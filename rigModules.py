@@ -40,3 +40,13 @@ def createLocatorMidpoint():
     cmds.xform(locator, t=position, ws=True)
 
 
+def grpOwnName(): # grouping itself and named own
+    sel = cmds.ls(sl=True)
+    if not sel:
+        cmds.group(em=True) # em : empty
+    else:
+        for i in sel:
+            cmds.group(i, n="%s_GRP" % i)
+
+
+grpOwnName()
