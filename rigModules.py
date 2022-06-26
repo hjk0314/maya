@@ -49,4 +49,16 @@ def grpOwnName(): # grouping itself and named own
             cmds.group(i, n="%s_GRP" % i)
 
 
-grpOwnName()
+def createChannel(name, typ):
+    sel = cmds.ls(sl=True)
+    channelName = name
+    channelType = typ # ex) "bool", "double"
+    for ctrl in sel:
+        channelChek = cmds.attributeQuery(channelName, node=ctrl, ex=True) # ex = exist
+        if not channelChek:
+            cmds.addAttr(ctrl, ln=channelName, at=channelType, dv=0)
+            cmds.setAttr("%s.%s" % (ctrl, channelName), e=True, k=True)
+        else:
+            pass
+
+
