@@ -1,5 +1,6 @@
 import maya.cmds as cmds
 import maya.OpenMaya as om
+import os
 
 
 def createCurveUsingLocator(closedCurve): # input : True or False
@@ -61,4 +62,22 @@ def createChannel(name, typ):
         else:
             pass
 
+
+ # input elements is fullPath or string.
+ # ex1) "C:/Users/userName/Desktop/expressionSource.txt"
+ # ex2) "tx = sin(time);"
+def writeExpression(fullPath):
+    ext = os.path.splitext(fullPath)[-1] # .txt
+    chk = os.path.isfile(fullPath)
+    if ext == ".txt" and chk: # ex1) fullPath
+        with open(fullPath, 'r') as txt:
+            srcList = txt.readlines()
+        src = "\n".join(srcList)
+    else: # ex2) string
+        src = fullPath
+    try:
+        # s=string, o=object, ae=alwaysEvaluate, uc=unitConversion
+        cmds.expression(s=src, o='', ae=1, uc='all')
+    except:
+        om.MGlobal.displayError('Fail to write expressions.')
 
