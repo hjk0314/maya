@@ -105,3 +105,24 @@ def deleteUnknownPlugins():
         om.MGlobal.displayWarning("There are no unknown plugins.")
 
 
+# Create Curve on Path
+def createCurvePath(startFrame, endFrame):
+    sel = cmds.ls(sl=True, fl=True)
+    for j in sel:
+        pointList = []
+        for k in range(startFrame, endFrame + 1):
+            cmds.currentTime(k)
+            try:
+                pointList.append(cmds.pointPosition(j)) # vtx position
+            except:
+                pointList.append(cmds.xform(j, q=True, ws=True, rp=True)) # obj position
+        cmds.curve(p=pointList) # make Curves
+
+
+# Offset the Keys
+def offsetKey(interval):
+    sel = cmds.ls(sl=True, fl=True)
+    for j, k in enumerate(sel):
+        cmds.keyframe(k, e=True, r=True, tc = j * interval)
+
+
