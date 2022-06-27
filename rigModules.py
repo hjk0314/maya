@@ -93,3 +93,15 @@ def getNumberFromName(name): # input -> 'pCube1_22_obj_22_a2'
         return False
 
 
+def deleteUnknownPlugins():
+    cmds.delete(cmds.ls(type="unknown")) # Just delete Unknown type lists.
+    pluginsList = cmds.unknownPlugin(q=True, l=True)
+    if pluginsList:
+        for j, k in enumerate(pluginsList):
+            cmds.unknownPlugin(k, r=True)
+            print("%d : %s" % (j, k)) # Print deleted plugin's names and number
+        print('Delete completed.')
+    else:
+        om.MGlobal.displayWarning("There are no unknown plugins.")
+
+
