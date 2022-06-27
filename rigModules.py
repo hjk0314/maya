@@ -72,7 +72,7 @@ def writeExpression(fullPath):
     if ext == ".txt" and chk: # ex1) fullPath
         with open(fullPath, 'r') as txt:
             srcList = txt.readlines()
-        src = "\n".join(srcList)
+        src = "".join(srcList)
     else: # ex2) string
         src = fullPath
     try:
@@ -80,4 +80,16 @@ def writeExpression(fullPath):
         cmds.expression(s=src, o='', ae=1, uc='all')
     except:
         om.MGlobal.displayError('Fail to write expressions.')
+
+
+# This function is Only works for strings sliced with underscores.
+def getNumberFromName(name): # input -> 'pCube1_22_obj_22_a2'
+    nameSlice = name.split("_") # ['pCube1', '22', 'obj', '22', 'a2']
+    digitList = [(j, k) for j, k in enumerate(nameSlice) if k.isdigit()] # [(1, '22'), (3, '22')]
+    try:
+        idx, num = digitList[-1]
+        return idx, int(num)
+    except:
+        return False
+
 
