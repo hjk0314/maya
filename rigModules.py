@@ -1,4 +1,3 @@
-from linecache import getline
 import maya.cmds as cmds
 import maya.OpenMaya as om
 import os
@@ -127,19 +126,33 @@ def offsetKey(interval):
         cmds.keyframe(k, e=True, r=True, tc = j * interval)
 
 
-def getLineList(fullPath, word):
-    node = "createNode"
-    wordList = []
-    nodeList = []
+def delVaccine(fullPath):
+    vcc = "vaccine_gene"
+    brd = "breed_gene"
+    crt = "createNode"
     with open(fullPath, "r") as txt:
-        for j, k in enumerate(txt):
-            if node in k and word in k:
-                wordList.append(j)
-            if node in k:
-                nodeList.append(j)
-    delList = []
-    for i in wordList:
-        end = nodeList.index(i) + 1
-        endLine = nodeList[end]
-        delList += [x for x in range(i, endLine)]
-    return delList
+        lines = txt.readlines()
+    # for p, q in enumerate(lines):
+    #     print(p, q.rstrip())
+    vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k]
+    brdList = [j for j, k in enumerate(lines) if brd in k and crt in k]
+    crtList = [j for j, k in enumerate(lines) if crt in k]
+    # print(vccList)
+    # print(brdList)
+    # print(crtList)
+    sum = vccList + brdList
+    deleteList = []
+    for min in sum:
+        max = crtList[crtList.index(min) + 1]
+        deleteList += [i for i in range(min, max)]
+    # print(deleteList)
+    new, ext = os.path.splitext(fullPath)
+    new += "_fix" + ext
+    # print(new)
+    with open(new, "w") as txt:
+        for j, k in enumerate(lines):
+            if j in deleteList:
+                txt.write("// Deleted here.\n")
+            else:
+                txt.write(k)
+
