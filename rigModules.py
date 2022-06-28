@@ -1,3 +1,4 @@
+from linecache import getline
 import maya.cmds as cmds
 import maya.OpenMaya as om
 import os
@@ -126,3 +127,19 @@ def offsetKey(interval):
         cmds.keyframe(k, e=True, r=True, tc = j * interval)
 
 
+def getLineList(fullPath, word):
+    node = "createNode"
+    wordList = []
+    nodeList = []
+    with open(fullPath, "r") as txt:
+        for j, k in enumerate(txt):
+            if node in k and word in k:
+                wordList.append(j)
+            if node in k:
+                nodeList.append(j)
+    delList = []
+    for i in wordList:
+        end = nodeList.index(i) + 1
+        endLine = nodeList[end]
+        delList += [x for x in range(i, endLine)]
+    return delList
