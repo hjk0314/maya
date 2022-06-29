@@ -126,7 +126,27 @@ def offsetKey(interval):
         cmds.keyframe(k, e=True, r=True, tc = j * interval)
 
 
-def delVaccine(fullPath):
+# Move the camera's keys and map the image accordingly.
+def mapCameraKeyImage(destinationKey):
+    sel = cmds.ls(sl=True, dag=True, type=['camera']) # ['cameraShape1']
+    cam = cmds.listRelatives(sel, p=True) # ['camera1']
+    try:
+        currentKey = min(cmds.keyframe(cam, q=True)) # Smallest key value in camera.
+        value = destinationKey - currentKey
+    except:
+        value = 0 # Nothing happens
+        om.MGlobal.displayError("The camera has no keyframes.")
+    img = cmds.listRelatives(sel, c=True) # ['imagePlane1']
+    imgShape = cmds.listRelatives(img, c=True) # ['imagePlaneShape1']
+    if img:
+        cmds.keyframe(cam, e=True, r=True, tc=value)
+        frameOffset = cmds.getAttr(imgShape[0] + ".frameOffset")
+        cmds.setAttr(imgShape[0] + ".frameOffset", frameOffset - value)
+    else:
+        om.MGlobal.displayError("There is no imagePlane.")
+
+
+def delVaccineStr(fullPath):
     vcc = "vaccine_gene"
     brd = "breed_gene"
     crt = "createNode"
@@ -157,22 +177,30 @@ def delVaccine(fullPath):
                 txt.write(k)
 
 
-# Move the camera's keys and map the image accordingly.
-def mapCameraKeyImage(destinationKey):
-    sel = cmds.ls(sl=True, dag=True, type=['camera']) # ['cameraShape1']
-    cam = cmds.listRelatives(sel, p=True) # ['camera1']
-    try:
-        currentKey = min(cmds.keyframe(cam, q=True)) # Smallest key value in camera.
-        value = destinationKey - currentKey
-    except:
-        value = 0 # Nothing happens
-        om.MGlobal.displayError("The camera has no keyframes.")
-    img = cmds.listRelatives(sel, c=True) # ['imagePlane1']
-    imgShape = cmds.listRelatives(img, c=True) # ['imagePlaneShape1']
-    if img:
-        cmds.keyframe(cam, e=True, r=True, tc=value)
-        frameOffset = cmds.getAttr(imgShape[0] + ".frameOffset")
-        cmds.setAttr(imgShape[0] + ".frameOffset", frameOffset - value)
-    else:
-        om.MGlobal.displayError("There is no imagePlane.")
+def showInternalVarFlag():
+    print("0 : " + cmds.internalVar(mid=True))
+    print("1 : " + cmds.internalVar(uad=True))
+    print("2 : " + cmds.internalVar(ubd=True))
+    print("3 : " + cmds.internalVar(uhk=True))
+    print("4 : " + cmds.internalVar(umm=True))
+    print("5 : " + cmds.internalVar(upd=True))
+    print("6 : " + cmds.internalVar(ups=True))
+    print("7 : " + cmds.internalVar(usd=True))
+    print("8 : " + cmds.internalVar(ush=True))
+    print("9 : " + cmds.internalVar(utd=True))
+    print("10 : " + cmds.internalVar(uwd=True))
 
+
+def delVaccinePy():
+    vaccinePy = cmds.internalVar(uad=True) + "scripts/vaccine.py"
+    vaccinePyc = cmds.internalVar(uad=True) + "scripts/vaccine.pyc"
+    userSetupPy = cmds.internalVar(uad=True) + "scripts/userSetup.py"
+    print(vaccinePy)
+    print(os.path.isfile(vaccinePy))
+    print(vaccinePyc)
+    print(os.path.isfile(vaccinePyc))
+    print(userSetupPy)
+    print(os.path.isfile(userSetupPy))
+
+
+delVaccinePy()
