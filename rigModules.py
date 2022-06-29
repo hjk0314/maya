@@ -191,16 +191,14 @@ def showInternalVarFlag():
     print("10 : " + cmds.internalVar(uwd=True))
 
 
+# Delete this file : "vaccine.py", "vaccine.pyc", "userSetup.py"
+# "C:/Users/user/Documents/maya/scripts/" in this folder.
 def delVaccinePy():
-    vaccinePy = cmds.internalVar(uad=True) + "scripts/vaccine.py"
-    vaccinePyc = cmds.internalVar(uad=True) + "scripts/vaccine.pyc"
-    userSetupPy = cmds.internalVar(uad=True) + "scripts/userSetup.py"
-    print(vaccinePy)
-    print(os.path.isfile(vaccinePy))
-    print(vaccinePyc)
-    print(os.path.isfile(vaccinePyc))
-    print(userSetupPy)
-    print(os.path.isfile(userSetupPy))
+    dir = cmds.internalVar(uad=True) + "scripts/"
+    fileList = [dir + i for i in ["vaccine.py", "vaccine.pyc", "userSetup.py"]]
+    for i in fileList:
+        try:
+            os.remove(i)
+        except:
+            om.MGlobal.displayInfo("There is no %s" % os.path.basename(i))
 
-
-delVaccinePy()
