@@ -156,3 +156,23 @@ def delVaccine(fullPath):
             else:
                 txt.write(k)
 
+
+# Move the camera's keys and map the image accordingly.
+def mapCameraKeyImage(destinationKey):
+    sel = cmds.ls(sl=True, dag=True, type=['camera']) # ['cameraShape1']
+    cam = cmds.listRelatives(sel, p=True) # ['camera1']
+    try:
+        currentKey = min(cmds.keyframe(cam, q=True)) # Smallest key value in camera.
+        value = destinationKey - currentKey
+    except:
+        value = 0 # Nothing happens
+        om.MGlobal.displayError("The camera has no keyframes.")
+    img = cmds.listRelatives(sel, c=True) # ['imagePlane1']
+    imgShape = cmds.listRelatives(img, c=True) # ['imagePlaneShape1']
+    if img:
+        cmds.keyframe(cam, e=True, r=True, tc=value)
+        frameOffset = cmds.getAttr(imgShape[0] + ".frameOffset")
+        cmds.setAttr(imgShape[0] + ".frameOffset", frameOffset - value)
+    else:
+        om.MGlobal.displayError("There is no imagePlane.")
+
