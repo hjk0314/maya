@@ -152,8 +152,6 @@ def delVaccineStr(fullPath):
     crt = "createNode"
     with open(fullPath, "r") as txt:
         lines = txt.readlines()
-    # for p, q in enumerate(lines):
-    #     print(p, q.rstrip())
     vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k]
     brdList = [j for j, k in enumerate(lines) if brd in k and crt in k]
     crtList = [j for j, k in enumerate(lines) if crt in k]
@@ -177,28 +175,39 @@ def delVaccineStr(fullPath):
                 txt.write(k)
 
 
-def showInternalVarFlag():
-    print("0 : " + cmds.internalVar(mid=True))
-    print("1 : " + cmds.internalVar(uad=True))
-    print("2 : " + cmds.internalVar(ubd=True))
-    print("3 : " + cmds.internalVar(uhk=True))
-    print("4 : " + cmds.internalVar(umm=True))
-    print("5 : " + cmds.internalVar(upd=True))
-    print("6 : " + cmds.internalVar(ups=True))
-    print("7 : " + cmds.internalVar(usd=True))
-    print("8 : " + cmds.internalVar(ush=True))
-    print("9 : " + cmds.internalVar(utd=True))
-    print("10 : " + cmds.internalVar(uwd=True))
-
-
 # Delete this file : "vaccine.py", "vaccine.pyc", "userSetup.py"
 # "C:/Users/user/Documents/maya/scripts/" in this folder.
 def delVaccinePy():
     dir = cmds.internalVar(uad=True) + "scripts/"
     fileList = [dir + i for i in ["vaccine.py", "vaccine.pyc", "userSetup.py"]]
     for i in fileList:
-        try:
+        if os.path.isfile(i):
             os.remove(i)
-        except:
+        else:
             om.MGlobal.displayInfo("There is no %s" % os.path.basename(i))
+
+
+# Select folder containing malware.
+# As a result, return list of infected files.
+def getInfectedFiles():
+    directory = cmds.fileDialog2(fm=2, ds=1) # file browser
+    if directory:
+        dirPath = directory[0] # "C:/users/user/Desktop"
+        # There are only <.ma> files, including uninfected files.
+        maFiles = [i for i in os.listdir(dirPath) if os.path.splitext(i)[-1] == ".ma"]
+        # full path of the list <maFiles>
+        maFullPath = [dirPath + "/" + i for i in maFiles]
+        infectedList = []
+        for i in maFullPath:
+            with open(i, "r") as txt:
+                lines = txt.readlines()
+            for j in lines:
+                if "vaccine_gene" in j or "breed_gene" in j:
+                    infectedList.append(i)
+                    break
+                else:
+                    pass
+        return infectedList
+    else:
+        return False
 
