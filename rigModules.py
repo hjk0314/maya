@@ -3,6 +3,9 @@ import maya.OpenMaya as om
 import os
 
 
+# Creates a curve along the locator's trajectory.
+# Place locators to create trajectories.
+# If True is given to the closedCurve parameter, a circle is created.
 def createCurveUsingLocator(closedCurve): # input : True or False
     sel = cmds.ls(sl=True) # select locators
     if not sel:
@@ -19,15 +22,21 @@ def createCurveUsingLocator(closedCurve): # input : True or False
                 cmds.move(k[0], k[1], k[2], '%s.cv[%d]' % (circleName, j), ws=True)
 
 
+# Returns the midpoint between two objects.
 def getMiddlePoint(sel): # sel : tuple in list
     allPoints = [cmds.xform(i, q=True, t=True, ws=True) for i in sel]
     try:
-        middlePoints = [(allPoints[0][i] + allPoints[1][i]) / 2 for i in range(3)] # x, y, z coordinates
+        middlePoints = [(allPoints[0][i] + allPoints[1][i]) / 2 for i in range(3)] # ex) [1.0, -2.3, -0.4]
         return middlePoints
     except:
         return False
 
 
+# Create a locator based on selection.
+# This function uses the <getMiddlePoint> function.
+# Create a locator at the origin if nothing is selected.
+# Selecting one obj creates a locator in its place.
+# When you select two obj, a locator is created at the midpoint.
 def createLocatorMidpoint():
     sel = cmds.ls(sl=True, fl=True)
     selNumber = len(sel)
@@ -41,6 +50,7 @@ def createLocatorMidpoint():
     cmds.xform(locator, t=position, ws=True)
 
 
+# Add the name '_GRP' to the name and group it.
 def grpOwnName(): # grouping itself and named own
     sel = cmds.ls(sl=True)
     if not sel:
@@ -50,6 +60,7 @@ def grpOwnName(): # grouping itself and named own
             cmds.group(i, n="%s_GRP" % i)
 
 
+# Create channel attributes on a controller or group.
 def createChannel(name, typ):
     sel = cmds.ls(sl=True)
     channelName = name
@@ -83,6 +94,9 @@ def writeExpression(fullPath):
 
 
 # This function is Only works for strings sliced with underscores.
+# When given a name like this : 'pCube1_22_obj_22_a2'
+# Return index and its number.
+# The number is last one in name.
 def getNumberFromName(name): # input -> 'pCube1_22_obj_22_a2'
     nameSlice = name.split("_") # ['pCube1', '22', 'obj', '22', 'a2']
     digitList = [(j, k) for j, k in enumerate(nameSlice) if k.isdigit()] # [(1, '22'), (3, '22')]
@@ -93,6 +107,7 @@ def getNumberFromName(name): # input -> 'pCube1_22_obj_22_a2'
         return False
 
 
+# Attempt to delete unused plugins.
 def deleteUnknownPlugins():
     cmds.delete(cmds.ls(type="unknown")) # Just delete Unknown type lists.
     pluginsList = cmds.unknownPlugin(q=True, l=True)
@@ -105,7 +120,8 @@ def deleteUnknownPlugins():
         om.MGlobal.displayWarning("There are no unknown plugins.")
 
 
-# Create Curve on Path
+# Create Curve on Path.
+# This function works even if you select a point.
 def createCurvePath(startFrame, endFrame):
     sel = cmds.ls(sl=True, fl=True)
     for j in sel:
@@ -126,7 +142,7 @@ def offsetKey(interval):
         cmds.keyframe(k, e=True, r=True, tc = j * interval)
 
 
-# Move the camera's keys and map the image accordingly.
+# Move the key of the camera with the imagePlane, and adjust the frame offset to show the imagePlane accordingly.
 def mapCameraKeyImage(destinationKey):
     sel = cmds.ls(sl=True, dag=True, type=['camera']) # ['cameraShape1']
     cam = cmds.listRelatives(sel, p=True) # ['camera1']
@@ -146,27 +162,29 @@ def mapCameraKeyImage(destinationKey):
         om.MGlobal.displayError("There is no imagePlane.")
 
 
+# This functions are related : delVaccineStr(), delVaccinePy(), getInfectedFiles()
+# Detects and removes malicious Maya startup scripts.
+# Delete the node named 'vaccine_gene' and "breed_gene" in the <.ma> file.
+# It is related to mayaScanner distributed by autodesk.
 def delVaccineStr(fullPath):
     vcc = "vaccine_gene"
     brd = "breed_gene"
     crt = "createNode"
     with open(fullPath, "r") as txt:
         lines = txt.readlines()
-    vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k]
-    brdList = [j for j, k in enumerate(lines) if brd in k and crt in k]
-    crtList = [j for j, k in enumerate(lines) if crt in k]
-    # print(vccList)
-    # print(brdList)
-    # print(crtList)
-    sum = vccList + brdList
+    vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k] # List up the line numbers containing 'vaccine_gene'.
+    brdList = [j for j, k in enumerate(lines) if brd in k and crt in k] # List up the line numbers containing 'breed_gene'.
+    crtList = [j for j, k in enumerate(lines) if crt in k] # List up the line numbers containing 'createNode'.
+    sum = vccList + brdList # ex) [16, 21, 84, 105]
     deleteList = []
+    # List lines to delete consecutively
     for min in sum:
         max = crtList[crtList.index(min) + 1]
         deleteList += [i for i in range(min, max)]
-    # print(deleteList)
     new, ext = os.path.splitext(fullPath)
     new += "_fix" + ext
-    # print(new)
+    # When creating a new file, delete the 'vaccine_gene' or 'breed_gene' paragraph.
+    # Write '//Deleted here' instead of the deleted line.
     with open(new, "w") as txt:
         for j, k in enumerate(lines):
             if j in deleteList:
@@ -175,8 +193,9 @@ def delVaccineStr(fullPath):
                 txt.write(k)
 
 
+# This functions are related : delVaccineStr(), delVaccinePy(), getInfectedFiles()
 # Delete this file : "vaccine.py", "vaccine.pyc", "userSetup.py"
-# "C:/Users/user/Documents/maya/scripts/" in this folder.
+# in this folder : "C:/Users/user/Documents/maya/scripts/"
 def delVaccinePy():
     dir = cmds.internalVar(uad=True) + "scripts/"
     fileList = [dir + i for i in ["vaccine.py", "vaccine.pyc", "userSetup.py"]]
@@ -187,6 +206,7 @@ def delVaccinePy():
             om.MGlobal.displayInfo("There is no %s" % os.path.basename(i))
 
 
+# This functions are related : delVaccineStr(), delVaccinePy(), getInfectedFiles()
 # Select folder containing malware.
 # As a result, return list of infected files.
 def getInfectedFiles():
@@ -212,6 +232,8 @@ def getInfectedFiles():
         return False
 
 
+# Create a curve controller.
+# Create a shape with given arguments
 def createCtrl(shape):
     ctrl = {
     "cub": [(-0.5, 0.5, -0.5), (-0.5, 0.5, 0.5), (0.5, 0.5, 0.5), (0.5, 0.5, -0.5), (-0.5, 0.5, -0.5), (-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5), (0.5, -0.5, 0.5), (0.5, -0.5, -0.5), (-0.5, -0.5, -0.5), (-0.5, -0.5, 0.5), (-0.5, 0.5, 0.5), (0.5, 0.5, 0.5), (0.5, -0.5, 0.5), (0.5, -0.5, -0.5), (0.5, 0.5, -0.5)], 
