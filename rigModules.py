@@ -1,5 +1,6 @@
 import maya.cmds as cmds
 import maya.OpenMaya as om
+import pymel.core as pm
 import os
 
 
@@ -162,99 +163,6 @@ def mapCameraKeyImage(destinationKey):
         om.MGlobal.displayError("There is no imagePlane.")
 
 
-# This functions are related : deleteVaccineString(), deleteVaccineFiles(), findVaccineBrowser()
-# Detects and removes malicious Maya startup scripts.
-# Delete the node named 'vaccine_gene' and "breed_gene" in the <.ma> file.
-# It is related to mayaScanner distributed by autodesk.
-def deleteVaccineString(fullPath):
-    vcc = "vaccine_gene"
-    brd = "breed_gene"
-    crt = "createNode"
-    with open(fullPath, "r") as txt:
-        lines = txt.readlines()
-    vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k] # List up the line numbers containing 'vaccine_gene'.
-    brdList = [j for j, k in enumerate(lines) if brd in k and crt in k] # List up the line numbers containing 'breed_gene'.
-    crtList = [j for j, k in enumerate(lines) if crt in k] # List up the line numbers containing 'createNode'.
-    sum = vccList + brdList # ex) [16, 21, 84, 105]
-    deleteList = []
-    # List lines to delete consecutively
-    for min in sum:
-        max = crtList[crtList.index(min) + 1]
-        deleteList += [i for i in range(min, max)]
-    new, ext = os.path.splitext(fullPath)
-    new += "_fix" + ext
-    # When creating a new file, delete the 'vaccine_gene' or 'breed_gene' paragraph.
-    # Write '//Deleted here' instead of the deleted line.
-    with open(new, "w") as txt:
-        for j, k in enumerate(lines):
-            if j in deleteList:
-                txt.write("// Deleted here.\n")
-            else:
-                txt.write(k)
-
-
-# This functions are related : deleteVaccineString(), deleteVaccineFiles(), findVaccineBrowser()
-# Delete this file : "vaccine.py", "vaccine.pyc", "userSetup.py"
-# in this folder : "C:/Users/user/Documents/maya/scripts/"
-def deleteVaccineFiles():
-    dir = cmds.internalVar(uad=True) + "scripts/"
-    fileList = [dir + i for i in ["vaccine.py", "vaccine.pyc", "userSetup.py"]]
-    for i in fileList:
-        if os.path.isfile(i):
-            os.remove(i)
-        else:
-            pass
-
-
-# This functions are related : deleteVaccineString(), deleteVaccineFiles(), findVaccineBrowser()
-# pop up the Browser for detecting file or folder.
-def findVaccineBrowser(radioBtn):
-    if radioBtn == "file":
-        sel = cmds.fileDialog2(fm=1, ds=1) # file browser
-    elif radioBtn == "folder":
-        sel = cmds.fileDialog2(fm=2, ds=1) # folder browser
-    else:
-        sel = None
-    return sel
-
-
-# This functions are related : deleteVaccineString(), deleteVaccineFiles(), findVaccineBrowser()
-# Select folder containing malware.
-# As a result, return list of infected files.
-def detectingVaccineFiles(fileOrFolder):
-    if isinstance(fileOrFolder, list):
-        fileOrFolder = ''.join(fileOrFolder)
-    else:
-        pass
-    if os.path.isfile(fileOrFolder) and os.path.splitext(fileOrFolder)[-1] == ".ma":
-        infectedList = scanVaccineString(fileOrFolder)
-    elif os.path.isdir(fileOrFolder):
-        mayaFiles = [i for i in os.listdir(fileOrFolder) if os.path.splitext(i)[-1] == ".ma"]
-        mayaFilesPath = [fileOrFolder + "/" + i for i in mayaFiles]
-        infectedList = [i for i in mayaFilesPath if scanVaccineString(i)]
-    else:
-        infectedList = False
-    return infectedList
-
-
-def scanVaccineString(fullPath):        
-    with open(fullPath, "r") as txt:
-        lines = txt.readlines()
-    for i in lines:
-        if "vaccine_gene" in i or "breed_gene" in i:
-            return fullPath
-            break
-        else:
-            pass
-    return False
-
-# deleteVaccineString(r"C:\Users\hjk03\Desktop\a.ma")
-# print(scanVaccineString(r"C:\Users\hjk03\Desktop\a.ma"))
-# print(scanVaccineString(r"C:\Users\hjk03\Desktop\a_fix.ma"))
-print(detectingVaccineFiles(r"C:\Users\hjk03\Desktop"))
-print(detectingVaccineFiles(r"C:\Users\hjk03\Desktop\a_fix.ma"))
-
-
 # Create a curve controller.
 # Create a shape with given arguments
 def createCtrl(shape):
@@ -275,4 +183,58 @@ def createCtrl(shape):
     except:
         keyList = list(ctrl.keys())
         om.MGlobal.displayInfo(f"As input factors : {keyList}")
+
+
+# Delete the node named 'vaccine_gene' and "breed_gene" in the <.ma> file.
+# It is related to mayaScanner distributed by autodesk.
+def deleteVaccineString(fullPath):
+    vcc = "vaccine_gene"
+    brd = "breed_gene"
+    crt = "createNode"
+    with open(fullPath, "r") as txt:
+        lines = txt.readlines()
+    vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k] # List up the line numbers containing 'vaccine_gene'.
+    brdList = [j for j, k in enumerate(lines) if brd in k and crt in k] # List up the line numbers containing 'breed_gene'.
+    crtList = [j for j, k in enumerate(lines) if crt in k] # List up the line numbers containing 'createNode'.
+    sum = vccList + brdList # ex) [16, 21, 84, 105]
+    deleteList = []
+    # List lines to delete consecutively
+    for min in sum:
+        max = crtList[crtList.index(min) + 1]
+        deleteList += [i for i in range(min, max)]
+    new, ext = os.path.splitext(fullPath)
+    new += "_fixed" + ext
+    # When creating a new file, delete the 'vaccine_gene' or 'breed_gene' paragraph.
+    # Write '//Deleted here' instead of the deleted line.
+    with open(new, "w") as txt:
+        for j, k in enumerate(lines):
+            if j in deleteList:
+                txt.write("// Deleted here.\n")
+            else:
+                txt.write(k)
+
+
+# Delete this file : "vaccine.py", "vaccine.pyc", "userSetup.py" in "C:/Users/user/Documents/maya/scripts/"
+def deleteVaccineFiles():
+    dir = cmds.internalVar(uad=True) + "scripts/"
+    fileList = [dir + i for i in ["vaccine.py", "vaccine.pyc", "userSetup.py"]]
+    for i in fileList:
+        if os.path.isfile(i):
+            os.remove(i)
+        else:
+            pass
+
+
+# Checking First, if the file is infected or not.
+def checkVaccineString(fullPath):        
+    with open(fullPath, "r") as txt:
+        lines = txt.readlines()
+    result = ''
+    for i in lines:
+        if "vaccine_gene" in i or "breed_gene" in i:
+            result = fullPath
+            break
+        else:
+            pass
+    return result
 
