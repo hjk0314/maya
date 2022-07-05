@@ -2,6 +2,7 @@ import maya.cmds as cmds
 import maya.OpenMaya as om
 import pymel.core as pm
 import os
+import tkinter as tk
 
 
 # Creates a curve along the locator's trajectory.
@@ -239,4 +240,3 @@ def checkVaccineString(fullPath):
     return result
 
 
-# new functions.
