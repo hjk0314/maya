@@ -238,3 +238,5 @@ def checkVaccineString(fullPath):
             pass
     return result
 
+
+# new functions.
