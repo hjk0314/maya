@@ -238,3 +238,51 @@ def checkVaccineString(fullPath):
             pass
     return result
 
+
+# using pymel.core
+# Grabs only the given type from the selected group and returns the list.
+def getTypeOnly(typ = "mesh"):
+    if typ == "joint":
+        shp = pm.ls(sl=True, dag=True, type=["joint"])
+        obj = [i.name() for i in shp]
+    else:
+        shp = pm.ls(sl=True, dag=True, s=True)
+        obj = [i.getParent().name() for i in shp if pm.nodeType(i) == "mesh"]
+    pm.select(obj)
+    lst = pm.ls(sl=True)
+    return lst
+
+
+# Delete Constraints and Break Connections scale and visibility.
+def deleteConstraintAndConnection():
+    sel = pm.ls(sl=True)
+    for i in sel:
+        pm.delete(i, cn=True)
+        for j in [".sx", ".sy", ".sz", ".v"]:
+            pm.disconnectAttr(i + j) # Break connections : scale, visibility
+
+# show drawStyle in joint attributes.
+def setBoneDrawStyle(attr="drawStyle"):
+    sel = pm.ls(sl=True)
+    for i in sel:
+        chkAttr = pm.attributeQuery(attr, node=i, ex=True)
+        if chkAttr:
+            pm.setAttr("%s.%s" % (i, attr), 0)
+        else:
+            pass
+
+# Create a locator at the selected joint location.
+# And return the locators list.
+def createLocatorObjPosition():
+    sel = pm.ls(sl=True)
+    locatorList = []
+    for i in sel:
+        locator = pm.spaceLocator(n="%s_locator" % i, p=(0, 0, 0))
+        pm.matchTransform(locator, i, pos=True)
+        locatorList.append(locator)
+    return locatorList
+
+
+# getTypeOnly("joint")
+# deleteConstraintAndConnection()
+setBoneDrawStyle()
