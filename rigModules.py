@@ -255,11 +255,18 @@ def getTypeOnly(typ = "mesh"):
 
 # Delete Constraints and Break Connections scale and visibility.
 def deleteConstraintAndConnection():
-    sel = pm.ls(sl=True)
-    for i in sel:
+    sel = pm.ls(sl=True, type=["transform"])
+    sel2 = [i for i in sel if not "Constraint" in pm.nodeType(i)]
+    channelList = [".tx", ".ty", ".tz", ".rx", ".ry", ".rz", ".sx", ".sy", ".sz", ".v"]
+    for i in sel2:
+        for j in channelList:
+            pm.setAttr(i + j, k=True, l=False)
+            try:
+                pm.disconnectAttr(i + j) # Break connections : scale, visibility
+            except:
+                pass
         pm.delete(i, cn=True)
-        for j in [".sx", ".sy", ".sz", ".v"]:
-            pm.disconnectAttr(i + j) # Break connections : scale, visibility
+
 
 # show drawStyle in joint attributes.
 def setBoneDrawStyle(attr="drawStyle"):
@@ -270,6 +277,7 @@ def setBoneDrawStyle(attr="drawStyle"):
             pm.setAttr("%s.%s" % (i, attr), 0)
         else:
             pass
+
 
 # Create a locator at the selected joint location.
 # And return the locators list.
@@ -283,6 +291,26 @@ def createLocatorObjPosition():
     return locatorList
 
 
-# getTypeOnly("joint")
-# deleteConstraintAndConnection()
-setBoneDrawStyle()
+# Create an empty group and match the pivot with the selector.
+def createEmptyGroup():
+    sel = cmds.ls(sl=True)
+    for i in sel:
+        grp = cmds.group(em=True, n=i + "_offset")
+        cmds.matchTransform(grp, i, pos=True, rot=True)
+        try:
+            iParent = "".join(cmds.listRelatives(i, p=True)) # Selector's mom group.
+            cmds.parent(grp, iParent)
+        except:
+            pass
+        cmds.parent(i, grp)
+
+
+# Sets the color of the controller.
+# idx : blue=6, red=13, yellow=17
+def setColorRed(idx=13):
+    sel = cmds.ls(sl=True, dag=True, s=True, type=["mesh"])
+    for i in sel:
+        cmds.setAttr(i + ".overrideEnabled", 1)
+        cmds.setAttr(i + ".overrideColor", idx)
+
+
