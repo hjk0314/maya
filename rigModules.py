@@ -317,10 +317,12 @@ def setColorRed(idx=13):
 
 class abc():
     def __init__(self):
-        self.setupUI()
+        min = pm.playbackOptions(q=True, min=True)
+        max = pm.playbackOptions(q=True, max=True)
+        self.setupUI(min, max)
 
 
-    def setupUI(self):
+    def setupUI(self, min, max):
         if pm.window('exportABC_withShader', exists=True):
             pm.deleteUI('exportABC_withShader')
         else:
@@ -328,9 +330,9 @@ class abc():
             pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=380)
             pm.separator(h=10)
             pm.button(l='JSON and shadingEngine', c=lambda x: self.jsonButton())
-            pm.intFieldGrp(l='Range : ', nf=2, v1=1, v2=120)
-            pm.checkBoxGrp(l='One File : ', ncb=1, v1=True)
-            pm.button(l='Export ABC', c=lambda x: print('export ABC'))
+            self.frameRange = pm.intFieldGrp(l='Range : ', nf=2, v1=min, v2=max)
+            self.oneFileCheck = pm.checkBoxGrp(l='One File : ', ncb=1, v1=True)
+            pm.button(l='Export ABC', c=lambda x: self.exportButton())
             pm.button(l='Import ABC', c=lambda x: print('import ABC'))
             pm.button(l='Assign', c=lambda x: print('assign'))
             pm.separator(h=10)
@@ -347,7 +349,7 @@ class abc():
             shdEngList = self.getShadingEngine(sel)
             jsonPath = pm.fileDialog2(fm=0, ff='json (*.json);; All Files (*.*)')
             if not jsonPath:
-                om.MGlobal.displayInfo('Cancled.')
+                om.MGlobal.displayInfo('Canceled.')
             else:
                 jsonPath = ''.join(jsonPath)
                 self.createJson(shdEngList, jsonPath)
@@ -384,3 +386,60 @@ class abc():
         pm.select(cl=True)
         pm.select(shdEngList, ne=True)
         pm.exportSelected(exportPath, type="mayaAscii", f=True)
+
+
+    def exportButton(self):
+        sel = pm.ls(sl=True, long=True)
+        oneFileCheck = pm.checkBoxGrp(self.oneFileCheck, q=True, v1=True)
+        fullPath = self.getExportPath(oneFileCheck)
+        if not fullPath:
+            om.MGlobal.displayInfo("Canceled.")
+        else:
+            if oneFileCheck:
+                selection = ""
+                for i in sel:
+                    selection += " -root " + i
+                exportOpt = self.createJstring(fullPath[0], selection)
+                pm.AbcExport(j=exportOpt)
+            else:
+                for i in sel:
+                    selection = " -root " + i
+                    newPath = fullPath[0] + "/" + i + ".abc"
+                    exportOpt = self.createJstring(newPath, selection)
+                    pm.AbcExport(j=exportOpt)
+
+
+    def getExportPath(self, oneFileCheck):
+        if oneFileCheck:
+            abcPath = pm.fileDialog2(fm=0, ff='Alembic (*.abc);; All Files (*.*)')
+        else:
+            abcPath = pm.fileDialog2(fm=2, ds=1)
+        return abcPath
+
+
+    def createJstring(self, fullPath, selection):
+        startFrame = pm.intFieldGrp(self.frameRange, q=True, v1=True)
+        endFrame = pm.intFieldGrp(self.frameRange, q=True, v2=True)
+        abc = " -file %s" % fullPath
+        frameRange = "-frameRange %s %s" % (str(startFrame), str(endFrame))
+        # ======= options start ==================================
+        exportOpt = frameRange
+        exportOpt += " -noNormals"
+        exportOpt += " -ro"
+        exportOpt += " -stripNamespaces"
+        exportOpt += " -uvWrite"
+        exportOpt += " -writeColorSets"
+        exportOpt += " -writeFaceSets"
+        exportOpt += " -wholeFrameGeo"
+        exportOpt += " -worldSpace"
+        exportOpt += " -writeVisibility"
+        exportOpt += " -eulerFilter"
+        exportOpt += " -autoSubd"
+        exportOpt += " -writeUVSets"
+        exportOpt += " -dataFormat ogawa"
+        exportOpt += selection
+        exportOpt += abc
+        # ======= options end ====================================
+        return exportOpt
+
+
