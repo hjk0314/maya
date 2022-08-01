@@ -1,6 +1,7 @@
 import maya.cmds as cmds
 import maya.OpenMaya as om
 import pymel.core as pm
+import json
 import os
 
 
@@ -314,3 +315,72 @@ def setColorRed(idx=13):
         cmds.setAttr(i + ".overrideColor", idx)
 
 
+class abc():
+    def __init__(self):
+        self.setupUI()
+
+
+    def setupUI(self):
+        if pm.window('exportABC_withShader', exists=True):
+            pm.deleteUI('exportABC_withShader')
+        else:
+            win = pm.window('exportABC_withShader', t='Export to Alembic with Shader', s=True, rtf=True)
+            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=380)
+            pm.separator(h=10)
+            pm.button(l='JSON and shadingEngine', c=lambda x: self.jsonButton())
+            pm.intFieldGrp(l='Range : ', nf=2, v1=1, v2=120)
+            pm.checkBoxGrp(l='One File : ', ncb=1, v1=True)
+            pm.button(l='Export ABC', c=lambda x: print('export ABC'))
+            pm.button(l='Import ABC', c=lambda x: print('import ABC'))
+            pm.button(l='Assign', c=lambda x: print('assign'))
+            pm.separator(h=10)
+            pm.showWindow(win)
+
+
+    def jsonButton(self):
+        sel = pm.ls(sl=True, dag=True, s=True)
+        if not sel:
+            om.MGlobal.displayError("Nothing Selected.")
+        elif self.checkSameName(sel):
+            om.MGlobal.displayError("Same name exists.")
+        else:
+            shdEngList = self.getShadingEngine(sel)
+            jsonPath = pm.fileDialog2(fm=0, ff='json (*.json);; All Files (*.*)')
+            if not jsonPath:
+                om.MGlobal.displayInfo('Cancled.')
+            else:
+                jsonPath = ''.join(jsonPath)
+                self.createJson(shdEngList, jsonPath)
+                self.exportShader(shdEngList, jsonPath)
+
+
+    def checkSameName(self, nameList):
+        sameName = [i for i in nameList if "|" in i]
+        return sameName
+
+
+    def getShadingEngine(self, sel):
+        dic = {}
+        for i in sel:
+            try:
+                shadingEngine = i.shadingGroups()[0].name()
+            except:
+                continue
+            objName = i.getParent().name()
+            objName = objName.split(":")[-1] if ":" in objName else objName
+            dic[objName] = shadingEngine
+        return dic
+
+
+    def createJson(self, dic, jsonPath):
+        with open(jsonPath, 'w') as JSON:
+            json.dump(dic, JSON, indent=4)
+
+
+    def exportShader(self, dic, fullPath):
+        (dir, ext) = os.path.splitext(fullPath)
+        exportPath = "%s_shader%s" % (dir, ext)
+        shdEngList = list(set(dic.values()))
+        pm.select(cl=True)
+        pm.select(shdEngList, ne=True)
+        pm.exportSelected(exportPath, type="mayaAscii", f=True)
