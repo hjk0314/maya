@@ -329,12 +329,12 @@ class abc():
             win = pm.window('exportABC_withShader', t='Export to Alembic with Shader', s=True, rtf=True)
             pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=380)
             pm.separator(h=10)
-            pm.button(l='JSON and shadingEngine', c=lambda x: self.jsonButton())
+            pm.button(l='Create JSON and export shadingEngines', c=lambda x: self.jsonButton())
             self.frameRange = pm.intFieldGrp(l='Range : ', nf=2, v1=min, v2=max)
             self.oneFileCheck = pm.checkBoxGrp(l='One File : ', ncb=1, v1=True)
             pm.button(l='Export ABC', c=lambda x: self.exportButton())
             pm.button(l='Import ABC', c=lambda x: self.importButton())
-            pm.button(l='Assign', c=lambda x: print('assign'))
+            pm.button(l='Assign shaders to objects', c=lambda x: self.assignButton())
             pm.separator(h=10)
             pm.showWindow(win)
 
@@ -452,42 +452,60 @@ class abc():
 
 
     def assignButton(self):
-        jsonPath = pm.fileDialog2(fm=1, ff='json (*.json);; All Files (*.*)')
-        if not jsonPath:
-            om.MGlobal.displayInfo("Canceled.")
+        sel = pm.ls(sl=True, dag=True, s=True)
+        if not sel:
+            om.MGlobal.displayError('Nothing selected.')
         else:
-            sel = pm.ls(sl=True, dag=True, s=True)
+            jsonPath = pm.fileDialog2(fm=1, ff='json (*.json);; All Files (*.*)')
             shaderPath = self.getShaderPath(jsonPath)
-            self.makeReference(shaderPath)
-            jsonDic = self.readJson(jsonPath)
-            for i in sel:
-                obj = i.getParent().name()
-                self.assignShd(obj)
+            if not jsonPath:
+                om.MGlobal.displayInfo("Canceled.")
+            elif not shaderPath:
+                om.MGlobal.displayError('There are no "_shader.ma" files.')
+            else:
+                self.makeReference(shaderPath)
+                jsonDic = self.readJson(jsonPath)
+                failLst = self.assignShd(sel, jsonDic)
+                message = "\n".join(failLst) if failLst else "Completed successfully"
+                om.MGlobal.displayInfo(message)
+
+
+    def assignShd(self, sel, jsonDic):
+        print(type(jsonDic))
+        assignFailed = []
+        for i in sel:
+            objName = i.getParent().name()
+            sepName = objName.split(":")[-1] if ":" in objName else objName
+            if sepName in jsonDic:
+                try:
+                    pm.sets(jsonDic[sepName], fe=objName)
+                except:
+                    assignFailed.append(objName)
+            else:
+                continue
+        return assignFailed
 
 
     def makeReference(self, shaderPath):
-        if shaderPath:
-            try:
-                # If a reference aleady exists, get reference's node name.
-                referenceName = pm.referenceQuery(shaderPath, referenceNode=True)
-            except:
-                referenceName = False
-            if referenceName:
-                # This is a replacement reference.
-                pm.file(shaderPath, lr=referenceName, op='v=0')   # lr=loadReference,
-            else:
-                # This is a new reference.
-                # r=reference, iv=ignoreVersion, gl=groupLocator, mnc=mergeNamespacesOnClash, op=option, v=verbose, ns=nameSpace
-                pm.file(shaderPath, r=True, typ='mayaAscii', iv=True, gl=True, mnc=True, op='v=0', ns=':')
-
-
-    def assignShd(self, obj):
-        pass
+        try:
+            # If a reference aleady exists, get reference's node name.
+            referenceName = pm.referenceQuery(shaderPath, referenceNode=True)
+        except:
+            referenceName = False
+        if referenceName:
+            # This is a replacement reference.
+            # cmds.file(shaderPath, lr=referenceName, op='v=0')   # lr=loadReference
+            pm.loadReference(shaderPath, op='v=0')
+        else:
+            # This is a new reference.
+            # r=reference, iv=ignoreVersion, gl=groupLocator, mnc=mergeNamespacesOnClash, op=option, v=verbose, ns=nameSpace
+            # cmds.file(shaderPath, r=True, typ='mayaAscii', iv=True, gl=True, mnc=True, op='v=0', ns=':')
+            pm.createReference(shaderPath, r=True, typ='mayaAscii', iv=True, gl=True, mnc=True, op='v=0', ns=':')
 
 
     def readJson(self, jsonPath):
         try:
-            with open(jsonPath, 'r') as JSON:
+            with open(jsonPath[0], 'r') as JSON:
                 jsonDic = json.load(JSON)
             return jsonDic
         except:
@@ -495,10 +513,13 @@ class abc():
 
 
     def getShaderPath(self, jsonPath):
-        (dir, ext) = os.path.splitext(jsonPath)
-        shaderPath = dir + "_shader.ma"
-        checkFile = os.path.isfile(shaderPath)
-        return shaderPath if checkFile else False
+        try:
+            (dir, ext) = os.path.splitext(jsonPath[0])
+            shaderPath = dir + "_shader.ma"
+            checkFile = os.path.isfile(shaderPath)
+            return shaderPath if checkFile else False
+        except:
+            return False
 
 
 abc()
