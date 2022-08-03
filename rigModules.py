@@ -315,13 +315,18 @@ def setColorRed(idx=13):
         cmds.setAttr(i + ".overrideColor", idx)
 
 
-class abc():
+# keywords = ['json', 'os', 'getParent', 'shadingGroups', 'sets', 'fileDialog2', 'exportSelected', 'AbcExport', 'referenceQuery']
+# author = "HONG JINKI"
+# update = {'1st': '2022/05/10', '2nd': '2022/08/03'}
+# Module name : hjkTool_ABC
+# Description : Export to json file and shading networks. And assign to them.
+class ABC():
     def __init__(self):
         min = pm.playbackOptions(q=True, min=True)
         max = pm.playbackOptions(q=True, max=True)
         self.setupUI(min, max)
 
-
+    # UI.
     def setupUI(self, min, max):
         if pm.window('exportABC_withShader', exists=True):
             pm.deleteUI('exportABC_withShader')
@@ -338,7 +343,7 @@ class abc():
             pm.separator(h=10)
             pm.showWindow(win)
 
-
+    # This function works when the json button is pressed.
     def jsonButton(self):
         sel = pm.ls(sl=True, dag=True, s=True)
         if not sel:
@@ -355,12 +360,12 @@ class abc():
                 self.writeJson(shdEngList, jsonPath)
                 self.exportShader(shdEngList, jsonPath)
 
-
+    # If there is a "|" in the object name, it is considered a duplicate name.
     def checkSameName(self, nameList):
         sameName = [i for i in nameList if "|" in i]
         return sameName
 
-
+    # If the object is connected to the shading engine, it is returned as a dictionary.
     def getShadingEngine(self, sel):
         dic = {}
         for i in sel:
@@ -373,12 +378,12 @@ class abc():
             dic[objName] = shadingEngine
         return dic
 
-
+    # Create a json file.
     def writeJson(self, dic, jsonPath):
         with open(jsonPath, 'w') as JSON:
             json.dump(dic, JSON, indent=4)
 
-
+    # Export the shading network and save it as a .ma file.
     def exportShader(self, dic, fullPath):
         (dir, ext) = os.path.splitext(fullPath)
         exportPath = "%s_shader" % dir
@@ -387,9 +392,10 @@ class abc():
         pm.select(shdEngList, ne=True)
         pm.exportSelected(exportPath, type="mayaAscii", f=True)
 
-
+    # This function works when the Export button is pressed.
     def exportButton(self):
         sel = pm.ls(sl=True, long=True)
+        # multiple abc files or one abc file. If True then one file.
         oneFileCheck = pm.checkBoxGrp(self.oneFileCheck, q=True, v1=True)
         fullPath = self.getExportPath(oneFileCheck)
         if not fullPath:
@@ -408,7 +414,7 @@ class abc():
                     exportOpt = self.createJstring(newPath, selection)
                     pm.AbcExport(j=exportOpt)
 
-
+    # Select a folder or specify a file name.
     def getExportPath(self, oneFileCheck):
         if oneFileCheck:
             abcPath = pm.fileDialog2(fm=0, ff='Alembic (*.abc);; All Files (*.*)')
@@ -416,7 +422,7 @@ class abc():
             abcPath = pm.fileDialog2(fm=2, ds=1)
         return abcPath
 
-
+    # Jstring is required to export.
     def createJstring(self, fullPath, selection):
         startFrame = pm.intFieldGrp(self.frameRange, q=True, v1=True)
         endFrame = pm.intFieldGrp(self.frameRange, q=True, v2=True)
@@ -442,7 +448,7 @@ class abc():
         # ======= options end ====================================
         return exportOpt
 
-
+    # This function works when the Import button is pressed. 
     def importButton(self):
         importDir = pm.fileDialog2(fm=1, ff='Alembic (*.abc);; All Files (*.*)')
         if importDir:
@@ -450,7 +456,8 @@ class abc():
         else:
             om.MGlobal.displayInfo("Canceled.")
 
-
+    # This function works when the Assign button is pressed.
+    # "_shader.ma" is loaded as a reference and associated with the selected object.
     def assignButton(self):
         sel = pm.ls(sl=True, dag=True, s=True)
         if not sel:
@@ -466,12 +473,11 @@ class abc():
                 self.makeReference(shaderPath)
                 jsonDic = self.readJson(jsonPath)
                 failLst = self.assignShd(sel, jsonDic)
-                message = "\n".join(failLst) if failLst else "Completed successfully"
+                message = "Some objects failed to connect." if failLst else "Completed successfully."
                 om.MGlobal.displayInfo(message)
 
-
+    # Attempts to assign, and returns a list that fails.
     def assignShd(self, sel, jsonDic):
-        print(type(jsonDic))
         assignFailed = []
         for i in sel:
             objName = i.getParent().name()
@@ -485,7 +491,7 @@ class abc():
                 continue
         return assignFailed
 
-
+    # Load Reference "_shader.ma" file.
     def makeReference(self, shaderPath):
         try:
             # If a reference aleady exists, get reference's node name.
@@ -502,7 +508,7 @@ class abc():
             # cmds.file(shaderPath, r=True, typ='mayaAscii', iv=True, gl=True, mnc=True, op='v=0', ns=':')
             pm.createReference(shaderPath, r=True, typ='mayaAscii', iv=True, gl=True, mnc=True, op='v=0', ns=':')
 
-
+    # Read shading information from Json file.
     def readJson(self, jsonPath):
         try:
             with open(jsonPath[0], 'r') as JSON:
@@ -511,7 +517,7 @@ class abc():
         except:
             return False
 
-
+    # There should be a "_shader.ma" file in the same folder as the json file.
     def getShaderPath(self, jsonPath):
         try:
             (dir, ext) = os.path.splitext(jsonPath[0])
@@ -522,4 +528,3 @@ class abc():
             return False
 
 
-abc()
