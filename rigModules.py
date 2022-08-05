@@ -1,3 +1,4 @@
+from importlib.machinery import OPTIMIZED_BYTECODE_SUFFIXES
 import maya.cmds as cmds
 import maya.OpenMaya as om
 import pymel.core as pm
@@ -528,3 +529,72 @@ class ABC():
             return False
 
 
+# return last number from name.
+def getNumberFromName(name): # Input -> 'pCube1_22_obj_22_a2'
+    nameList = name.split('_') # ['pCube1', '22', 'obj', '22', 'a2']
+    digitLst = [(j, k) for j, k in enumerate(nameList) if k.isdigit()] # [(1, '22'), (3, '22')]
+    try:
+        index, number = digitLst[-1] # index = 3, number = '22'
+        return int(number)
+    except:
+        return False
+
+
+# return only group type.
+def isGrp():
+    sel = pm.ls(type='transform')
+    grp = [i for i in sel if not pm.listRelatives(i, s=True) and not pm.ls(i, type='joint')]
+    return grp
+
+
+class showStep():
+    def __init__(self):
+        self.typ = {'typeA': 5, 'typeB': 4, 'typeC': 6, 'typeD': 5, 'typeE': 3, 'typeF': 5, 'typeG': 4}
+        self.setupUI()
+
+    # UI.
+    def setupUI(self):
+        if pm.window('Show_Step', exists=True):
+            pm.deleteUI('Show_Step')
+        else:
+            win = pm.window('Show_Step', t='Show step by step', s=True, rtf=True)
+            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=280)
+            pm.separator(h=10)
+            self.startFrame = pm.intFieldGrp(l='Start Frame : ', nf=1, v1=0)
+            self.step = pm.intFieldGrp(l='Step : ', nf=1, v1=0)
+            pm.button(l='Show', c=lambda x: self.showFloor())
+            pm.separator(h=10)
+            pm.showWindow(win)
+
+
+    def isGrp(self, obj):
+        sel = pm.ls(obj, type='transform')
+        grp = []
+        for i in sel:
+            A = pm.listRelatives(i, s=True)
+            B = pm.ls(i, type='joint')
+            C = pm.ls(i, type='parentConstraint')
+            if not (A or B or C):
+                grp.append(i)
+            else:
+                continue
+        return grp
+
+
+    def getGrpType(self, sel):
+        sel = pm.ls(tr=True)
+        for i in sel:
+            conn = pm.listConnections(i, scn=True, t='transform')
+            conn = list(set(conn))
+            return [j for j in conn if self.isGrp(j)]
+
+        name.split("_")
+
+
+    def showFloor(self):
+        sel = self.isGrp()
+        startFrame = pm.intFieldGrp(self.startFrame, q=True, v1=True)
+        step = pm.intFieldGrp(self.step, q=True, v1=True)
+
+
+offsetKey(2)
