@@ -588,8 +588,6 @@ class showStep():
             conn = list(set(conn))
             return [j for j in conn if self.isGrp(j)]
 
-        name.split("_")
-
 
     def showFloor(self):
         sel = self.isGrp()
@@ -597,4 +595,52 @@ class showStep():
         step = pm.intFieldGrp(self.step, q=True, v1=True)
 
 
-offsetKey(2)
+# offsetKey(5)
+# createCtrl("cub")
+
+class buildUp():
+    def __init__(self):
+        self.typeList = {"typeA": 4, "typeB": 5, "typeC": 6, "typeD": 7, "typeE": 4, "typeF": 5, "typeG": 6}
+        self.nameList = ["init", "structure", "asibar", "fence", "wall", "roof"]
+        self.setupUI()
+
+    # UI.
+    def setupUI(self):
+        if pm.window('Build_Up', exists=True):
+            pm.deleteUI('Build_Up')
+        else:
+            win = pm.window('Build_Up', t='Structure Buildings', s=True, rtf=True)
+            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=280)
+            pm.separator(h=10)
+            self.startFrame = pm.intFieldGrp(l='Start Frame : ', nf=1, v1=0)
+            self.step = pm.intFieldGrp(l='Step : ', nf=1, v1=0)
+            pm.button(l='Build Up', c=lambda x: self.getGroup())
+            pm.separator(h=10)
+            pm.showWindow(win)
+
+
+    def getGroup(self):
+        shp = pm.ls(sl=True, dag=True, s=True)
+        obj = [i.getParent().name() for i in shp]
+        grp = pm.listRelatives(obj, p=True)
+        print(grp)
+        if not sel:
+            om.MGlobal.displayError("Nothing selected.")
+            result = []
+        else:
+            result = self.isGrp(sel)
+        print(result)
+    
+    
+    def isGrp(self, obj):
+        sel = pm.ls(obj, type='transform')
+        grp = []
+        for i in sel:
+            A = pm.listRelatives(i, s=True)
+            B = pm.ls(i, type='joint')
+            C = pm.ls(i, type='parentConstraint')
+            if not (A or B or C):
+                grp.append(i)
+            else:
+                continue
+        return grp
