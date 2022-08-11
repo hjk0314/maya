@@ -541,7 +541,7 @@ def getNumberFromName(name): # Input -> 'pCube1_22_obj_22_a2'
         return False
 
 
-class bundang():
+class bundangTool():
     def __init__(self):
         self.wallList = ['wall0', 'wall1', 'wall2', 'wall3', 'wall4', 'wall5', 'wall6', 'wall7', 'wall8', 'wall9', 'wall10']
         self.wallDict = {'wall0': [0.0, 21.0], 'wall1': [0.0, 22.0], 'wall2': [0.0, 36.0], 'wall3': [0.0, 37.0], 'wall4': [0.0, 42.0], 'wall5': [0.0, 43.0], 'wall6': [0.0, 62.0], 'wall7': [0.0, 63.0], 'wall8': [0.0, 75.0], 'wall9': [0.0, 76.0], 'wall10': [0.0, 86.0]}
@@ -569,7 +569,7 @@ class bundang():
             self.ratio = pm.intFieldGrp(l='Ratio : ', nf=1, v1=1)
             pm.button(l='Build Up', c=lambda x: self.buildUp())
             pm.button(l='Default', c=lambda x: self.defaultSetting())
-            pm.button(l='Select', c=lambda x: self.selectGroup())
+            pm.button(l='Select Groups', c=lambda x: self.selectGroup())
             pm.separator(h=10)
             pm.showWindow(win)
 
@@ -604,9 +604,9 @@ class bundang():
         
 
     def getStartFrame(self, obj):
-        channelName = "Start"
+        channelName = "StartFrame"
         channelCheck = pm.attributeQuery(channelName, node=obj, ex=True) # ex = exist
-        result = pm.getAttr(obj + ".Start") if channelCheck else False
+        result = pm.getAttr("%s.%s" % (obj, channelName)) if channelCheck else False
         return result
 
 
@@ -617,17 +617,18 @@ class bundang():
 
         
     def insertKeyToGrp(self, namespace, startFrame, List, Dict):
+        ratio = pm.intFieldGrp(self.ratio, q=True, v1=True)
         for i in List:
             grp = namespace + i + "_grp"
             key = Dict[i]
             for j, k in enumerate(key):
-                frame = startFrame + k * self.ratio
+                frame = startFrame + k * ratio
                 pm.setKeyframe(grp, at="visibility", t=frame, v=j%2, s=False)
 
 
-    def setVisibility(self, givenList, num=1):
+    def setVisibility(self, namespace, givenList, num):
         for i in givenList:
-            grp = i + "_grp"
+            grp = namespace + i + "_grp"
             pm.setAttr(grp + ".visibility", num)
 
 
@@ -664,4 +665,63 @@ class bundang():
             self.insertKeyToGrp(namespace, startFrame, self.asibarList, self.asibarDict)
 
 
-bundang()
+class bundangSet():
+    def __init__(self):
+        pass
+
+
+    def getKeyInfo(self):
+        sel = pm.ls(sl=True)
+        dic = {i: pm.keyframe(i, q=True, at="visibility") for i in sel}
+        return dic
+    
+    
+    def reKey(self, dic):
+        sel = pm.ls(sl=True)
+        for i in sel:
+            if not i in dic:
+                continue
+            else:
+                key = dic[obj]
+                for k in range(0, len(frame), 2):
+                    pm.cutKey(i, at="visibility", t=key[k], cl=True)
+                pm.setKeyframe(i, at="visibility", t=0, v=0, s=False)
+
+
+    def grpOwnName(self, obj):
+        grp = cmds.group(obj, n="%s_grp" % obj, r=False)
+        cmds.move(0, 0, 0, grp + ".scalePivot", grp + ".rotatePivot", rpr=True)
+        return grp
+
+
+def grpOwnName(): # grouping itself and named own
+    sel = cmds.ls(sl=True)
+    if not sel:
+        cmds.group(em=True) # em : empty
+    else:
+        for i in sel:
+            grp = cmds.group(i, n="%s_grp" % i, r=False)
+            cmds.move(0, 0, 0, grp + ".scalePivot", grp + ".rotatePivot", rpr=True)
+
+
+def reName(new):
+    sel = cmds.ls(sl=True)
+    for j, k in enumerate(sel):
+        cmds.rename(k, new + str(j))
+
+
+def number():
+    sel = cmds.ls(sl=True)
+    print(len(sel))
+
+
+def conn():
+    sel = cmds.ls(sl=True)
+    for i in sel:
+        pm.connectAttr(i + ".visibility", "env_bundangmainA_mdl_v9999:" + i + ".visibility", f=True)
+
+
+def selectMesh():
+    sel = pm.ls(sl=True, dag=True, s=True, type=["mesh"])
+    obj = [i.getParent().name() for i in sel]
+    pm.select(obj)
