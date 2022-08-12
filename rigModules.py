@@ -308,6 +308,17 @@ def createEmptyGroup():
         cmds.parent(i, grp)
 
 
+# return last number from name.
+def getNumberFromName(name): # Input -> 'pCube1_22_obj_22_a2'
+    nameList = name.split('_') # ['pCube1', '22', 'obj', '22', 'a2']
+    digitLst = [(j, k) for j, k in enumerate(nameList) if k.isdigit()] # [(1, '22'), (3, '22')]
+    try:
+        index, number = digitLst[-1] # index = 3, number = '22'
+        return int(number)
+    except:
+        return False
+
+
 # Sets the color of the controller.
 # idx : blue=6, red=13, yellow=17
 def setColorRed(idx=13):
@@ -530,31 +541,17 @@ class ABC():
             return False
 
 
-# return last number from name.
-def getNumberFromName(name): # Input -> 'pCube1_22_obj_22_a2'
-    nameList = name.split('_') # ['pCube1', '22', 'obj', '22', 'a2']
-    digitLst = [(j, k) for j, k in enumerate(nameList) if k.isdigit()] # [(1, '22'), (3, '22')]
-    try:
-        index, number = digitLst[-1] # index = 3, number = '22'
-        return int(number)
-    except:
-        return False
-
-
-class bundangTool():
+class bundangmain():
     def __init__(self):
-        self.wallList = ['wall0', 'wall1', 'wall2', 'wall3', 'wall4', 'wall5', 'wall6', 'wall7', 'wall8', 'wall9', 'wall10']
-        self.wallDict = {'wall0': [0.0, 21.0], 'wall1': [0.0, 22.0], 'wall2': [0.0, 36.0], 'wall3': [0.0, 37.0], 'wall4': [0.0, 42.0], 'wall5': [0.0, 43.0], 'wall6': [0.0, 62.0], 'wall7': [0.0, 63.0], 'wall8': [0.0, 75.0], 'wall9': [0.0, 76.0], 'wall10': [0.0, 86.0]}
-        self.structureList = ['structure0', 'structure1', 'structure2', 'structure3', 'structure4', 'structure5', 'structure6', 'structure7', 'structure8', 'structure9', 'structure10']
-        self.structureDict = {'structure0': [0.0, 6.0], 'structure1': [0.0, 6.0], 'structure2': [0.0, 21.0], 'structure3': [0.0, 21.0], 'structure4': [0.0, 34.0], 'structure5': [0.0, 34.0], 'structure6': [0.0, 47.0], 'structure7': [0.0, 47.0], 'structure8': [0.0, 60.0], 'structure9': [0.0, 61.0], 'structure10': [0.0, 65.0]}
-        self.initList = ['init0', 'init1']
-        self.initDict = {'init0': [0.0, 1.0], 'init1': [0.0, 1.0]}
-        self.roofList = ['roof0', 'roof1']
-        self.roofDict = {'roof0': [0.0, 84.0], 'roof1': [0.0, 87.0]}
-        self.fenceList = ['fence0', 'fence1', 'fence2', 'fence3', 'fence4', 'fence5', 'fence6', 'fence7', 'fence8', 'fence9', 'fence10', 'fence11', 'fence12', 'fence13', 'fence14', 'fence15', 'fence16', 'fence17', 'fence18', 'fence19', 'fence20', 'fence21', 'fence22', 'fence23', 'fence24', 'fence25', 'fence26', 'fence27', 'fence28', 'fence29', 'fence30', 'fence31', 'fence32', 'fence33', 'fence34', 'fence35', 'fence36', 'fence37', 'fence38', 'fence39', 'fence40', 'fence41', 'fence42']
-        self.fenceDict = {'fence0': [0.0, 16.0, 31.0], 'fence1': [0.0, 16.0, 30.0], 'fence2': [0.0, 16.0, 33.0], 'fence3': [0.0, 18.0, 32.0], 'fence4': [0.0, 19.0, 31.0], 'fence5': [0.0, 20.0, 30.0], 'fence6': [0.0, 24.0, 37.0], 'fence7': [0.0, 24.0, 38.0], 'fence8': [0.0, 24.0, 41.0], 'fence9': [0.0, 25.0, 38.0], 'fence10': [0.0, 26.0, 39.0], 'fence11': [0.0, 27.0, 38.0], 'fence12': [0.0, 32.0, 92.0], 'fence13': [0.0, 33.0, 93.0], 'fence14': [0.0, 37.0, 52.0], 'fence15': [0.0, 37.0, 51.0], 'fence16': [0.0, 37.0, 54.0], 'fence17': [0.0, 38.0, 53.0], 'fence18': [0.0, 38.0, 91.0], 'fence19': [0.0, 39.0, 52.0], 'fence20': [0.0, 39.0, 92.0], 'fence21': [0.0, 40.0, 51.0], 'fence22': [0.0, 52.0, 67.0], 'fence23': [0.0, 52.0, 66.0], 'fence24': [0.0, 52.0, 69.0], 'fence25': [0.0, 53.0, 68.0], 'fence26': [0.0, 54.0, 67.0], 'fence27': [0.0, 55.0, 66.0], 'fence28': [0.0, 58.0, 92.0], 'fence29': [0.0, 59.0, 91.0], 'fence30': [0.0, 67.0, 82.0], 'fence31': [0.0, 67.0, 81.0], 'fence32': [0.0, 67.0, 84.0], 'fence33': [0.0, 68.0, 83.0], 'fence34': [0.0, 69.0, 82.0], 'fence35': [0.0, 70.0, 81.0], 'fence36': [0.0, 71.0, 91.0], 'fence37': [0.0, 72.0, 90.0], 'fence38': [0.0, 82.0, 88.0], 'fence39': [0.0, 82.0, 88.0], 'fence40': [0.0, 82.0, 88.0], 'fence41': [0.0, 83.0, 87.0], 'fence42': [0.0, 83.0, 87.0]}
-        self.asibarList = ['asibar0', 'asibar1', 'asibar2', 'asibar3', 'asibar4', 'asibar5', 'asibar6', 'asibar7', 'asibar8', 'asibar9', 'asibar10', 'asibar11', 'asibar12', 'asibar13', 'asibar14', 'asibar15', 'asibar16', 'asibar17', 'asibar18', 'asibar19', 'asibar20', 'asibar21', 'asibar22', 'asibar23', 'asibar24', 'asibar25', 'asibar26', 'asibar27', 'asibar28', 'asibar29', 'asibar30', 'asibar31', 'asibar32', 'asibar33', 'asibar34', 'asibar35', 'asibar36', 'asibar37', 'asibar38', 'asibar39', 'asibar40', 'asibar41', 'asibar42', 'asibar43', 'asibar44', 'asibar45', 'asibar46', 'asibar47', 'asibar48', 'asibar49', 'asibar50', 'asibar51', 'asibar52', 'asibar53', 'asibar54', 'asibar55', 'asibar56', 'asibar57', 'asibar58', 'asibar59', 'asibar60', 'asibar61', 'asibar62', 'asibar63', 'asibar64', 'asibar65', 'asibar66', 'asibar67', 'asibar68', 'asibar69', 'asibar70', 'asibar71', 'asibar72', 'asibar73', 'asibar74', 'asibar75', 'asibar76', 'asibar77', 'asibar78', 'asibar79']
-        self.asibarDict = {'asibar0': [0.0, 1.0, 93.0], 'asibar1': [0.0, 1.0, 93.0], 'asibar2': [0.0, 2.0, 92.0], 'asibar3': [0.0, 2.0, 92.0], 'asibar4': [0.0, 3.0, 92.0], 'asibar5': [0.0, 4.0, 91.0], 'asibar6': [0.0, 4.0, 93.0], 'asibar7': [0.0, 5.0, 93.0], 'asibar8': [0.0, 5.0, 91.0], 'asibar9': [0.0, 6.0, 93.0], 'asibar10': [0.0, 7.0, 93.0], 'asibar11': [0.0, 7.0, 93.0], 'asibar12': [0.0, 8.0, 91.0], 'asibar13': [0.0, 8.0, 92.0], 'asibar14': [0.0, 12.0, 93.0], 'asibar15': [0.0, 12.0, 92.0], 'asibar16': [0.0, 13.0, 92.0], 'asibar17': [0.0, 13.0, 93.0], 'asibar18': [0.0, 14.0, 92.0], 'asibar19': [0.0, 15.0, 93.0], 'asibar20': [0.0, 15.0, 92.0], 'asibar21': [0.0, 16.0, 92.0], 'asibar22': [0.0, 16.0, 92.0], 'asibar23': [0.0, 17.0, 92.0], 'asibar24': [0.0, 18.0, 93.0], 'asibar25': [0.0, 18.0, 93.0], 'asibar26': [0.0, 19.0, 92.0], 'asibar27': [0.0, 19.0, 92.0], 'asibar28': [0.0, 29.0, 91.0], 'asibar29': [0.0, 29.0, 91.0], 'asibar30': [0.0, 30.0, 92.0], 'asibar31': [0.0, 30.0, 92.0], 'asibar32': [0.0, 31.0, 91.0], 'asibar33': [0.0, 32.0, 92.0], 'asibar34': [0.0, 32.0, 91.0], 'asibar35': [0.0, 33.0, 91.0], 'asibar36': [0.0, 33.0, 92.0], 'asibar37': [0.0, 34.0, 92.0], 'asibar38': [0.0, 35.0, 91.0], 'asibar39': [0.0, 35.0, 91.0], 'asibar40': [0.0, 36.0, 92.0], 'asibar41': [0.0, 36.0, 92.0], 'asibar42': [0.0, 43.0, 91.0], 'asibar43': [0.0, 43.0, 91.0], 'asibar44': [0.0, 44.0, 90.0], 'asibar45': [0.0, 44.0, 90.0], 'asibar46': [0.0, 45.0, 91.0], 'asibar47': [0.0, 46.0, 90.0], 'asibar48': [0.0, 46.0, 91.0], 'asibar49': [0.0, 47.0, 91.0], 'asibar50': [0.0, 47.0, 90.0], 'asibar51': [0.0, 48.0, 90.0], 'asibar52': [0.0, 49.0, 91.0], 'asibar53': [0.0, 49.0, 91.0], 'asibar54': [0.0, 50.0, 90.0], 'asibar55': [0.0, 50.0, 90.0], 'asibar56': [0.0, 57.0, 89.0], 'asibar57': [0.0, 57.0, 90.0], 'asibar58': [0.0, 58.0, 89.0], 'asibar59': [0.0, 58.0, 89.0], 'asibar60': [0.0, 59.0, 89.0], 'asibar61': [0.0, 60.0, 90.0], 'asibar62': [0.0, 60.0, 90.0], 'asibar63': [0.0, 61.0, 89.0], 'asibar64': [0.0, 61.0, 89.0], 'asibar65': [0.0, 62.0, 89.0], 'asibar66': [0.0, 63.0, 90.0], 'asibar67': [0.0, 63.0, 90.0], 'asibar68': [0.0, 64.0, 89.0], 'asibar69': [0.0, 64.0, 89.0], 'asibar70': [0.0, 66.0, 89.0], 'asibar71': [0.0, 67.0, 89.0], 'asibar72': [0.0, 68.0, 89.0], 'asibar73': [0.0, 69.0, 89.0], 'asibar74': [0.0, 70.0, 89.0], 'asibar75': [0.0, 71.0, 90.0], 'asibar76': [0.0, 72.0, 89.0], 'asibar77': [0.0, 72.0, 89.0], 'asibar78': [0.0, 73.0, 89.0], 'asibar79': [0.0, 73.0, 89.0]}
+        self.bundangmainA = {
+        'init0': [0.0, 4.0], 'init1': [0.0, 7.0], 'init2': [0.0, 14.0], 'init3': [0.0, 16.0], 
+        'inWall0': [0.0, 18.0], 'inWall1': [0.0, 22.0], 'inWall2': [0.0, 24.0], 'inWall3': [0.0, 26.0], 'inWall4': [0.0, 26.0], 'inWall5': [0.0, 43.0], 'inWall6': [0.0, 28.0], 'inWall7': [0.0, 34.0], 'inWall8': [0.0, 40.0], 'inWall9': [0.0, 43.0], 'inWall10': [0.0, 46.0], 'inWall11': [0.0, 52.0], 'inWall12': [0.0, 55.0], 'inWall13': [0.0, 61.0], 'inWall14': [0.0, 67.0], 'inWall15': [0.0, 73.0], 'inWall16': [0.0, 76.0], 'inWall17': [0.0, 79.0], 'inWall18': [0.0, 91.0], 'inWall19': [0.0, 95.0], 'inWall20': [0.0, 95.0], 'inWall21': [0.0, 97.0], 'inWall22': [0.0, 97.0], 'inWall23': [0.0, 101.0], 'inWall24': [0.0, 110.0], 'inWall25': [0.0, 112.0], 'inWall26': [0.0, 116.0], 
+        'asibar0': [0.0, 26.0, 145.0], 'asibar1': [0.0, 26.0, 145.0], 'asibar2': [0.0, 18.0, 145.0], 'asibar3': [0.0, 26.0, 144.0], 'asibar4': [0.0, 26.0, 144.0], 'asibar5': [0.0, 37.0, 144.0], 'asibar6': [0.0, 26.0, 144.0], 'asibar7': [0.0, 18.0, 144.0], 'asibar8': [0.0, 26.0, 144.0], 'asibar9': [0.0, 16.0, 144.0], 'asibar10': [0.0, 18.0, 144.0], 'asibar11': [0.0, 20.0, 145.0], 'asibar12': [0.0, 37.0, 145.0], 'asibar13': [0.0, 37.0, 145.0], 'asibar14': [0.0, 18.0, 144.0], 'asibar15': [0.0, 16.0, 144.0], 'asibar16': [0.0, 18.0, 144.0], 'asibar17': [0.0, 18.0, 145.0], 'asibar18': [0.0, 16.0, 145.0], 'asibar19': [0.0, 10.0, 145.0], 'asibar20': [0.0, 18.0, 145.0], 'asibar21': [0.0, 12.0, 144.0], 'asibar22': [0.0, 46.0, 142.0], 'asibar23': [0.0, 46.0, 143.0], 'asibar24': [0.0, 40.0, 143.0], 'asibar25': [0.0, 40.0, 142.0], 'asibar26': [0.0, 46.0, 142.0], 'asibar27': [0.0, 40.0, 143.0], 'asibar28': [0.0, 40.0, 142.0], 'asibar29': [0.0, 34.0, 143.0], 'asibar30': [0.0, 52.0, 142.0], 'asibar31': [0.0, 34.0, 143.0], 'asibar32': [0.0, 28.0, 143.0], 'asibar33': [0.0, 52.0, 142.0], 'asibar34': [0.0, 34.0, 143.0], 'asibar35': [0.0, 46.0, 142.0], 'asibar36': [0.0, 28.0, 142.0], 'asibar37': [0.0, 40.0, 143.0], 'asibar38': [0.0, 46.0, 142.0], 'asibar39': [0.0, 28.0, 142.0], 'asibar40': [0.0, 46.0, 142.0], 'asibar41': [0.0, 40.0, 143.0], 'asibar42': [0.0, 52.0, 142.0], 'asibar43': [0.0, 34.0, 143.0], 'asibar44': [0.0, 64.0, 140.0], 'asibar45': [0.0, 55.0, 140.0], 'asibar46': [0.0, 61.0, 141.0], 'asibar47': [0.0, 58.0, 140.0], 'asibar48': [0.0, 61.0, 140.0], 'asibar49': [0.0, 64.0, 140.0], 'asibar50': [0.0, 61.0, 141.0], 'asibar51': [0.0, 55.0, 140.0], 'asibar52': [0.0, 64.0, 140.0], 'asibar53': [0.0, 55.0, 140.0], 'asibar54': [0.0, 55.0, 141.0], 'asibar55': [0.0, 64.0, 141.0], 'asibar56': [0.0, 55.0, 141.0], 'asibar57': [0.0, 64.0, 141.0], 'asibar58': [0.0, 61.0, 141.0], 'asibar59': [0.0, 64.0, 140.0], 'asibar60': [0.0, 67.0, 141.0], 'asibar61': [0.0, 61.0, 140.0], 'asibar62': [0.0, 64.0, 140.0], 'asibar63': [0.0, 61.0, 140.0], 'asibar64': [0.0, 61.0, 141.0], 'asibar65': [0.0, 55.0, 141.0], 'asibar66': [0.0, 95.0, 139.0], 'asibar67': [0.0, 95.0, 138.0], 'asibar68': [0.0, 89.0, 138.0], 'asibar69': [0.0, 84.0, 138.0], 'asibar70': [0.0, 89.0, 139.0], 'asibar71': [0.0, 89.0, 139.0], 'asibar72': [0.0, 89.0, 138.0], 'asibar73': [0.0, 89.0, 139.0], 'asibar74': [0.0, 89.0, 138.0], 'asibar75': [0.0, 95.0, 138.0], 'asibar76': [0.0, 89.0, 139.0], 'asibar77': [0.0, 89.0, 138.0], 'asibar78': [0.0, 101.0, 139.0], 'asibar79': [0.0, 95.0, 138.0], 'asibar80': [0.0, 101.0, 138.0], 'asibar81': [0.0, 95.0, 138.0], 'asibar82': [0.0, 95.0, 139.0], 'asibar83': [0.0, 95.0, 138.0], 'asibar84': [0.0, 89.0, 139.0], 'asibar85': [0.0, 84.0, 138.0], 'asibar86': [0.0, 89.0, 139.0], 'asibar87': [0.0, 89.0, 139.0], 'asibar88': [0.0, 105.0, 134.0], 'asibar89': [0.0, 105.0, 134.0], 'asibar90': [0.0, 112.0, 134.0], 'asibar91': [0.0, 107.0, 134.0], 'asibar92': [0.0, 112.0, 134.0], 'asibar93': [0.0, 107.0, 134.0], 'asibar94': [0.0, 112.0, 134.0], 'asibar95': [0.0, 107.0, 134.0], 'asibar96': [0.0, 105.0, 134.0], 'asibar97': [0.0, 110.0, 134.0], 'asibar98': [0.0, 105.0, 134.0], 'asibar99': [0.0, 110.0, 134.0], 'asibar100': [0.0, 107.0, 134.0], 'asibar101': [0.0, 112.0, 134.0], 
+        'structure0': [0.0, 31.0], 'structure1': [0.0, 26.0], 'structure2': [0.0, 49.0], 'structure3': [0.0, 43.0], 'structure4': [0.0, 87.0], 'structure5': [0.0, 79.0], 'structure6': [0.0, 101.0], 'structure7': [0.0, 97.0], 'structure8': [0.0, 114.0], 
+        'fence0': [0.0, 40.0, 143.0], 'fence1': [0.0, 45.0, 72.0], 'fence2': [0.0, 45.0, 72.0], 'fence3': [0.0, 45.0, 72.0], 'fence4': [0.0, 45.0, 72.0], 'fence5': [0.0, 45.0, 72.0], 'fence6': [0.0, 46.0, 72.0], 'fence7': [0.0, 46.0, 72.0], 'fence8': [0.0, 44.0, 72.0], 'fence9': [0.0, 47.0, 72.0], 'fence10': [0.0, 44.0, 72.0], 'fence11': [0.0, 46.0, 72.0], 'fence12': [0.0, 45.0, 72.0], 'fence13': [0.0, 42.0, 143.0], 'fence14': [0.0, 64.0, 141.0], 'fence15': [0.0, 63.0, 142.0], 'fence16': [0.0, 68.0, 103.0], 'fence17': [0.0, 67.0, 103.0], 'fence18': [0.0, 65.0, 103.0], 'fence19': [0.0, 66.0, 103.0], 'fence20': [0.0, 65.0, 103.0], 'fence21': [0.0, 66.0, 103.0], 'fence22': [0.0, 65.0, 103.0], 'fence23': [0.0, 66.0, 103.0], 'fence24': [0.0, 67.0, 103.0], 'fence25': [0.0, 66.0, 103.0], 'fence26': [0.0, 69.0, 103.0], 'fence27': [0.0, 66.0, 103.0], 'fence28': [0.0, 95.0, 139.0], 'fence29': [0.0, 98.0, 119.0], 'fence30': [0.0, 99.0, 119.0], 'fence31': [0.0, 98.0, 119.0], 'fence32': [0.0, 98.0, 119.0], 'fence33': [0.0, 98.0, 119.0], 'fence34': [0.0, 97.0, 119.0], 'fence35': [0.0, 98.0, 119.0], 'fence36': [0.0, 98.0, 119.0], 'fence37': [0.0, 99.0, 119.0], 'fence38': [0.0, 97.0, 119.0], 'fence39': [0.0, 99.0, 119.0], 'fence40': [0.0, 97.0, 119.0], 'fence41': [0.0, 97.0, 140.0], 'fence42': [0.0, 112.0, 134.0], 'fence43': [0.0, 114.0, 134.0], 'fence44': [0.0, 112.0, 134.0], 'fence45': [0.0, 112.0, 134.0], 'fence46': [0.0, 113.0, 134.0], 'fence47': [0.0, 115.0, 134.0], 'fence48': [0.0, 114.0, 137.0], 
+        'wall0': [0.0, 37.0], 'wall1': [0.0, 37.0], 'wall2': [0.0, 70.0], 'wall3': [0.0, 70.0], 'wall4': [0.0, 93.0], 'wall5': [0.0, 93.0], 'wall6': [0.0, 113.0], 'wall7': [0.0, 113.0], 'wall8': [0.0, 124.0], 
+        'roof0': [0.0, 126.0], 'roof1': [0.0, 126.0], 'roof2': [0.0, 117.0]
+        }
         self.setupUI()
 
     # UI.
@@ -565,10 +562,9 @@ class bundangTool():
             win = pm.window('Bundang_Structure', t='Auto Build Up', s=True, rtf=True)
             pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=280)
             pm.separator(h=10)
-            # self.startFrame = pm.intFieldGrp(l='Start Frame : ', nf=1, v1=0)
-            self.ratio = pm.intFieldGrp(l='Ratio : ', nf=1, v1=1)
+            self.ratio = pm.floatFieldGrp(l='Ratio : ', nf=1, v1=1)
+            pm.button(l='Default (No Keys)', c=lambda x: self.defaultSetting())
             pm.button(l='Build Up', c=lambda x: self.buildUp())
-            pm.button(l='Default', c=lambda x: self.defaultSetting())
             pm.button(l='Select Groups', c=lambda x: self.selectGroup())
             pm.separator(h=10)
             pm.showWindow(win)
@@ -590,18 +586,16 @@ class bundangTool():
 
     def selectGroup(self):
         grp = self.isGrp()
-        pm.select(grp)
+        grpKey = [i for i in grp if pm.keyframe(i, q=True, at="visibility", s=False, kc=True)]
+        if not grpKey:
+            om.MGlobal.displayError("There are no keys.")
+        pm.select(grpKey)
 
 
     def getNamespace(self, obj):
         namespace = obj.rsplit(":", 1)[0] + ":" if ":" in obj else ''
         return namespace
 
-
-    def getName(self, obj):
-        name = obj.rsplit(":", 1)[-1]
-        return name
-        
 
     def getStartFrame(self, obj):
         channelName = "StartFrame"
@@ -610,46 +604,53 @@ class bundangTool():
         return result
 
 
-    def deleteGroupKey(self, namespace, List):
-        for i in List:
+    def deleteGroupKey(self, namespace, Hash):
+        for i in Hash:
             grp = namespace + i + "_grp"
             pm.cutKey(grp, at="visibility", cl=True)
 
         
-    def insertKeyToGrp(self, namespace, startFrame, List, Dict):
-        ratio = pm.intFieldGrp(self.ratio, q=True, v1=True)
-        for i in List:
+    def insertKeyToGrp(self, namespace, startFrame, Hash):
+        ratio = pm.floatFieldGrp(self.ratio, q=True, v1=True)
+        for i in Hash:
             grp = namespace + i + "_grp"
-            key = Dict[i]
+            key = Hash[i]
             for j, k in enumerate(key):
                 frame = startFrame + k * ratio
                 pm.setKeyframe(grp, at="visibility", t=frame, v=j%2, s=False)
+            pm.selectKey(grp, at="visibility", s=False)
+            pm.keyTangent(grp, ott="step")
+            pm.selectKey(grp, at="visibility", s=False, cl=True)
 
 
-    def setVisibility(self, namespace, givenList, num):
-        for i in givenList:
+    def setVisibility(self, namespace, Hash):
+        for i in Hash:
             grp = namespace + i + "_grp"
+            num = 1 if "wall" in i or "roof" in i else 0
             pm.setAttr(grp + ".visibility", num)
+
+
+    def getHashType(self, namespace):
+        parsingNamespace = namespace.split("_")
+        if "bundangmainA" in parsingNamespace:
+            result = self.bundangmainA
+        # elif "bundangmainB" in parsingNamespace:
+        #     result = self.bundangmainB
+        else:
+            result = False
+        return result
 
 
     def defaultSetting(self):
         sel = pm.ls(sl=True)
         for i in sel:
             namespace = self.getNamespace(i)
-            # delete keys
-            self.deleteGroupKey(namespace, self.wallList)
-            self.deleteGroupKey(namespace, self.structureList)
-            self.deleteGroupKey(namespace, self.initList)
-            self.deleteGroupKey(namespace, self.roofList)
-            self.deleteGroupKey(namespace, self.fenceList)
-            self.deleteGroupKey(namespace, self.asibarList)
-            # default visibility
-            self.setVisibility(namespace, self.wallList, 1)
-            self.setVisibility(namespace, self.structureList, 0)
-            self.setVisibility(namespace, self.initList, 0)
-            self.setVisibility(namespace, self.roofList, 1)
-            self.setVisibility(namespace, self.fenceList, 0)
-            self.setVisibility(namespace, self.asibarList, 0)
+            Hash = self.getHashType(namespace)
+            if not Hash:
+                continue
+            else:
+                self.deleteGroupKey(namespace, Hash)
+                self.setVisibility(namespace, Hash)
 
 
     def buildUp(self):
@@ -657,71 +658,11 @@ class bundangTool():
         for i in sel:
             namespace = self.getNamespace(i)
             startFrame = self.getStartFrame(i)
-            self.insertKeyToGrp(namespace, startFrame, self.wallList, self.wallDict)
-            self.insertKeyToGrp(namespace, startFrame, self.structureList, self.structureDict)
-            self.insertKeyToGrp(namespace, startFrame, self.initList, self.initDict)
-            self.insertKeyToGrp(namespace, startFrame, self.roofList, self.roofDict)
-            self.insertKeyToGrp(namespace, startFrame, self.fenceList, self.fenceDict)
-            self.insertKeyToGrp(namespace, startFrame, self.asibarList, self.asibarDict)
-
-
-class bundangSet():
-    def __init__(self):
-        pass
-
-
-    def getKeyInfo(self):
-        sel = pm.ls(sl=True)
-        dic = {i: pm.keyframe(i, q=True, at="visibility") for i in sel}
-        return dic
-    
-    
-    def reKey(self, dic):
-        sel = pm.ls(sl=True)
-        for i in sel:
-            if not i in dic:
+            Hash = self.getHashType(namespace)
+            if not Hash:
                 continue
             else:
-                key = dic[obj]
-                for k in range(0, len(frame), 2):
-                    pm.cutKey(i, at="visibility", t=key[k], cl=True)
-                pm.setKeyframe(i, at="visibility", t=0, v=0, s=False)
+                self.insertKeyToGrp(namespace, startFrame, Hash)
 
 
-    def grpOwnName(self, obj):
-        grp = cmds.group(obj, n="%s_grp" % obj, r=False)
-        cmds.move(0, 0, 0, grp + ".scalePivot", grp + ".rotatePivot", rpr=True)
-        return grp
-
-
-def grpOwnName(): # grouping itself and named own
-    sel = cmds.ls(sl=True)
-    if not sel:
-        cmds.group(em=True) # em : empty
-    else:
-        for i in sel:
-            grp = cmds.group(i, n="%s_grp" % i, r=False)
-            cmds.move(0, 0, 0, grp + ".scalePivot", grp + ".rotatePivot", rpr=True)
-
-
-def reName(new):
-    sel = cmds.ls(sl=True)
-    for j, k in enumerate(sel):
-        cmds.rename(k, new + str(j))
-
-
-def number():
-    sel = cmds.ls(sl=True)
-    print(len(sel))
-
-
-def conn():
-    sel = cmds.ls(sl=True)
-    for i in sel:
-        pm.connectAttr(i + ".visibility", "env_bundangmainA_mdl_v9999:" + i + ".visibility", f=True)
-
-
-def selectMesh():
-    sel = pm.ls(sl=True, dag=True, s=True, type=["mesh"])
-    obj = [i.getParent().name() for i in sel]
-    pm.select(obj)
+bundangmain()
