@@ -548,7 +548,7 @@ class delVaccine():
         crt = "createNode"
         with open(fullPath, "r") as txt:
             lines = txt.readlines()
-        vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k] # List up the line numbers containing 'vaccine_gene'.
+        vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k] # List up the line numbers containing 'vaccine_gene'
         brdList = [j for j, k in enumerate(lines) if brd in k and crt in k] # List up the line numbers containing 'breed_gene'
         crtList = [j for j, k in enumerate(lines) if crt in k] # List up the line numbers containing 'createNode'
         sum = vccList + brdList # ex) [16, 21, 84, 105]
