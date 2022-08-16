@@ -457,7 +457,8 @@ def cuvLoc(cl=False): # cl = closed
 
 # Attempt to delete unused plugins.
 def delPlugin():
-    pm.delete(cmds.ls(type="unknown")) # Just delete Unknown type list.
+    unknownList = pm.ls(type="unknown")
+    pm.delete(unknownList) # Just delete Unknown type list.
     pluginList = pm.unknownPlugin(q=True, l=True)
     if pluginList:
         for j, k in enumerate(pluginList):
