@@ -580,6 +580,15 @@ class bundangmain():
             'wall0': [0.0, 26.0], 'wall1': [0.0, 37.0], 'wall2': [0.0, 49.0], 'wall3': [0.0, 61.0], 'wall4': [0.0, 68.0], 'wall5': [0.0, 73.0], 
             'roof0': [0.0, 76.0]
         }
+        self.bundangmainE = {
+            'init0': [0.0, 3.0], 'init1': [0.0, 6.0], 
+            'inWall0': [0.0, 9.0], 'inWall1': [0.0, 12.0], 'inWall2': [0.0, 18.0], 'inWall3': [0.0, 24.0], 'inWall4': [0.0, 27.0], 'inWall5': [0.0, 33.0], 'inWall6': [0.0, 39.0], 'inWall7': [0.0, 42.0], 'inWall8': [0.0, 48.0], 'inWall9': [0.0, 51.0], 
+            'asibar0': [0.0, 6.0, 80.0], 'asibar1': [0.0, 6.0, 80.0], 'asibar2': [0.0, 9.0, 80.0], 'asibar3': [0.0, 9.0, 80.0], 'asibar4': [0.0, 9.0, 80.0], 'asibar5': [0.0, 9.0, 80.0], 'asibar6': [0.0, 12.0, 80.0], 'asibar7': [0.0, 12.0, 80.0], 'asibar8': [0.0, 12.0, 80.0], 'asibar9': [0.0, 12.0, 80.0], 'asibar10': [0.0, 12.0, 80.0], 'asibar11': [0.0, 12.0, 80.0], 'asibar12': [0.0, 12.0, 80.0], 'asibar13': [0.0, 12.0, 80.0], 'asibar14': [0.0, 21.0, 76.0], 'asibar15': [0.0, 21.0, 76.0], 'asibar16': [0.0, 24.0, 76.0], 'asibar17': [0.0, 24.0, 76.0], 'asibar18': [0.0, 24.0, 76.0], 'asibar19': [0.0, 24.0, 76.0], 'asibar20': [0.0, 24.0, 76.0], 'asibar21': [0.0, 24.0, 76.0], 'asibar22': [0.0, 24.0, 76.0], 'asibar23': [0.0, 24.0, 76.0], 'asibar24': [0.0, 27.0, 76.0], 'asibar25': [0.0, 27.0, 76.0], 'asibar26': [0.0, 27.0, 76.0], 'asibar27': [0.0, 27.0, 76.0], 'asibar28': [0.0, 36.0, 72.0], 'asibar29': [0.0, 39.0, 72.0], 'asibar30': [0.0, 39.0, 72.0], 'asibar31': [0.0, 39.0, 72.0], 'asibar32': [0.0, 39.0, 72.0], 'asibar33': [0.0, 39.0, 72.0], 'asibar34': [0.0, 42.0, 72.0], 'asibar35': [0.0, 42.0, 72.0], 'asibar36': [0.0, 42.0, 72.0], 'asibar37': [0.0, 42.0, 72.0], 'asibar38': [0.0, 42.0, 72.0], 'asibar39': [0.0, 42.0, 72.0], 'asibar40': [0.0, 42.0, 72.0], 'asibar41': [0.0, 42.0, 72.0], 'asibar42': [0.0, 51.0, 68.0], 'asibar43': [0.0, 51.0, 68.0], 'asibar44': [0.0, 51.0, 68.0], 'asibar45': [0.0, 54.0, 68.0], 'asibar46': [0.0, 54.0, 68.0], 'asibar47': [0.0, 54.0, 68.0], 'asibar48': [0.0, 54.0, 68.0], 'asibar49': [0.0, 54.0, 68.0], 'asibar50': [0.0, 57.0, 68.0], 'asibar51': [0.0, 57.0, 68.0], 'asibar52': [0.0, 57.0, 68.0], 'asibar53': [0.0, 57.0, 68.0], 'asibar54': [0.0, 57.0, 68.0], 'asibar55': [0.0, 57.0, 68.0], 
+            'structure0': [0.0, 15.0], 'structure1': [0.0, 30.0], 'structure2': [0.0, 45.0], 'structure3': [0.0, 54.0], 
+            'fence0': [0.0, 18.0, 78.0], 'fence1': [0.0, 30.0, 45.0], 'fence2': [0.0, 30.0, 45.0], 'fence3': [0.0, 30.0, 45.0], 'fence4': [0.0, 30.0, 45.0], 'fence5': [0.0, 30.0, 45.0], 'fence6': [0.0, 33.0, 45.0], 'fence7': [0.0, 33.0, 45.0], 'fence8': [0.0, 33.0, 45.0], 'fence9': [0.0, 33.0, 45.0], 'fence10': [0.0, 33.0, 45.0], 'fence11': [0.0, 33.0, 45.0], 'fence12': [0.0, 33.0, 45.0], 'fence13': [0.0, 36.0, 74.0], 'fence14': [0.0, 42.0, 57.0], 'fence15': [0.0, 42.0, 57.0], 'fence16': [0.0, 42.0, 57.0], 'fence17': [0.0, 42.0, 57.0], 'fence18': [0.0, 42.0, 57.0], 'fence19': [0.0, 45.0, 57.0], 'fence20': [0.0, 45.0, 57.0], 'fence21': [0.0, 45.0, 57.0], 'fence22': [0.0, 45.0, 57.0], 'fence23': [0.0, 45.0, 57.0], 'fence24': [0.0, 45.0, 57.0], 'fence25': [0.0, 45.0, 57.0], 'fence26': [0.0, 54.0, 66.0], 'fence27': [0.0, 54.0, 66.0], 'fence28': [0.0, 54.0, 66.0], 'fence29': [0.0, 54.0, 66.0], 'fence30': [0.0, 54.0, 66.0], 'fence31': [0.0, 48.0, 70.0], 'fence32': [0.0, 57.0, 66.0], 'fence33': [0.0, 57.0, 66.0], 'fence34': [0.0, 57.0, 66.0], 'fence35': [0.0, 57.0, 66.0], 'fence36': [0.0, 57.0, 66.0], 'fence37': [0.0, 57.0, 66.0], 'fence38': [0.0, 57.0, 66.0], 
+            'wall0': [0.0, 24.0], 'wall1': [0.0, 36.0], 'wall2': [0.0, 48.0], 'wall3': [0.0, 57.0], 
+            'roof0': [0.0, 60.0]
+            }
         self.setupUI()
 
     # UI.
@@ -590,8 +599,17 @@ class bundangmain():
             win = pm.window('Bundang_Structure', t='Auto Build Up', s=True, rtf=True)
             pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=280)
             pm.separator(h=10)
+            pm.text("--- Import Bundang Apart ---", h=23)
+            pm.button(l="A", c=lambda x: self.importAPT("A"))
+            pm.button(l="B", c=lambda x: self.importAPT("B"))
+            pm.button(l="C", c=lambda x: self.importAPT("C"))
+            pm.button(l="D", c=lambda x: self.importAPT("D"))
+            pm.button(l="E", c=lambda x: self.importAPT("E"))
+            pm.button(l="F", c=lambda x: self.importAPT("F"))
+            pm.button(l="G", c=lambda x: self.importAPT("G"))
+            pm.separator(h=10)
             self.ratio = pm.floatFieldGrp(l='Ratio : ', nf=1, v1=1)
-            pm.button(l='Default (No Keys)', c=lambda x: self.defaultSetting())
+            pm.button(l='Delete Keys', c=lambda x: self.defaultSetting())
             pm.button(l='Build Up', c=lambda x: self.buildUp())
             pm.button(l='Select Groups', c=lambda x: self.selectGroup())
             pm.separator(h=10)
@@ -668,6 +686,8 @@ class bundangmain():
             result = self.bundangmainC
         elif "bundangmainD" in parsingNamespace:
             result = self.bundangmainD
+        elif "bundangmainE" in parsingNamespace:
+            result = self.bundangmainE
         else:
             result = False
         return result
@@ -695,6 +715,40 @@ class bundangmain():
                 continue
             else:
                 self.insertKeyToGrp(namespace, startFrame, Hash)
+
+
+    def importAPT(self, typ):
+        APT = f"Y:/SON/Assets/Env/bundangmain{typ}/rig/pub/scenes/env_bundangmain{typ}_rig_v9999.ma"
+        if not os.path.isfile(APT):
+            om.MGlobal.displayError("There is no Apartment.")
+        else:
+            namespace = self.getVersion(typ)
+            if namespace:
+                name = namespace
+            else:
+                APTbase = os.path.basename(APT)
+                name, ext = os.path.splitext(APTbase)
+            pm.createReference(APT, r=True, typ='mayaAscii', iv=True, gl=True, mnc=True, op='v=0', ns=name)
+    
+
+    def getVersion(self, typ):
+        keyword1 = f"env_bundangmain{typ}_rig"
+        keyword2 = "mdl"
+        refList = pm.ls(rf=True)
+        namespaceList = [pm.referenceQuery(i, ns=True) for i in refList]
+        summaryList = [i for i in namespaceList if keyword1 in i and not keyword2 in i]
+        verList = []
+        for i in summaryList:
+            ver = i.split("_")[-1]
+            ver = int(ver[1:])
+            verList.append(ver)
+        if verList:
+            verList.sort()
+            max = verList[-1]
+            namespace = f"{keyword1}_v{max + 1}"
+        else:
+            namespace = False
+        return namespace
 
 
 bundangmain()
