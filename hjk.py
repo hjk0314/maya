@@ -328,6 +328,114 @@ class rename():
                 pm.rename(i, i + end if end else new)
 
 
+# Delete the node named 'vaccine_gene' and "breed_gene" in the <.ma> file.
+# It is related to mayaScanner distributed by autodesk.
+class vaccine():
+    def __init__(self):
+        self.setupUI()
+
+
+    # UI.
+    def setupUI(self):
+        if pm.window('Delete_vaccine', exists=True):
+            pm.deleteUI('Delete_vaccine')
+        else:
+            win = pm.window('Delete_vaccine', t='Clean Malware called vaccine', s=True, rtf=True)
+            pm.columnLayout(cat=('both', 4), rs=2, columnWidth=200)
+            # pm.separator(h=10)
+            # pm.text("--- Select a File or Folder ---", h=23)
+            pm.separator(h=10)
+            pm.button(l='File', c=lambda x: self.deleteMain(one=True))
+            pm.button(l='Clean All Files in Folder', c=lambda x: self.deleteMain(one=False))
+            pm.separator(h=10)
+            pm.showWindow(win)
+
+
+    # Delete below strings in ASCII file.
+    def deleteVaccineString(self, fullPath):
+        vcc = "vaccine_gene"
+        brd = "breed_gene"
+        crt = "createNode"
+        with open(fullPath, "r") as txt:
+            lines = txt.readlines()
+        vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k] # List up the line numbers containing 'vaccine_gene'
+        brdList = [j for j, k in enumerate(lines) if brd in k and crt in k] # List up the line numbers containing 'breed_gene'
+        crtList = [j for j, k in enumerate(lines) if crt in k] # List up the line numbers containing 'createNode'
+        sum = vccList + brdList # ex) [16, 21, 84, 105]
+        deleteList = []
+        # List lines to delete consecutively
+        for min in sum:
+            max = crtList[crtList.index(min) + 1]
+            deleteList += [i for i in range(min, max)]
+        new, ext = os.path.splitext(fullPath)
+        new += "_cleaned" + ext
+        # When creating a new file, delete the 'vaccine_gene' or 'breed_gene' paragraph.
+        # Write '//Deleted here' instead of the deleted line.
+        with open(new, "w") as txt:
+            for j, k in enumerate(lines):
+                if j in deleteList:
+                    txt.write("// Deleted here.\n")
+                else:
+                    txt.write(k)
+        return new
+
+
+    # Delete the files : "vaccine.py", "vaccine.pyc", "userSetup.py"
+    def deleteVaccineFiles(self):
+        dir = pm.internalVar(uad=True) + "scripts/" # Folder with that files.
+        fileList = ["vaccine.py", "vaccine.pyc", "userSetup.py"]
+        for i in fileList:
+            try:
+                os.remove(dir + i)
+            except:
+                pass
+
+
+    # Checking First, if the file is infected or not.
+    def checkVaccineString(self, fullPath):        
+        with open(fullPath, "r") as txt:
+            lines = txt.readlines()
+        for i in lines:
+            if "vaccine_gene" in i or "breed_gene" in i:
+                result = fullPath
+                break
+            else:
+                result = False
+        return result
+
+
+    # retrun <.ma> file list.
+    def getMaFile(self, one):
+        fileTypes = 'Infected Files (*.ma);; All Files (*.*)'
+        selection = pm.fileDialog2(fm=0, ff=fileTypes) if one else pm.fileDialog2(fm=2, ds=1)
+        if selection:
+            ext = os.path.splitext(selection[0])[-1]
+            if ext:
+                result = selection if ext == ".ma" else []
+            else:
+                dir = os.listdir(selection[0])
+                result = [selection[0] + "/" + i for i in dir if os.path.splitext(i)[-1] == ".ma"]
+        else:
+            result = []
+        return result
+
+
+    # This is the main function.
+    def deleteMain(self, one):
+        maFileList = self.getMaFile(one)
+        infectedFile = [i for i in maFileList if self.checkVaccineString(i)]
+        if infectedFile:
+            for j, k in enumerate(infectedFile):
+                result = self.deleteVaccineString(k)
+                om.MGlobal.displayInfo(f"{j} : {result}")
+            self.deleteVaccineFiles()
+        else:
+            om.MGlobal.displayInfo("No infected files were found.")
+
+
+# End Class ====================================================================================================================
+
+
 # Grouping itself and named own
 def grp(cp=False):
     sel = pm.ls(sl=True)
@@ -520,76 +628,4 @@ def selObj():
             continue
     pm.select(obj)
     return obj
-
-
-# Delete the node named 'vaccine_gene' and "breed_gene" in the <.ma> file.
-# It is related to mayaScanner distributed by autodesk.
-class delVaccine():
-    def __init__(self):
-        self.setupUI()
-
-
-    # UI.
-    def setupUI(self):
-        if pm.window('Delete_Malware_named_Vaccine', exists=True):
-            pm.deleteUI('Delete_Malware_named_Vaccine')
-        else:
-            win = pm.window('Delete_Malware_named_Vaccine', t='Delete the node named (vaccine_gene)', s=True, rtf=True)
-            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=380)
-            pm.separator(h=10)
-            pm.button(l='sample', c=lambda x: print('hi'))
-            pm.separator(h=10)
-            pm.showWindow(win)
-
-
-    def deleteVaccineString(self, fullPath):
-        vcc = "vaccine_gene"
-        brd = "breed_gene"
-        crt = "createNode"
-        with open(fullPath, "r") as txt:
-            lines = txt.readlines()
-        vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k] # List up the line numbers containing 'vaccine_gene'
-        brdList = [j for j, k in enumerate(lines) if brd in k and crt in k] # List up the line numbers containing 'breed_gene'
-        crtList = [j for j, k in enumerate(lines) if crt in k] # List up the line numbers containing 'createNode'
-        sum = vccList + brdList # ex) [16, 21, 84, 105]
-        deleteList = []
-        # List lines to delete consecutively
-        for min in sum:
-            max = crtList[crtList.index(min) + 1]
-            deleteList += [i for i in range(min, max)]
-        new, ext = os.path.splitext(fullPath)
-        new += "_fixed" + ext
-        # When creating a new file, delete the 'vaccine_gene' or 'breed_gene' paragraph.
-        # Write '//Deleted here' instead of the deleted line.
-        with open(new, "w") as txt:
-            for j, k in enumerate(lines):
-                if j in deleteList:
-                    txt.write("// Deleted here.\n")
-                else:
-                    txt.write(k)
-
-
-    # Delete this file : "vaccine.py", "vaccine.pyc", "userSetup.py" in "C:/Users/user/Documents/maya/scripts/"
-    def deleteVaccineFiles(self):
-        dir = pm.internalVar(uad=True) + "scripts/"
-        fileList = [dir + i for i in ["vaccine.py", "vaccine.pyc", "userSetup.py"]]
-        for i in fileList:
-            try:
-                os.remove(i)
-            except:
-                pass
-
-
-    # Checking First, if the file is infected or not.
-    def checkVaccineString(self, fullPath):        
-        with open(fullPath, "r") as txt:
-            lines = txt.readlines()
-        for i in lines:
-            if "vaccine_gene" in i or "breed_gene" in i:
-                result = fullPath
-                break
-            else:
-                result = False
-        return result
-
 

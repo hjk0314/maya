@@ -589,6 +589,15 @@ class bundangmain():
             'wall0': [0.0, 24.0], 'wall1': [0.0, 36.0], 'wall2': [0.0, 48.0], 'wall3': [0.0, 57.0], 
             'roof0': [0.0, 60.0]
             }
+        self.bundangmainF = {
+            'init0': [0.0, 3.0], 'init1': [0.0, 6.0], 
+            'inWall0': [0.0, 9.0], 'inWall1': [0.0, 12.0], 'inWall2': [0.0, 18.0], 'inWall3': [0.0, 24.0], 'inWall4': [0.0, 27.0], 'inWall5': [0.0, 33.0], 'inWall6': [0.0, 36.0], 'inWall7': [0.0, 39.0], 'inWall8': [0.0, 45.0], 'inWall9': [0.0, 48.0], 'inWall10': [0.0, 51.0], 'inWall11': [0.0, 57.0], 
+            'asibar0': [0.0, 6.0, 84.0], 'asibar1': [0.0, 9.0, 84.0], 'asibar2': [0.0, 9.0, 84.0], 'asibar3': [0.0, 9.0, 84.0], 'asibar4': [0.0, 9.0, 84.0], 'asibar5': [0.0, 9.0, 84.0], 'asibar6': [0.0, 9.0, 84.0], 'asibar7': [0.0, 12.0, 84.0], 'asibar8': [0.0, 12.0, 84.0], 'asibar9': [0.0, 12.0, 84.0], 'asibar10': [0.0, 12.0, 84.0], 'asibar11': [0.0, 12.0, 84.0], 'asibar12': [0.0, 21.0, 80.0], 'asibar13': [0.0, 24.0, 80.0], 'asibar14': [0.0, 24.0, 80.0], 'asibar15': [0.0, 24.0, 80.0], 'asibar16': [0.0, 24.0, 80.0], 'asibar17': [0.0, 27.0, 80.0], 'asibar18': [0.0, 27.0, 80.0], 'asibar19': [0.0, 27.0, 80.0], 'asibar20': [0.0, 27.0, 80.0], 'asibar21': [0.0, 27.0, 80.0], 'asibar22': [0.0, 27.0, 80.0], 'asibar23': [0.0, 27.0, 80.0], 'asibar24': [0.0, 33.0, 76.0], 'asibar25': [0.0, 36.0, 76.0], 'asibar26': [0.0, 36.0, 76.0], 'asibar27': [0.0, 36.0, 76.0], 'asibar28': [0.0, 36.0, 76.0], 'asibar29': [0.0, 36.0, 76.0], 'asibar30': [0.0, 39.0, 76.0], 'asibar31': [0.0, 39.0, 76.0], 'asibar32': [0.0, 39.0, 76.0], 'asibar33': [0.0, 39.0, 76.0], 'asibar34': [0.0, 39.0, 76.0], 'asibar35': [0.0, 39.0, 76.0], 'asibar36': [0.0, 48.0, 72.0], 'asibar37': [0.0, 51.0, 72.0], 'asibar38': [0.0, 51.0, 72.0], 'asibar39': [0.0, 51.0, 72.0], 'asibar40': [0.0, 51.0, 72.0], 'asibar41': [0.0, 51.0, 72.0], 'asibar42': [0.0, 54.0, 72.0], 'asibar43': [0.0, 54.0, 72.0], 'asibar44': [0.0, 54.0, 72.0], 'asibar45': [0.0, 54.0, 72.0], 'asibar46': [0.0, 54.0, 72.0], 'asibar47': [0.0, 54.0, 72.0], 
+            'structure0': [0.0, 15.0], 'structure1': [0.0, 30.0], 'structure2': [0.0, 42.0], 'structure3': [0.0, 54.0], 
+            'fence0': [0.0, 18.0, 82.0], 'fence1': [0.0, 27.0, 42.0], 'fence2': [0.0, 27.0, 42.0], 'fence3': [0.0, 27.0, 42.0], 'fence4': [0.0, 27.0, 42.0], 'fence5': [0.0, 27.0, 42.0], 'fence6': [0.0, 27.0, 42.0], 'fence7': [0.0, 30.0, 42.0], 'fence8': [0.0, 30.0, 42.0], 'fence9': [0.0, 30.0, 42.0], 'fence10': [0.0, 30.0, 42.0], 'fence11': [0.0, 30.0, 42.0], 'fence12': [0.0, 30.0, 42.0], 'fence13': [0.0, 33.0, 78.0], 'fence14': [0.0, 39.0, 54.0], 'fence15': [0.0, 39.0, 54.0], 'fence16': [0.0, 39.0, 54.0], 'fence17': [0.0, 39.0, 54.0], 'fence18': [0.0, 39.0, 54.0], 'fence19': [0.0, 39.0, 54.0], 'fence20': [0.0, 42.0, 54.0], 'fence21': [0.0, 42.0, 54.0], 'fence22': [0.0, 42.0, 54.0], 'fence23': [0.0, 42.0, 54.0], 'fence24': [0.0, 42.0, 54.0], 'fence25': [0.0, 42.0, 54.0], 'fence26': [0.0, 45.0, 74.0], 'fence27': [0.0, 51.0, 70.0], 'fence28': [0.0, 51.0, 70.0], 'fence29': [0.0, 51.0, 70.0], 'fence30': [0.0, 51.0, 70.0], 'fence31': [0.0, 51.0, 70.0], 'fence32': [0.0, 54.0, 70.0], 'fence33': [0.0, 54.0, 70.0], 'fence34': [0.0, 54.0, 70.0], 'fence35': [0.0, 54.0, 70.0], 'fence36': [0.0, 54.0, 70.0], 'fence37': [0.0, 54.0, 70.0], 'fence38': [0.0, 54.0, 70.0], 
+            'wall0': [0.0, 24.0], 'wall1': [0.0, 33.0], 'wall2': [0.0, 45.0], 'wall3': [0.0, 57.0], 
+            'roof0': [0.0, 60.0]
+            }
         self.setupUI()
 
     # UI.
@@ -688,6 +697,8 @@ class bundangmain():
             result = self.bundangmainD
         elif "bundangmainE" in parsingNamespace:
             result = self.bundangmainE
+        elif "bundangmainF" in parsingNamespace:
+            result = self.bundangmainF
         else:
             result = False
         return result
@@ -736,9 +747,9 @@ class bundangmain():
         keyword2 = "mdl"
         refList = pm.ls(rf=True)
         namespaceList = [pm.referenceQuery(i, ns=True) for i in refList]
-        summaryList = [i for i in namespaceList if keyword1 in i and not keyword2 in i]
+        conditionList = [i for i in namespaceList if keyword1 in i and not keyword2 in i]
         verList = []
-        for i in summaryList:
+        for i in conditionList:
             ver = i.split("_")[-1]
             ver = int(ver[1:])
             verList.append(ver)
