@@ -1,4 +1,4 @@
-from filecmp import cmp
+import filecmp
 import maya.cmds as cmds
 import maya.OpenMaya as om
 import os
@@ -85,20 +85,20 @@ class UpdateVersion():
     def compareFiles(self):
         if self.ver == 9999:
             if self.lastVerInPub and self.lastVerInDev:
-                return cmp(self.sceneName, self.lastVerInPub) and cmp(self.sceneName, self.lastVerInDev)
+                return filecmp.cmp(self.sceneName, self.lastVerInPub) and filecmp.cmp(self.sceneName, self.lastVerInDev)
             else:
                 return False
         else:
             if self.tsk[1] == 'dev':
                 ver9999 = self.sceneName.replace('dev', 'pub').replace('v%04d' % self.ver, 'v9999')
                 if os.path.isfile(ver9999) and self.lastVerInPub:
-                    return cmp(self.sceneName, ver9999) and cmp(self.sceneName, self.lastVerInPub)
+                    return filecmp.cmp(self.sceneName, ver9999) and filecmp.cmp(self.sceneName, self.lastVerInPub)
                 else:
                     return False
             else:
                 ver9999 = self.sceneName.replace('v%04d' % self.ver, 'v9999')
                 if os.path.isfile(ver9999) and self.lastVerInDev:
-                    return cmp(self.sceneName, ver9999) and cmp(self.sceneName, self.lastVerInDev)
+                    return filecmp.cmp(self.sceneName, ver9999) and filecmp.cmp(self.sceneName, self.lastVerInDev)
                 else:
                     return False
 
