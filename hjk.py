@@ -607,13 +607,21 @@ def selObj():
     return obj
 
 
-def color():
-    pass
-
-
+# Select objects with duplicate names.
 def sameName():
+    sel = pm.ls(tr=True)
+    dup = [i for i in sel if "|" in i]
+    if dup:
+        pm.select(dup)
+        om.MGlobal.displayError("Same name selected in outliner.")
+    else:
+        om.MGlobal.displayInfo("No duplicated names.")
+
+
+def color():
     pass
 
 
 def info():
     pass
+
