@@ -33,7 +33,7 @@ class badName():
             pm.select(badName)
             om.MGlobal.displayError("Rule breaker selected in outliner.")
         else:
-            om.MGlobal.displayInfo("No name breaks the rules.")
+            om.MGlobal.displayInfo("No bad names.")
 
 
     # Checking 4 types : 'abc', 'ABC', 'Abc', 'aBc'
@@ -74,5 +74,5 @@ def sameName():
         pm.select(dup)
         om.MGlobal.displayError("Same name selected in outliner.")
     else:
-        om.MGlobal.displayInfo("No duplicated names.")
+        om.MGlobal.displayInfo("No same names.")
 

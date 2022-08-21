@@ -1,5 +1,8 @@
 import maya.cmds as cmds
 import maya.mel as mel
+import check
+import tools
+# import update
 
 
 cmds.evalDeferred('createMenuBar()')
@@ -16,20 +19,21 @@ def createMenuBar():
     #
     # menu start ========================================================================
     # Check
-    cmds.menuItem(l="Check", subMenu=True, p=mainMenu, to=True)
-    cmds.menuItem(l="Same Names", c=lambda x: print("same name"))
-    cmds.menuItem(l="Name Rules", c=lambda x: print("bad name"))
+    cmds.menuItem(l="Check", subMenu=True, p=mainMenu, to=True) # to: tearOff
+    cmds.menuItem(l="Same Names", c=lambda x: check.sameName())
+    cmds.menuItem(l="Bad Names", c=lambda x: check.badName())
     cmds.setParent("..", menu=True)
     # Tools
     cmds.menuItem(l="Tools", subMenu=True, p=mainMenu, to=True)
-    cmds.menuItem(l="Export Shader to Json", c=lambda x: print("json"))
-    cmds.menuItem(l="Speed", c=lambda x: print("speed"))
-    cmds.menuItem(l="Delete Vaccine", c=lambda x: print("delete vaccine"))
-    cmds.menuItem(l="Bundangmain", c=lambda x: print("bundang"))
-    cmds.menuItem(l="Unknown Plugins", c=lambda x: print("unknown plugins"))
+    cmds.menuItem(l="Export Shader to Json", c=lambda x: tools.abc())
+    cmds.menuItem(l="Speed", c=lambda x: tools.speed())
+    cmds.menuItem(l="Delete Vaccine", c=lambda x: tools.vaccine())
+    cmds.menuItem(l="Bundangmain", c=lambda x: tools.bundangmain())
+    cmds.menuItem(l="Unknown Plugins", c=lambda x: tools.delPlugin())
     cmds.setParent("..", menu=True)
     # Update
-    cmds.menuItem(l="Modeling Update", c=lambda x: print("model update"))
+    cmds.menuItem(l="Update", subMenu=True, p=mainMenu, to=True)
+    cmds.menuItem(l="Model Sync", c=lambda x: print("mdlSync"))
     cmds.setParent("..", menu=True)
     # menu end ==========================================================================
 

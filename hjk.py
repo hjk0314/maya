@@ -3,6 +3,7 @@ import maya.OpenMaya as om
 import pymel.core as pm
 import json
 import os
+import codecs
 
 
 # Export to json file and shading networks. And assign to them.
@@ -433,6 +434,48 @@ class vaccine():
             om.MGlobal.displayInfo("No infected files were found.")
 
 
+# Transform HanGeul unicode to bytes. Otherside too.
+class han():
+    def __init__(self):
+        self.btnHan1 = b'\xec\x9d\xb8\xec\xbd\x94\xeb\x94\xa9'
+        self.btnHan2 = b'\xec\xa7\x80\xec\x9a\xb0\xea\xb8\xb0'
+        self.HanGeul = b'\xed\x95\x9c\xea\xb8\x80'
+        self.setupUI()
+
+
+    # UI.
+    def setupUI(self):
+        if pm.window('HanGeul', exists=True):
+            pm.deleteUI('HanGeul')
+        else:
+            win = pm.window('HanGeul', t='Encode / Decode', s=True, rtf=True)
+            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=240)
+            pm.separator(h=10)
+            self.hanField = pm.textField(ed=True, pht=self.HanGeul)
+            self.utfField = pm.textField(ed=True, pht="Bytes")
+            self.btn = pm.button(l=self.btnHan1, c=lambda x: self.transform())
+            pm.separator(h=10)
+            pm.showWindow(win)
+
+
+    # The field value is returned as a string type.
+    def transform(self):
+        A = self.hanField.getText()
+        B = self.utfField.getText()
+        if A and not B:
+            result = r"%s" % (str(A).encode("utf-8"))
+            self.utfField.setText(result)
+            self.btn.setLabel(self.btnHan2)
+        elif B and not A:
+            result = eval(B)
+            self.hanField.setText(result.decode("utf-8", "strict"))
+            self.btn.setLabel(self.btnHan2)
+        else:
+            self.hanField.setText("")
+            self.utfField.setText("")
+            self.btn.setLabel(self.btnHan1)
+
+
 # Class end. ====================================================================================================================
 
 
@@ -467,7 +510,7 @@ def loc():
 
 
 # Create a curve controller.
-def ctrl(cub=False, sph=False, cyl=False, pip=False, con=False, ar1=False, ar2=False):
+def ctrl(**kwargs):
     ctrl = {
     "cub": [
         (-1, 1, -1), (-1, 1, 1), (1, 1, 1), (1, 1, -1), (-1, 1, -1), (-1, -1, -1), 
@@ -495,20 +538,14 @@ def ctrl(cub=False, sph=False, cyl=False, pip=False, con=False, ar1=False, ar2=F
         (4, -1, 2), (2, -1, 2), (2, -1, -4), (-2, -1, -4), (-2, -1, 2), (-4, -1, 2), (0, -1, 4), (4, -1, 2), 
         (4, 1, 2), (2, 1, 2), (2, 1, -4), (2, -1, -4), (-2, -1, -4), (-2, 1, -4), (-2, 1, 2), (-4, 1, 2), (-4, -1, 2)]
     }
-    shapeList = []
-    if cub: shapeList.append("cub")
-    if sph: shapeList.append("sph")
-    if cyl: shapeList.append("cyl")
-    if pip: shapeList.append("pip")
-    if con: shapeList.append("con")
-    if ar1: shapeList.append("ar1")
-    if ar2: shapeList.append("ar2")
-    if shapeList:
-        for i in shapeList:
-            pm.curve(d=1, p=ctrl[i])
+    if kwargs:
+        coordinate = [ctrl[i] for i in kwargs if kwargs[i]]
+        for i in coordinate:
+            pm.curve(d=1, p=i)
     else:
         shapes = list(ctrl.keys())
-        print(f"Shape's List: {shapes}")
+        om.MGlobal.displayInfo(f"Shape list : {shapes}")
+        om.MGlobal.displayInfo(f"How to use : ctrl(cub=True, sph=True, ...)")
 
 
 # This function works even if you select a point.
@@ -618,10 +655,34 @@ def sameName():
         om.MGlobal.displayInfo("No duplicated names.")
 
 
-def color():
-    pass
-
-
-def info():
-    pass
+# Return scene's infomations.
+# Parameter : dir, sceneName, name, ext, dir, typ, ver
+# How to use : info(fullPath, ver=True, dir=True, ...)
+def info(fullPath="", **kwargs):
+    if not kwargs:
+        om.MGlobal.displayInfo("How to use : info(fullPath, dir=True, ver=True...")
+        om.MGlobal.displayInfo("Parameters : dir, sceneName, name, ext, dir, typ, ver")
+    elif not fullPath:
+        om.MGlobal.displayError("The fullPath parameter is missing.")
+    else:
+        # values
+        dir = os.path.dirname(fullPath)
+        sceneName = os.path.basename(fullPath)
+        name, ext = os.path.splitext(sceneName)
+        wip = dir.split("/")[-2]
+        typ = dir.split("/")[-3]
+        ver = name.split("_")[-1]
+        # keys
+        result = {
+            # 'fullPath': fullPath, 
+            'dir': dir, 
+            'sceneName': sceneName, 
+            'name': name, 
+            'ext': ext, 
+            'wip': wip, 
+            'typ': typ, 
+            'ver': ver
+        }
+        # return
+        return (result[i] for i in kwargs if kwargs[i])
 
