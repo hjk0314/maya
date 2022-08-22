@@ -34,7 +34,7 @@ class mdlSync():
             pm.setParent("..", u=True)
             self.memo = pm.scrollField(ed=True, ww=True, h=100)
             pm.separator(h=10)
-            pm.button(l='Synchronize', c=lambda x: self.makeText())
+            pm.button(l='Synchronize', c=lambda x: print("hi"))
             pm.separator(h=10)
             pm.showWindow(win)
 
@@ -116,16 +116,27 @@ class mdlSync():
         pass
 
 
-    def makeText(self):
-        textPath = self.info2(pub=True)[0]
-        user = pm.internalVar(uad=True).split("/")[2]
-        date = pm.date()
-        memo = self.memo.getText()
-        with codecs.open(textPath, 'a', 'utf-8-sig') as txt:
-            textLine = f"{user}" + "\n"
-            textLine += f"{date}" + "\n"
-            textLine += f"{memo}" + "\n"
-            txt.write(textLine)
+    # Make Korean document.
+    def makeText(self, dir):
+        # bytes, Korean
+        fileName = b'\xec\x9e\x91\xec\x97\x85\xec\x9e\x90'.decode("utf-8", "strict")
+        user = b'\xec\x9e\x91\xec\x97\x85\xec\x9e\x90 : '.decode("utf-8", "strict")
+        user += pm.internalVar(uad=True).split("/")[2]
+        date = b'\xeb\x82\xa0\xec\xa7\x9c : '.decode("utf-8", "strict")
+        date += pm.date()
+        memo = b'\xeb\xa9\x94\xeb\xaa\xa8 : '.decode("utf-8", "strict")
+        memo += self.memo.getText().replace("\n", "\n" + "#" + " " * 9)
+        version = b'\xeb\xb2\x84\xec\xa0\x84 : '.decode("utf-8", "strict")
+        version += 'dev) v0004 = pub) v9999'
+        fullPath = dir + '/' + fileName + '.txt'
+        with codecs.open(fullPath, 'a', 'utf-8-sig') as txt:
+            line = "# " + "=" * 40 + " #" + "\n"
+            line += "# " + f"{user}" + "\n"
+            line += "# " + f"{date}" + "\n"
+            line += "# " + f"{memo}" + "\n"
+            line += "# " + f"{version}" + "\n"
+            line += "# " + "=" * 40 + " #" + "\n"
+            txt.write(line)
 
 
     def main(self):
