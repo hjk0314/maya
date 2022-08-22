@@ -480,33 +480,33 @@ class han():
 
 
 # Grouping itself and named own
+# cp is centerPivot
 def grp(cp=False):
     sel = pm.ls(sl=True)
-    grpList = []
     for i in sel:
         grp = pm.group(i, n="%s_grp" % i)
         if not cp:
             pm.move(0, 0, 0, grp + ".scalePivot", grp + ".rotatePivot", rpr=True)
-        grpList.append(grp)
-    return grpList
 
 
-# Create three types of locators.
-# When you select two objects, a locator is created at the midpoint.
-def loc():
+# Create locators in boundingBox.
+# Default parameter is True.
+def loc(bb=True):
     sel = pm.ls(sl=True)
-    num = len(sel)
-    if num == 1: # Select One point.
-        position = pm.xform(sel[0], q=True, t=True, ws=True)
-        position = tuple(position)
-    elif num == 2: # Select Two points.
-        twoPoint = [pm.xform(i, q=True, t=True, ws=True) for i in sel]
-        position = tuple((twoPoint[0][i] + twoPoint[1][i]) / 2 for i in range(3))
-    else:
-        position = (0, 0, 0)
-    loc = pm.spaceLocator(p=position)
-    pm.xform(loc, t=position, ws=True)
-    return position
+    for i in sel:
+        loc = pm.spaceLocator(p=(0, 0, 0), n=f"loc_{i}")
+        # bb is boundingBox
+        if bb:
+            bbCoordinate = pm.xform(i, q=True, boundingBox=True)
+            xMin, yMin, zMin, xMax, yMax, zMax = bbCoordinate
+            x = (xMin + xMax) / 2
+            y = (yMin + yMax) / 2
+            z = (zMin + zMax) / 2
+            pos = (x, y, z)
+        else:
+            pos = pm.xform(i, q=True, t=True, ws=True)
+        pm.xform(loc, t=pos, ws=True)
+        pm.matchTransform(loc, i, rot=True)
 
 
 # Create a curve controller.
