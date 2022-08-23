@@ -655,35 +655,3 @@ def sameName():
         om.MGlobal.displayInfo("No duplicated names.")
 
 
-# Return scene's infomations.
-# Parameter : dir, sceneName, name, ext, dir, typ, ver
-# How to use : info(fullPath, ver=True, dir=True, ...)
-def info(fullPath="", **kwargs):
-    if not kwargs:
-        om.MGlobal.displayInfo("How to use : info(fullPath, dir=True, ver=True...")
-        om.MGlobal.displayInfo("Parameters : dir, sceneName, name, ext, dir, typ, ver")
-    elif not fullPath:
-        om.MGlobal.displayError("The fullPath parameter is missing.")
-    else:
-        # values
-        dir = os.path.dirname(fullPath)
-        sceneName = os.path.basename(fullPath)
-        name, ext = os.path.splitext(sceneName)
-        wip = dir.split("/")[-2]
-        typ = dir.split("/")[-3]
-        ver = name.split("_")[-1]
-        # keys
-        result = {
-            # 'fullPath': fullPath, 
-            'dir': dir, 
-            'sceneName': sceneName, 
-            'name': name, 
-            'ext': ext, 
-            'wip': wip, 
-            'typ': typ, 
-            'ver': ver
-        }
-        # return
-        return (result[i] for i in kwargs if kwargs[i])
-
-
