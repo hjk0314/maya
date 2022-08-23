@@ -10,37 +10,64 @@ import os
 class sync():
     def __init__(self):
         self.setupUI()
+        self.fillBlanks()
     
 
     # UI.
     def setupUI(self):
         if pm.window('Modeling_Synchronize', exists=True):
             pm.deleteUI('Modeling_Synchronize')
+        win = pm.window('Modeling_Synchronize', t='SynChronize', s=True, rtf=True)
+        pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=285)
+        pm.separator(h=10)
+        pm.text("Model Synchronize", h=23)
+        pm.separator(h=10)
+        pm.rowColumnLayout(nc=2, cw=[(1, 50), (2, 226)])
+        pm.text('user : ')
+        self.userField = pm.textField(ed=True)
+        pm.text("curr : ")
+        self.currField = pm.textField(ed=False)
+        pm.text("sync : ")
+        self.syncField = pm.textField(ed=False)
+        pm.setParent("..", u=True)
+        pm.rowColumnLayout(nc=4, cw=[(1, 50), (2, 160), (3, 8), (4, 60)])
+        pm.text("abc : ")
+        self.abcField = pm.textField(ed=True)
+        pm.text(" ")
+        self.abcCheck = pm.checkBox(l="export", v=False)
+        pm.setParent("..", u=True)
+        self.memoField = pm.scrollField(ed=True, ww=True, h=100)
+        pm.separator(h=10)
+        pm.button(l='Synchronize', c=lambda x: self.main())
+        pm.separator(h=10)
+        pm.showWindow(win)
+
+
+    def fillBlanks(self):
+        fullPath = pm.Env().sceneName()
+        # current version
+        dev, pub = self.info2(fullPath, dev=True, pub=True)
+        vDev = self.getMaxVersion(dev)
+        vDev = vDev if vDev else 'v0000'
+        vPub = self.getMaxVersion(pub)
+        vPub = vPub if vPub else 'v0000'
+        curr = f"dev) {vDev} = pub) {vPub} = pub) v9999"
+        # sync version
+        cmp = self.compareFiles(fullPath)
+        if cmp:
+            sync = curr
         else:
-            win = pm.window('Modeling_Synchronize', t='SynChronize', s=True, rtf=True)
-            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=285)
-            pm.separator(h=10)
-            pm.text("Model Synchronize", h=23)
-            pm.separator(h=10)
-            pm.rowColumnLayout(nc=2, cw=[(1, 40), (2, 236)])
-            pm.text("dev : ")
-            self.devField = pm.textField(ed=True)
-            pm.text("pub : ")
-            self.pubField = pm.textField(ed=True)
-            pm.text(" ")
-            self.v9999Field = pm.textField(ed=True)
-            pm.setParent("..", u=True)
-            pm.rowColumnLayout(nc=4, cw=[(1, 40), (2, 170), (3, 8), (4, 60)])
-            pm.text("abc : ")
-            self.abcField = pm.textField(ed=True)
-            pm.text(" ")
-            self.abcCheck = pm.checkBox(l="export", v=False)
-            pm.setParent("..", u=True)
-            self.memo = pm.scrollField(ed=True, ww=True, h=100)
-            pm.separator(h=10)
-            pm.button(l='Synchronize', c=lambda x: self.main())
-            pm.separator(h=10)
-            pm.showWindow(win)
+            dev, pub, v9999 = self.makeNames(fullPath)
+            vDev = self.info(dev, ver=True)[0]
+            vPub = self.info(pub, ver=True)[0]
+            v9999 = self.info(v9999, ver=True)[0]
+            sync = f"dev) {vDev} = pub) {vPub} = pub) {v9999}"
+        # user
+        user = pm.internalVar(uad=True).split("/")[2]
+        # fill the blanks
+        self.userField.setText(user)
+        self.currField.setText(curr)
+        self.syncField.setText(sync)
 
 
     def checkPath(self, fullPath):
@@ -232,13 +259,13 @@ class sync():
     def makeText(self, textPath):
         # bytes, Korean
         user = b'\xec\x9e\x91\xec\x97\x85\xec\x9e\x90 : '.decode("utf-8", "strict")
-        user += pm.internalVar(uad=True).split("/")[2]
+        user += self.userField.getText()
         date = b'\xeb\x82\xa0\xec\xa7\x9c : '.decode("utf-8", "strict")
         date += pm.date()
         memo = b'\xeb\xa9\x94\xeb\xaa\xa8 : '.decode("utf-8", "strict")
-        memo += self.memo.getText().replace("\n", "\n" + "#" + " " * 9)
+        memo += self.memoField.getText().replace("\n", "\n" + "#" + " " * 9)
         version = b'\xeb\xb2\x84\xec\xa0\x84 : '.decode("utf-8", "strict")
-        version += 'dev) v0004 = pub) v9999'
+        version += self.syncField.getText()
         with codecs.open(textPath, 'a', 'utf-8-sig') as txt:
             line = "# " + "=" * 40 + " #" + "\n"
             line += "# " + f"{user}" + "\n"
