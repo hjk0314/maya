@@ -10,7 +10,6 @@ import os
 class sync():
     def __init__(self):
         self.setupUI()
-        self.fillBlanks()
     
 
     # UI.
@@ -20,109 +19,108 @@ class sync():
         win = pm.window('Modeling_Synchronize', t='SynChronize', s=True, rtf=True)
         pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=285)
         pm.separator(h=10)
-        pm.text("Model Synchronize", h=23)
+        self.caseText = pm.text('', h=23)
         pm.separator(h=10)
         pm.rowColumnLayout(nc=2, cw=[(1, 50), (2, 226)])
-        pm.text('user : ')
-        self.userField = pm.textField(ed=True)
-        pm.text("curr : ")
-        self.currField = pm.textField(ed=False)
-        pm.text("sync : ")
-        self.syncField = pm.textField(ed=False)
-        pm.setParent("..", u=True)
-        pm.rowColumnLayout(nc=4, cw=[(1, 50), (2, 160), (3, 8), (4, 60)])
-        pm.text("abc : ")
-        self.abcField = pm.textField(ed=True)
-        pm.text(" ")
-        self.abcCheck = pm.checkBox(l="export", v=False)
+        pm.text('worker : ')
+        user = pm.internalVar(uad=True).split('/')[2]
+        self.userField = pm.textField(ed=True, tx=user)
         pm.setParent("..", u=True)
         self.memoField = pm.scrollField(ed=True, ww=True, h=100)
+        self.syncField = pm.textField(ed=False)
         pm.separator(h=10)
-        pm.button(l='Synchronize', c=lambda x: self.main())
+        pm.button('Synchronize', c=lambda x: self.syncMain())
+        pm.button('Export Alembic', c=lambda x: self.makeAbc())
+        pm.button('Open Note', c=lambda x: self.openNotepad())
         pm.separator(h=10)
         pm.showWindow(win)
 
 
-    def fillBlanks(self):
+    def makeCaseField(self):
         fullPath = pm.Env().sceneName()
-        # current version
-        dev, pub = self.info2(fullPath, dev=True, pub=True)
-        vDev = self.getMaxVersion(dev)
-        vDev = vDev if vDev else 'v0000'
-        vPub = self.getMaxVersion(pub)
-        vPub = vPub if vPub else 'v0000'
-        curr = f"dev) {vDev} = pub) {vPub} = pub) v9999"
-        # sync version
         cmp = self.compareFiles(fullPath)
-        if cmp:
-            sync = curr
+        result = "All filese are same." if cmp else "Need to sync."
+        self.caseText.setText(result)
+        return result
+
+
+    # Two steps : Synchronize and write Korean text.
+    def syncMain(self):
+        fullPath = pm.Env().sceneName()
+        cmp = self.compareFiles(fullPath)
+        if not fullPath:
+            om.MGlobal.displayError("Save scene, First.")
+        elif cmp:
+            om.MGlobal.displayInfo("All files are same.")
         else:
-            dev, pub, v9999 = self.makeNames(fullPath)
-            vDev = self.info(dev, ver=True)[0]
-            vPub = self.info(pub, ver=True)[0]
-            v9999 = self.info(v9999, ver=True)[0]
-            sync = f"dev) {vDev} = pub) {vPub} = pub) {v9999}"
-        # user
-        user = pm.internalVar(uad=True).split("/")[2]
-        # fill the blanks
-        self.userField.setText(user)
-        self.currField.setText(curr)
-        self.syncField.setText(sync)
+            # Save and Copy
+            dev, pub, v9999 = self.makeSyncNames(fullPath)
+            self.makeSyncFiles(fullPath, dev, pub, v9999)
+            # Write down notes
+            textPath = self.makeTextPath(fullPath)
+            verInfo = self.makeTextVersionInfo(dev, pub, v9999)
+            self.makeText(textPath, verInfo)
+            # reStart UI
+            self.syncField.setText(verInfo)
+            self.makeCaseField()
 
 
-    def checkPath(self, fullPath):
-        typeList = ["mdl", "ldv", "rig"]
-        nameList = fullPath.split("/")
-        result = [nameList.index(i) for i in typeList if i in nameList]
+    # Make the text fields.
+    def makeTextVersionInfo(self, devPath, pubPath, v9999Path):
+        dev = self.info(devPath, ver=True)[0]
+        pub = self.info(pubPath, ver=True)[0]
+        v9999 = self.info(v9999Path, ver=True)[0]
+        result = f"dev) {dev} = pub) {pub}, {v9999}"
+        return result
+
+
+    # Returns index number and check the company folder tree, too.
+    def getIndex(self, fullPath):
+        typList = ["mdl", "ldv", "rig"]
+        dirList = fullPath.split("/")
+        result = [dirList.index(i) for i in typList if i in dirList]
         return result
 
 
     # Return scene's infomations.
     def info(self, fullPath, **kwargs):
-        idx = self.checkPath(fullPath)
+        idx = self.getIndex(fullPath)
         if not idx:
             om.MGlobal.displayError("Check the File Path.")
         else:
-            # values
-            dir = os.path.dirname(fullPath)
-            sceneName = os.path.basename(fullPath)
-            name, ext = os.path.splitext(sceneName)
-            wip = dir.split("/")[idx[0] + 1] # dev or pub
-            typ = dir.split("/")[idx[0]] # mdl or rig or ldv
-            ver = name.split("_")[-1] # v0001 or v9999
-            nwv = name.rsplit("_", 1)[0] # nwv : name without version
+            # sample : "C:/Users/jkhong/Desktop/bundangA/mdl/pub/scenes/env_bundangA_mdl_v0011.ma"
+            dir = os.path.dirname(fullPath) # "C:/Users/jkhong/Desktop/bundangA/mdl/pub/scenes"
+            scn = os.path.basename(fullPath) # "env_bundangA_mdl_v0011.ma"
+            # nwe = nameWithoutExtension
+            nwe, ext = os.path.splitext(scn) # "env_bundangA_mdl_v0011"
+            wip = dir.split("/")[idx[0] + 1] # "pub"
+            typ = dir.split("/")[idx[0]] # "mdl"
+            ver = nwe.split("_")[-1] # "v0011"
+            # nwv = nameWithoutVersion
+            nwv = nwe.rsplit("_", 1)[0] # "env_bundangA_mdl"
+            if wip == 'dev': (dev, pub) = (dir, dir.replace("dev", "pub")) # "C:/Users/jkhong/Desktop/bundangA/mdl/dev"
+            if wip == 'pub': (dev, pub) = (dir.replace("pub", "dev"), dir) # "C:/Users/jkhong/Desktop/bundangA/mdl/pub"
+            abc = pub.replace('scenes', 'data/abc') # "C:/Users/jkhong/Desktop/bundangA/mdl/pub/data/abc"
             # keys
             result = {
                 'dir': dir, 
-                'sceneName': sceneName, 
-                'name': name, 
+                'scn': scn, 
+                'nwe': nwe, 
                 'ext': ext, 
                 'wip': wip, 
                 'typ': typ, 
-                'ver': ver,
-                'nwv': nwv
+                'ver': ver, 
+                'nwv': nwv, 
+                'dev': dev, 
+                'pub': pub, 
+                'abc': abc
             }
             return [result[i] for i in kwargs if kwargs[i]]
     
 
-    def info2(self, fullPath, **kwargs):
-        # values
-        dir, wip = self.info(fullPath, dir=True, wip=True)
-        if wip == 'dev': (dev, pub) = (dir, dir.replace("dev", "pub"))
-        elif wip == 'pub': (dev, pub) = (dir.replace("pub", "dev"), dir)
-        else: om.MGlobal.displayError("This scene doesn't belong to dev or pub.")
-        # keys
-        result = {
-            'dev': dev, 
-            'pub': pub, 
-            'abc': pub.replace('scenes', 'data/abc')
-        }
-        # return
-        return [result[i] for i in kwargs if kwargs[i]]
-
-
-    # Returns the maximum version number of the input directory.
+    # Returns the maximum version of the input directory.
     def getMaxVersion(self, dir):
+        # File types are ".ma" or ".mb"
         mayaList = [i for i in os.listdir(dir) if i.endswith('.ma') or i.endswith('.mb')]
         verList = []
         for i in mayaList:
@@ -146,29 +144,31 @@ class sync():
         return result
 
 
+    # Return the bigger of the two versions.
     def compareVersion(self, ver1, ver2):
-        if not ver1: ver1 = 'v0000' # if False is input
-        if not ver2: ver2 = 'v0000' # if False is input
+        if not ver1: ver1 = 'v0000' # False to 'v0000'
+        if not ver2: ver2 = 'v0000' # False to 'v0000'
         verList = [ver1, ver2]
         result = sorted(verList, reverse=True)[0]
         return result
 
 
-    def finalVersion(self, dev, pub):
+    # Return the maxVersion + 1
+    def makeSyncVersion(self, dev, pub):
         if not os.path.isdir(dev): os.makedirs(dev)
         if not os.path.isdir(pub): os.makedirs(pub)
-        maxVerInDev = self.getMaxVersion(dev) # 'v0005'
-        maxVerInPub = self.getMaxVersion(pub) # 'v0004'
-        finalString = self.compareVersion(maxVerInDev, maxVerInPub) # 'v0005'
+        maxVerInDev = self.getMaxVersion(dev) # 'v0005' <- example
+        maxVerInPub = self.getMaxVersion(pub) # 'v0004' <- example
+        finalString = self.compareVersion(maxVerInDev, maxVerInPub) # 'v0005' <- return the bigger
         finalNumber = int(finalString[1:]) + 1 # 'v0005' -> 6
         result = "v%04d" % finalNumber # 6 -> 'v0006'
         return result
 
 
-    def makeNames(self, fullPath):
-        nwv, ext = self.info(fullPath, nwv=True, ext=True)
-        dev, pub = self.info2(fullPath, dev=True, pub=True)
-        ver = self.finalVersion(dev, pub)
+    # Make a sync full path.
+    def makeSyncNames(self, fullPath):
+        nwv, ext, dev, pub = self.info(fullPath, nwv=True, ext=True, dev=True, pub=True)
+        ver = self.makeSyncVersion(dev, pub)
         devPath = f"{dev}/{nwv}_{ver}{ext}"
         pubPath = f"{pub}/{nwv}_{ver}{ext}"
         v9999 = f"{pub}/{nwv}_v9999{ext}"
@@ -176,11 +176,13 @@ class sync():
         return result
 
 
+    # Compare Two Files.
+    # maxNumber in devFolder = maxNumber in pubFolder
     def compareFiles(self, fullPath):
-        nwv, ext = self.info(fullPath, nwv=True, ext=True)
-        dev, pub = self.info2(fullPath, dev=True, pub=True)
+        nwv, ext, dev, pub = self.info(fullPath, nwv=True, ext=True, dev=True, pub=True)
         maxVerInDev = self.getMaxVersion(dev)
         maxVerInPub = self.getMaxVersion(pub)
+        # Even if the real file is the same, return False, if the version is simply different.
         if maxVerInDev != maxVerInPub:
             result = False
         else:
@@ -199,7 +201,9 @@ class sync():
         return result
 
 
-    def makeFiles(self, fullPath, dev, pub, v9999):
+    # Different case depending on open file.
+    # Just save and copy.
+    def makeSyncFiles(self, fullPath, dev, pub, v9999):
         wip, ver = self.info(fullPath, wip=True, ver=True)
         if wip == 'dev':
             pm.saveAs(dev)
@@ -216,56 +220,60 @@ class sync():
                 shutil.copy(pub, v9999)
 
 
+    # Make the Alembic file path.
     def makeAbcPath(self, fullPath):
-        name = self.info(fullPath, name=True)[0] # without extension
-        dir = self.info2(fullPath, abc=True)[0] # "Y:/Project/Assets/Env/sceneName/mdl/pub/data/abc"
+        nwv, dir = self.info(fullPath, nwv=True, abc=True)[0]
         if not os.path.isdir(dir): os.makedirs(dir)
-        result = f"{dir}/{name}.abc"
+        result = f"{dir}/{nwv}_v9999.abc"
         return result
 
 
+    # Normal is unchecked in export options.
     def makeAbc(self, abcPath):
         sel = pm.ls(sl=True, long=True)
-        abcFile = " -file " + abcPath
-        start_end = "-frameRange %d %d" % (1, 1)
-        selection = ''.join([" -root " + i for i in sel])
-        exportOpt = start_end
-        # exportOpt += " -noNormals"
-        exportOpt += " -ro"
-        exportOpt += " -stripNamespaces"
-        exportOpt += " -uvWrite"
-        exportOpt += " -writeColorSets"
-        exportOpt += " -writeFaceSets"
-        exportOpt += " -wholeFrameGeo"
-        exportOpt += " -worldSpace"
-        exportOpt += " -writeVisibility"
-        exportOpt += " -eulerFilter"
-        exportOpt += " -autoSubd"
-        exportOpt += " -writeUVSets"
-        exportOpt += " -dataFormat ogawa"
-        exportOpt += selection
-        exportOpt += abcFile
-        pm.AbcExport(j = exportOpt)
+        if not sel:
+            om.MGlobal.displayError("Nothing selected.")
+        else:
+            abcFile = " -file " + abcPath
+            start_end = "-frameRange %d %d" % (1, 1)
+            selection = ''.join([" -root " + i for i in sel])
+            exportOpt = start_end
+            # exportOpt += " -noNormals"
+            exportOpt += " -ro"
+            exportOpt += " -stripNamespaces"
+            exportOpt += " -uvWrite"
+            exportOpt += " -writeColorSets"
+            exportOpt += " -writeFaceSets"
+            exportOpt += " -wholeFrameGeo"
+            exportOpt += " -worldSpace"
+            exportOpt += " -writeVisibility"
+            exportOpt += " -eulerFilter"
+            exportOpt += " -autoSubd"
+            exportOpt += " -writeUVSets"
+            exportOpt += " -dataFormat ogawa"
+            exportOpt += selection
+            exportOpt += abcFile
+            pm.AbcExport(j = exportOpt)
 
 
+    # Make the path of notepad.
     def makeTextPath(self, fullPath):
-        fileName = b'\xec\x9e\x91\xec\x97\x85\xec\x9e\x90'.decode("utf-8", "strict")
-        dir = self.info2(fullPath, pub=True)[0]
-        result = dir + '/' + fileName + '.txt'
+        fileName = 'log'
+        pubFolder = self.info(fullPath, pub=True)[0]
+        result = pubFolder + '/' + fileName + '.txt'
         return result
 
 
-    # Make Korean document.
-    def makeText(self, textPath):
-        # bytes, Korean
-        user = b'\xec\x9e\x91\xec\x97\x85\xec\x9e\x90 : '.decode("utf-8", "strict")
+    # Write down notepad.
+    def makeText(self, textPath, verInfo):
+        user = "user : "
         user += self.userField.getText()
-        date = b'\xeb\x82\xa0\xec\xa7\x9c : '.decode("utf-8", "strict")
+        date = "date : "
         date += pm.date()
-        memo = b'\xeb\xa9\x94\xeb\xaa\xa8 : '.decode("utf-8", "strict")
-        memo += self.memoField.getText().replace("\n", "\n" + "#" + " " * 9)
-        version = b'\xeb\xb2\x84\xec\xa0\x84 : '.decode("utf-8", "strict")
-        version += self.syncField.getText()
+        memo = "memo : "
+        memo += self.memoField.getText()
+        version = "version : "
+        version += verInfo
         with codecs.open(textPath, 'a', 'utf-8-sig') as txt:
             line = "# " + "=" * 40 + " #" + "\n"
             line += "# " + f"{user}" + "\n"
@@ -276,27 +284,12 @@ class sync():
             txt.write(line)
 
 
-    def main(self):
-        sel = pm.ls(sl=True)
+    # Open Note.
+    def openNotepad(self):
         fullPath = pm.Env().sceneName()
-        if not fullPath:
-            print("Save scene, First.")
-        elif not sel:
-            print("Nothing selected.")
-        else:
-            cmp = self.compareFiles(fullPath)
-            if cmp:
-                print("All files are synchronized.")
-            else:
-                # Save and Copy
-                dev, pub, v9999 = self.makeNames(fullPath)
-                self.makeFiles(fullPath, dev, pub, v9999)
-                # Alembic
-                abcPath = self.makeAbcPath(fullPath)
-                self.makeAbc(abcPath)
-                # Write down notes
-                textPath = self.makeTextPath(fullPath)
-                self.makeText(textPath)
+        notePath = self.makeTextPath(fullPath)
+        progName = "Notepad.exe"
+        subprocess.Popen([progName, notePath])
 
 
 sync()
