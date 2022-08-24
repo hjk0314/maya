@@ -2,7 +2,7 @@ import maya.cmds as cmds
 import maya.mel as mel
 import check
 import tools
-# import update
+import update
 
 
 cmds.evalDeferred('createMenuBar()')
@@ -33,7 +33,7 @@ def createMenuBar():
     cmds.setParent("..", menu=True)
     # Update
     cmds.menuItem(l="Update", subMenu=True, p=mainMenu, to=True)
-    cmds.menuItem(l="Model Sync", c=lambda x: print("mdlSync"))
+    cmds.menuItem(l="Sync", c=lambda x: update.sync())
     cmds.setParent("..", menu=True)
     # menu end ==========================================================================
 

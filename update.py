@@ -7,9 +7,12 @@ import subprocess
 import os
 
 
+# Synchronize the dev and pub folders.
+# Available in the madmanpost folder tree.
 class sync():
     def __init__(self):
         self.setupUI()
+        self.setText()
     
 
     # UI.
@@ -19,29 +22,42 @@ class sync():
         win = pm.window('Modeling_Synchronize', t='SynChronize', s=True, rtf=True)
         pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=285)
         pm.separator(h=10)
-        self.caseText = pm.text('', h=23)
+        self.caseText = pm.text(h=23)
         pm.separator(h=10)
         pm.rowColumnLayout(nc=2, cw=[(1, 50), (2, 226)])
-        pm.text('worker : ')
+        pm.text('작업자 : ')
         user = pm.internalVar(uad=True).split('/')[2]
         self.userField = pm.textField(ed=True, tx=user)
         pm.setParent("..", u=True)
         self.memoField = pm.scrollField(ed=True, ww=True, h=100)
         self.syncField = pm.textField(ed=False)
+        pm.button('새로고침', c=lambda x: self.setText())
         pm.separator(h=10)
-        pm.button('Synchronize', c=lambda x: self.syncMain())
-        pm.button('Export Alembic', c=lambda x: self.makeAbc())
-        pm.button('Open Note', c=lambda x: self.openNotepad())
+        pm.button('동기화', c=lambda x: self.syncMain())
+        pm.button('알렘빅 내보내기', c=lambda x: self.makeAbc())
+        pm.button('노트 열기', c=lambda x: self.openNotepad())
         pm.separator(h=10)
         pm.showWindow(win)
 
 
-    def makeCaseField(self):
+    def setText(self):
         fullPath = pm.Env().sceneName()
-        cmp = self.compareFiles(fullPath)
-        result = "All filese are same." if cmp else "Need to sync."
-        self.caseText.setText(result)
-        return result
+        if not fullPath:
+            case = "___ 알 수 없는 파일 ___"
+            ver = ''
+        else:
+            # set values
+            cmp = self.compareFiles(fullPath)
+            case = "=== 동기화 완료 ===" if cmp else "*** 동기화 필요 ***"
+            dev, pub = self.info(fullPath, dev=True, pub=True)
+            verDev = self.getMaxVersion(dev)
+            verDev = verDev if verDev else "_____"
+            verPub = self.getMaxVersion(pub)
+            verPub = verPub if verPub else "_____"
+            ver = f"dev) {verDev}    /    pub) {verPub}"
+        # set text
+        self.caseText.setLabel(case)
+        self.syncField.setText(ver)
 
 
     # Two steps : Synchronize and write Korean text.
@@ -62,7 +78,7 @@ class sync():
             self.makeText(textPath, verInfo)
             # reStart UI
             self.syncField.setText(verInfo)
-            self.makeCaseField()
+            self.setText()
 
 
     # Make the text fields.
@@ -220,20 +236,22 @@ class sync():
                 shutil.copy(pub, v9999)
 
 
-    # Make the Alembic file path.
-    def makeAbcPath(self, fullPath):
-        nwv, dir = self.info(fullPath, nwv=True, abc=True)[0]
+    def makeAbcPath(self):
+        fullPath = pm.Env().sceneName()
+        nwv, dir = self.info(fullPath, nwv=True, abc=True)
         if not os.path.isdir(dir): os.makedirs(dir)
-        result = f"{dir}/{nwv}_v9999.abc"
-        return result
+        abcPath = f"{dir}/{nwv}_v9999.abc"
+        return abcPath, dir
 
 
     # Normal is unchecked in export options.
-    def makeAbc(self, abcPath):
+    def makeAbc(self):
         sel = pm.ls(sl=True, long=True)
         if not sel:
             om.MGlobal.displayError("Nothing selected.")
         else:
+            abcPath, dir = self.makeAbcPath()
+            os.startfile(dir)
             abcFile = " -file " + abcPath
             start_end = "-frameRange %d %d" % (1, 1)
             selection = ''.join([" -root " + i for i in sel])
@@ -258,7 +276,7 @@ class sync():
 
     # Make the path of notepad.
     def makeTextPath(self, fullPath):
-        fileName = 'log'
+        fileName = '작업노트'
         pubFolder = self.info(fullPath, pub=True)[0]
         result = pubFolder + '/' + fileName + '.txt'
         return result
@@ -290,7 +308,4 @@ class sync():
         notePath = self.makeTextPath(fullPath)
         progName = "Notepad.exe"
         subprocess.Popen([progName, notePath])
-
-
-sync()
 
