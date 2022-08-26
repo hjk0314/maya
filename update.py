@@ -25,18 +25,18 @@ class sync():
         self.caseText = pm.text(h=23)
         pm.separator(h=10)
         pm.rowColumnLayout(nc=2, cw=[(1, 50), (2, 226)])
-        pm.text('작업자 : ')
+        pm.text('User : ')
         user = pm.internalVar(uad=True).split('/')[2]
         self.userField = pm.textField(ed=True, tx=user)
         pm.setParent("..", u=True)
         self.memoField = pm.scrollField(ed=True, ww=True, h=100)
         self.syncField = pm.textField(ed=False)
-        pm.button('새로고침', c=lambda x: self.setText())
+        pm.button('Refresh', c=lambda x: self.setText())
         pm.separator(h=10)
-        pm.button('동기화', c=lambda x: self.syncMain())
-        pm.button('pub폴더 열기', c=lambda x: self.openPubFolder())
-        pm.button('알렘빅 내보내기', c=lambda x: self.makeAbc())
-        pm.button('노트 열기', c=lambda x: self.openNotepad())
+        pm.button('Synchronize', c=lambda x: self.syncMain())
+        pm.button('Open the pub folder', c=lambda x: self.openPubFolder())
+        pm.button('Export to Alembic', c=lambda x: self.makeAbc())
+        pm.button('Open the note', c=lambda x: self.openNotepad())
         pm.separator(h=10)
         pm.showWindow(win)
 
@@ -45,13 +45,13 @@ class sync():
     def setText(self):
         fullPath = pm.Env().sceneName()
         if not fullPath:
-            case = "___ 알 수 없는 파일 ___"
+            case = "___ Unknown File ___"
             ver = ''
         else:
             # set values
             cmp = self.compareFiles(fullPath)
             dev, pub, nwe = self.info(fullPath, dev=True, pub=True, nwe=True)
-            case = "=== 동기화 완료 ===" if cmp else "*** 동기화 되어 있지 않습니다 ***"
+            case = "=== Sync complete ===" if cmp else "*** Not synchronized ***"
             case += "\n" + nwe
             verDev = self.getMaxVersion(dev)
             verDev = verDev if verDev else "_____"
@@ -67,11 +67,11 @@ class sync():
     def syncMain(self):
         fullPath = pm.Env().sceneName()
         if not fullPath:
-            om.MGlobal.displayError("씬은 저장되어 있어야 합니다.")
+            om.MGlobal.displayError("Save scene, first.")
         else:
             cmp = self.compareFiles(fullPath)
             if cmp:
-                om.MGlobal.displayInfo("모든 파일이 동기화 되었습니다.")
+                om.MGlobal.displayInfo("All Files are synchronized.")
             else:
                 # Save and Copy
                 dev, pub, v9999 = self.makeSyncNames(fullPath)
@@ -106,7 +106,7 @@ class sync():
     def info(self, fullPath, **kwargs):
         idx = self.getIndex(fullPath)
         if not idx:
-            om.MGlobal.displayError("폴더 트리가 회사 규칙에 맞는지 확인하십시요.")
+            om.MGlobal.displayError("Check the folder tree with company rules.")
         else:
             # sample : "C:/Users/jkhong/Desktop/bundangA/mdl/pub/scenes/env_bundangA_mdl_v0011.ma"
             dir = os.path.dirname(fullPath) # "C:/Users/jkhong/Desktop/bundangA/mdl/pub/scenes"
@@ -253,7 +253,7 @@ class sync():
     def makeAbc(self):
         sel = pm.ls(sl=True, long=True)
         if not sel:
-            om.MGlobal.displayError("먼저 오브젝트를 선택해야 합니다.")
+            om.MGlobal.displayError("Nothing selected.")
         else:
             abcPath, dir = self.makeAbcPath()
             os.startfile(dir)
@@ -281,7 +281,7 @@ class sync():
 
     # Make the path of notepad.
     def makeTextPath(self, fullPath):
-        fileName = '작업노트'
+        fileName = 'readme'
         pubFolder = self.info(fullPath, pub=True)
         pubFolder = ''.join(pubFolder)
         result = pubFolder + '/' + fileName + '.txt'
@@ -290,13 +290,13 @@ class sync():
 
     # Write down notepad.
     def makeText(self, textPath, verInfo):
-        user = "작업자 : "
+        user = "User : "
         user += self.userField.getText()
-        date = "날짜 : "
+        date = "Date : "
         date += pm.date()
-        memo = "메모 : "
+        memo = "Memo : "
         memo += self.memoField.getText().replace("\n", "\n#         ")
-        version = "버전 : "
+        version = "version : "
         version += verInfo
         with codecs.open(textPath, 'a', 'utf-8-sig') as txt:
             line = "# " + "=" * 40 + " #" + "\n"
@@ -312,11 +312,11 @@ class sync():
     def openNotepad(self):
         fullPath = pm.Env().sceneName()
         if not fullPath:
-            om.MGlobal.displayError("씬 파일에서 경로를 추출할 수 없습니다.")
+            om.MGlobal.displayError("Unable to extract path from scene file.")
         else:
             notePath = self.makeTextPath(fullPath)
             if not os.path.isfile(notePath):
-                om.MGlobal.displayError("작성된 노트가 없습니다.")
+                om.MGlobal.displayError("There is no readme.txt.")
             else:
                 progName = "Notepad.exe"
                 subprocess.Popen([progName, notePath])
@@ -325,7 +325,7 @@ class sync():
     def openPubFolder(self):
         fullPath = pm.Env().sceneName()
         if not fullPath:
-            om.MGlobal.displayError("씬은 저장되어 있어야 경로를 추출할 수 있습니다.")
+            om.MGlobal.displayError("The scene must be saved.")
         else:
             pubFolder = self.info(fullPath, pub=True)
             os.startfile(pubFolder)

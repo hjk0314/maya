@@ -625,6 +625,20 @@ def selGrp():
         else:
             continue
     pm.select(grp)
+
+
+# is group or not
+def isGrp():
+    sel = pm.ls(sl=True, dag=True, type=['transform'])
+    grp = []
+    for i in sel:
+        A = pm.listRelatives(i, s=True)
+        B = pm.ls(i, type='joint')
+        C = pm.ls(i, type='parentConstraint')
+        if not (A or B or C):
+            grp.append(i)
+        else:
+            continue
     return grp
 
 
@@ -653,5 +667,4 @@ def sameName():
         om.MGlobal.displayError("Same name selected in outliner.")
     else:
         om.MGlobal.displayInfo("No duplicated names.")
-
 
