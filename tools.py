@@ -763,6 +763,28 @@ class crewPlan():
         pm.showWindow(win)
 
 
-crewPlan()
+    def crewPlan():
+        team = "ANI_Team"
+        name = '홍진기'
+        csvPath = f"C:/Users/jkhong/Desktop/{team}_{name}_data.csv"
+        year = pm.date(f="YYYY")
+        month = '%02d' % 8
+        date = f"{year}-{month}"
+        with open(csvPath, 'r') as csv:
+            data = csv.readlines()
+        dataHash = {}
+        for i in data:
+            i = i.replace("\n", "")
+            line = i.split(",")
+            if line[2].startswith(date):
+                dataHash[line[2]] = line[2:7]
+            else:
+                continue
+        csvPath = "C:/Users/jkhong/Desktop/ANI_Team_홍진기_data.csv"
+        xlPath = "C:/Users/jkhong/Desktop/크루플랜(2022)_v01.xlsx"
+        doc = opxl.load_workbook(xlPath)
+        sheet = doc['기타']
+        sheet['HP70'] = 1.0
+        doc.save("C:/Users/jkhong/Desktop/크루플랜(2022)_v02.xlsx")
 
 
