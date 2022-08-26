@@ -3,6 +3,7 @@ import pymel.core as pm
 import json
 import os
 import math
+import openpyxl
 
 
 # Export to json file and shading networks. And assign to them.
@@ -702,4 +703,66 @@ def delPlugin():
         print('Delete completed.')
     else:
         om.MGlobal.displayWarning("There are no unknown plugins.")
+
+
+class crewPlan():
+    def __init__(self):
+        self.setupUI()
+
+
+    # UI.
+    def setupUI(self):
+        if pm.window('Crew_Plan', exists=True):
+            pm.deleteUI('Crew_Plan')
+        win = pm.window('Crew_Plan', t='Crew_Plan', s=True, rtf=True)
+        pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=360)
+        pm.separator(h=10)
+        pm.text('Crewplan input Tools', h=23)
+        pm.separator(h=10)
+        pm.rowColumnLayout(nc=5, cw=[(1, 50), (2, 100), (3, 10), (4, 50), (5, 141)])
+        pm.text('Team : ', al='left')
+        pm.optionMenu(l='', cc=print)
+        pm.menuItem(l='')
+        pm.menuItem(l='2D')
+        pm.menuItem(l='3D')
+        pm.menuItem(l='ANI')
+        pm.menuItem(l='ART')
+        pm.menuItem(l='ASSET')
+        pm.menuItem(l='FX')
+        pm.menuItem(l='PM')
+        pm.menuItem(l='SV')
+        pm.menuItem(l='VD')
+        pm.text('  - ')
+        pm.text('Name : ')
+        pm.textField(ed=True)
+        pm.setParent("..", u=True)
+        pm.rowColumnLayout(nc=5, cw=[(1, 120), (2, 80), (3, 50), (4, 101)])
+        pm.optionMenu(l='Date : ', cc=print)
+        pm.menuItem(l='2022')
+        pm.optionMenu(l='  -', cc=print)
+        pm.menuItem(l='1')
+        pm.menuItem(l='2')
+        pm.menuItem(l='3')
+        pm.menuItem(l='4')
+        pm.menuItem(l='5')
+        pm.menuItem(l='6')
+        pm.menuItem(l='7')
+        pm.menuItem(l='8')
+        pm.menuItem(l='9')
+        pm.menuItem(l='10')
+        pm.menuItem(l='11')
+        pm.menuItem(l='12')
+        pm.text('Start : ')
+        pm.textField(ed=True)
+        pm.setParent("..", u=True)
+        pm.scrollField(ed=True, ww=True, h=100)
+        pm.textField(ed=False)
+        pm.separator(h=10)
+        pm.button('write', c=lambda x: print(''))
+        pm.separator(h=10)
+        pm.showWindow(win)
+
+
+crewPlan()
+
 

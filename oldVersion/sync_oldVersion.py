@@ -1,6 +1,5 @@
 import maya.cmds as cmds
 import maya.OpenMaya as om
-import pymel.core as pm
 import shutil
 import codecs
 import filecmp
@@ -8,7 +7,7 @@ import subprocess
 import os
 
 
-class UpdateVersion():
+class sync_oldVersion():
     def __init__(self):
         self.sceneName = cmds.file(q=True, sn=True)
         if not self.sceneName:

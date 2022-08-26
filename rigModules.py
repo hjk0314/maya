@@ -1,5 +1,3 @@
-from argparse import Namespace
-from importlib.machinery import OPTIMIZED_BYTECODE_SUFFIXES
 import maya.cmds as cmds
 import maya.OpenMaya as om
 import pymel.core as pm
@@ -762,4 +760,3 @@ class bundangmain():
         return namespace
 
 
-bundangmain()
