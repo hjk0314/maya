@@ -10,9 +10,9 @@ class crewPlan():
         self.myCrewPlanPath2 = b'W:\\SP\xed\x8c\x80\\\xed\x81\xac\xeb\xa3\xa8\xed\x94\x8c\xeb\x9e\x9c\\2022'.decode('utf-8')
         self.alpha = {
             'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 'J': 10, 'K': 11, 'L': 12, 'M': 13, 
-            'N': 14, 'O': 15, 'P': 16, 'Q': 17, 'R': 18, 'S': 19, 'T': 20, 'U': 21, 'V': 22, 'W': 23, 'X': 24, 'Y': 25, 'Z': 26
+            'N': 14, 'O': 15, 'P': 16, 'Q': 17, 'R': 18, 'S': 19, 'T': 20, 'U': 21, 'V': 22, 'W': 23, 'X': 24, 'Y': 25, 'Z': 0
         }
-        self.exchangeAlpha = {value: key for key, value in self.alpha.items()}
+        self.swap_alpha = {value: key for key, value in self.alpha.items()}
         self.setupUI()
         self.checkCsvPath()
 
@@ -102,22 +102,27 @@ class crewPlan():
             return False
 
 
-    def getColumn(self, number, base): # getColumn(197, 26) -> 'HP'
+    def getColumn(self, number, base): # getColumn(224, 26) -> 'HP'
+        print(number)
         baseList = []
         while number > 0:
-            number, mod = divmod(number, base)
-            baseList.append(self.exchangeAlpha[mod]) # ['P', 'H']
+            if number == 26:
+                baseList.append('Z')
+                break
+            else:
+                number, mod = divmod(number, base)
+                baseList.append(self.swap_alpha[mod])
         result = baseList[::-1] # ['H', 'P']
-        result = ''.join(result) # 'HP'
-        # print(result)
-        return result
+        result = ''.join(result)
+        return result # 'HP'
 
 
-    def convertColumnToBase(self, columnString, base): # convertColumnToBase('HP', 26) -> 197
-        columnList = list(columnString)[::-1] # 'HP' -> ['H', 'P'] -> ['P', 'H']
+    def convertColumnToBase(self, columnString, base): # convertColumnToBase('HP', 26) -> 224
+        columnList = list(columnString) # 'HP' -> ['H', 'P']
+        columnList = columnList[::-1] # ['H', 'P'] -> ['P', 'H']
         result = 0
         for j, k in enumerate(columnList):
-            result += self.alpha[k] * (base ** j) # 15 * (26 ** 0) + 7 * (26 ** 1) + ...
+            result += self.alpha[k] * base ** j # 'P'*(base**j) + 'H'*(base**j)
         # print(result)
         return result
 
@@ -146,19 +151,22 @@ class crewPlan():
     def crewPlanMain(self):
         # data = self.getCsvInfo()
         column = self.columnField.getText()
+        # print(type(column))
         decimal = self.convertColumnToBase(column, 26)
-        # print(decimal)
+        # print(f"decimal : {decimal}")
         month = self.monthField.getValue()
         month = int(month)
         day = self.getDayCount(month)
         # print(day)
         userRow = '13'
-        columnList = []
-        for i in range(decimal, decimal + day):
+        columnList = [self.getColumn(i, 26) for i in range(decimal, decimal + day)]
+        print(columnList)
             # print(i)
-            columnList.append(f"{self.getColumn(i, 26)}")
-        for i in columnList:
-            print(i)
+            
+        #     print(a)
+        #     columnList.append(a)
+        # for i in columnList:
+        #     print(i)
         # print(len(columnList))
             
         
