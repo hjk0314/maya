@@ -1,6 +1,7 @@
 import pymel.core as pm
 import openpyxl
 import os
+import itertools
 
 
 class crewPlan():
@@ -8,11 +9,26 @@ class crewPlan():
         self.userName = ''
         self.myCrewPlanPath = pm.internalVar(uad=True) + 'myCrewPlanPath.txt'
         self.myCrewPlanPath2 = b'W:\\SP\xed\x8c\x80\\\xed\x81\xac\xeb\xa3\xa8\xed\x94\x8c\xeb\x9e\x9c\\2022'.decode('utf-8')
-        self.alpha = {
-            'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 'J': 10, 'K': 11, 'L': 12, 'M': 13, 
-            'N': 14, 'O': 15, 'P': 16, 'Q': 17, 'R': 18, 'S': 19, 'T': 20, 'U': 21, 'V': 22, 'W': 23, 'X': 24, 'Y': 25, 'Z': 26
+        self.alpha = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
+        self.sheetDict = {
+            "기타": "기타", 
+            "핸썸가이즈": "A_핸썸가이즈", 
+            "크리스마스선물": "B_크리스마스선물", 
+            "해피뉴이어": "C_해피뉴이어", 
+            "한산": "D_한산", 
+            "범죄2": "E_범죄2", 
+            "재벌집": "G_재벌집", 
+            "모럴센스": "F_모럴센스", 
+            "패뷸러스": "I_패뷸러스", 
+            "오픈더도어": "J_오픈더도어", 
+            "말할수없는비밀": "H_말할수없는비밀", 
+            "도적": "K_도적", 
+            "서울의봄": "L_서울의봄", 
+            "피랍": "M_피랍", 
+            "마스크걸": "N_마스크걸", 
+            "하얼빈": "O_하얼빈", 
+            "범죄3": "P_범죄3"
         }
-        self.exchangeAlpha = {value: key for key, value in self.alpha.items()}
         self.setupUI()
         self.checkCsvPath()
 
@@ -76,7 +92,6 @@ class crewPlan():
             # self.csvField.setBackgroundColor(val=(1.052, 0.275, 0.204))
 
 
-
     def getDayCount(self, month):
         year = pm.date(f='YYYY')
         year = int(year)
@@ -102,26 +117,6 @@ class crewPlan():
             return False
 
 
-    def getColumn(self, number, base): # getColumn(197, 26) -> 'HP'
-        baseList = []
-        while number > 0:
-            number, mod = divmod(number, base)
-            baseList.append(self.exchangeAlpha[mod]) # ['P', 'H']
-        result = baseList[::-1] # ['H', 'P']
-        result = ''.join(result) # 'HP'
-        # print(result)
-        return result
-
-
-    def convertColumnToBase(self, columnString, base): # convertColumnToBase('HP', 26) -> 197
-        columnList = list(columnString)[::-1] # 'HP' -> ['H', 'P'] -> ['P', 'H']
-        result = 0
-        for j, k in enumerate(columnList):
-            result += self.alpha[k] * (base ** j) # 15 * (26 ** 0) + 7 * (26 ** 1) + ...
-        # print(result)
-        return result
-
-
     def getCsvInfo(self):
         csv = self.csvField.getText()
         year = self.yearField.getValue()
@@ -143,27 +138,76 @@ class crewPlan():
         return dataList
 
 
+    # Convert number to column character in excel.
+    def numberToColumn(self, number):
+        count = 0
+        column = ''
+        for j in itertools.count(1): # count(1) -> 'A', 'B' / count(2) -> 'AA', 'AB' / count(3) -> 'AAA', 'AAB'
+            if count > number:
+                break
+            for k in itertools.product(self.alpha, repeat=j):
+                count += 1
+                if count > number:
+                    # yield ''.join(k)
+                    column = ''.join(k)
+                    break
+        return column
+
+
+    # Convert column letters to numbers in Excel.
+    def columnToNumber(self, column):
+        count = 0
+        isSame = False
+        for j in itertools.count(1): # count(1) -> 'A', 'B' / count(2) -> 'AA', 'AB' / count(3) -> 'AAA', 'AAB'
+            if isSame:
+                break
+            for k in itertools.product(self.alpha, repeat=j):
+                if column == ''.join(k):
+                    isSame = True
+                    # yield count
+                    break
+                count += 1
+        return count
+
+
     def crewPlanMain(self):
-        # data = self.getCsvInfo()
+        data = self.getCsvInfo()
         column = self.columnField.getText()
-        decimal = self.convertColumnToBase(column, 26)
-        # print(decimal)
+        num = self.columnToNumber(column)
         month = self.monthField.getValue()
         month = int(month)
         day = self.getDayCount(month)
-        # print(day)
-        userRow = '13'
-        columnList = []
-        for i in range(decimal, decimal + day):
-            # print(i)
-            columnList.append(f"{self.getColumn(i, 26)}")
-        for i in columnList:
-            print(i)
-        # print(len(columnList))
-            
+        userRow = '70'
+        columnList = [self.numberToColumn(i) for i in range(num, num + day)]
+        orgPath = 'C:/Users/jkhong/Desktop/크루플랜(2022)_v01.xlsx'
+        loadExcel = openpyxl.load_workbook(orgPath)
+        for i in data:
+            date = i[0]
+            date = date.split("-")[-1]
+            date = int(date)
+            idx = date - 1
+            colRow = columnList[idx] + userRow
+            sheetValue, cellValue = self.getInputData(i[1], i[2], i[3], i[4])
+            sName = loadExcel[self.sheetDict[sheetValue]]
+            sName[colRow] = float(cellValue) if cellValue.isdigit() else cellValue
+        loadExcel.save(orgPath)
+
+
+    def getInputData(self, sheet, time, sum, typ):
+        if typ == '휴가':
+            r_sheet = '기타'
+            value = '0.0'
+        elif typ == '반차':
+            r_sheet = sheet
+            value = '반' if sheet == '기타' and time == '0.0' else time
+        elif typ == '정상근무':
+            r_sheet = sheet
+            value = time
+        return r_sheet, value
+
+
+
         
-
-
 
 
 crewPlan()

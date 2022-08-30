@@ -1,9 +1,9 @@
-# import maya.cmds as cmds
 import maya.OpenMaya as om
 import pymel.core as pm
 import json
 import os
 import codecs
+import itertools
 
 
 # Export to json file and shading networks. And assign to them.
@@ -667,4 +667,41 @@ def sameName():
         om.MGlobal.displayError("Same name selected in outliner.")
     else:
         om.MGlobal.displayInfo("No duplicated names.")
+
+
+# Convert number to column character in excel.
+def numberToColumn(number):
+    if not number.isdigit():
+        print('Number only.')
+    else:
+        # ['A', 'B', 'C', ... 'Z']
+        alpha = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
+        count = 0
+        for j in itertools.count(1): # count(1) -> 'A', 'B' / count(2) -> 'AA', 'AB' / count(3) -> 'AAA', 'AAB'
+            if count > number:
+                break
+            for k in itertools.product(alpha, repeat=j):
+                count += 1
+                if count > number:
+                    yield ''.join(k)
+                    break
+
+
+# Convert column letters to numbers in Excel.
+def columnToNumber(column):
+    if not column.isalpha():
+        print('Alphabet only.')
+    else:
+        alpha = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
+        count = 0
+        isSame = False
+        for j in itertools.count(1): # count(1) -> 'A', 'B' / count(2) -> 'AA', 'AB' / count(3) -> 'AAA', 'AAB'
+            if isSame:
+                break
+            for k in itertools.product(alpha, repeat=j):
+                if column == ''.join(k):
+                    isSame = True
+                    yield count
+                    break
+                count += 1
 
