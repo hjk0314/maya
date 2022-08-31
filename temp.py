@@ -1,3 +1,4 @@
+import maya.OpenMaya as om
 import pymel.core as pm
 import openpyxl
 import os
@@ -6,9 +7,10 @@ import itertools
 
 class crewPlan():
     def __init__(self):
-        self.userName = ''
         self.myCrewPlanPath = pm.internalVar(uad=True) + 'myCrewPlanPath.txt'
-        self.myCrewPlanPath2 = b'W:\\SP\xed\x8c\x80\\\xed\x81\xac\xeb\xa3\xa8\xed\x94\x8c\xeb\x9e\x9c\\2022'.decode('utf-8')
+        self.wCrewPlanFolder = 'W:/SP팀/크루플랜/2022'
+        # self.originalExcelFolder = "W:/SP팀/크루플랜/크루플랜(2022)_v01.xlsx"
+        self.originalExcelFolder = 'C:/Users/jkhong/Desktop/크루플랜(2022)_v01.xlsx'
         self.alpha = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
         self.sheetDict = {
             "기타": "기타", 
@@ -37,61 +39,83 @@ class crewPlan():
     def setupUI(self):
         if pm.window('Crew_Plan', exists=True):
             pm.deleteUI('Crew_Plan')
-        win = pm.window('Crew_Plan', t='Crew_Plan', s=True, rtf=True)
+        win = pm.window('Crew_Plan', t='크루플랜 입력기', s=True, rtf=True)
         pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=310)
         pm.separator(h=10)
-        pm.button('Open csv file', c=lambda x: self.openCsv())
+        pm.button('CSV 파일 열기', c=lambda x: self.openCsv())
+        # my csv file path is here.
         self.csvField = pm.textField('csvField', ed=False)
         pm.separator(h=10)
         pm.rowColumnLayout(nc=4, cw=[(1, 95), (2, 55), (3, 90), (4, 60)])
-        self.yearField = pm.optionMenu(l='Date : ')
+        # This year.
+        self.yearField = pm.optionMenu(l='날짜 : ')
         pm.menuItem(l='2022')
+        # This month.
         self.monthField = pm.optionMenu(l='  -')
         mm = pm.date(f='MM')
-        mm = int(mm) - 1
-        mm = mm if mm else 12
-        for k in range(mm):
-            pm.menuItem(l='%d' % (mm - k))
-        pm.text('Start column : ', al='right')
-        self.columnField = pm.textField(ed=True)
+        mm = int(mm)
+        for k in range(1, mm + 1):
+            pm.menuItem(l='%d' % (mm - k + 1))
+        # Start column in of this month in excel File. ex) 6: FE, 7: GJ, 8: HP
+        pm.text('이달의 시작 열 : ', al='right')
+        self.columnField = pm.textField(ed=True, pht='FE, GJ, HP')
+        self.nameText = pm.text(al='left')
+        pm.text('    ')
+        pm.text('사용자 시작 행 : ', al='right')
+        self.userRowField = pm.textField(ed=True, pht=70)
         pm.setParent("..", u=True)
-        pm.button('Overwrite', c=lambda x: self.crewPlanMain())
         pm.separator(h=10)
-        pm.textField('resultField', ed=False) #, bgc=(1.052, 0.275, 0.204))
+        self.OriginFile = pm.textField(ed=False)
+        pm.button('원본 파일 열기', c=lambda x: self.openOrginalPath())
         pm.separator(h=10)
+        pm.button('덮어쓰기', c=lambda x: self.crewPlanMain())
+        pm.button('이번달 셀 초기화', c=lambda x: print('Not Ready.'))
+        pm.separator(h=10)
+        # This is alert messages.
+        # self.alarm = pm.textField('resultField', ed=False) #, bgc=(1.052, 0.275, 0.204))
+        # pm.separator(h=10)
         pm.showWindow(win)
 
 
+    # To load paths automatically the next time you run the tool.
     def checkCsvPath(self):
+        # Check this folder -> C:\Users\users\Documents\maya
+        # Put the 'myCrewPlanPath.txt'
         chk = os.path.isfile(self.myCrewPlanPath)
         if chk:
             with open(self.myCrewPlanPath, 'r') as file:
                 line = file.readline()
                 self.csvField.setText(line)
+                name = os.path.basename(line)
+                name = name.split("_")[2]
+                self.nameText.setLabel(f"이름 :   {name}")
         else:
-            self.csvField.setText("First run.")
+            self.csvField.setText('')
+            self.nameText.setLabel("이름 :   ")
 
 
+    # Save the Crewplan folder path as txt in My Documents Maya folder.
     def writeCsv(self, fullPath):
         with open(self.myCrewPlanPath, 'w') as file:
             file.write(fullPath)
 
 
+    # Open the csv file and save the path to the My Documents Maya folder.
     def openCsv(self):
-        csvPath = pm.fileDialog2(dir=self.myCrewPlanPath2, fm=0, ff='csv (*.csv);; All Files (*.*)')
+        csvPath = pm.fileDialog2(dir=self.wCrewPlanFolder, fm=0, ff='csv (*.csv);; All Files (*.*)')
         if csvPath:
             csvPath = ''.join(csvPath)
             self.csvField.setText(csvPath)
             file = os.path.basename(csvPath)
             name = file.split("_")[2]
-            self.userName = name
+            self.nameText.setLabel(f"이름 :   {name}")
             # Remember csv path.
             self.writeCsv(csvPath)
         else:
-            self.csvField.setText('Canceled.')
-            # self.csvField.setBackgroundColor(val=(1.052, 0.275, 0.204))
+            self.csvField.setText('')
 
 
+    # Get the number of days in the this month. Calculate leap years.
     def getDayCount(self, month):
         year = pm.date(f='YYYY')
         year = int(year)
@@ -117,14 +141,15 @@ class crewPlan():
             return False
 
 
-    def getCsvInfo(self):
-        csv = self.csvField.getText()
+    # Load information from csv file.
+    # Return the information as a list.
+    def getCsvInfo(self, csvPath):
         year = self.yearField.getValue()
         month = self.monthField.getValue()
         month = int(month)
         month = '%02d' % month
         date = f"{year}-{month}"
-        with open(csv, 'r') as file:
+        with open(csvPath, 'r') as file:
             data = file.readlines()
         dataList = []
         for i in data:
@@ -134,7 +159,6 @@ class crewPlan():
                 dataList.append(line[2:7])
             else:
                 continue
-        # print(dataList)
         return dataList
 
 
@@ -170,44 +194,85 @@ class crewPlan():
         return count
 
 
-    def crewPlanMain(self):
-        data = self.getCsvInfo()
-        column = self.columnField.getText()
-        num = self.columnToNumber(column)
-        month = self.monthField.getValue()
-        month = int(month)
-        day = self.getDayCount(month)
-        userRow = '70'
-        columnList = [self.numberToColumn(i) for i in range(num, num + day)]
-        orgPath = 'C:/Users/jkhong/Desktop/크루플랜(2022)_v01.xlsx'
-        loadExcel = openpyxl.load_workbook(orgPath)
-        for i in data:
-            date = i[0]
-            date = date.split("-")[-1]
-            date = int(date)
-            idx = date - 1
-            colRow = columnList[idx] + userRow
-            sheetValue, cellValue = self.getInputData(i[1], i[2], i[3], i[4])
-            sName = loadExcel[self.sheetDict[sheetValue]]
-            sName[colRow] = float(cellValue) if cellValue.isdigit() else cellValue
-        loadExcel.save(orgPath)
-
-
-    def getInputData(self, sheet, time, sum, typ):
+    # Organize the data to put in the cell
+    def getInputData(self, sheet, wTime, sum, typ):
+        r_sheet = sheet
+        value = wTime
         if typ == '휴가':
             r_sheet = '기타'
-            value = '0.0'
+            value = '휴'
         elif typ == '반차':
             r_sheet = sheet
-            value = '반' if sheet == '기타' and time == '0.0' else time
+            value = '반' if sheet == '기타' and wTime == '0.0' else (float(wTime) / 8)
         elif typ == '정상근무':
             r_sheet = sheet
-            value = time
+            value = float(wTime) / float(sum)
+        elif typ == '기타':
+            r_sheet = sheet
+            value = float(wTime) / float(sum)
+        else:
+            om.MGlobal.displayError('휴가, 반차, 정상근무 이외의 항목이 있습니다.')
+            r_sheet = ''
+            value = 0
         return r_sheet, value
 
 
+    # Open Original Excel File.
+    def openOrginalPath(self):
+        orgPath = pm.fileDialog2(dir=self.originalExcelFolder, fm=0, ff='xlsx (*.xlsx);; All Files (*.*)')
+        if orgPath:
+            orgPath = ''.join(orgPath)
+            self.OriginFile.setText(orgPath)
+        else:
+            self.OriginFile.setText('')
 
-        
+
+    # Main Function.
+    def crewPlanMain(self):
+        column = self.columnField.getText()
+        userRow = self.userRowField.getText()
+        csvPath = self.csvField.getText()
+        orgPath = self.OriginFile.getText()
+        if not column:
+            pass
+        elif not column.isalpha():
+            pass
+        elif not userRow:
+            pass
+        elif not userRow.isdigit():
+            pass
+        elif not csvPath:
+            pass
+        elif not orgPath:
+            pass
+        else:
+            column = column.upper() # GJ, HP 
+            userRow = int(userRow)
+            month = self.monthField.getValue() # '8'
+            month = int(month) # '8' -> 8
+            day = self.getDayCount(month) # 8 -> 31
+            data = self.getCsvInfo(csvPath) # [['2022-08-01', 'Etc', '0.0', '8.0', 'Normal'], ['2022-08-01', 'DOJ', '8.0', '8.0', 'Normal'], ...
+            num = self.columnToNumber(column) # HP -> 223
+            columnList = [self.numberToColumn(i) for i in range(num, num + day)]
+            loadExcel = openpyxl.load_workbook(orgPath)
+            for i in data:
+                date = i[0]
+                date = date.split("-")[-1]
+                date = int(date)
+                idx = date - 1
+                colRow = columnList[idx] + str(userRow)
+                sheetValue, cellValue = self.getInputData(i[1], i[2], i[3], i[4])
+                if sheetValue == '기타' and cellValue == 0.0:
+                    pass
+                else:
+                    try:
+                        float(cellValue)
+                    except:
+                        pass
+                    sName = loadExcel[self.sheetDict[sheetValue]]
+                    sName[colRow] = cellValue
+            loadExcel.save(orgPath)
+            om.MGlobal.displayInfo('Successfully done.')
 
 
 crewPlan()
