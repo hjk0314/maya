@@ -3,6 +3,7 @@ import os
 import itertools
 import datetime
 import csv
+import pandas as pd
 
 
 class crew():
@@ -188,9 +189,14 @@ class crew():
 def test():
     csvFolder = "Y:/personal/hjk2"
     csvFile = csvFolder + "/jkhong.csv"
-    with open(csvFile, 'a+', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(['Ani', '홍진기', '2022-09-01', '기타', 8.0, '정상근무'])
+    data = pd.read_csv(csvFile, sep=',')
+    # print(data[data['wType']=='휴가'])
+    # print(data[data.wDate == '2022-09-08'])
+    # data.uName = data.uName.replace('홍진기', '황병식')
+    # data.to_csv(csvFile, sep=',', index=False)
+    # with open(csvFile, 'a+', newline='') as file:
+    #     writer = csv.writer(file)
+    #     writer.writerow(['Ani', '홍진기', '2022-09-01', '기타', 8.0, '정상근무'])
 
 
 
