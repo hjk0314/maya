@@ -2,10 +2,12 @@ import openpyxl
 import os
 import itertools
 import datetime
+import csv
 
 
 class crew():
     def __init__(self):
+        self.csvFolder = "Y:/personal/hjk2"
         self.csvFile = '' # '../folder/*.csv'
         self.orgFile = '' # '../folder/*.xlsx'
         self.col = 'HP' # 'FE', 'GJ', 'HP'
@@ -183,4 +185,25 @@ class crew():
             loadExcel.save(orgPath)
 
 
-crew()
+def test():
+    csvFolder = "Y:/personal/hjk2"
+    csvFile = csvFolder + "/jkhong.csv"
+    with open(csvFile, 'a+', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['Ani', '홍진기', '2022-09-01', '기타', 8.0, '정상근무'])
+
+
+
+        # for row in reader:
+        #     yyyymmdd = datetime.date.today() # '2022-08-31'
+        #     temp = yyyymmdd.split("-") # ['2022', '08', '31']
+        #     yyyy = temp[0] # '2022'
+        #     mm = temp[1] # '08'
+        #     dd = temp[2] # '31'
+        #     idx = f"{yyyy}-{mm}"
+# dir = "Y:/personal/hjk2"
+# csvFolder = os.listdir(dir)
+# csvFile = [dir + '/' + i for i in csvFolder if i.endswith('.py')]
+# print(csvFile)
+
+test()
