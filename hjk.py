@@ -2,12 +2,6 @@ import maya.OpenMaya as om
 import pymel.core as pm
 import json
 import os
-import codecs
-import itertools
-import pandas as pd
-import pyodbc
-import urllib
-from sqlalchemy import create_engine
 
 
 # Export to json file and shading networks. And assign to them.

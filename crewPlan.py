@@ -9,14 +9,17 @@ import openpyxl
 from sqlalchemy import create_engine
 
 
-class crewPlan():
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+
+class CrewPlan():
     def __init__(self):
-        self.myCrewPlanPath = pm.internalVar(uad=True) + 'myCrewPlanPath.txt'
-        self.wCrewPlanFolder = 'W:/SP팀/크루플랜/2022'
-        # self.originalExcelFolder = "W:/SP팀/크루플랜/크루플랜(2022)_v01.xlsx"
-        self.originalExcelFolder = 'C:/Users/jkhong/Desktop/크루플랜(2022)_v01.xlsx'
-        self.alpha = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
-        self.sheetDict = {
+        self.DATE = '2022-08'
+        self.CSV_PATH = 'W:/SP팀/크루플랜/2022/ANI_Team_홍진기_data.csv'
+        self.ORG_PATH = 'W:/SP팀/크루플랜/크루플랜(2022)_v01.xlsx'
+        self.ALPHA = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
+        self.PROJ = {
             "기타": "기타", 
             "핸썸가이즈": "A_핸썸가이즈", 
             "크리스마스선물": "B_크리스마스선물", 
@@ -33,206 +36,67 @@ class crewPlan():
             "피랍": "M_피랍", 
             "마스크걸": "N_마스크걸", 
             "하얼빈": "O_하얼빈", 
-            "범죄3": "P_범죄3"
+            "범죄3": "P_범죄3", 
         }
-        self.setupUI()
-        self.checkCsvPath()
+        self.main()
 
 
-    # UI.
-    def setupUI(self):
-        if pm.window('Crew_Plan', exists=True):
-            pm.deleteUI('Crew_Plan')
-        win = pm.window('Crew_Plan', t='크루플랜 입력기', s=True, rtf=True)
-        pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=310)
-        pm.separator(h=10)
-        pm.button('CSV 파일 열기', c=lambda x: self.openCsv())
-        # my csv file path is here.
-        self.csvField = pm.textField('csvField', ed=False)
-        pm.separator(h=10)
-        pm.rowColumnLayout(nc=4, cw=[(1, 95), (2, 55), (3, 90), (4, 60)])
-        # This year.
-        self.yearField = pm.optionMenu(l='날짜 : ')
-        pm.menuItem(l='2022')
-        # This month.
-        self.monthField = pm.optionMenu(l='  -')
-        mm = pm.date(f='MM')
-        mm = int(mm)
-        for k in range(1, mm + 1):
-            pm.menuItem(l='%d' % (mm - k + 1))
-        # Start column in of this month in excel File. ex) 6: FE, 7: GJ, 8: HP
-        pm.text('이달의 시작 열 : ', al='right')
-        self.columnField = pm.textField(ed=True, pht='FE, GJ, HP')
-        self.nameText = pm.text(al='left')
-        pm.text('    ')
-        pm.text('사용자 시작 행 : ', al='right')
-        self.userRowField = pm.textField(ed=True, pht=70)
-        pm.setParent("..", u=True)
-        pm.separator(h=10)
-        self.OriginFile = pm.textField(ed=False)
-        pm.button('원본 파일 열기', c=lambda x: self.openOrginalPath())
-        pm.separator(h=10)
-        pm.button('덮어쓰기', c=lambda x: self.crewPlanMain())
-        pm.button('이번달 셀 초기화', c=lambda x: print('Not Ready.'))
-        pm.separator(h=10)
-        # This is alert messages.
-        # self.alarm = pm.textField('resultField', ed=False) #, bgc=(1.052, 0.275, 0.204))
-        # pm.separator(h=10)
-        pm.showWindow(win)
+    def main(self):
+        PATH = self.copyCSV()
+        data = self.readCSV(PATH)
+        self.makeValues(data)
 
 
-    # To load paths automatically the next time you run the tool.
-    def checkCsvPath(self):
-        # Check this folder -> C:\Users\users\Documents\maya
-        # Put the 'myCrewPlanPath.txt'
-        chk = os.path.isfile(self.myCrewPlanPath)
-        if chk:
-            with open(self.myCrewPlanPath, 'r') as file:
-                line = file.readline()
-                self.csvField.setText(line)
-                name = os.path.basename(line)
-                name = name.split("_")[2]
-                self.nameText.setLabel(f"이름 :   {name}")
-        else:
-            self.csvField.setText('')
-            self.nameText.setLabel("이름 :   ")
+    # Read the csv file.
+    def readCSV(self, PATH):
+        df = pd.read_csv(PATH)
+        data = df['날짜'].str.contains(self.DATE)
+        return df[data] # class: 'pandas.core.frame.DataFrame'
 
 
-    # Save the Crewplan folder path as txt in My Documents Maya folder.
-    def writeCsv(self, fullPath):
-        with open(self.myCrewPlanPath, 'w') as file:
-            file.write(fullPath)
+    # Make the sheet name and value.
+    def makeValues(self, df):
+        pass
 
 
-    # Open the csv file and save the path to the My Documents Maya folder.
-    def openCsv(self):
-        csvPath = pm.fileDialog2(dir=self.wCrewPlanFolder, fm=0, ff='csv (*.csv);; All Files (*.*)')
-        if csvPath:
-            csvPath = ''.join(csvPath)
-            self.csvField.setText(csvPath)
-            file = os.path.basename(csvPath)
-            name = file.split("_")[2]
-            self.nameText.setLabel(f"이름 :   {name}")
-            # Remember csv path.
-            self.writeCsv(csvPath)
-        else:
-            self.csvField.setText('')
-
-
-    # Get the number of days in the this month. Calculate leap years.
-    def getDayCount(self, month):
-        year = pm.date(f='YYYY')
-        year = int(year)
-        dayDict = {
-            1: 31, 
-            2: 28 if year%4 else 29, 
-            3: 31, 
-            4: 30, 
-            5: 31, 
-            6: 30, 
-            7: 31, 
-            8: 31, 
-            9: 30, 
-            10: 31, 
-            11: 30, 
-            12: 31
-        }
-        keys = dayDict.keys()
-        keys = list(keys)
-        if month in keys:
-            return dayDict[month]
-        else:
-            return False
-
-
-    # Load information from csv file.
-    # Return the information as a list.
-    def getCsvInfo(self, csvPath):
-        year = self.yearField.getValue()
-        month = self.monthField.getValue()
-        month = int(month)
-        month = '%02d' % month
-        date = f"{year}-{month}"
-        with open(csvPath, 'r') as file:
-            data = file.readlines()
-        dataList = []
-        for i in data:
-            i = i.replace("\n", "")
-            line = i.split(",")
-            if line[2].startswith(date):
-                dataList.append(line[2:7])
-            else:
-                continue
-        return dataList
-
-
-    # Convert number to column character in excel.
-    def numberToColumn(self, number):
+    # Number converted to column character.
+    def num2Col(self, number: int) -> str:
         count = 0
         column = ''
-        for j in itertools.count(1): # count(1) -> 'A', 'B' / count(2) -> 'AA', 'AB' / count(3) -> 'AAA', 'AAB'
+        # count(1): 'A', 'B'
+        # count(2): 'AA', 'AB'
+        # count(3): 'AAA', 'AAB'
+        for j in itertools.count(1):
             if count > number:
                 break
-            for k in itertools.product(self.alpha, repeat=j):
+            for k in itertools.product(self.ALPHA, repeat=j):
                 count += 1
                 if count > number:
-                    # yield ''.join(k)
                     column = ''.join(k)
                     break
         return column
 
 
-    # Convert column letters to numbers in Excel.
-    def columnToNumber(self, column):
+    # Column character converted to number.
+    def col2Num(self, column: str) -> int:
         count = 0
         isSame = False
-        for j in itertools.count(1): # count(1) -> 'A', 'B' / count(2) -> 'AA', 'AB' / count(3) -> 'AAA', 'AAB'
+        # count(1): 'A', 'B'
+        # count(2): 'AA', 'AB'
+        # count(3): 'AAA', 'AAB'
+        for j in itertools.count(1):
             if isSame:
                 break
-            for k in itertools.product(self.alpha, repeat=j):
+            for k in itertools.product(self.ALPHA, repeat=j):
                 if column == ''.join(k):
                     isSame = True
-                    # yield count
                     break
                 count += 1
         return count
 
 
-    # Organize the data to put in the cell
-    def getInputData(self, sheet, wTime, sum, typ):
-        r_sheet = sheet
-        value = wTime
-        if typ == '휴가':
-            r_sheet = '기타'
-            value = '휴'
-        elif typ == '반차':
-            r_sheet = sheet
-            value = '반' if sheet == '기타' and wTime == '0.0' else (float(wTime) / 8)
-        elif typ == '정상근무':
-            r_sheet = sheet
-            value = float(wTime) / float(sum)
-        elif typ == '기타':
-            r_sheet = sheet
-            value = float(wTime) / float(sum)
-        else:
-            om.MGlobal.displayError('휴가, 반차, 정상근무 이외의 항목이 있습니다.')
-            r_sheet = ''
-            value = 0
-        return r_sheet, value
-
-
-    # Open Original Excel File.
-    def openOrginalPath(self):
-        orgPath = pm.fileDialog2(dir=self.originalExcelFolder, fm=0, ff='xlsx (*.xlsx);; All Files (*.*)')
-        if orgPath:
-            orgPath = ''.join(orgPath)
-            self.OriginFile.setText(orgPath)
-        else:
-            self.OriginFile.setText('')
-
-
-    # Main Function.
-    def crewPlanMain(self):
+    # Check the conditions.
+    def conditions(self):
         column = self.columnField.getText()
         userRow = self.userRowField.getText()
         csvPath = self.csvField.getText()
@@ -279,47 +143,18 @@ class crewPlan():
             om.MGlobal.displayInfo('Successfully done.')
 
 
-
-    def saveAs():
-        csv_folder = "W:/SP팀/크루플랜/2022"
-        csv_newFolder = "C:/Users/jkhong/Desktop/크루플랜_테스트"
-        csv_files = os.listdir(csv_folder)
-        for i in csv_files:
-            csv_old = csv_folder + '/' + i
-            if os.path.isfile(csv_old):
-                csv_new = csv_newFolder + '/' + i
-                with open(csv_old, 'r') as txtOld:
-                    lines = txtOld.readlines()
-                if lines:
-                    with codecs.open(csv_new, 'w', 'utf-8-sig') as txtNew:
-                        txtNew.writelines(lines)
-                else:
-                    print(f"No data : {i}")
-            else:
-                pass
+    def writeExcel(self):
+        pass
 
 
-    # using urlib
-    # using sqlalchemy
-    # using pandas
-    def usingSqlalchemy():
-        conn_str = (
-            r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
-            r"DBQ=C:\Users\jkhong\Desktop\크루플랜_테스트\crewPlan.accdb;"
-        )
-        conn_url = f"access+pyodbc:///?odbc_connect={urllib.parse.quote_plus(conn_str)}"
-        acc_engine = create_engine(conn_url)
-        csv_folder = "C:/Users/jkhong/Desktop/크루플랜_테스트/csv_copied"
-        csv_files = os.listdir(csv_folder)
-        for i in csv_files:
-            csv_file = csv_folder + '/' + i
-            if os.path.isfile(csv_file):
-                try:
-                    df = pd.read_csv(csv_file)
-                    df.to_sql('2022', acc_engine, if_exists='append', index=True)
-                except:
-                    print(f'Error : {i}')
-                    continue
-            else:
-                pass
+    # CSV file is copied and returned.
+    def copyCSV(self) -> str:
+        (name, ext) = os.path.splitext(self.CSV_PATH)
+        NEW_PATH = name + '_sig' + ext
+        with open(self.CSV_PATH, 'r') as file:
+            lines = file.readlines()
+        with codecs.open(NEW_PATH, 'w', 'utf-8-sig') as newFile:
+            newFile.writelines(lines)
+        return NEW_PATH
+
 
