@@ -275,4 +275,3 @@ class crewPlan():
             om.MGlobal.displayInfo('Successfully done.')
 
 
-crewPlan()
