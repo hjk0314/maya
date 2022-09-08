@@ -1,70 +1,64 @@
 import itertools
 import urllib
 import pyodbc
+import openpyxl
 import pandas as pd
 from sqlalchemy import create_engine
 
 
-# using urlib
-# using sqlalchemy
-# using pandas
-def usingSqlalchemy():
+# Using pyodbc, pandas, sqlalchemy
+def csv2DB():
+    CSV_PATH = '../folder/file.csv'
     conn_str = (
         r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
-        r"DBQ=C:\Users\hjk03\Desktop\crewPlan\crewPlanDB.accdb;"
+        r"DBQ=../folder/file.accdb;"
     )
-    conn_url = f"access+pyodbc:///?odbc_connect={urllib.parse.quote_plus(conn_str)}"
+    conn_str = urllib.parse.quote_plus(conn_str)
+    conn_url = f'access+pyodbc:///?odbc_connect={conn_str}'
     acc_engine = create_engine(conn_url)
-    csv_path = r"C:\Users\hjk03\Desktop\crewPlan\csv\ANI_Team_NAME_data.csv"
-    df = pd.read_csv(csv_path)
-    df.to_sql('2022', acc_engine, if_exists='append', index=False)
+    df = pd.read_csv(CSV_PATH, encoding='ANSI')
+    # df.to_csv(CSV_PATH, index=False, encoding='utf-8')
+    df.to_sql('TABLE', acc_engine, if_exists='append', index=False)
 
 
-# using pyodbc only
-def usingPyodbc():
+# Using pyodbc
+def sql2DB():
     conn_str = (
         r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
-        r"DBQ=C:\Users\hjk03\Desktop\crewPlan\crewPlanDB.accdb;"
+        r"DBQ=../folder/file.accdb;"
     )
     conn = pyodbc.connect(conn_str)
     cursor = conn.cursor()
-    # insert
     sql = (
-        r"INSERT INTO 2022 ([TEAM], [NAME], [DATE], [PROJ], [wTIME], [aTIME], [TYPE]) VALUES "
-        r"('myTeam', 'myName', '2022-09-03', 'Voltron', 5.0, 5.0, 'normal')"
+        r'INSERT INTO "table" (["team"], ["name"], ["date"]) VALUES '
+        r'("myTeam", "myName", "2022-09-08")'
     )
     cursor.execute(sql)
     cursor.commit()
-    # select
-    sql = r"SELECT * FROM 2022"
-    cursor.execute(sql)
-    for row in cursor.fetchall():
-        print(row)
+    # sql = r'SELECT * FROM table'
+    # cursor.execute(sql)
+    # for row in cursor.fetchall():
+    #     print(row)
     cursor.close()
     conn.close()
 
 
-# using pandas
-# using pyodbc
-def usingPandas():
+# Using pyodbc, pandas
+# Read only.
+def readDB():
     conn_str = (
         r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
-        r"DBQ=C:\Users\hjk03\Desktop\crewPlan\crewPlanDB.accdb;"
+        r"DBQ=../folder/file.accdb;"
     )
     conn = pyodbc.connect(conn_str)
-    sql = r"SELECT * FROM 2022"
+    sql = r"SELECT * FROM table"
     df = pd.read_sql(sql, conn)
-    wDate  = [str(i) for i in df['DATE'] if str(i).startswith('2022-05')]
-    print(wDate)
+    data = df['DATE'].str.contains('2022-08')
+    # data = [str(i) for i in df['DATE'] if str(i).startswith('2022-05')]
     conn.close()
 
 
-# 79 char line ================================================================
-# 72 docstring or comments line ========================================
-
-
-
-
+# Useful for Excel columns.
 def num2Col(number: int) -> str:
     alpha = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
     count = 0
@@ -84,6 +78,7 @@ def num2Col(number: int) -> str:
     return column
 
 
+# Useful for Excel columns.
 def col2Num(column: str) -> int:
     alpha = [chr(i) for i in range(ord('A'), ord('Z') + 1)]
     count = 0
@@ -101,4 +96,17 @@ def col2Num(column: str) -> int:
                 break
             count += 1
     return count
+
+
+# Using openpyxl only.
+def writeExcel():
+    EXCEL_PATH = '../folder/file.xlsx'
+    loadExcel = openpyxl.load_workbook(EXCEL_PATH)
+    SHEET = loadExcel['Sheet1']
+    SHEET['A1'] = 2.0
+    loadExcel.save(EXCEL_PATH)
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
