@@ -1,5 +1,4 @@
 import pymel.core as pm
-import codecs
 
 
 # 79 char line ================================================================
@@ -8,12 +7,7 @@ import codecs
 
 class AutoWheel():
     def __init__(self):
-        # inputs
-        self.obj = 'pony2_wheel_Ft_L'
-        self.ccSize = 3
-        # self.variables
         self.setupUI()
-        self.fill()
 
 
     def setupUI(self):
@@ -21,20 +15,38 @@ class AutoWheel():
             pm.deleteUI('Auto_Wheel')
         titleStr = 'Automatically_rotate_the_wheel'
         win = pm.window('Auto_Wheel', t=titleStr, s=True, rtf=True)
-        pm.columnLayout(cat=('both', 4), rs=2, cw=285)
+        pm.columnLayout(cat=('both', 4), rs=2, cw=295)
+        sel = pm.ls(sl=True)
+        dic = {}
+        for j, k in enumerate(sel):
+            pm.separator(h=10)
+            pm.rowColumnLayout(nc=2, cw=[(1, 60), (2, 226)])
+            pm.text('wheel_%s :  ' % j, al='right')
+            obj = pm.textField(ed=False, tx=k)
+            pm.text('ctrl_%s :  ' % j, al='right')
+            cuv = pm.textField(ed=True, tx=f'cc_{k}')
+            pm.setParent("..", u=True)
+            dic[obj] = cuv
         pm.separator(h=10)
-        pm.rowColumnLayout(nc=2, cw=[(1, 50), (2, 226)])
-        pm.text('cuvCtrl :')
-        self.ctrlName = pm.textField(ed=True, pht='Controller\'s name')
-        pm.text('Radius :')
-        self.wheelRadius = pm.textField(ed=True, pht='Size of wheel')
-        pm.setParent("..", u=True)
-        self.conditions = pm.textField(ed=False)
+        bgColor = (0.269, 0.509, 0.617)
+        # bgColor = (0.839, 0.422, 0.176)
+        msg1 = 'Change the radius later in the controller.'
+        msg2 = 'Nothing selected.'
+        msg = msg1 if sel else msg2
+        self.conditions = pm.textField(ed=False, tx=msg, bgc=bgColor)
         pm.separator(h=10)
-        pm.button(l='Create', c=lambda x: self.main())
+        if sel:
+            lbl = 'Create'
+            fn = 'lambda x: self.main(dic)'
+        else:
+            lbl = 'Select the wheel first'
+            fn = 'lambda x: self.setupUI()'
+        pm.button(l=lbl, c=exec(fn))
         pm.separator(h=10)
         pm.showWindow(win)
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
     def fill(self):
         sel = pm.ls(sl=True)
@@ -70,8 +82,8 @@ class AutoWheel():
         return result
 
 
-    def main(self):
-        a = self.ctrlName.getText()
+    def main(self, a):
+        # a = self.ctrlName.getText()
         print(a)
 
 
