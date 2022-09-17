@@ -1,101 +1,90 @@
 import pymel.core as pm
 
 
-# 79 char line ================================================================
-# 72 docstring or comments line ========================================
-
-
 class AutoWheel():
     def __init__(self):
         self.setupUI()
 
 
+    # maya UI
     def setupUI(self):
         if pm.window('Auto_Wheel', exists=True):
             pm.deleteUI('Auto_Wheel')
+        # title
         ttl = 'Automatically_rotate_the_wheel'
         win = pm.window('Auto_Wheel', t=ttl, s=True, rtf=True)
         pm.columnLayout(cat=('both', 4), rs=2, cw=295)
-        self.dic = {}
-        for i in range(4):
-            wheelStr = 'wheel_%d' % i
-            ctrlStr = 'ctrl_%d' % i
-            pm.separator(h=10)
-            pm.rowColumnLayout(nc=2, cw=[(1, 60), (2, 226)])
-            pm.text(f'{wheelStr} :  ', al='right')
-            wheelField = pm.textField(ed=False, pht='wheel\'s name')
-            pm.text(f'{ctrlStr} :  ', al='right')
-            ctrlField = pm.textField(ed=True, pht='controller\'s name')
-            pm.setParent("..", u=True)
-            self.dic[wheelField] = ctrlField
+        pm.separator(h=10)
+        pm.rowColumnLayout(nc=2, cw=[(1, 60), (2, 226)])
+        pm.text('wheel_0 :  ', al='right')
+        self.wheelField = pm.textField(ed=False, pht='Nothing selected')
+        pm.text('ctrl_0 :  ', al='right')
+        self.ctrlField = pm.textField(ed=True)
+        pm.setParent("..", u=True)
         pm.separator(h=10)
         self.conditions = pm.textField(ed=False)
         pm.separator(h=10)
         pm.button(l='Fill the blanks', c=lambda x: self.fill())
-        pm.button(l='Create', c=lambda x: self.main())
+        # create button
+        self.crtBtn = pm.button(l='Create', en=False, c=lambda x: self.main())
         pm.separator(h=10)
         pm.showWindow(win)
 
 
+    # fill the blanks
     def fill(self):
         sel = pm.ls(sl=True)
-        num = len(sel)
-        for j, k in enumerate(self.dic):
-            if j < num:
-                obj = sel[j]
-                k.setText(obj)
-                self.dic[k].setText(f'cc_{obj}')
-            else:
-                break
+        if not sel:
+            obj = ''
+            cuv = ''
+            msg = 'Nothing Selected.'
+            enb = False
+            bgColor = (0.839, 0.422, 0.176)
+        else:
+            obj = sel[0]
+            cuv = 'cc_' + obj
+            msg = 'Ready'
+            enb = True
+            bgColor = (0.269, 0.509, 0.617)
+        # Some fields are changed.
+        self.wheelField.setText(obj)
+        self.ctrlField.setText(cuv)
+        self.conditions.setText(msg)
+        self.conditions.setBackgroundColor(bgColor)
+        self.crtBtn.setEnable(enb)
 
 
-    def main(self):
-        # cc: Curve Controller
-        ccDic = self.check()
-        print(ccDic)
-        # for i in ccDic:
-            # ccDic = {cuvName: wheelRadius, ...}
-            # self.createCC(i, ccDic[i])
-
-
-    def check(self):
+    # check the field.
+    def check(self) -> dict:
         result = {}
-        for i in self.dic:
-            wheel = i.getText()
-            curve = self.dic[i].getText()
-            colon = ':' in curve
-            dup = '|' in curve
-            rad = self.getRadius(wheel)
-            if not wheel: # is or not
-                msg = 'Nothing selected.'
-                bgColor = (0.839, 0.422, 0.176)
-                break
-            elif not curve: # is or not
-                msg = 'The Curve Controller Name field is empty.'
-                bgColor = (0.839, 0.422, 0.176)
-                break
-            elif not rad: # zero or not
-                msg = 'The radius must be non-zero.'
-                bgColor = (0.839, 0.422, 0.176)
-                break
-            elif colon: # is colon included or not
-                msg = 'The controllers name contains a colon.'
-                bgColor = (0.839, 0.422, 0.176)
-                break
-            elif dup: # is duplicated or not
-                msg = 'You should check for duplicate names.'
-                bgColor = (0.839, 0.422, 0.176)
-                break
-            else:
-                msg = 'Successfully added it to the dictionary.'
-                bgColor = (0.269, 0.509, 0.617)
-                result[curve] = rad
+        wheel = self.wheelField.getText()
+        curve = self.ctrlField.getText()
+        colon = ':' in curve
+        dup = '|' in curve
+        rad = self.getRadius(wheel)
+        bgColor = (0.839, 0.422, 0.176) # This is red
+        if not wheel: # is or not
+            msg = 'Nothing selected.'
+        elif not curve: # is or not
+            msg = 'is empty.'
+        elif not rad: # zero or not
+            msg = 'The radius must be non-zero.'
+        elif colon: # is colon included or not
+            msg = 'Contains a colon.'
+        elif dup: # is duplicated or not
+            msg = 'check the duplicate names.'
+        else:
+            msg = 'Successfully done.'
+            bgColor = (0.269, 0.509, 0.617) # This is blue.
+            result[curve] = rad
         self.conditions.setText(msg)
         self.conditions.setBackgroundColor(bgColor)
         return result
 
 
+    # Return wheel's radius.
     def getRadius(self, obj: str) -> float:
+        # bb: bounding box
         bbWheel = pm.xform(obj, q=True, bb=True)
         xMin, yMin, zMin, xMax, yMax, zMax = bbWheel
         x = (xMax - xMin) / 2
@@ -103,17 +92,16 @@ class AutoWheel():
         z = (zMax - zMin) / 2
         bbList = [x, y, z]
         bbList.sort(reverse=True)
-        bb = bbList[0] # biggest
-        result = round(bb, 3)
+        bb = bbList[0] # biggest: 0.12345678
+        result = round(bb, 3) # 0.123
         return result
 
 
     # Create curve Controllers, joints, and groups.
-    def createCC(self, cuv: str, rad: float) -> None:
-        # Variables
-        jnt, nullGrp, prevGrp, orntGrp, exprStr = self.createVar(cuv)
+    def createCC(self, cc: str, rad: float) -> None:
         # Create in maya
-        pm.circle(n=cuv, nr=(1,0,0), r=rad, ch=False)
+        cuv = pm.circle(n=cc, nr=(1,0,0), r=rad, ch=False)[0]
+        jnt, nullGrp, prevGrp, orntGrp, exprStr = self.createVar(cuv)
         pm.addAttr(cuv, ln='Radius', at='double', dv=1)
         pm.setAttr(f'{cuv}.Radius', e=True, k=True)
         pm.setAttr(f'{cuv}.Radius', rad)
@@ -171,6 +159,12 @@ class AutoWheel():
         # expression end ===============================================
         result = (jnt, nullGrp, prevGrp, orntGrp, exprStr)
         return result
+
+
+    def main(self):
+        dic = self.check()
+        for i in dic:
+            self.createCC(i, dic[i])
 
 
 AutoWheel()
