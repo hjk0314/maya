@@ -1,10 +1,6 @@
 import maya.cmds as cmds
 
 
-# xform
-cmds.xform('obj', q=True, t=True, ws=True)
-
-
 # Create channel
 cmds.attributeQuery('FKIK', node='controller', ex=True)
 cmds.addAttr('controller', ln='visibility', at='float', dv=0)

@@ -167,4 +167,8 @@ class AutoWheel():
             self.createCC(i, dic[i])
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+
 AutoWheel()
