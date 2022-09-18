@@ -1,11 +1,11 @@
+import os
+import json
 import maya.OpenMaya as om
 import pymel.core as pm
-import json
-import os
 
 
 # Export to json file and shading networks. And assign to them.
-class abc():
+class Abc():
     def __init__(self):
         min = pm.playbackOptions(q=True, min=True)
         max = pm.playbackOptions(q=True, max=True)
@@ -14,18 +14,24 @@ class abc():
 
     # UI.
     def setupUI(self, min, max):
-        if pm.window('exportABC_withShader', exists=True):
-            pm.deleteUI('exportABC_withShader')
+        winStr = 'exportABC_withShader'
+        ttl = 'Export to Alembic with Shader'
+        if pm.window(winStr, exists=True):
+            pm.deleteUI(winStr)
         else:
-            win = pm.window('exportABC_withShader', t='Export to Alembic with Shader', s=True, rtf=True)
+            win = pm.window(winStr, t=ttl, s=True, rtf=True)
             pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=380)
             pm.separator(h=10)
-            pm.button(l='Create JSON and export shadingEngines', c=lambda x: self.jsonButton())
-            self.frameRange = pm.intFieldGrp(l='Range : ', nf=2, v1=min, v2=max)
-            self.oneFileCheck = pm.checkBoxGrp(l='One File : ', ncb=1, v1=True)
+            btnStr = 'Create JSON and export shadingEngines'
+            pm.button(l=btnStr, c=lambda x: self.jsonButton())
+            rStr = 'Range : '
+            self.frameRange = pm.intFieldGrp(l=rStr, nf=2, v1=min, v2=max)
+            oStr = 'One File : '
+            self.oneFileCheck = pm.checkBoxGrp(l=oStr, ncb=1, v1=True)
             pm.button(l='Export ABC', c=lambda x: self.exportButton())
             pm.button(l='Import ABC', c=lambda x: self.importButton())
-            pm.button(l='Assign shaders to objects', c=lambda x: self.assignButton())
+            btnStr = 'Assign shaders to objects'
+            pm.button(l=btnStr, c=lambda x: self.assignButton())
             pm.separator(h=10)
             pm.showWindow(win)
 
@@ -39,7 +45,8 @@ class abc():
             om.MGlobal.displayError("Same name exists.")
         else:
             shdEngList = self.getShadingEngine(sel)
-            jsonPath = pm.fileDialog2(fm=0, ff='json (*.json);; All Files (*.*)')
+            ffStr = 'json (*.json);; All Files (*.*)'
+            jsonPath = pm.fileDialog2(fm=0, ff=ffStr)
             if not jsonPath:
                 om.MGlobal.displayInfo('Canceled.')
             else:
@@ -48,13 +55,15 @@ class abc():
                 self.exportShader(shdEngList, jsonPath)
 
 
-    # If there is a "|" in the object name, it is considered a duplicate name.
+    # If there is a "|" in the object name, 
+    # It is considered a duplicate name.
     def checkSameName(self, nameList):
         sameName = [i for i in nameList if "|" in i]
         return sameName
 
 
-    # If the object is connected to the shading engine, it is returned as a dictionary.
+    # If the object is connected to the shading engine,
+    # It is returned as a dictionary.
     def getShadingEngine(self, sel):
         dic = {}
         for i in sel:
@@ -109,8 +118,9 @@ class abc():
 
     # Select a folder or specify a file name.
     def getExportPath(self, oneFileCheck):
+        ffStr = 'Alembic (*.abc);; All Files (*.*)'
         if oneFileCheck:
-            abcPath = pm.fileDialog2(fm=0, ff='Alembic (*.abc);; All Files (*.*)')
+            abcPath = pm.fileDialog2(fm=0, ff=ffStr)
         else:
             abcPath = pm.fileDialog2(fm=2, ds=1)
         return abcPath
@@ -145,7 +155,8 @@ class abc():
 
     # This function works when the Import button is pressed. 
     def importButton(self):
-        importDir = pm.fileDialog2(fm=1, ff='Alembic (*.abc);; All Files (*.*)')
+        ffStr = 'Alembic (*.abc);; All Files (*.*)'
+        importDir = pm.fileDialog2(fm=1, ff=ffStr)
         if importDir:
             pm.AbcImport(importDir, m='import')
         else:
@@ -153,13 +164,14 @@ class abc():
 
 
     # This function works when the Assign button is pressed.
-    # "_shader.ma" is loaded as a reference and associated with the selected object.
+    # "_shader.ma" is loaded as a reference and associated with objects.
     def assignButton(self):
         sel = pm.ls(sl=True, dag=True, s=True)
         if not sel:
             om.MGlobal.displayError('Nothing selected.')
         else:
-            jsonPath = pm.fileDialog2(fm=1, ff='json (*.json);; All Files (*.*)')
+            ffStr = 'json (*.json);; All Files (*.*)'
+            jsonPath = pm.fileDialog2(fm=1, ff=ffStr)
             shaderPath = self.getShaderPath(jsonPath)
             if not jsonPath:
                 om.MGlobal.displayInfo("Canceled.")
@@ -169,8 +181,11 @@ class abc():
                 self.makeReference(shaderPath)
                 jsonDic = self.readJson(jsonPath)
                 failLst = self.assignShd(sel, jsonDic)
-                message = "Some objects failed to connect." if failLst else "Completed successfully."
-                om.MGlobal.displayInfo(message)
+                if failLst:
+                    msg = "Some objects failed to connect."
+                else:
+                    msg =  "Completed successfully."
+                om.MGlobal.displayInfo(msg)
 
 
     # Attempts to assign, and returns a list that fails.
@@ -198,13 +213,18 @@ class abc():
             referenceName = False
         if referenceName:
             # This is a replacement reference.
-            # cmds.file(shaderPath, lr=referenceName, op='v=0')   # lr=loadReference
             pm.loadReference(shaderPath, op='v=0')
         else:
             # This is a new reference.
-            # r=reference, iv=ignoreVersion, gl=groupLocator, mnc=mergeNamespacesOnClash, op=option, v=verbose, ns=nameSpace
-            # cmds.file(shaderPath, r=True, typ='mayaAscii', iv=True, gl=True, mnc=True, op='v=0', ns=':')
-            pm.createReference(shaderPath, r=True, typ='mayaAscii', iv=True, gl=True, mnc=True, op='v=0', ns=':')
+            pm.createReference(shaderPath, 
+                r=True, # r=reference
+                typ='mayaAscii', 
+                iv=True, # iv=ignoreVersion
+                gl=True, # gl=groupLocator
+                mnc=True, # mnc=mergeNamespacesOnClash
+                op='v=0', # op=option
+                ns=':' # ns=nameSpace
+            )
 
 
     # Read shading information from Json file.
@@ -217,7 +237,7 @@ class abc():
             return False
 
 
-    # There should be a "_shader.ma" file in the same folder as the json file.
+    # There should be a "_shader.ma" file in the json's same folder.
     def getShaderPath(self, jsonPath):
         try:
             (dir, ext) = os.path.splitext(jsonPath[0])
@@ -230,7 +250,7 @@ class abc():
 
 # Got this code from the internet.
 # Modified to class.
-class softSel():
+class SoftSel():
     def __init__(self):
         self.createSoftCluster()
     
@@ -250,7 +270,9 @@ class softSel():
             node = dagPath.fullPathName()
             fnComp = om.MFnSingleIndexedComponent(component)   
             for i in range(fnComp.elementCount()):
-                elements.append([node, fnComp.element(i), fnComp.weight(i).influence()])
+                elem = fnComp.element(i)
+                infl = fnComp.weight(i).influence()
+                elements.append([node, elem, infl])
             iter.next()
         return elements
         
@@ -265,7 +287,7 @@ class softSel():
         pm.select(cluster[1], r=True)
 
 
-class rename():
+class Rename():
     def __init__(self):
         self.setupUI()
 
@@ -278,10 +300,19 @@ class rename():
             win = pm.window('Re_name', t='rename', s=True, rtf=True)
             pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=391)
             pm.separator(h=10)
+            # new field
             self.new = pm.textFieldGrp(l="New name : ", ed=True)
-            self.chk = pm.checkBoxGrp(l='Replace : ', ncb=1, v1=False, cc=lambda x: self.updateUI())
-            self.rep = pm.textFieldGrp(l="Replace to this : ", ed=True, en=False)
-            self.end = pm.textFieldGrp(l="End : ", ed=True, tcc=lambda x: self.updateUI())
+            # check field
+            chkStr = 'Replace : '
+            chkFn = lambda x: self.updateUI()
+            self.chk = pm.checkBoxGrp(l=chkStr, ncb=1, v1=False, cc=chkFn)
+            # replace field
+            repStr = "Replace to this : "
+            self.rep = pm.textFieldGrp(l=repStr, ed=True, en=False)
+            # endfield
+            endFn = lambda x: self.updateUI()
+            self.end = pm.textFieldGrp(l="End : ", ed=True, tcc=endFn)
+            # button
             self.btn = pm.button(l='New', c=lambda x: self.reName())
             pm.separator(h=10)
             pm.showWindow(win)
@@ -303,12 +334,18 @@ class rename():
     # The number is last one in name.
     # This function is Only works for strings sliced with underscores.
     # Return index and its number.
-    def getNumberInName(self, name): # input example : 'pCube1_22_obj_22_a2'
-        nameSlice = name.split("_") # ['pCube1', '22', 'obj', '22', 'a2']
-        digitList = [(j, k) for j, k in enumerate(nameSlice) if k.isdigit()] # [(1, '22'), (3, '22')]
+    def getNumberInName(self, name: str) -> tuple:
+        # sample string: 'Cube1_22_obj_22_a2'
+        nameSlice = name.split("_")
+        # nameSlice: ['Cube1', '22', 'obj', '22', 'a2']
+        digitList = []
+        # digitList: [(1, '22'), (3, '22')]
+        for j, k in enumerate(nameSlice):
+            if k.isdigit():
+                digitList.append((j, k))
         try:
-            idx, num = digitList[-1]
-            return idx, int(num)
+            result = digitList[-1] # last one
+            return result
         except:
             return False
 
@@ -327,25 +364,28 @@ class rename():
                 pm.rename(i, i + end if end else new)
 
 
-# Delete the node named 'vaccine_gene' and "breed_gene" in the <.ma> file.
+# Delete the node named 'vaccine_gene' and "breed_gene" in the ma file.
 # It is related to mayaScanner distributed by autodesk.
-class vaccine():
+class Vaccine():
     def __init__(self):
         self.setupUI()
 
 
     # UI.
     def setupUI(self):
-        if pm.window('Delete_vaccine', exists=True):
-            pm.deleteUI('Delete_vaccine')
+        winStr = 'Delete_vaccine'
+        ttl = 'Clean Malware called vaccine'
+        if pm.window(winStr, exists=True):
+            pm.deleteUI(winStr)
         else:
-            win = pm.window('Delete_vaccine', t='Clean Malware called vaccine', s=True, rtf=True)
+            win = pm.window(winStr, t=ttl, s=True, rtf=True)
             pm.columnLayout(cat=('both', 4), rs=2, columnWidth=200)
             # pm.separator(h=10)
             # pm.text("--- Select a File or Folder ---", h=23)
             pm.separator(h=10)
             pm.button(l='File', c=lambda x: self.deleteMain(one=True))
-            pm.button(l='Clean All Files in Folder', c=lambda x: self.deleteMain(one=False))
+            btnStr = 'Clean All Files in Folder'
+            pm.button(l=btnStr, c=lambda x: self.deleteMain(one=False))
             pm.separator(h=10)
             pm.showWindow(win)
 
@@ -357,9 +397,12 @@ class vaccine():
         crt = "createNode"
         with open(fullPath, "r") as txt:
             lines = txt.readlines()
-        vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k] # List up the line numbers containing 'vaccine_gene'
-        brdList = [j for j, k in enumerate(lines) if brd in k and crt in k] # List up the line numbers containing 'breed_gene'
-        crtList = [j for j, k in enumerate(lines) if crt in k] # List up the line numbers containing 'createNode'
+        # List up the line numbers containing 'vaccine_gene'
+        vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k]
+        # List up the line numbers containing 'breed_gene'
+        brdList = [j for j, k in enumerate(lines) if brd in k and crt in k]
+        # List up the line numbers containing 'createNode'
+        crtList = [j for j, k in enumerate(lines) if crt in k]
         sum = vccList + brdList # ex) [16, 21, 84, 105]
         deleteList = []
         # List lines to delete consecutively
@@ -368,7 +411,7 @@ class vaccine():
             deleteList += [i for i in range(min, max)]
         new, ext = os.path.splitext(fullPath)
         new += "_cleaned" + ext
-        # When creating a new file, delete the 'vaccine_gene' or 'breed_gene' paragraph.
+        # Delete the 'vaccine_gene' or 'breed_gene' paragraph in .ma
         # Write '//Deleted here' instead of the deleted line.
         with open(new, "w") as txt:
             for j, k in enumerate(lines):
@@ -381,7 +424,8 @@ class vaccine():
 
     # Delete the files : "vaccine.py", "vaccine.pyc", "userSetup.py"
     def deleteVaccineFiles(self):
-        dir = pm.internalVar(uad=True) + "scripts/" # Folder with that files.
+        # Folder with that files.
+        dir = pm.internalVar(uad=True) + "scripts/"
         fileList = ["vaccine.py", "vaccine.pyc", "userSetup.py"]
         for i in fileList:
             try:
@@ -405,15 +449,23 @@ class vaccine():
 
     # retrun <.ma> file list.
     def getMaFile(self, one):
-        fileTypes = 'Infected Files (*.ma);; All Files (*.*)'
-        selection = pm.fileDialog2(fm=0, ff=fileTypes) if one else pm.fileDialog2(fm=2, ds=1)
-        if selection:
-            ext = os.path.splitext(selection[0])[-1]
+        fileType = 'Infected Files (*.ma);; All Files (*.*)'
+        if one:
+            sel = pm.fileDialog2(fm=0, ff=fileType)
+        else:
+            sel = pm.fileDialog2(fm=2, ds=1)
+        if sel:
+            selStr = ''.join(sel)
+            ext = os.path.splitext(selStr)[-1]
             if ext:
-                result = selection if ext == ".ma" else []
+                result = sel if ext == ".ma" else []
             else:
-                dir = os.listdir(selection[0])
-                result = [selection[0] + "/" + i for i in dir if os.path.splitext(i)[-1] == ".ma"]
+                dir = os.listdir(selStr)
+                result = []
+                for i in dir:
+                    chk = os.path.splitext(i)[-1]
+                    if chk == ".ma":
+                        result.append(f'{selStr}/{i}')
         else:
             result = []
         return result
@@ -474,6 +526,110 @@ class han():
             self.btn.setLabel(self.btnHan1)
 
 
+# Create wheels that rotate automatically
+class AutoWheel():
+    def __init__(self):
+        self.main()
+    
+
+    def main(self):
+        sel = pm.ls(sl=True)
+        if not sel:
+            om.MGlobal.displayError('Nothing selected.')
+        else:
+            for i in sel:
+                rad = self.createRad(i)
+                var = self.createVar(rad)
+                self.createRig(i, var, rad)
+    
+
+    # Return obj's radius.
+    def createRad(self, obj: str) -> float:
+        # bb: bounding box
+        bbObj = pm.xform(obj, q=True, bb=True)
+        xMin, yMin, zMin, xMax, yMax, zMax = bbObj
+        x = (xMax - xMin) / 2
+        y = (yMax - yMin) / 2
+        z = (zMax - zMin) / 2
+        bbList = [x, y, z]
+        bbList.sort(reverse=True) # biggest
+        bb = bbList[0] # 0.12345678
+        result = round(bb, 3) # 0.123
+        return result
+
+
+    # Create variables.
+    def createVar(self, rad: float) -> tuple:
+        rad *= 1.1
+        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False)
+        cuv = cuv[0]
+        jnt = cuv + '_jnt'
+        null = cuv + '_null_grp'
+        prev = cuv + '_prev_grp'
+        orient = cuv + '_orient_Grp'
+        # expression1 ==================================================
+        expr1 = f'float $R = {cuv}.Radius;'
+        expr1 += f'float $A = {cuv}.AutoRoll;'
+        expr1 += f'float $J = {jnt}.rotateX;'
+        expr1 += f'float $C = 2 * 3.141 * $R;' # 2*pi*r
+        expr1 += f'float $O = {orient}.rotateY;'
+        expr1 += f'float $S = 1;' # Connect the global scale.
+        expr1 += f'float $pX = {cuv}.PrevPosX;'
+        expr1 += f'float $pY = {cuv}.PrevPosY;'
+        expr1 += f'float $pZ = {cuv}.PrevPosZ;'
+        expr1 += f'{prev}.translateX = $pX;'
+        expr1 += f'{prev}.translateY = $pY;'
+        expr1 += f'{prev}.translateZ = $pZ;'
+        expr1 += f'float $nX = {cuv}.translateX;'
+        expr1 += f'float $nY = {cuv}.translateY;'
+        expr1 += f'float $nZ = {cuv}.translateZ;'
+        # expression2: Distance between two points.
+        expr2 = 'float $D = `mag<<$nX-$pX, $nY-$pY, $nZ-$pZ>>`;'
+        # expression3: Insert value into jonit rotation.
+        expr3 = f'{jnt}.rotateX = $J' # Original rotation value.
+        expr3 += ' + ($D/$C) * 360' # Proportional: (d / 2*pi*r) * 360
+        expr3 += ' * $A' # Auto roll switch.
+        expr3 += ' * 1' # Create other switches.
+        expr3 += ' * sin(deg_to_rad($O))' # When the wheel turns.
+        expr3 += ' / $S;' # Resizing the global scale.
+        # expression4
+        expr4 = f'{cuv}.PrevPosX = $nX;'
+        expr4 += f'{cuv}.PrevPosY = $nY;'
+        expr4 += f'{cuv}.PrevPosZ = $nZ;'
+        # expression Final =============================================
+        exprFinal = expr1 + expr2 + expr3 + expr4
+        # Result
+        result = (cuv, jnt, null, prev, orient, exprFinal)
+        return result
+
+
+    # Construct a rig inside maya.
+    def createRig(self, obj: str, var: tuple, rad: float) -> None:
+        # variables
+        cuv, jnt, null, prev, orient, expr = var
+        # channel to cuv
+        pm.addAttr(cuv, ln='Radius', at='double', dv=1)
+        pm.setAttr(f'{cuv}.Radius', e=True, k=True)
+        pm.setAttr(f'{cuv}.Radius', rad)
+        pm.addAttr(cuv, ln='AutoRoll', at='long', min=0, max=1, dv=1)
+        pm.setAttr(f'{cuv}.AutoRoll', e=True, k=True)
+        for i in ['X', 'Y', 'Z']:
+            pm.addAttr(cuv, ln=f'PrevPos{i}', at='double', dv=0)
+            pm.setAttr(f'{cuv}.PrevPos{i}', e=True, k=True)
+        # create joint inside cuv
+        pm.joint(n=jnt, p=(0,0,0))
+        # create groups
+        pm.group(n=null, em=True, p=cuv)
+        pm.group(n=prev, em=True, w=True)
+        pm.group(n=orient, em=True, p=prev)
+        grp = pm.group(cuv, prev)
+        pm.matchTransform(grp, obj, pos=True)
+        # create constraints
+        pm.aimConstraint(cuv, prev, mo=False)
+        pm.orientConstraint(null, orient, mo=False)
+        pm.expression(s=expr, o='', ae=1, uc='all')
+
+
 # Class end. ==================================================================
 
 
@@ -484,7 +640,7 @@ def grp(cp=False):
     for i in sel:
         grp = pm.group(i, n="%s_grp" % i)
         if not cp:
-            pm.move(0, 0, 0, grp + ".scalePivot", grp + ".rotatePivot", rpr=True)
+            pm.move(0,0,0, grp+".scalePivot", grp+".rotatePivot", rpr=True)
 
 
 # Create locators in boundingBox.
@@ -510,31 +666,42 @@ def loc(bb=True):
 # Create a curve controller.
 def ctrl(**kwargs):
     ctrl = {
-    "cub": [
-        (-1, 1, -1), (-1, 1, 1), (1, 1, 1), (1, 1, -1), (-1, 1, -1), (-1, -1, -1), 
-        (-1, -1, 1), (1, -1, 1), (1, -1, -1), (-1, -1, -1), (-1, -1, 1), (-1, 1, 1), 
-        (1, 1, 1), (1, -1, 1), (1, -1, -1), (1, 1, -1)], 
-    "sph": [
-        (0, 1, 0), (0, 0.7, 0.7), (0, 0, 1), (0, -0.7, 0.7), (0, -1, 0), (0, -0.7, -0.7), 
-        (0, 0, -1), (0, 0.7, -0.7), (0, 1, 0), (-0.7, 0.7, 0), (-1, 0, 0), (-0.7, 0, 0.7), 
-        (0, 0, 1), (0.7, 0, 0.7), (1, 0, 0), (0.7, 0, -0.7), (0, 0, -1), (-0.7, 0, -0.7), 
-        (-1, 0, 0), (-0.7, -0.7, 0), (0, -1, 0), (0.7, -0.7, 0), (1, 0, 0), (0.7, 0.7, 0), (0, 1, 0)], 
-    "cyl": [
-        (-1, 1, 0), (-0.7, 1, 0.7), (0, 1, 1), (0.7, 1, 0.7), (1, 1, 0), (0.7, 1, -0.7), 
-        (0, 1, -1), (0, 1, 1), (0, -1, 1), (-0.7, -1, 0.7), (-1, -1, 0), (-0.7, -1, -0.7), 
-        (0, -1, -1), (0.7, -1, -0.7), (1, -1, 0), (0.7, -1, 0.7), (0, -1, 1), (0, -1, -1), 
-        (0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), (1, 1, 0), (1, -1, 0), (-1, -1, 0), (-1, 1, 0)], 
-    "pip": [
-        (0, 1, 1), (0, -1, 1), (0.7, -1, 0.7), (1, -1, 0), (1, 1, 0), (0.7, 1, -0.7), 
-        (0, 1, -1), (0, -1, -1), (-0.7, -1, -0.7), (-1, -1, 0), (-1, 1, 0), (-0.7, 1, 0.7), 
-        (0, 1, 1), (0.7, 1, 0.7), (1, 1, 0), (1, -1, 0), (0.7, -1, -0.7), (0, -1, -1), 
-        (0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), (-1, -1, 0), (-0.7, -1, 0.7), (0, -1, 1)], 
-    "con": [(0, 2, 0), (-0.87, 0, -0), (0.87, 0, 0), (0, 2, 0), (0, 0, 1), (-0.87, 0, -0), (0.87, 0, 0), (0, 0, 1)], 
-    "ar1": [(0, 0, 2), (2, 0, 1), (1, 0, 1), (1, 0, -2), (-1, 0, -2), (-1, 0, 1), (-2, 0, 1), (0, 0, 2)], 
-    "ar2": [
-        (0, 1, 4), (4, 1, 2), (2, 1, 2), (2, 1, -4), (-2, 1, -4), (-2, 1, 2), (-4, 1, 2), (0, 1, 4), (0, -1, 4), 
-        (4, -1, 2), (2, -1, 2), (2, -1, -4), (-2, -1, -4), (-2, -1, 2), (-4, -1, 2), (0, -1, 4), (4, -1, 2), 
-        (4, 1, 2), (2, 1, 2), (2, 1, -4), (2, -1, -4), (-2, -1, -4), (-2, 1, -4), (-2, 1, 2), (-4, 1, 2), (-4, -1, 2)]
+    "cub": [(-1, 1, -1), (-1, 1, 1), (1, 1, 1), (1, 1, -1), (-1, 1, -1), 
+        (-1, -1, -1), (-1, -1, 1), (1, -1, 1), (1, -1, -1), (-1, -1, -1), 
+        (-1, -1, 1), (-1, 1, 1), (1, 1, 1), (1, -1, 1), (1, -1, -1), (1, 1, -1)
+    ], 
+    "sph": [(0, 1, 0), (0, 0.7, 0.7), (0, 0, 1), (0, -0.7, 0.7), (0, -1, 0), 
+        (0, -0.7, -0.7), (0, 0, -1), (0, 0.7, -0.7), (0, 1, 0), (-0.7, 0.7, 0), 
+        (-1, 0, 0), (-0.7, 0, 0.7), (0, 0, 1), (0.7, 0, 0.7), (1, 0, 0), 
+        (0.7, 0, -0.7), (0, 0, -1), (-0.7, 0, -0.7), (-1, 0, 0), 
+        (-0.7, -0.7, 0), (0, -1, 0), (0.7, -0.7, 0), (1, 0, 0), (0.7, 0.7, 0), 
+        (0, 1, 0)
+    ], 
+    "cyl": [(-1, 1, 0), (-0.7, 1, 0.7), (0, 1, 1), (0.7, 1, 0.7), (1, 1, 0), 
+        (0.7, 1, -0.7), (0, 1, -1), (0, 1, 1), (0, -1, 1), (-0.7, -1, 0.7), 
+        (-1, -1, 0), (-0.7, -1, -0.7), (0, -1, -1), (0.7, -1, -0.7), 
+        (1, -1, 0), (0.7, -1, 0.7), (0, -1, 1), (0, -1, -1), (0, 1, -1), 
+        (-0.7, 1, -0.7), (-1, 1, 0), (1, 1, 0), (1, -1, 0), (-1, -1, 0), 
+        (-1, 1, 0)
+    ], 
+    "pip": [(0, 1, 1), (0, -1, 1), (0.7, -1, 0.7), (1, -1, 0), (1, 1, 0), 
+        (0.7, 1, -0.7), (0, 1, -1), (0, -1, -1), (-0.7, -1, -0.7), 
+        (-1, -1, 0), (-1, 1, 0), (-0.7, 1, 0.7), (0, 1, 1), (0.7, 1, 0.7), 
+        (1, 1, 0), (1, -1, 0), (0.7, -1, -0.7), (0, -1, -1), (0, 1, -1), 
+        (-0.7, 1, -0.7), (-1, 1, 0), (-1, -1, 0), (-0.7, -1, 0.7), (0, -1, 1)
+    ], 
+    "con": [(0, 2, 0), (-0.87, 0, -0), (0.87, 0, 0), (0, 2, 0), (0, 0, 1), 
+        (-0.87, 0, -0), (0.87, 0, 0), (0, 0, 1)
+    ], 
+    "ar1": [(0, 0, 2), (2, 0, 1), (1, 0, 1), (1, 0, -2), (-1, 0, -2), 
+        (-1, 0, 1), (-2, 0, 1), (0, 0, 2)
+    ], 
+    "ar2": [(0, 1, 4), (4, 1, 2), (2, 1, 2), (2, 1, -4), (-2, 1, -4), 
+        (-2, 1, 2), (-4, 1, 2), (0, 1, 4), (0, -1, 4), (4, -1, 2), (2, -1, 2), 
+        (2, -1, -4), (-2, -1, -4), (-2, -1, 2), (-4, -1, 2), (0, -1, 4), 
+        (4, -1, 2), (4, 1, 2), (2, 1, 2), (2, 1, -4), (2, -1, -4), 
+        (-2, -1, -4), (-2, 1, -4), (-2, 1, 2), (-4, 1, 2), (-4, -1, 2)
+    ]
     }
     if kwargs:
         coordinate = [ctrl[i] for i in kwargs if kwargs[i]]
@@ -554,9 +721,11 @@ def cuvPath(startFrame, endFrame):
         for k in range(startFrame, endFrame + 1):
             pm.currentTime(k)
             try:
-                pointList.append(pm.pointPosition(j)) # vtx position
+                # vtx position
+                pointList.append(pm.pointPosition(j))
             except:
-                pointList.append(pm.xform(j, q=True, ws=True, rp=True)) # obj position
+                # obj position
+                pointList.append(pm.xform(j, q=True, ws=True, rp=True))
         pm.curve(p=pointList)
 
 
@@ -567,7 +736,7 @@ def cuvLoc(cl=False): # cl = closed
     locatorPosition = [pm.xform(i, q=True, ws=True, rp=True) for i in sel]
     if cl:
         # if closed : first, creates a circle, and change its shape.
-        cuvName = pm.circle(c=(0, 0, 0), nr=(0, 1, 0), sw=360, r=1, d=3, ch=False, s=len(sel))[0]
+        cuvName = pm.circle(nr=(0, 1, 0), ch=False, s=len(sel))[0]
         for j, k in enumerate(locatorPosition):
             pm.move(k[0], k[1], k[2], '%s.cv[%d]' % (cuvName, j), ws=True)
     else:
@@ -583,7 +752,8 @@ def delPlugin():
     if pluginList:
         for j, k in enumerate(pluginList):
             pm.unknownPlugin(k, r=True)
-            print("%d : %s" % (j, k)) # Print deleted plugin's names and number
+            # Print deleted plugin's names and number
+            print("%d : %s" % (j, k))
         print('Delete completed.')
     else:
         om.MGlobal.displayWarning("There are no unknown plugins.")
@@ -603,7 +773,8 @@ def grpEmpty():
         grp = pm.group(em=True, n=i + "_offset")
         pm.matchTransform(grp, i, pos=True, rot=True)
         try:
-            iParent = "".join(pm.listRelatives(i, p=True)) # Selector's mom group.
+            # Selector's mom group.
+            iParent = "".join(pm.listRelatives(i, p=True))
             pm.parent(grp, iParent)
         except:
             pass
@@ -669,5 +840,4 @@ def sameName():
 
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
-
 
