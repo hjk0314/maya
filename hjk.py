@@ -4,6 +4,10 @@ import maya.OpenMaya as om
 import pymel.core as pm
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+
 # Export to json file and shading networks. And assign to them.
 class Abc():
     def __init__(self):
