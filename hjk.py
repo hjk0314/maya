@@ -489,7 +489,7 @@ class Vaccine():
 
 
 # Transform HanGeul unicode to bytes. Otherside too.
-class han():
+class Han():
     def __init__(self):
         self.btnHan1 = b'\xec\x9d\xb8\xec\xbd\x94\xeb\x94\xa9'
         self.btnHan2 = b'\xec\xa7\x80\xec\x9a\xb0\xea\xb8\xb0'
