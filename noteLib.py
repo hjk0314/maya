@@ -9,6 +9,7 @@ import decimal
 import fractions
 import random
 import statistics
+import itertools
 
 
 # re
@@ -151,11 +152,47 @@ def statistics_Test():
     print(B)
 
 
+# itertools
+def itertools_Test():
+    # cycle
+    nameList = ['kim', 'lee', 'hong']
+    cyl = itertools.cycle(nameList)
+    print(next(cyl), next(cyl), next(cyl), next(cyl))
+    # accumulate
+    saleList = [
+        1161, 1814, 1270, 2256, 1413, 1842, 
+        2221, 2207, 2450, 2823, 2540, 2134
+        ]
+    result = itertools.accumulate(saleList)
+    result = list(result)
+    print(result)
+    result = itertools.accumulate(saleList, max)
+    result = list(result)
+    print(result)
+    # groupby
+    # zip_longest
+    student = ['kim', 'lee', 'hong', 'han', 'choi']
+    rewards = ['candy', 'jelly', 'chocolate']
+    result = zip(student, rewards)
+    result = list(result)
+    print(result)
+    result = itertools.zip_longest(student, rewards, fillvalue='caramel')
+    result = list(result)
+    print(result)
+    # permutatins
+    numList = ['1', '2', '3']
+    result = itertools.permutations(numList, 2)
+    result = list(result)
+    print(result)
+    # combinations
+    # result = len(list(itertools.combinations(range(1, 46), 6)))
+    result = itertools.combinations(numList, 2)
+    result = list(result)
+    print(result)
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
-
-
-
 
 
 # textwrap_Test()
@@ -170,3 +207,4 @@ def statistics_Test():
 # fractions_Test()
 # random_Test()
 # statistics_Test()
+itertools_Test()

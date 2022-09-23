@@ -2,6 +2,7 @@ import os
 import json
 import maya.OpenMaya as om
 import pymel.core as pm
+import maya.mel as mel
 
 
 # 79 char line ================================================================
@@ -634,6 +635,79 @@ class AutoWheel():
         pm.expression(s=expr, o='', ae=1, uc='all')
 
 
+# Matching the direction of the pivot.
+class matchPivot():
+    def __init__(self):
+        self.setupUI()
+
+
+    # UI.
+    def setupUI(self):
+        winStr = 'Orient_the_pivot'
+        ttl = 'Matching the direction of the pivot.'
+        if pm.window(winStr, exists=True):
+            pm.deleteUI(winStr)
+        win = pm.window(winStr, t=ttl, s=True, rtf=True)
+        pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=200)
+        pm.separator(h=10)
+        btnStr = 'Select 3 points'
+        pm.button(l=btnStr, c=lambda x: self.select3Points())
+        btnStr = 'Finish'
+        self.btn = pm.button(l=btnStr, c=lambda x: self.finish(), en=False)
+        pm.separator(h=10)
+        pm.showWindow(win)
+
+
+    # Check if selected is a point.
+    def check(self, sel: list) -> bool:
+        vtxList = [i for i in sel if isinstance(i, pm.MeshVertex)]
+        if not sel:
+            om.MGlobal.displayError('Nothing selected.')
+            result = False
+        elif len(sel) != 3 or len(vtxList) != 3:
+            om.MGlobal.displayError('Select 3 points.')
+            result = False
+        else:
+            result = True
+        return result
+
+
+    # Decide the direction.
+    def select3Points(self):
+        sel = pm.ls(sl=True, fl=True)
+        chk = self.check(sel)
+        if not chk:
+            pass
+        else:
+            shp = sel[0].split('.')[0]
+            obj = pm.listRelatives(shp, p=True)
+            self.obj = obj[0] # Object's name
+            pPlane = pm.polyPlane(sx=1, sy=1, ax=(0, 1, 0), cuv=2, ch=False)
+            self.pPlane = pPlane[0] # pPlane's name
+            vtx = pm.ls(f"{self.pPlane}.vtx[0:2]", fl=True)
+            all = vtx + sel
+            pm.select(all)
+            mel.eval("snap3PointsTo3Points(0);")
+            pm.select(self.pPlane)
+            self.btn.setEnable(True)
+
+
+    # Wrap up
+    def finish(self):
+        try:
+            pm.parent(self.obj, self.pPlane)
+            pm.makeIdentity(self.obj, a=True, t=1, r=1, s=1, n=0, pn=1)
+            pm.parent(self.obj, w=True)
+            pm.delete(self.pPlane)
+            self.btn.setEnable(False)
+        except:
+            om.MGlobal.displayError('Check the selection.')
+
+
+# Class end. ==================================================================
+# Class end. ==================================================================
+# Class end. ==================================================================
+# Class end. ==================================================================
 # Class end. ==================================================================
 
 
@@ -842,6 +916,16 @@ def sameName():
         om.MGlobal.displayInfo("No duplicated names.")
 
 
+# Moving pivot to zero.
+def zeroPivot():
+    sel = pm.ls(sl=True)
+    for i in sel:
+        j = f"{i}.scalePivot"
+        k = f"{i}.rotatePivot"
+        pm.move(0, 0, 0, j, k, rpr=True)
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
+
 
