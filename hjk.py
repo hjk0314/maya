@@ -636,26 +636,30 @@ class AutoWheel():
 
 
 # Matching the direction of the pivot.
+# Example: matchPivot(cub=True, cyl=True ...)
 class matchPivot():
-    def __init__(self):
-        self.setupUI()
+    def __init__(self, **kwargs):
+        # You can also input the controller's shape.
+        self.ctrlShape = kwargs if kwargs else {}
+        self.main()
 
-
-    # UI.
-    def setupUI(self):
-        winStr = 'Orient_the_pivot'
-        ttl = 'Matching the direction of the pivot.'
-        if pm.window(winStr, exists=True):
-            pm.deleteUI(winStr)
-        win = pm.window(winStr, t=ttl, s=True, rtf=True)
-        pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=200)
-        pm.separator(h=10)
-        btnStr = 'Select 3 points'
-        pm.button(l=btnStr, c=lambda x: self.select3Points())
-        btnStr = 'Finish'
-        self.btn = pm.button(l=btnStr, c=lambda x: self.finish(), en=False)
-        pm.separator(h=10)
-        pm.showWindow(win)
+    
+    def main(self) -> None:
+        sel = pm.ls(sl=True, fl=True)
+        chk = self.check(sel)
+        if not chk:
+            pass
+        else:
+            obj = self.select3Points(sel)
+            cuv = self.ctrl()
+            if not cuv:
+                msg = 'You can use it like this: matchPivot(cub=True)'
+                om.MGlobal.displayWarning(msg)
+            else:
+                for i in cuv:
+                    grp = pm.group(i)
+                    pm.matchTransform(grp, obj, pos=True, rot=True)
+                om.MGlobal.displayInfo('Successfully done.')
 
 
     # Check if selected is a point.
@@ -673,35 +677,97 @@ class matchPivot():
 
 
     # Decide the direction.
-    def select3Points(self):
-        sel = pm.ls(sl=True, fl=True)
-        chk = self.check(sel)
-        if not chk:
-            pass
+    # Input is a list of 3 points.
+    def select3Points(self, sel: list) -> str:
+        # shp: shape
+        shp = sel[0].split('.')[0]
+        # Object's name
+        obj = pm.listRelatives(shp, p=True)
+        obj = obj[0]
+        # pPlane's name
+        pPlane = pm.polyPlane(sx=1, sy=1, ax=(0, 1, 0), cuv=2, ch=False)
+        pPlane = pPlane[0]
+        vtx = pm.ls(f"{pPlane}.vtx[0:2]", fl=True)
+        all = vtx + sel
+        pm.select(all)
+        mel.eval("snap3PointsTo3Points(0);")
+        pm.select(cl=True)
+        return pPlane
+
+
+    # Create a curve controller.
+    def ctrl(self) -> list:
+        # Cube shape coordinates
+        cub = [(-1, 1, -1), (-1, 1, 1), (1, 1, 1), ]
+        cub += [(1, 1, -1), (-1, 1, -1), (-1, -1, -1), ]
+        cub += [(-1, -1, 1), (1, -1, 1), (1, -1, -1), ]
+        cub += [(-1, -1, -1), (-1, -1, 1), (-1, 1, 1), ]
+        cub += [(1, 1, 1), (1, -1, 1), (1, -1, -1), ]
+        cub += [(1, 1, -1), ]
+        # Sphere shape coordinates
+        sph = [(0, 1, 0), (0, 0.7, 0.7), (0, 0, 1), ]
+        sph += [(0, -0.7, 0.7), (0, -1, 0), (0, -0.7, -0.7), ]
+        sph += [(0, 0, -1), (0, 0.7, -0.7), (0, 1, 0), ]
+        sph += [(-0.7, 0.7, 0), (-1, 0, 0), (-0.7, 0, 0.7), ]
+        sph += [(0, 0, 1), (0.7, 0, 0.7), (1, 0, 0), ]
+        sph += [(0.7, 0, -0.7), (0, 0, -1), (-0.7, 0, -0.7), ]
+        sph += [(-1, 0, 0), (-0.7, -0.7, 0), (0, -1, 0), ]
+        sph += [(0.7, -0.7, 0), (1, 0, 0), (0.7, 0.7, 0), ]
+        sph += [(0, 1, 0), ]
+        # Cylinder shape coordinates
+        cyl = [(-1, 1, 0), (-0.7, 1, 0.7), (0, 1, 1), ]
+        cyl += [(0.7, 1, 0.7), (1, 1, 0), (0.7, 1, -0.7), ]
+        cyl += [(0, 1, -1), (0, 1, 1), (0, -1, 1), ]
+        cyl += [(-0.7, -1, 0.7), (-1, -1, 0), (-0.7, -1, -0.7), ]
+        cyl += [(0, -1, -1), (0.7, -1, -0.7), (1, -1, 0), ]
+        cyl += [(0.7, -1, 0.7), (0, -1, 1), (0, -1, -1), ]
+        cyl += [(0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), ]
+        cyl += [(1, 1, 0), (1, -1, 0), (-1, -1, 0), ]
+        cyl += [(-1, 1, 0), ]
+        # Pipe shape coordinates
+        pip = [(0, 1, 1), (0, -1, 1), (0.7, -1, 0.7), ]
+        pip += [(1, -1, 0), (1, 1, 0), (0.7, 1, -0.7), ]
+        pip += [(0, 1, -1), (0, -1, -1), (-0.7, -1, -0.7), ]
+        pip += [(-1, -1, 0), (-1, 1, 0), (-0.7, 1, 0.7), ]
+        pip += [(0, 1, 1), (0.7, 1, 0.7), (1, 1, 0), ]
+        pip += [(1, -1, 0), (0.7, -1, -0.7), (0, -1, -1), ]
+        pip += [(0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), ]
+        pip += [(-1, -1, 0), (-0.7, -1, 0.7), (0, -1, 1), ]
+        # Cone shape coordinates
+        con = [(0, 2, 0), (-0.87, 0, -0), (0.87, 0, 0), ]
+        con += [(0, 2, 0), (0, 0, 1), (-0.87, 0, -0), ]
+        con += [(0.87, 0, 0), (0, 0, 1), ]
+        # Arrow1 shape coordinates
+        ar1 = [(0, 0, 2), (2, 0, 1), (1, 0, 1), ]
+        ar1 += [(1, 0, -2), (-1, 0, -2), (-1, 0, 1), ]
+        ar1 += [(-2, 0, 1), (0, 0, 2), ]
+        # Arrow2 shape coordinates
+        ar2 = [(0, 1, 4), (4, 1, 2), (2, 1, 2), ]
+        ar2 += [(2, 1, -4), (-2, 1, -4), (-2, 1, 2), ]
+        ar2 += [(-4, 1, 2), (0, 1, 4), (0, -1, 4), ]
+        ar2 += [(4, -1, 2), (2, -1, 2), (2, -1, -4), ]
+        ar2 += [(-2, -1, -4), (-2, -1, 2), (-4, -1, 2), ]
+        ar2 += [(0, -1, 4), (4, -1, 2), (4, 1, 2), ]
+        ar2 += [(2, 1, 2), (2, 1, -4), (2, -1, -4), ]
+        ar2 += [(-2, -1, -4), (-2, 1, -4), (-2, 1, 2), ]
+        ar2 += [(-4, 1, 2), (-4, -1, 2), ]
+        # Dictionary
+        ctrl = {
+            "cub": cub, 
+            "sph": sph, 
+            "cyl": cyl, 
+            "pip": pip, 
+            "con": con, 
+            "ar1": ar1, 
+            "ar2": ar2, 
+        }
+        hash = self.ctrlShape
+        if hash:
+            points = [ctrl[i] for i in hash if hash[i]]
+            result = [pm.curve(d=1, p=i) for i in points]
         else:
-            shp = sel[0].split('.')[0]
-            obj = pm.listRelatives(shp, p=True)
-            self.obj = obj[0] # Object's name
-            pPlane = pm.polyPlane(sx=1, sy=1, ax=(0, 1, 0), cuv=2, ch=False)
-            self.pPlane = pPlane[0] # pPlane's name
-            vtx = pm.ls(f"{self.pPlane}.vtx[0:2]", fl=True)
-            all = vtx + sel
-            pm.select(all)
-            mel.eval("snap3PointsTo3Points(0);")
-            pm.select(self.pPlane)
-            self.btn.setEnable(True)
-
-
-    # Wrap up
-    def finish(self):
-        try:
-            pm.parent(self.obj, self.pPlane)
-            pm.makeIdentity(self.obj, a=True, t=1, r=1, s=1, n=0, pn=1)
-            pm.parent(self.obj, w=True)
-            pm.delete(self.pPlane)
-            self.btn.setEnable(False)
-        except:
-            om.MGlobal.displayError('Check the selection.')
+            result = []
+        return result
 
 
 # Class end. ==================================================================
@@ -743,43 +809,69 @@ def loc(bb=True):
 
 # Create a curve controller.
 def ctrl(**kwargs):
+    # Cube shape coordinates
+    cub = [(-1, 1, -1), (-1, 1, 1), (1, 1, 1), ]
+    cub += [(1, 1, -1), (-1, 1, -1), (-1, -1, -1), ]
+    cub += [(-1, -1, 1), (1, -1, 1), (1, -1, -1), ]
+    cub += [(-1, -1, -1), (-1, -1, 1), (-1, 1, 1), ]
+    cub += [(1, 1, 1), (1, -1, 1), (1, -1, -1), ]
+    cub += [(1, 1, -1), ]
+    # Sphere shape coordinates
+    sph = [(0, 1, 0), (0, 0.7, 0.7), (0, 0, 1), ]
+    sph += [(0, -0.7, 0.7), (0, -1, 0), (0, -0.7, -0.7), ]
+    sph += [(0, 0, -1), (0, 0.7, -0.7), (0, 1, 0), ]
+    sph += [(-0.7, 0.7, 0), (-1, 0, 0), (-0.7, 0, 0.7), ]
+    sph += [(0, 0, 1), (0.7, 0, 0.7), (1, 0, 0), ]
+    sph += [(0.7, 0, -0.7), (0, 0, -1), (-0.7, 0, -0.7), ]
+    sph += [(-1, 0, 0), (-0.7, -0.7, 0), (0, -1, 0), ]
+    sph += [(0.7, -0.7, 0), (1, 0, 0), (0.7, 0.7, 0), ]
+    sph += [(0, 1, 0), ]
+    # Cylinder shape coordinates
+    cyl = [(-1, 1, 0), (-0.7, 1, 0.7), (0, 1, 1), ]
+    cyl += [(0.7, 1, 0.7), (1, 1, 0), (0.7, 1, -0.7), ]
+    cyl += [(0, 1, -1), (0, 1, 1), (0, -1, 1), ]
+    cyl += [(-0.7, -1, 0.7), (-1, -1, 0), (-0.7, -1, -0.7), ]
+    cyl += [(0, -1, -1), (0.7, -1, -0.7), (1, -1, 0), ]
+    cyl += [(0.7, -1, 0.7), (0, -1, 1), (0, -1, -1), ]
+    cyl += [(0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), ]
+    cyl += [(1, 1, 0), (1, -1, 0), (-1, -1, 0), ]
+    cyl += [(-1, 1, 0), ]
+    # Pipe shape coordinates
+    pip = [(0, 1, 1), (0, -1, 1), (0.7, -1, 0.7), ]
+    pip += [(1, -1, 0), (1, 1, 0), (0.7, 1, -0.7), ]
+    pip += [(0, 1, -1), (0, -1, -1), (-0.7, -1, -0.7), ]
+    pip += [(-1, -1, 0), (-1, 1, 0), (-0.7, 1, 0.7), ]
+    pip += [(0, 1, 1), (0.7, 1, 0.7), (1, 1, 0), ]
+    pip += [(1, -1, 0), (0.7, -1, -0.7), (0, -1, -1), ]
+    pip += [(0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), ]
+    pip += [(-1, -1, 0), (-0.7, -1, 0.7), (0, -1, 1), ]
+    # Cone shape coordinates
+    con = [(0, 2, 0), (-0.87, 0, -0), (0.87, 0, 0), ]
+    con += [(0, 2, 0), (0, 0, 1), (-0.87, 0, -0), ]
+    con += [(0.87, 0, 0), (0, 0, 1), ]
+    # Arrow1 shape coordinates
+    ar1 = [(0, 0, 2), (2, 0, 1), (1, 0, 1), ]
+    ar1 += [(1, 0, -2), (-1, 0, -2), (-1, 0, 1), ]
+    ar1 += [(-2, 0, 1), (0, 0, 2), ]
+    # Arrow2 shape coordinates
+    ar2 = [(0, 1, 4), (4, 1, 2), (2, 1, 2), ]
+    ar2 += [(2, 1, -4), (-2, 1, -4), (-2, 1, 2), ]
+    ar2 += [(-4, 1, 2), (0, 1, 4), (0, -1, 4), ]
+    ar2 += [(4, -1, 2), (2, -1, 2), (2, -1, -4), ]
+    ar2 += [(-2, -1, -4), (-2, -1, 2), (-4, -1, 2), ]
+    ar2 += [(0, -1, 4), (4, -1, 2), (4, 1, 2), ]
+    ar2 += [(2, 1, 2), (2, 1, -4), (2, -1, -4), ]
+    ar2 += [(-2, -1, -4), (-2, 1, -4), (-2, 1, 2), ]
+    ar2 += [(-4, 1, 2), (-4, -1, 2), ]
+    # Dictionary
     ctrl = {
-    "cub": [(-1, 1, -1), (-1, 1, 1), (1, 1, 1), (1, 1, -1), (-1, 1, -1), 
-        (-1, -1, -1), (-1, -1, 1), (1, -1, 1), (1, -1, -1), (-1, -1, -1), 
-        (-1, -1, 1), (-1, 1, 1), (1, 1, 1), (1, -1, 1), (1, -1, -1), (1, 1, -1)
-    ], 
-    "sph": [(0, 1, 0), (0, 0.7, 0.7), (0, 0, 1), (0, -0.7, 0.7), (0, -1, 0), 
-        (0, -0.7, -0.7), (0, 0, -1), (0, 0.7, -0.7), (0, 1, 0), (-0.7, 0.7, 0), 
-        (-1, 0, 0), (-0.7, 0, 0.7), (0, 0, 1), (0.7, 0, 0.7), (1, 0, 0), 
-        (0.7, 0, -0.7), (0, 0, -1), (-0.7, 0, -0.7), (-1, 0, 0), 
-        (-0.7, -0.7, 0), (0, -1, 0), (0.7, -0.7, 0), (1, 0, 0), (0.7, 0.7, 0), 
-        (0, 1, 0)
-    ], 
-    "cyl": [(-1, 1, 0), (-0.7, 1, 0.7), (0, 1, 1), (0.7, 1, 0.7), (1, 1, 0), 
-        (0.7, 1, -0.7), (0, 1, -1), (0, 1, 1), (0, -1, 1), (-0.7, -1, 0.7), 
-        (-1, -1, 0), (-0.7, -1, -0.7), (0, -1, -1), (0.7, -1, -0.7), 
-        (1, -1, 0), (0.7, -1, 0.7), (0, -1, 1), (0, -1, -1), (0, 1, -1), 
-        (-0.7, 1, -0.7), (-1, 1, 0), (1, 1, 0), (1, -1, 0), (-1, -1, 0), 
-        (-1, 1, 0)
-    ], 
-    "pip": [(0, 1, 1), (0, -1, 1), (0.7, -1, 0.7), (1, -1, 0), (1, 1, 0), 
-        (0.7, 1, -0.7), (0, 1, -1), (0, -1, -1), (-0.7, -1, -0.7), 
-        (-1, -1, 0), (-1, 1, 0), (-0.7, 1, 0.7), (0, 1, 1), (0.7, 1, 0.7), 
-        (1, 1, 0), (1, -1, 0), (0.7, -1, -0.7), (0, -1, -1), (0, 1, -1), 
-        (-0.7, 1, -0.7), (-1, 1, 0), (-1, -1, 0), (-0.7, -1, 0.7), (0, -1, 1)
-    ], 
-    "con": [(0, 2, 0), (-0.87, 0, -0), (0.87, 0, 0), (0, 2, 0), (0, 0, 1), 
-        (-0.87, 0, -0), (0.87, 0, 0), (0, 0, 1)
-    ], 
-    "ar1": [(0, 0, 2), (2, 0, 1), (1, 0, 1), (1, 0, -2), (-1, 0, -2), 
-        (-1, 0, 1), (-2, 0, 1), (0, 0, 2)
-    ], 
-    "ar2": [(0, 1, 4), (4, 1, 2), (2, 1, 2), (2, 1, -4), (-2, 1, -4), 
-        (-2, 1, 2), (-4, 1, 2), (0, 1, 4), (0, -1, 4), (4, -1, 2), (2, -1, 2), 
-        (2, -1, -4), (-2, -1, -4), (-2, -1, 2), (-4, -1, 2), (0, -1, 4), 
-        (4, -1, 2), (4, 1, 2), (2, 1, 2), (2, 1, -4), (2, -1, -4), 
-        (-2, -1, -4), (-2, 1, -4), (-2, 1, 2), (-4, 1, 2), (-4, -1, 2)
-    ]
+        "cub": cub, 
+        "sph": sph, 
+        "cyl": cyl, 
+        "pip": pip, 
+        "con": con, 
+        "ar1": ar1, 
+        "ar2": ar2, 
     }
     if kwargs:
         coordinate = [ctrl[i] for i in kwargs if kwargs[i]]
