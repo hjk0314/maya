@@ -572,35 +572,36 @@ class AutoWheel():
         null = cuv + '_null_grp'
         prev = cuv + '_prev_grp'
         orient = cuv + '_orient_Grp'
+        br = '\n'
         # expression1 ==================================================
-        expr1 = f'float $R = {cuv}.Radius;'
-        expr1 += f'float $A = {cuv}.AutoRoll;'
-        expr1 += f'float $J = {jnt}.rotateX;'
-        expr1 += f'float $C = 2 * 3.141 * $R;' # 2*pi*r
-        expr1 += f'float $O = {orient}.rotateY;'
-        expr1 += f'float $S = 1;' # Connect the global scale.
-        expr1 += f'float $pX = {cuv}.PrevPosX;'
-        expr1 += f'float $pY = {cuv}.PrevPosY;'
-        expr1 += f'float $pZ = {cuv}.PrevPosZ;'
-        expr1 += f'{prev}.translateX = $pX;'
-        expr1 += f'{prev}.translateY = $pY;'
-        expr1 += f'{prev}.translateZ = $pZ;'
-        expr1 += f'float $nX = {cuv}.translateX;'
-        expr1 += f'float $nY = {cuv}.translateY;'
-        expr1 += f'float $nZ = {cuv}.translateZ;'
+        expr1 = f'float $R = {cuv}.Radius;{br}'
+        expr1 += f'float $A = {cuv}.AutoRoll;{br}'
+        expr1 += f'float $J = {jnt}.rotateX;{br}'
+        expr1 += f'float $C = 2 * 3.141 * $R;{br}' # 2*pi*r
+        expr1 += f'float $O = {orient}.rotateY;{br}'
+        expr1 += f'float $S = 1;{br}' # Connect the global scale.
+        expr1 += f'float $pX = {cuv}.PrevPosX;{br}'
+        expr1 += f'float $pY = {cuv}.PrevPosY;{br}'
+        expr1 += f'float $pZ = {cuv}.PrevPosZ;{br}'
+        expr1 += f'{prev}.translateX = $pX;{br}'
+        expr1 += f'{prev}.translateY = $pY;{br}'
+        expr1 += f'{prev}.translateZ = $pZ;{br}'
+        expr1 += f'float $nX = {cuv}.translateX;{br}'
+        expr1 += f'float $nY = {cuv}.translateY;{br}'
+        expr1 += f'float $nZ = {cuv}.translateZ;{br*2}'
         # expression2: Distance between two points.
-        expr2 = 'float $D = `mag<<$nX-$pX, $nY-$pY, $nZ-$pZ>>`;'
+        expr2 = f'float $D = `mag<<$nX-$pX, $nY-$pY, $nZ-$pZ>>`;{br*2}'
         # expression3: Insert value into jonit rotation.
         expr3 = f'{jnt}.rotateX = $J' # Original rotation value.
         expr3 += ' + ($D/$C) * 360' # Proportional: (d / 2*pi*r) * 360
         expr3 += ' * $A' # Auto roll switch.
         expr3 += ' * 1' # Create other switches.
         expr3 += ' * sin(deg_to_rad($O))' # When the wheel turns.
-        expr3 += ' / $S;' # Resizing the global scale.
+        expr3 += f' / $S;{br*2}' # Resizing the global scale.
         # expression4
-        expr4 = f'{cuv}.PrevPosX = $nX;'
-        expr4 += f'{cuv}.PrevPosY = $nY;'
-        expr4 += f'{cuv}.PrevPosZ = $nZ;'
+        expr4 = f'{cuv}.PrevPosX = $nX;{br}'
+        expr4 += f'{cuv}.PrevPosY = $nY;{br}'
+        expr4 += f'{cuv}.PrevPosZ = $nZ;{br}'
         # expression Final =============================================
         exprFinal = expr1 + expr2 + expr3 + expr4
         # Result
@@ -637,7 +638,7 @@ class AutoWheel():
 
 # Matching the direction of the pivot.
 # Example: matchPivot(cub=True, cyl=True ...)
-class matchPivot():
+class MatchPivot():
     def __init__(self, **kwargs):
         # You can also input the controller's shape.
         self.ctrlShape = kwargs if kwargs else {}
@@ -751,6 +752,11 @@ class matchPivot():
         ar2 += [(2, 1, 2), (2, 1, -4), (2, -1, -4), ]
         ar2 += [(-2, -1, -4), (-2, 1, -4), (-2, 1, 2), ]
         ar2 += [(-4, 1, 2), (-4, -1, 2), ]
+        # Arrow3 shape coordinates
+        ar3 = [(7, 0, 0), (5, 0, -5), (0, 0, -7), ]
+        ar3 += [(-5, 0, -5), (-7, 0, 0), (-5, 0, 5), ]
+        ar3 += [(0, 0, 7), (5, 0, 5), (7, 0, 0), ]
+        ar3 += [(5, 0, 2), (7, 0, 3), (7, 0, 0), ]
         # Dictionary
         ctrl = {
             "cub": cub, 
@@ -760,6 +766,7 @@ class matchPivot():
             "con": con, 
             "ar1": ar1, 
             "ar2": ar2, 
+            "ar3": ar3, 
         }
         hash = self.ctrlShape
         if hash:
@@ -863,6 +870,11 @@ def ctrl(**kwargs):
     ar2 += [(2, 1, 2), (2, 1, -4), (2, -1, -4), ]
     ar2 += [(-2, -1, -4), (-2, 1, -4), (-2, 1, 2), ]
     ar2 += [(-4, 1, 2), (-4, -1, 2), ]
+    # Arrow3 shape coordinates
+    ar3 = [(7, 0, 0), (5, 0, -5), (0, 0, -7), ]
+    ar3 += [(-5, 0, -5), (-7, 0, 0), (-5, 0, 5), ]
+    ar3 += [(0, 0, 7), (5, 0, 5), (7, 0, 0), ]
+    ar3 += [(5, 0, 2), (7, 0, 3), (7, 0, 0), ]
     # Dictionary
     ctrl = {
         "cub": cub, 
@@ -872,6 +884,7 @@ def ctrl(**kwargs):
         "con": con, 
         "ar1": ar1, 
         "ar2": ar2, 
+        "ar3": ar3, 
     }
     if kwargs:
         coordinate = [ctrl[i] for i in kwargs if kwargs[i]]
