@@ -1,3 +1,4 @@
+import time
 import textwrap
 import re
 import datetime
@@ -10,6 +11,8 @@ import fractions
 import random
 import statistics
 import itertools
+import functools
+import operator
 
 
 # re
@@ -191,8 +194,98 @@ def itertools_Test():
     print(result)
 
 
-# 79 char line ================================================================
-# 72 docstring or comments line ========================================
+# functools.lru_cache
+# A decorator that caches the return value of a function.
+# @functools.lru_cache(maxsize=32)
+
+
+# functools.partial
+# Creates a new function with one or more arguments already populated.
+class partial_Test():
+    def __init__(self):
+        self.usage()
+
+
+    # Example functions
+    def cal(self, typ: str, *args) -> float:
+        if typ == 'add':
+            result = 0
+            for i in args:
+                result += i
+            return result
+        elif typ == 'mul':
+            result = 1
+            for i in args:
+                result *= i
+            return result
+        else:
+            print('Unknow type.')
+
+
+    # cal('add', 1, 2, 3) -> Use it like below.
+    def usage(self):
+        add = functools.partial(self.cal, 'add')
+        mul = functools.partial(self.cal, 'mul')
+        print(add(1, 2, 3))
+        print(mul(4, 5, 6))
+        print(add.func, add.args)
+        print(mul.func, mul.args)
+
+
+# functools.reduce
+def reduce_Test():
+    data = [1, 2, 3, 4, 5]
+    result = functools.reduce(lambda x, y: x + y, data)
+    # ((((1 + 2) + 3) + 4) + 5)
+    print(result)
+
+
+# functools.wraps
+class wraps_Test():
+    def __init__(self):
+        result = self.add(1, 2)
+        print(result)
+        help(self.add)
+
+
+    def elapsed(original_func):
+        # wraps is here.
+        @functools.wraps(original_func)
+        def wrapper(*args, **kwargs):
+            start = time.time()
+            result = original_func(*args, **kwargs)
+            end = time.time()
+            print(f'Running time: {end - start}sec')
+            return result
+        return wrapper
+
+
+    @elapsed
+    def add(self, num1, num2):
+        '''Function that returns the sum.'''
+        result = num1 + num2
+        return result
+
+
+# operator.itemgetter
+def itemgetter_Test():
+    '''sorted와 같은 함수의 key 매개변수에 적용'''
+    students = [
+        ('jane', 22, 'A'), 
+        ('dave', 32, 'B'), 
+        ('sally', 17, 'B'), 
+    ]
+    result = sorted(students, key=operator.itemgetter(1))
+    print(result)
+    students = [
+        {'name': 'jane', 'age': 22, 'grade': 'A'}, 
+        {'name': 'dave', 'age': 32, 'grade': 'B'}, 
+        {'name': 'sally', 'age': 17, 'grade': 'B'}, 
+    ]
+    result = sorted(students, key=operator.itemgetter('age'))
+    # 클래스의 객체인 경우 attrgetter 사용
+    # result = sorted(students, key=operator.attrgetter('age'))
+    print(result)
 
 
 # textwrap_Test()
@@ -207,4 +300,10 @@ def itertools_Test():
 # fractions_Test()
 # random_Test()
 # statistics_Test()
-itertools_Test()
+# itertools_Test()
+# partial_Test()
+# reduce_Test()
+# wraps_Test()
+# itemgetter_Test()
+
+
