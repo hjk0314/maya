@@ -3,6 +3,9 @@ import pathlib
 import fileinput
 import glob
 import filecmp
+import tempfile
+import fnmatch
+import linecache
 
 
 # pathlib
@@ -23,7 +26,6 @@ def pathlib_Test():
         print(new)
         '''replace는 shutil.move와 같음.'''
         # i.replace(new)
-    
     # suffix는 .을 포함한 파일 확장자를 뜻함.
     # pathlib.Path.cwd().iterdir() 이런식으로도 사용
     ext = collections.Counter([i.suffix for i in path2.iterdir()])
@@ -51,9 +53,51 @@ def filecmp_Test():
     result.report() # 위의 내용을 한꺼번에 볼 수 있다.
 
 
+# tempfile: 임시 파일을 만드는 모듈
+def tempfile_Test():
+    _tempFile = tempfile.TemporaryFile(mode='w+')
+    for i in range(10):
+        _tempFile.write(str(i))
+        _tempFile.write('\n')
+    # seek(0)을 수행하여 파일을 처음부터 읽을 수 있도록 한다.
+    # close()가 실행되거나, 프로세스가 종료되면 임시 파일은 삭제된다.
+    _tempFile.seek(0)
+    _tempFile.close()
+
+
+# glob: 패턴(유닉스 셸이 사용하는 규칙)으로 파일을 검색하는 모듈
+def glob_Test():
+    for fileName in glob.glob("**/*.txt", recursive=True):
+        print(fileName)
+
+
+# fnmatch: 특정 패턴과 일치하는 파일을 검색하는 모듈
+# 파일명은 a로 시작한다.
+# 확장자는 .py이다.
+# 확장자를 제외한 파일명의 길이는 5이다.
+# 파일명의 마지막 5번째 문자는 숫자이다.
+# "a???[0-9].py"
+def fnmatch_Test():
+    for i in pathlib.Path(".").rglob("*.py"):
+        if fnmatch.fnmatch(i, "a???[0-9].py"):
+            print(i)
+
+
+# linecache
+# 파일에서 원하는 줄의 값을 읽을 때, 캐시를 사용하여 내부적으로 최적화.
+def linecache_Test():
+    '''checkcache, clearcache, getline과 getlines 등이 있다.'''
+    num = 1
+    linecache.getline('fileName.txt', num)
+
+
 # pathlib_Test()
 # fileinput_Test()
 # filecmp_Test()
+# tempfile_Test()
+# glob_Test()
+# fnmatch_Test()
+# linecache_Test()
 
 
 # 79 char line ================================================================
