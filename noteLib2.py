@@ -6,6 +6,8 @@ import filecmp
 import tempfile
 import fnmatch
 import linecache
+import pickle
+import shelve
 
 
 # pathlib
@@ -91,6 +93,40 @@ def linecache_Test():
     linecache.getline('fileName.txt', num)
 
 
+# pickle: 자료형을 변환 없이 그대로 파일로 저장
+def pickle_Test():
+    data = {}
+    data[1] = {"name": "HONGJINKI", "age": 45, "tall": "171cm"}
+    with open(r"C:\Users\hjk03\Desktop\data.p", "wb") as pic:
+        pickle.dump(data, pic)
+    with open(r"C:\Users\hjk03\Desktop\data.p", "rb") as pic:
+        temp = pickle.load(pic)
+        print(temp)
+
+
+# shelve: 딕셔너리를 파일로 저장할 때 사용하는 모듈
+# shelve는 딕셔너리만을 처리하지만, pickle은 모든 객체를 다룬다. 
+class shelve_Test():
+    def __init__(self):
+        self.main()
+
+
+    # 바탕화면에 .dat파일을 만든다.
+    def save(self, key, value):
+        with shelve.open(r"C:\Users\hjk03\Desktop\data.dat") as shlv:
+            shlv[key] = value
+
+    # 저장된 .dat파일에서 key값으로 value값을 불러온다.
+    def get(self, key):
+        with shelve.open(r"C:\Users\hjk03\Desktop\data.dat") as shlv:
+            return shlv[key]
+
+
+    def main(self):
+        self.save("number", [1, 2, 3, 4, 5])
+        print(self.get("number"))
+
+
 # pathlib_Test()
 # fileinput_Test()
 # filecmp_Test()
@@ -98,6 +134,8 @@ def linecache_Test():
 # glob_Test()
 # fnmatch_Test()
 # linecache_Test()
+# pickle_Test()
+# shelve_Test()
 
 
 # 79 char line ================================================================
