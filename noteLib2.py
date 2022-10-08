@@ -8,6 +8,12 @@ import fnmatch
 import linecache
 import pickle
 import shelve
+import sqlite3
+import zlib
+import gzip
+import bz2
+import lzma
+import zipfile
 
 
 # pathlib
@@ -127,6 +133,92 @@ class shelve_Test():
         print(self.get("number"))
 
 
+# sqlite3
+def sqlite3_Test():
+    '''https://sqlitebrowser.org/dl/'''
+    conn = sqlite3.connect('blog.db')
+    # 쿼리문을 실행하려면 cursor()가 필요함
+    curs = conn.cursor()
+    # 테이블 만들기
+    # 오라클은 text가 아닌 varchar 형식의 칼럼 타입을 사용
+    createTable = '''CREATE TABLE blog 
+    (id integer PRIMARY KEY, subject text, content text, date text)'''
+    curs.execute(createTable)
+    #
+    # 데이터 입력하기
+    # 방법1: 보안에 취약. SQL injection 공격
+    insertValue = '''INSERT INTO blog VALUES 
+    (1, "My First Blog.", "This is a First Content.", "20221008")'''
+    curs.execute(insertValue)
+    # 방법2: 보안에 취약. 사용자가 악의적인 쿼리를 던질 수도 있음
+    _id = 2
+    subject = 'My Second Blog.'
+    content = 'Second content.'
+    date = '20221009'
+    insertValue = '''INSERT INTO blog VALUES 
+    (%d, "%s", "%s", "%s")''' % (_id, subject, content, date)
+    curs.execute(insertValue)
+    # 방법3: 물음표 스타일. 보안에 그나마 괜찮음.
+    _id = 3
+    subject = 'My Third Blog.'
+    content = 'Third content.'
+    date = '20221010'
+    insertValue = '''INSERT INTO blog VALUES 
+    (?, ?, ?, ?)''', (_id, subject, content, date)
+    curs.execute(insertValue)
+    # 방법4: 딕셔너리 사용. 보안에 그나마 괜찮음.
+    dic = {
+        "id": 4, 
+        "subject": "My Fourth Blog.", 
+        "content": "Fourth content.", 
+        "date": "20221011"
+    }
+    insertValue = '''INSERT INTO blog VALUES 
+    (:id, :subject, :content, :date)''', dic
+    curs.execute(insertValue)
+    #
+    # 데이터 조회하기
+    curs.execute('SELECT * FROM blog')
+    # fetchall()은 한 번 수행하면 끝이다. 다시 수행하면 빈 리스트 출력.
+    all = curs.fetchall()
+    print(all)
+    #
+    # 데이터 수정
+    curs.execute("UPDATE blog SET subject='Original Blog.' WHERE id=1")
+    # fetchone()은 튜플 형태로 반환
+    curs.execute("SELECT * FROM blog WHERE id=1")
+    one = curs.fetchone()
+    print(one)
+    #
+    # 데이터 삭제: WHERE문을 생략하면 테이블의 모든 데이터 삭제. 주의 요망.
+    curs.execute("DELETE FROM blog WHERE id=5")
+    #
+    # 커밋은 결정 서명과 같은 역할
+    # 커밋하지 않고 종료하면 입력했던 데이터는 모두 사라짐.
+    conn.commit()
+    #
+    # 롤백: 커밋되기 전의 데이터 변경 사항을 취소.
+    # 이미 커밋된 데이터에는 소용 없음.
+    conn.rollback()
+    #
+    # close()는 자동으로 commit()을 자동으로 수행하지 않음. 주의 요망.
+    conn.close()
+
+
+# sqlite3 데코레이터
+# commit()과 close()를 반복 수행한다면 데코레이터를 만들어 사용.
+def with_cursor(original_func):
+    def wrapper(*args, **kwargs):
+        conn = sqlite3.connect('blog.db')
+        conn.row_factory = sqlite3.Row
+        curs = conn.cursor()
+        result = original_func(curs, *args, **kwargs)
+        conn.commit()
+        conn.close()
+        return result
+    return wrapper
+
+
 # pathlib_Test()
 # fileinput_Test()
 # filecmp_Test()
@@ -140,5 +232,64 @@ class shelve_Test():
 
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
+
+
+# zlib
+data = "Life is too short, You need python." * 10000
+compress_data = zlib.compress(data.encode(encoding='utf-8'))
+print(len(compress_data))
+org_data = zlib.decompress(compress_data).decode(encoding='utf-8')
+print(len(org_data))
+
+
+# gzip
+data = "Life is too short, You need python.\n" * 10000
+with gzip.open('C:/Users/jkhong/Desktop/data.txt.gz', 'wb') as File:
+    File.write(data.encode('utf-8'))
+with gzip.open('C:/Users/jkhong/Desktop/data.txt.gz', 'rb') as File:
+    read_data = File.read().decode('utf-8')
+print(len(read_data))
+
+
+# bz2
+data = "Life is too short, You need python." * 10000
+compress_data = bz2.compress(data.encode(encoding='utf-8'))
+print(len(compress_data))
+org_data = bz2.decompress(compress_data).decode(encoding='utf-8')
+print(len(org_data))
+# 
+data = "Life is too short, You need python.\n" * 10000
+with bz2.open('C:/Users/jkhong/Desktop/data.txt.bz2', 'wb') as File:
+    File.write(data.encode('utf-8'))
+with bz2.open('C:/Users/jkhong/Desktop/data.txt.bz2', 'rb') as File:
+    read_data = File.read().decode('utf-8')
+print(len(read_data))
+
+
+# lzma
+data = "Life is too short, You need python." * 10000
+compress_data = lzma.compress(data.encode(encoding='utf-8'))
+print(len(compress_data))
+org_data = lzma.decompress(compress_data).decode(encoding='utf-8')
+print(len(org_data))
+# 
+data = "Life is too short, You need python.\n" * 10000
+with lzma.open('C:/Users/jkhong/Desktop/data.txt.xz', 'wb') as File:
+    File.write(data.encode('utf-8'))
+with lzma.open('C:/Users/jkhong/Desktop/data.txt.xz', 'rb') as File:
+    read_data = File.read().decode('utf-8')
+print(len(read_data))
+
+
+# zipfile
+dir = 'C:/Users/jkhong/Desktop'
+with zipfile.ZipFile(f'{dir}/myText.zip', 'w') as myzip:
+    myzip.write(f'{dir}/a.txt')
+    myzip.write(f'{dir}/b.txt')
+    myzip.write(f'{dir}/c.txt')
+with zipfile.ZipFile(f'{dir}/myText.zip') as myzip:
+    myzip.extractall()
+with zipfile.ZipFile(f'{dir}/myText.zip') as myzip:
+    myzip.extract(f'{dir}/a.txt')
 
 
