@@ -14,6 +14,7 @@ import gzip
 import bz2
 import lzma
 import zipfile
+import tarfile
 
 
 # pathlib
@@ -219,6 +220,97 @@ def with_cursor(original_func):
     return wrapper
 
 
+# zlib: 문자열을 압축하고 해제할 수 있다.
+def zlib_Test():
+    data = "Life is too short, You need python." * 10000
+    compress_data = zlib.compress(data.encode(encoding='utf-8'))
+    print(len(compress_data))
+    org_data = zlib.decompress(compress_data).decode(encoding='utf-8')
+    print(len(org_data))
+
+
+# gzip: 파일을 압축할 수 있다. 내부적으로 zlib를 사용.
+def gzip_Test():
+    data = "Life is too short, You need python.\n" * 10000
+    with gzip.open('C:/Users/jkhong/Desktop/data.txt.gz', 'wb') as File:
+        File.write(data.encode('utf-8'))
+    with gzip.open('C:/Users/jkhong/Desktop/data.txt.gz', 'rb') as File:
+        read_data = File.read().decode('utf-8')
+    print(len(read_data))
+
+
+# bz2: 문자열을 압축할 수 있다. 스레드 환경에서 안전함.
+def bz2_Test():
+    data = "Life is too short, You need python." * 10000
+    compress_data = bz2.compress(data.encode(encoding='utf-8'))
+    print(len(compress_data))
+    org_data = bz2.decompress(compress_data).decode(encoding='utf-8')
+    print(len(org_data))
+    # 파일도 압축, 해제 할 수 있다.
+    data = "Life is too short, You need python.\n" * 10000
+    with bz2.open('C:/Users/jkhong/Desktop/data.txt.bz2', 'wb') as File:
+        File.write(data.encode('utf-8'))
+    with bz2.open('C:/Users/jkhong/Desktop/data.txt.bz2', 'rb') as File:
+        read_data = File.read().decode('utf-8')
+    print(len(read_data))
+
+
+# lzma: 문자열을 압축할 수 있다. 스레드 환경에서 안전하지 않음.
+def lzma_Test():
+    data = "Life is too short, You need python." * 10000
+    compress_data = lzma.compress(data.encode(encoding='utf-8'))
+    print(len(compress_data))
+    org_data = lzma.decompress(compress_data).decode(encoding='utf-8')
+    print(len(org_data))
+    # 파일도 압축, 해제 할 수 있다.
+    data = "Life is too short, You need python.\n" * 10000
+    with lzma.open('C:/Users/jkhong/Desktop/data.txt.xz', 'wb') as File:
+        File.write(data.encode('utf-8'))
+    with lzma.open('C:/Users/jkhong/Desktop/data.txt.xz', 'rb') as File:
+        read_data = File.read().decode('utf-8')
+    print(len(read_data))
+
+
+# zipfile: 여러개의 파일을 zip형식으로 합치거나 해제할 수 있다.
+def zipfile_Test():
+    dir = 'C:/Users/hjk03/Desktop'
+    # 파일 모두 압축
+    with zipfile.ZipFile(f'{dir}/myText.zip', 'w') as myzip:
+        myzip.write(f'{dir}/a.txt')
+        myzip.write(f'{dir}/b.txt')
+        myzip.write(f'{dir}/c.txt')
+    # 파일 모두 압축 해제
+    with zipfile.ZipFile(f'{dir}/myText.zip') as myzip:
+        myzip.extractall()
+    # 파일 중 하나만 압축 해제 가능
+    with zipfile.ZipFile(f'{dir}/myText.zip') as myzip:
+        myzip.extract(f'{dir}/a.txt')
+
+
+# tarfile: 여러개의 파일을 tar형식으로 합치거나 해제할 수 있다.
+def tarfile_Test():
+    dir = 'C:/Users/jkhong/Desktop'
+    # 파일 모두 압축
+    with tarfile.open(f'{dir}/myText.tar', 'w') as mytar:
+        mytar.add(f'{dir}/a.txt')
+        mytar.add(f'{dir}/b.txt')
+        mytar.add(f'{dir}/c.txt')
+    # 파일 모두 압축 해제
+    with tarfile.open(f'{dir}/myText.tar') as mytar:
+        mytar.extractall()
+    # 파일 중 하나만 압축 해제 가능
+    with tarfile.open(f'{dir}/myText.tar') as mytar:
+        mytar.extract(f'{dir}/a.txt')
+    # 압축 방법을 지정
+    with tarfile.open(f'{dir}/myText.tar.gz', 'w:gz') as mytar:
+        mytar.add(f'{dir}/a.txt')
+        mytar.add(f'{dir}/b.txt')
+        mytar.add(f'{dir}/c.txt')
+    # 파일 모두 압축 해제
+    with tarfile.open(f'{dir}/myText.tar.gz') as mytar:
+        mytar.extractall()
+
+
 # pathlib_Test()
 # fileinput_Test()
 # filecmp_Test()
@@ -228,68 +320,15 @@ def with_cursor(original_func):
 # linecache_Test()
 # pickle_Test()
 # shelve_Test()
+# zlib_Test()
+# gzip_Test()
+# bz2_Test()
+# lzma_Test()
+# zipfile_Test()
+# tarfile_Test()
 
 
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
-
-
-# zlib
-data = "Life is too short, You need python." * 10000
-compress_data = zlib.compress(data.encode(encoding='utf-8'))
-print(len(compress_data))
-org_data = zlib.decompress(compress_data).decode(encoding='utf-8')
-print(len(org_data))
-
-
-# gzip
-data = "Life is too short, You need python.\n" * 10000
-with gzip.open('C:/Users/jkhong/Desktop/data.txt.gz', 'wb') as File:
-    File.write(data.encode('utf-8'))
-with gzip.open('C:/Users/jkhong/Desktop/data.txt.gz', 'rb') as File:
-    read_data = File.read().decode('utf-8')
-print(len(read_data))
-
-
-# bz2
-data = "Life is too short, You need python." * 10000
-compress_data = bz2.compress(data.encode(encoding='utf-8'))
-print(len(compress_data))
-org_data = bz2.decompress(compress_data).decode(encoding='utf-8')
-print(len(org_data))
-# 
-data = "Life is too short, You need python.\n" * 10000
-with bz2.open('C:/Users/jkhong/Desktop/data.txt.bz2', 'wb') as File:
-    File.write(data.encode('utf-8'))
-with bz2.open('C:/Users/jkhong/Desktop/data.txt.bz2', 'rb') as File:
-    read_data = File.read().decode('utf-8')
-print(len(read_data))
-
-
-# lzma
-data = "Life is too short, You need python." * 10000
-compress_data = lzma.compress(data.encode(encoding='utf-8'))
-print(len(compress_data))
-org_data = lzma.decompress(compress_data).decode(encoding='utf-8')
-print(len(org_data))
-# 
-data = "Life is too short, You need python.\n" * 10000
-with lzma.open('C:/Users/jkhong/Desktop/data.txt.xz', 'wb') as File:
-    File.write(data.encode('utf-8'))
-with lzma.open('C:/Users/jkhong/Desktop/data.txt.xz', 'rb') as File:
-    read_data = File.read().decode('utf-8')
-print(len(read_data))
-
-
-# zipfile
-dir = 'C:/Users/jkhong/Desktop'
-with zipfile.ZipFile(f'{dir}/myText.zip', 'w') as myzip:
-    myzip.write(f'{dir}/a.txt')
-    myzip.write(f'{dir}/b.txt')
-    myzip.write(f'{dir}/c.txt')
-with zipfile.ZipFile(f'{dir}/myText.zip') as myzip:
-    myzip.extractall()
-with zipfile.ZipFile(f'{dir}/myText.zip') as myzip:
-    myzip.extract(f'{dir}/a.txt')
 
 
