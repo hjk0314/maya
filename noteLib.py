@@ -80,7 +80,7 @@ def bisect_Test():
     for i in scoreList:
         # bisect.bisect_left()
         idx = bisect.bisect(gradeList, i)
-        # 77 returns 2, which is an index between 70 and 80.
+        # 77은 70과 80 사이에 있으므로 인덱스 값 2를 반환한다.
         print(f'idx: {idx}')
         grade = 'FDCBA'[idx]
         result.append(grade)
@@ -101,8 +101,8 @@ class Week(enum.IntEnum):
 
 
 # math
-# gcd(): More than 3 parameters available in ver 3.9
-# lcm(): python --ver 3.9
+# gcd(): 3개 이상의 최대공약수를 구하는 것은 파이썬 ver 3.9 에서 가능
+# lcm(): 3개 이상의 최소공배수를 구하는 것은 파이썬 ver 3.9 에서 가능
 def math_Test():
     gcd = math.gcd(60, 100)
     isc = math.isclose(0.1 * 3, 0.3)
@@ -118,7 +118,7 @@ def decimal_Test():
     print(mul)
     print(sum)
     print(flt)
-    # Don't use like below.
+    # 아래와 같이 사용하면 안된다. 곱하는 수는 정수여야 함.
     # decimal.Decimal('0.1') * 3.0
 
 
@@ -195,12 +195,12 @@ def itertools_Test():
 
 
 # functools.lru_cache
-# A decorator that caches the return value of a function.
-# @functools.lru_cache(maxsize=32)
+# 함수의 반환 결과를 캐시하는 데코레이터이다.
+# 사용법: @functools.lru_cache(maxsize=32)
 
 
 # functools.partial
-# Creates a new function with one or more arguments already populated.
+# 하나 또는 그 이상의 매개 변수를 포함한 채로 새로운 함수를 만든다.
 class partial_Test():
     def __init__(self):
         self.usage()
@@ -305,5 +305,9 @@ def itemgetter_Test():
 # reduce_Test()
 # wraps_Test()
 # itemgetter_Test()
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 
