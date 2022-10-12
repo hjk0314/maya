@@ -1031,49 +1031,62 @@ def zeroPivot():
 
 
 # Create mirror copy of selection with group.
-def mirrorCopy(**kwargs: dict) -> None:
-    '''mirrorCopy(x=True), mirrorCopy(z=True)'''
-    sel = pm.ls(sl=True)
-    if not sel:
-        om.MGlobal.displayError("Nothing selected.")
-    elif not kwargs:
-        om.MGlobal.displayError("Direction is required.")
-    else:
-        dir = [i.lower() for i in kwargs if kwargs[i]]
-        if not dir:
-            om.MGlobal.displayError("X and Z directions are available.")
-        else:
-            anotherFunction(dir)
+# Example: mirrorCopy(x=True or z=True)
+class MirrorCopy:
+    def __init__(self, **kwargs):
+        self.sel = pm.ls(sl=True)
+        self.dir = [i.lower() for i in kwargs if kwargs[i]]
+        self.main()
 
 
-def anotherFunction(lst: list) -> None:
-        for i in sel:
-            grp = pm.group(em=True, n=f'{i}_mirrorCopy')
-            pm.matchTransform(grp, i, pos=True, rot=True)
-            t = pm.getAttr(f'{grp}.translate')
-            r = pm.getAttr(f'{grp}.rotate')
-            if 'x' in lst:
-                    tX = t[0] * -1
-                    rX = r[0] + (180 if r[0] < 0 else -180)
-                    rY = r[1] * -1
-                    rZ = r[2] * -1
-                    pm.setAttr(f'{grp}.translateX', tX)
-                    pm.setAttr(f'{grp}.rotateX', rX)
-                    pm.setAttr(f'{grp}.rotateY', rY)
-                    pm.setAttr(f'{grp}.rotateZ', rZ)
-                    om.MGlobal.displayInfo('Result: x to -x')
-            elif 'z' in dir:
-                for i in sel:
-                    grp = pm.group(em=True, n=f'{i}_mirrorCopy')
-                    pm.matchTransform(grp, i, pos=True, rot=True)
-                    t = pm.getAttr(f'{grp}.translate')
-                    r = pm.getAttr(f'{grp}.rotate')
-                    tZ = t[2] * -1
-                    rZ = r[2] + (180 if r[2] < 0 else -180)
-                    pm.setAttr(f'{grp}.translateZ', tZ)
-                    pm.setAttr(f'{grp}.rotateZ', rZ)
-                    om.MGlobal.displayInfo('Result: z to -z')
+    def mirrorCopy(self, idx):
+        for i in self.sel:
+            if idx == 'x':
+                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
+                pm.matchTransform(grp, i, pos=True, rot=True)
+                t = pm.getAttr(f'{grp}.translate')
+                r = pm.getAttr(f'{grp}.rotate')
+                tX = t[0] * -1
+                rX = r[0] + (180 if r[0] < 0 else -180)
+                rY = r[1] * -1
+                rZ = r[2] * -1
+                pm.setAttr(f'{grp}.translateX', tX)
+                pm.setAttr(f'{grp}.rotateX', rX)
+                pm.setAttr(f'{grp}.rotateY', rY)
+                pm.setAttr(f'{grp}.rotateZ', rZ)
+            elif idx == 'z':
+                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
+                pm.matchTransform(grp, i, pos=True, rot=True)
+                t = pm.getAttr(f'{grp}.translate')
+                r = pm.getAttr(f'{grp}.rotate')
+                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
+                pm.matchTransform(grp, i, pos=True, rot=True)
+                t = pm.getAttr(f'{grp}.translate')
+                r = pm.getAttr(f'{grp}.rotate')
+                tZ = t[2] * -1
+                rZ = r[2] + (180 if r[2] < 0 else -180)
+                pm.setAttr(f'{grp}.translateZ', tZ)
+                pm.setAttr(f'{grp}.rotateZ', rZ)
             else:
                 continue
+
+
+    def main(self):
+        if not self.sel:
+            om.MGlobal.displayError("Nothing selected.")
+        elif not self.dir:
+            om.MGlobal.displayError("Direction is required.")
+        elif not self.dir:
+            om.MGlobal.displayError("X and Z directions are available.")
+        elif 'x' in self.dir:
+            self.mirrorCopy('x')
+        elif 'z' in self.dir:
+            self.mirrorCopy('y')
+        else:
+            om.MGlobal.displayError("Example: mirrorCopy(x=True or z=True)")
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 
