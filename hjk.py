@@ -1077,10 +1077,3 @@ def anotherFunction(lst: list) -> None:
                 continue
 
 
-# 79 char line ================================================================
-# 72 docstring or comments line ========================================
-
-
-
-
-
