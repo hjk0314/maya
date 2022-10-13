@@ -566,7 +566,7 @@ class AutoWheel():
     # Create variables.
     def createVar(self, rad: float) -> tuple:
         rad *= 1.1
-        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False)
+        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False, n='cc_Ft_wheel_mid_L_3')
         cuv = cuv[0]
         jnt = cuv + '_jnt'
         null = cuv + '_null_grp'
