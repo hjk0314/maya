@@ -566,7 +566,7 @@ class AutoWheel():
     # Create variables.
     def createVar(self, rad: float) -> tuple:
         rad *= 1.1
-        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False, n='cc_Ft_wheel_mid_L_3')
+        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False, n='cc_Ft_wheel_mid_R_3')
         cuv = cuv[0]
         jnt = cuv + '_jnt'
         null = cuv + '_null_grp'
@@ -1088,5 +1088,49 @@ class MirrorCopy:
 
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
+
+
+dic = {
+    'jnt_Ft_wheel_Ft_L_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_Ft_R_grp', 
+    'jnt_Ft_wheel_Ft_R_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_Ft_L_grp', 
+    'jnt_Ft_wheel_Bk_L_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_Bk_R_grp', 
+    'jnt_Ft_wheel_Bk_R_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_Bk_L_grp', 
+    'jnt_Ft_wheel_mid_L_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_R_1_grp', 
+    'jnt_Ft_wheel_mid_L_2': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_R_2_grp', 
+    'jnt_Ft_wheel_mid_L_3': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_R_3_grp', 
+    'jnt_Ft_wheel_mid_L_4': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_R_4_grp', 
+    'jnt_Ft_wheel_mid_R_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_L_1_grp', 
+    'jnt_Ft_wheel_mid_R_2': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_L_2_grp', 
+    'jnt_Ft_wheel_mid_R_3': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_L_3_grp', 
+    'jnt_Ft_wheel_mid_R_4': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_L_4_grp', 
+    'dum_smallCircle_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_5_grp', 
+    'dum_smallCircle_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_5_grp', 
+    'dum_linked4wheels_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_123_grp', 
+    'dum_linked4wheels_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_123_grp', 
+    'dum_powerTo4wheels_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_4_grp', 
+    'dum_powerTo4wheels_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_4_grp', 
+    'jnt_wheel2Gear_L_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_6_grp', 
+    'jnt_wheel2Gear_R_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_6_grp', 
+    'jnt_wheel2Gear_L_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_7_grp', 
+    'jnt_wheel2Gear_R_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_7_grp', 
+    'dum_power_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_17_grp', 
+    'dum_power_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_17_grp', 
+    'dum_gear2Piston_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_8_grp', 
+    'dum_gear2Piston_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_8_grp', 
+    'jnt_power2Gear_L_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_9_grp', 
+    'jnt_power2Gear_R_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_9_grp', 
+    'jnt_power2Gear_L_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_10_grp', 
+    'jnt_power2Gear_R_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_10_grp', 
+    'dum_piston_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_18_grp', 
+    'dum_piston_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_18_grp', 
+    'jnt_handle2Gear_L_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_11_grp', 
+    'jnt_handle2Gear_R_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_11_grp', 
+    'jnt_handle2Gear_L_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_12_grp', 
+    'jnt_handle2Gear_R_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_12_grp', 
+}
+for k in dic:
+    v = dic[k]
+    pm.parentConstraint(k, v, mo=True, w=1.0)
+    pm.scaleConstraint(k, v, mo=True, w=1.0)
 
 
