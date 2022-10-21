@@ -4,7 +4,8 @@ import hashlib
 import hmac
 import secrets
 import io
-import argparse
+# import argparse
+# import logging
 
 
 # csv
@@ -132,6 +133,13 @@ class io_Test():
             result = self.execute(txt)
             print(result)
 
+
+# argparse: 파이썬 스크립트의 명령행 옵션을 파싱할 때 사용하는 모듈
+# python module.py -a 1 2 3 4 5
+# python module.py --add 1 2 3 4 5
+
+
+# logging: 로그를 파일로 출력할 때 사용하는 모듈
 
 # csv_Test()
 # configparser_Test()

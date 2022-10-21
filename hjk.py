@@ -777,6 +777,62 @@ class MatchPivot():
         return result
 
 
+# Create mirror copy of selection with group.
+# Example: mirrorCopy(x=True or z=True)
+class MirrorCopy:
+    def __init__(self, **kwargs):
+        self.sel = pm.ls(sl=True)
+        self.dir = [i.lower() for i in kwargs if kwargs[i]]
+        self.main()
+
+
+    def mirrorCopy(self, idx):
+        for i in self.sel:
+            if idx == 'x':
+                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
+                pm.matchTransform(grp, i, pos=True, rot=True)
+                t = pm.getAttr(f'{grp}.translate')
+                r = pm.getAttr(f'{grp}.rotate')
+                tX = t[0] * -1
+                rX = r[0] + (180 if r[0] < 0 else -180)
+                rY = r[1] * -1
+                rZ = r[2] * -1
+                pm.setAttr(f'{grp}.translateX', tX)
+                pm.setAttr(f'{grp}.rotateX', rX)
+                pm.setAttr(f'{grp}.rotateY', rY)
+                pm.setAttr(f'{grp}.rotateZ', rZ)
+            elif idx == 'z':
+                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
+                pm.matchTransform(grp, i, pos=True, rot=True)
+                t = pm.getAttr(f'{grp}.translate')
+                r = pm.getAttr(f'{grp}.rotate')
+                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
+                pm.matchTransform(grp, i, pos=True, rot=True)
+                t = pm.getAttr(f'{grp}.translate')
+                r = pm.getAttr(f'{grp}.rotate')
+                tZ = t[2] * -1
+                rZ = r[2] + (180 if r[2] < 0 else -180)
+                pm.setAttr(f'{grp}.translateZ', tZ)
+                pm.setAttr(f'{grp}.rotateZ', rZ)
+            else:
+                continue
+
+
+    def main(self):
+        if not self.sel:
+            om.MGlobal.displayError("Nothing selected.")
+        elif not self.dir:
+            om.MGlobal.displayError("Direction is required.")
+        elif not self.dir:
+            om.MGlobal.displayError("X and Z directions are available.")
+        elif 'x' in self.dir:
+            self.mirrorCopy('x')
+        elif 'z' in self.dir:
+            self.mirrorCopy('y')
+        else:
+            om.MGlobal.displayError("Example: mirrorCopy(x=True or z=True)")
+
+
 # Class end. ==================================================================
 # Class end. ==================================================================
 # Class end. ==================================================================
@@ -1030,107 +1086,7 @@ def zeroPivot():
         pm.move(0, 0, 0, j, k, rpr=True)
 
 
-# Create mirror copy of selection with group.
-# Example: mirrorCopy(x=True or z=True)
-class MirrorCopy:
-    def __init__(self, **kwargs):
-        self.sel = pm.ls(sl=True)
-        self.dir = [i.lower() for i in kwargs if kwargs[i]]
-        self.main()
-
-
-    def mirrorCopy(self, idx):
-        for i in self.sel:
-            if idx == 'x':
-                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
-                pm.matchTransform(grp, i, pos=True, rot=True)
-                t = pm.getAttr(f'{grp}.translate')
-                r = pm.getAttr(f'{grp}.rotate')
-                tX = t[0] * -1
-                rX = r[0] + (180 if r[0] < 0 else -180)
-                rY = r[1] * -1
-                rZ = r[2] * -1
-                pm.setAttr(f'{grp}.translateX', tX)
-                pm.setAttr(f'{grp}.rotateX', rX)
-                pm.setAttr(f'{grp}.rotateY', rY)
-                pm.setAttr(f'{grp}.rotateZ', rZ)
-            elif idx == 'z':
-                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
-                pm.matchTransform(grp, i, pos=True, rot=True)
-                t = pm.getAttr(f'{grp}.translate')
-                r = pm.getAttr(f'{grp}.rotate')
-                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
-                pm.matchTransform(grp, i, pos=True, rot=True)
-                t = pm.getAttr(f'{grp}.translate')
-                r = pm.getAttr(f'{grp}.rotate')
-                tZ = t[2] * -1
-                rZ = r[2] + (180 if r[2] < 0 else -180)
-                pm.setAttr(f'{grp}.translateZ', tZ)
-                pm.setAttr(f'{grp}.rotateZ', rZ)
-            else:
-                continue
-
-
-    def main(self):
-        if not self.sel:
-            om.MGlobal.displayError("Nothing selected.")
-        elif not self.dir:
-            om.MGlobal.displayError("Direction is required.")
-        elif not self.dir:
-            om.MGlobal.displayError("X and Z directions are available.")
-        elif 'x' in self.dir:
-            self.mirrorCopy('x')
-        elif 'z' in self.dir:
-            self.mirrorCopy('y')
-        else:
-            om.MGlobal.displayError("Example: mirrorCopy(x=True or z=True)")
-
-
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
-
-
-dic = {
-    'jnt_Ft_wheel_Ft_L_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_Ft_R_grp', 
-    'jnt_Ft_wheel_Ft_R_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_Ft_L_grp', 
-    'jnt_Ft_wheel_Bk_L_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_Bk_R_grp', 
-    'jnt_Ft_wheel_Bk_R_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_Bk_L_grp', 
-    'jnt_Ft_wheel_mid_L_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_R_1_grp', 
-    'jnt_Ft_wheel_mid_L_2': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_R_2_grp', 
-    'jnt_Ft_wheel_mid_L_3': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_R_3_grp', 
-    'jnt_Ft_wheel_mid_L_4': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_R_4_grp', 
-    'jnt_Ft_wheel_mid_R_1': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_L_1_grp', 
-    'jnt_Ft_wheel_mid_R_2': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_L_2_grp', 
-    'jnt_Ft_wheel_mid_R_3': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_L_3_grp', 
-    'jnt_Ft_wheel_mid_R_4': 'vhcl_micaA_mdl_v9999:micaA_wheel_mid_L_4_grp', 
-    'dum_smallCircle_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_5_grp', 
-    'dum_smallCircle_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_5_grp', 
-    'dum_linked4wheels_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_123_grp', 
-    'dum_linked4wheels_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_123_grp', 
-    'dum_powerTo4wheels_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_4_grp', 
-    'dum_powerTo4wheels_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_4_grp', 
-    'jnt_wheel2Gear_L_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_6_grp', 
-    'jnt_wheel2Gear_R_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_6_grp', 
-    'jnt_wheel2Gear_L_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_7_grp', 
-    'jnt_wheel2Gear_R_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_7_grp', 
-    'dum_power_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_17_grp', 
-    'dum_power_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_17_grp', 
-    'dum_gear2Piston_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_8_grp', 
-    'dum_gear2Piston_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_8_grp', 
-    'jnt_power2Gear_L_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_9_grp', 
-    'jnt_power2Gear_R_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_9_grp', 
-    'jnt_power2Gear_L_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_10_grp', 
-    'jnt_power2Gear_R_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_10_grp', 
-    'dum_piston_L': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_18_grp', 
-    'dum_piston_R': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_18_grp', 
-    'jnt_handle2Gear_L_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_11_grp', 
-    'jnt_handle2Gear_R_2': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_11_grp', 
-    'jnt_handle2Gear_L_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_R_part_12_grp', 
-    'jnt_handle2Gear_R_1': 'vhcl_micaA_mdl_v9999:micaA_engine_1_L_part_12_grp', 
-}
-for k in dic:
-    v = dic[k]
-    pm.parentConstraint(k, v, mo=True, w=1.0)
-    pm.scaleConstraint(k, v, mo=True, w=1.0)
 
 
