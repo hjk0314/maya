@@ -1,3 +1,4 @@
+import re
 import os
 import json
 import maya.OpenMaya as om
@@ -831,6 +832,108 @@ class MirrorCopy:
             self.mirrorCopy('y')
         else:
             om.MGlobal.displayError("Example: mirrorCopy(x=True or z=True)")
+
+
+# Create a through curve or joint.
+class PenetratingCurve:
+    def __init__(self):
+        self.setupUI()
+
+
+    # UI.
+    def setupUI(self):
+        id = "Penetrating_Curve"
+        tt = "Creates curves or joints through the edge loop"
+        if pm.window(id, exists=True):
+            pm.deleteUI(id)
+        else:
+            win = pm.window(id, t=tt, s=True, rtf=True)
+            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=180)
+            pm.separator(h=8)
+            self.chk = pm.radioButtonGrp(la2=['Curve', 'Joint'], nrb=2, sl=1)
+            pm.separator(h=8)
+            pm.button(l='Create', c=lambda x: self.main())
+            pm.separator(h=8)
+            pm.showWindow(win)
+
+
+    # Get the edge number.
+    def getEdgeNumber(self, edg: str) -> int:
+        '''polygon.e[123] -> 123'''
+        result = []
+        for i in edg:
+            num = re.search(r"\[([0-9]+)\]", i.name())
+            num = num.group(1)
+            num = int(num)
+            result.append(num)
+        return result
+
+
+    # Get the smallest number in the list.
+    def getSmallNumber(self, obj: str, num: int) -> int:
+        '''When getting the edge loop information, 
+        it is necessary to match the starting number.'''
+        # el: edgeLoop, ns: noSelection
+        edgeLoop = pm.polySelect(obj, el=num, ns=True)
+        # Ignore the first number because it is the selected edge number.
+        edgeLoop = sorted(edgeLoop[1:])
+        result = edgeLoop[0] if edgeLoop else num
+        return result
+
+
+    # Get the coordinates of the cluster.
+    def getCoordinates(self, obj: str, edges: list) -> list:
+        '''Create a cluster for every edge loop 
+        and get the coordinates of its center.'''
+        points = []
+        for i in edges:
+            pm.polySelect(obj, el=i)
+            clt = pm.cluster()
+            cltHandle = clt[0].name() + 'HandleShape.origin'
+            pos = pm.getAttr(cltHandle)
+            points.append(pos)
+            # After getting the coordinates, the cluster is deleted.
+            pm.delete(clt)
+        return points
+
+
+    # Creates curves or joints.
+    def create(self, point: list, check: int) -> None:
+        '''check: 1=curve, 2=joint'''
+        if check == 2:
+            for i in point:
+                pm.joint(p=i)
+        else:
+            pm.curve(p=point)
+
+
+    def main(self) -> None:
+        '''Variables
+        1. edg: Edge is selected.
+        2. obj: Object name is returned even when edge is selected.
+        3. num: Get only numbers from string.
+        4. min: Get the smallest number in the list.
+        5. edges: All edge numbers between start and end.
+        6. check: Curve or Joint.
+        7. point: Center pivots of every edge loop.
+        '''
+        edg = pm.ls(os=True, fl=True)
+        obj = pm.ls(sl=True, o=True)
+        if not obj:
+            om.MGlobal.displayError("Nothing selected.")
+        else:
+            num = self.getEdgeNumber(edg)
+            min = {self.getSmallNumber(obj, i) for i in num}
+            min = list(min)
+            min.sort()
+            edges = pm.polySelect(obj, erp=(min[0], min[-1]))
+            check = pm.radioButtonGrp(self.chk, q=True, sl=True)
+            if edges == None:
+                msg = 'The "starting edges" should be a loop.'
+                om.MGlobal.displayError(msg)
+            else:
+                point = self.getCoordinates(obj, edges)
+                self.create(point, check)
 
 
 # Class end. ==================================================================
