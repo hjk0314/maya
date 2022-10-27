@@ -49,7 +49,7 @@ def main():
     for i in jnt:
         pm.delete(i, cn=True)
         for j in channel:
-            pm.disconnectAttr(i + j)
+            pm.disconnectAttr(f"{i}.{j}")
 
 
 main()

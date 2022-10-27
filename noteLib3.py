@@ -1,9 +1,24 @@
+import asyncio
+import base64
+import binascii
 import csv
 import configparser
 import hashlib
 import hmac
+import html
+import json
+import multiprocessing
+import quopri
+import sched
 import secrets
 import io
+import select
+import selectors
+import signal
+import socket
+import ssl
+import subprocess
+import uu
 # import argparse
 # import logging
 
@@ -140,15 +155,52 @@ class io_Test():
 
 
 # logging: 로그를 파일로 출력할 때 사용하는 모듈
-
-# csv_Test()
-# configparser_Test()
-# hashlib_Test()
-# hmac_Test()
-# secrets_Test()
-# io_Test()
-
-
+# getpass: 비밀번호를 입력할 때 화면에 노출하지 않도록 한다.
+# curses: 터미널 그래픽 애플리케이션을 만들 때 사용.
+# platform: 시스템 정보를 확인할 때 사용.
+# ctypes: C로 작성한 라이브러리를 파이썬에서 사용.
+# threading: 스레드를 이용하여 한 프로세스에서 2가지 이상의 일을 실행.
+# multiprocessing: 멀티 프로세스를 활용하여, 2가지 이상의 일을 동시에 실행.
+# concurrent.futures: 같은 규칙으로 threading과 multiprocessing을 더 쉽게 사용.
+'''subprocess: 시스템 명령을 수행.
+with open(r"C:\Users\jkhong\Desktop\file.txt", 'wb') as txt:
+    out = subprocess.run(['cmd', '/c', 'dir'], capture_output=True)
+    txt.write(out.stdout)
+'''
+# sched: 지정된 시간에 원하는 이벤트를 실행하게 해주는 이벤트 스케줄러이다.
+# asyncio: 단일 스레드 작업을 병렬로 처리.
+# socket: TCP 서버/클라이언트 프로그램을 작성할 때 사용.
+# ssl: socket 모듈로 작성한 서버/클라이언트에 공개키 암호화 방식을 적용.
+# select: socket 프로그래밍에서 "I/O멀티플랙싱"을 가능하게 하는 모듈.
+'''selectors: select를 확장하여 "고수준I/O멀티플랙싱"을 가능하도록 한 모듈로, 
+select 대신 사용하도록 권장하는 모듈이다.
+'''
+# signal: 특정 신호를 수신했을 때 사용자가 정의한 함수를 호출하도록 한다.
+'''json: "json데이터"를 쉽게 처리. pickle, shelve 등과 비슷한 일을 한다. 
+기본적으로 아스키 형태로 저장. 딕셔너리, 리스트나 튜플 같은 자료형도 처리 가능.
+'''
+'''base64: 바이너리 데이터를 문자열로 인코딩할 때 사용. 
+이때 인코딩한 문자열은 64개의 아스키 문자로 구성된다.(64진법)
+'''
+# binascii: 문자열을 16진수로, 변환할 16진수를 다시 문자열로 변환한다.
+'''quopri: quoted-printable 인코딩/디코딩을 할 때 사용하는 모듈.
+영문과 숫자 등의 ASCII 7bit 문자는 그대로 두고 한글 등 8bit 문자만 인코딩.
+quopri.decodestring('Python =EA=B3=B5=EB=B6=80').decode('utf-8')
+'''
+'''uu: 바이너리를 텍스트로 변환하기 위한 인코딩 방법. 
+1980년 메리 앤호튼이 개발. uu는 Unix-to-Unix를 뜻함. 
+지금은 대부분 uuencode의 단점을 보완한 Base64와 같은 MIME 방식의 인코딩을 사용. 
+uu는 이러한 uuencode 인코딩을 위한 파이썬 모듈이다.(begin ~ end로 구성됨)
+uu.encode('test.jpg', 'result.txt')
+uu.decode('result.txt', 'test.jpg')
+'''
+'''html: HTML문자를 이스케이프 처리할 때 사용.
+"&lt;script&gt;Hello&lt;/script&gt;"
+<script>Hello</script>
+'''
+'''html.parser: HTML 문서를 파싱할 때 사용. 
+예를 들어 <strong></strong>태그의 문자열을 찾아서 출력.
+'''
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 
