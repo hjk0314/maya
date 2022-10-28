@@ -1,55 +1,25 @@
 import re
-import itertools
 import pymel.core as pm
 
 
-def channelList():
-    TRS = ['t', 'r', 's']
-    XYZ = ['x', 'y', 'z']
-    PRO = itertools.product(TRS, XYZ)
-    # PRO: [('t', 'x'), ('t', 'y'), ... ('s', 'z')]
-    channel = [''.join(i) for i in PRO]
-    channel += ['v']
-    # ['tx', 'ty', 'tz', 'rx', 'ry', 'rz', 'sx', 'sy', 'sz', 'v']
-    return channel
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 
-def selConst():
-    sel = pm.ls(sl=True, dag=True)
-    STR = re.compile(r'.+Constraint[0-9]?')
-    constList = []
-    for i in sel:
-        typ = pm.objectType(i)
-        if STR.search(typ):
-            constList.append(i)
-        else:
-            continue
-    # pm.select(constList)
-    return constList
+# def getPos():
+#     sel = pm.ls(sl=True)
+#     pos = {j: pm.xform(k, q=True, t=True, ws=True) for j, k in enumerate(sel)}
+#     return pos
 
 
-def selJnt():
-    sel = pm.ls(sl=True, dag=True)
-    jnt = []
-    for i in sel:
-        typ = pm.objectType(i, i='joint')
-        if typ:
-            jnt.append(i)
-        else:
-            continue
-    # pm.select(jnt)
-    return jnt
 
+sel = pm.ls(sl=True)
 
-def main():
-    const = selConst()
-    jnt = selJnt()
-    channel = channelList()
-    pm.delete(const)
-    for i in jnt:
-        pm.delete(i, cn=True)
-        for j in channel:
-            pm.disconnectAttr(f"{i}.{j}")
-
-
-main()
+new = 'new_46_grp'
+for j, k in enumerate(sel):
+    slice = re.search(r"(.*)([0-9]+)(.*)", new)
+    grp1, grp2, grp3 = [slice.group(i) for i in range(1, 4)]
+    num = int(grp2) + j
+    num = str(num)
+    result = grp1 + num + grp3
+    pm.rename(k, result)
