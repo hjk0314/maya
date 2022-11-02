@@ -937,6 +937,58 @@ class PenetratingCurve:
                 self.create(point, check)
 
 
+# Match the curve shape from A to B.
+class A2B:
+    def __init__(self):
+        self.main()
+
+
+    # Number of Object's cv.
+    def numberOfCV(self, obj: str) -> int:
+        '''Number of object's cv'''
+        cv = f'{obj}.cv[0:]'
+        pm.select(cv)
+        cvSel = pm.ls(sl=True, fl=True)
+        cvNum = len(cvSel)
+        result = cvNum
+        pm.select(cl=True)
+        return result
+
+        
+    # Match the point to point.
+    def matchShape(self, obj: list) -> list:
+        '''Change the shape of the curve controller from A to B'''
+        A_list = obj[0:-1]
+        B = obj[-1] # The last selection is Base.
+        numB = self.numberOfCV(B) # number of B.cv
+        failed = []
+        for A in A_list:
+            numA = self.numberOfCV(A)
+            if numA == numB > 0:
+                for k in range(numA):
+                    cvA = f'{A}.cv[{k}]'
+                    cvB = f'{B}.cv[{k}]'
+                    p1, p2, p3 = pm.pointPosition(cvB)
+                    pm.move(p1, p2, p3, cvA, a=True)
+            else:
+                failed.append(A)
+        return failed
+
+
+    def main(self):
+        '''Select only "nurbsCurve" and match the shape.'''
+        sel = pm.ls(sl=True, dag=True, type=['nurbsCurve'])
+        # Select at least 2.
+        if len(sel) < 2:
+            om.MGlobal.displayError('Select two or more "nurbsCurves".')
+        else:
+            result = self.matchShape(sel)
+            failed = 'Check this objects : %s' % result
+            success = 'Successfully done.'
+            message = failed if result else success
+            om.MGlobal.displayInfo(message)
+
+
 # Class end. ==================================================================
 # Class end. ==================================================================
 # Class end. ==================================================================
@@ -1256,3 +1308,4 @@ def pvp():
 # 72 docstring or comments line ========================================
 
 
+rename('org_1')
