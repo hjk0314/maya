@@ -293,84 +293,6 @@ class SoftSel():
         pm.select(cluster[1], r=True)
 
 
-""" class Rename():
-    def __init__(self):
-        self.setupUI()
-
-
-    # UI.
-    def setupUI(self):
-        if pm.window('Re_name', exists=True):
-            pm.deleteUI('Re_name')
-        else:
-            win = pm.window('Re_name', t='rename', s=True, rtf=True)
-            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=391)
-            pm.separator(h=10)
-            # new field
-            self.new = pm.textFieldGrp(l="New name : ", ed=True)
-            # check field
-            chkStr = 'Replace : '
-            chkFn = lambda x: self.updateUI()
-            self.chk = pm.checkBoxGrp(l=chkStr, ncb=1, v1=False, cc=chkFn)
-            # replace field
-            repStr = "Replace to this : "
-            self.rep = pm.textFieldGrp(l=repStr, ed=True, en=False)
-            # endfield
-            endFn = lambda x: self.updateUI()
-            self.end = pm.textFieldGrp(l="End : ", ed=True, tcc=endFn)
-            # button
-            self.btn = pm.button(l='New', c=lambda x: self.reName())
-            pm.separator(h=10)
-            pm.showWindow(win)
-    
-
-    def updateUI(self):
-        chk = self.chk.getValue1()
-        end = '' if chk else self.end.getText()
-        newlbl = "Find : " if chk else "New name : "
-        btnlbl = "Rename" if chk else "New"
-        self.end.setText(end)
-        self.new.setLabel(newlbl)
-        self.btn.setLabel(btnlbl)
-        self.new.setEnable(not end)
-        self.rep.setEnable(chk)
-        self.end.setEnable(not chk)
-
-
-    # The number is last one in name.
-    # This function is Only works for strings sliced with underscores.
-    # Return index and its number.
-    def getNumberInName(self, name: str) -> tuple:
-        # sample string: 'Cube1_22_obj_22_a2'
-        nameSlice = name.split("_")
-        # nameSlice: ['Cube1', '22', 'obj', '22', 'a2']
-        digitList = []
-        # digitList: [(1, '22'), (3, '22')]
-        for j, k in enumerate(nameSlice):
-            if k.isdigit():
-                digitList.append((j, k))
-        try:
-            result = digitList[-1] # last one
-            return result
-        except:
-            return False
-
-
-    def reName(self):
-        sel = pm.ls(sl=True)
-        chk = self.chk.getValue1()
-        new = self.new.getText()
-        if chk:
-            rep = self.rep.getText()
-            for i in sel:
-                pm.rename(i, i.replace(new, rep))
-        else:
-            end = self.end.getText()
-            for i in sel:
-                pm.rename(i, i + end if end else new)
- """
-
-
 # Delete the node named 'vaccine_gene' and "breed_gene" in the ma file.
 # It is related to mayaScanner distributed by autodesk.
 class Vaccine():
@@ -639,30 +561,9 @@ class AutoWheel():
 
 
 # Matching the direction of the pivot.
-# Example: matchPivot(cub=True, cyl=True ...)
 class MatchPivot():
-    def __init__(self, **kwargs):
-        # You can also input the controller's shape.
-        self.ctrlShape = kwargs if kwargs else {}
+    def __init__(self):
         self.main()
-
-    
-    def main(self) -> None:
-        sel = pm.ls(sl=True, fl=True)
-        chk = self.check(sel)
-        if not chk:
-            pass
-        else:
-            obj = self.select3Points(sel)
-            cuv = self.ctrl()
-            if not cuv:
-                msg = 'You can use it like this: matchPivot(cub=True)'
-                om.MGlobal.displayWarning(msg)
-            else:
-                for i in cuv:
-                    grp = pm.group(i)
-                    pm.matchTransform(grp, obj, pos=True, rot=True)
-                om.MGlobal.displayInfo('Successfully done.')
 
 
     # Check if selected is a point.
@@ -697,86 +598,17 @@ class MatchPivot():
         pm.select(cl=True)
         return pPlane
 
-
-    # Create a curve controller.
-    def ctrl(self) -> list:
-        # Cube shape coordinates
-        cub = [(-1, 1, -1), (-1, 1, 1), (1, 1, 1), ]
-        cub += [(1, 1, -1), (-1, 1, -1), (-1, -1, -1), ]
-        cub += [(-1, -1, 1), (1, -1, 1), (1, -1, -1), ]
-        cub += [(-1, -1, -1), (-1, -1, 1), (-1, 1, 1), ]
-        cub += [(1, 1, 1), (1, -1, 1), (1, -1, -1), ]
-        cub += [(1, 1, -1), ]
-        # Sphere shape coordinates
-        sph = [(0, 1, 0), (0, 0.7, 0.7), (0, 0, 1), ]
-        sph += [(0, -0.7, 0.7), (0, -1, 0), (0, -0.7, -0.7), ]
-        sph += [(0, 0, -1), (0, 0.7, -0.7), (0, 1, 0), ]
-        sph += [(-0.7, 0.7, 0), (-1, 0, 0), (-0.7, 0, 0.7), ]
-        sph += [(0, 0, 1), (0.7, 0, 0.7), (1, 0, 0), ]
-        sph += [(0.7, 0, -0.7), (0, 0, -1), (-0.7, 0, -0.7), ]
-        sph += [(-1, 0, 0), (-0.7, -0.7, 0), (0, -1, 0), ]
-        sph += [(0.7, -0.7, 0), (1, 0, 0), (0.7, 0.7, 0), ]
-        sph += [(0, 1, 0), ]
-        # Cylinder shape coordinates
-        cyl = [(-1, 1, 0), (-0.7, 1, 0.7), (0, 1, 1), ]
-        cyl += [(0.7, 1, 0.7), (1, 1, 0), (0.7, 1, -0.7), ]
-        cyl += [(0, 1, -1), (0, 1, 1), (0, -1, 1), ]
-        cyl += [(-0.7, -1, 0.7), (-1, -1, 0), (-0.7, -1, -0.7), ]
-        cyl += [(0, -1, -1), (0.7, -1, -0.7), (1, -1, 0), ]
-        cyl += [(0.7, -1, 0.7), (0, -1, 1), (0, -1, -1), ]
-        cyl += [(0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), ]
-        cyl += [(1, 1, 0), (1, -1, 0), (-1, -1, 0), ]
-        cyl += [(-1, 1, 0), ]
-        # Pipe shape coordinates
-        pip = [(0, 1, 1), (0, -1, 1), (0.7, -1, 0.7), ]
-        pip += [(1, -1, 0), (1, 1, 0), (0.7, 1, -0.7), ]
-        pip += [(0, 1, -1), (0, -1, -1), (-0.7, -1, -0.7), ]
-        pip += [(-1, -1, 0), (-1, 1, 0), (-0.7, 1, 0.7), ]
-        pip += [(0, 1, 1), (0.7, 1, 0.7), (1, 1, 0), ]
-        pip += [(1, -1, 0), (0.7, -1, -0.7), (0, -1, -1), ]
-        pip += [(0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), ]
-        pip += [(-1, -1, 0), (-0.7, -1, 0.7), (0, -1, 1), ]
-        # Cone shape coordinates
-        con = [(0, 2, 0), (-0.87, 0, -0), (0.87, 0, 0), ]
-        con += [(0, 2, 0), (0, 0, 1), (-0.87, 0, -0), ]
-        con += [(0.87, 0, 0), (0, 0, 1), ]
-        # Arrow1 shape coordinates
-        ar1 = [(0, 0, 2), (2, 0, 1), (1, 0, 1), ]
-        ar1 += [(1, 0, -2), (-1, 0, -2), (-1, 0, 1), ]
-        ar1 += [(-2, 0, 1), (0, 0, 2), ]
-        # Arrow2 shape coordinates
-        ar2 = [(0, 1, 4), (4, 1, 2), (2, 1, 2), ]
-        ar2 += [(2, 1, -4), (-2, 1, -4), (-2, 1, 2), ]
-        ar2 += [(-4, 1, 2), (0, 1, 4), (0, -1, 4), ]
-        ar2 += [(4, -1, 2), (2, -1, 2), (2, -1, -4), ]
-        ar2 += [(-2, -1, -4), (-2, -1, 2), (-4, -1, 2), ]
-        ar2 += [(0, -1, 4), (4, -1, 2), (4, 1, 2), ]
-        ar2 += [(2, 1, 2), (2, 1, -4), (2, -1, -4), ]
-        ar2 += [(-2, -1, -4), (-2, 1, -4), (-2, 1, 2), ]
-        ar2 += [(-4, 1, 2), (-4, -1, 2), ]
-        # Arrow3 shape coordinates
-        ar3 = [(7, 0, 0), (5, 0, -5), (0, 0, -7), ]
-        ar3 += [(-5, 0, -5), (-7, 0, 0), (-5, 0, 5), ]
-        ar3 += [(0, 0, 7), (5, 0, 5), (7, 0, 0), ]
-        ar3 += [(5, 0, 2), (7, 0, 3), (7, 0, 0), ]
-        # Dictionary
-        ctrl = {
-            "cub": cub, 
-            "sph": sph, 
-            "cyl": cyl, 
-            "pip": pip, 
-            "con": con, 
-            "ar1": ar1, 
-            "ar2": ar2, 
-            "ar3": ar3, 
-        }
-        hash = self.ctrlShape
-        if hash:
-            points = [ctrl[i] for i in hash if hash[i]]
-            result = [pm.curve(d=1, p=i) for i in points]
+    
+    def main(self) -> None:
+        sel = pm.ls(sl=True, fl=True)
+        chk = self.check(sel)
+        if not chk:
+            pass
         else:
-            result = []
-        return result
+            obj = self.select3Points(sel)
+            loc = pm.spaceLocator()
+            pm.matchTransform(loc, obj, pos=True, rot=True)
+            pm.delete(obj)
 
 
 # Create mirror copy of selection with group.
@@ -938,7 +770,7 @@ class PenetratingCurve:
 
 
 # Match the curve shape from A to B.
-class A2B:
+class ccShape():
     def __init__(self):
         self.main()
 
@@ -987,13 +819,6 @@ class A2B:
             success = 'Successfully done.'
             message = failed if result else success
             om.MGlobal.displayInfo(message)
-
-
-# Class end. ==================================================================
-# Class end. ==================================================================
-# Class end. ==================================================================
-# Class end. ==================================================================
-# Class end. ==================================================================
 
 
 # Grouping itself and named own
@@ -1087,6 +912,52 @@ def ctrl(**kwargs):
     ar3 += [(-5, 0, -5), (-7, 0, 0), (-5, 0, 5), ]
     ar3 += [(0, 0, 7), (5, 0, 5), (7, 0, 0), ]
     ar3 += [(5, 0, 2), (7, 0, 3), (7, 0, 0), ]
+    # Arrow4 shape coordinates
+    ar4 = [(0, 0, -11), (-3, 0, -8), (-2.0, 0, -8), ]
+    ar4 += [(-2, 0, -6), (-5, 0, -5), (-6, 0, -2), ]
+    ar4 += [(-8, 0, -2), (-8, 0, -3), (-11, 0, 0), ]
+    ar4 += [(-8, 0, 3), (-8, 0, 2), (-6, 0, 2), ]
+    ar4 += [(-5, 0, 5), (-2, 0, 6), (-2, 0, 8), ]
+    ar4 += [(-3, 0, 8), (0, 0, 11), (3, 0, 8), ]
+    ar4 += [(2, 0, 8), (2, 0, 6), (5, 0, 5), ]
+    ar4 += [(6, 0, 2), (8, 0, 2), (8, 0, 3), ]
+    ar4 += [(11, 0, 0), (8, 0, -3), (8, 0, -2), ]
+    ar4 += [(6, 0, -2), (5, 0, -5), (2, 0, -6), ]
+    ar4 += [(2, 0, -8), (3, 0, -8), (0, 0, -11), ]
+    # Pointer shape
+    pointer = [(-1, 0, 0), (-0.7, 0, 0.7), (0, 0, 1), ]
+    pointer += [(0.7, 0, 0.7), (1, 0, 0), (0.7, 0, -0.7), ]
+    pointer += [(0, 0, -1), (-0.7, 0, -0.7), (-1, 0, 0), ]
+    pointer += [(0, 0, 0), (0, 2, 0), ]
+    # Foot shape
+    foot = [[-4, 0, -4], [-4, 0, -7], [-3, 0, -11], ]
+    foot += [[-1, 0, -12], [0, 0, -12], [1, 0, -12], ]
+    foot += [[3, 0, -11], [4, 0, -7], [4, 0, -4], ]
+    foot += [[-4, 0, -4], [-5, 0, 1], [-5, 0, 6], ]
+    foot += [[-4, 0, 12], [-2, 0, 15], [0, 0, 15.5], ]
+    foot += [[2, 0, 15], [4, 0, 12], [5, 0, 6], ]
+    foot += [[5, 0, 1], [4, 0, -4], [-4, 0, -4], ]
+    foot += [[4, 0, -4], ]
+    # Hoof shape
+    hoof = [[-6, 0, -5], [-6.5, 0, -1], [-6, 0, 3], ]
+    hoof += [[-5.2, 0, 5.5], [-3, 0, 7.5], [0, 0, 8.2], ]
+    hoof += [[3, 0, 7.5], [5.2, 0, 5.5], [6, 0, 3], ]
+    hoof += [[6.5, 0, -1], [6, 0, -5], [4, 0, -5], ]
+    hoof += [[4.5, 0, -1], [4, 0, 3], [3.5, 0, 4.5], ]
+    hoof += [[2, 0, 6], [0, 0, 6.5], [-2, 0, 6], ]
+    hoof += [[-3.5, 0, 4.5], [-4, 0, 3], [-4.5, 0, -1], ]
+    hoof += [[-4, 0, -5], [-6, 0, -5], [-5.5, 0, -6.5], ]
+    hoof += [[5.5, 0, -6.5], [4.5, 0, -10], [2.2, 0, -12.2], ]
+    hoof += [[0, 0, -12.2], [-2.2, 0, -12.2], [-4.5, 0, -10], ]
+    hoof += [[-5.5, 0, -6.5], ]
+    # Hoof2 shape
+    hoof2 = [[6, 6, -12], [0, 8, -12], [-6, 6, -12], ]
+    hoof2 += [[-8, 3, -13], [-8, 0, -12], [-7, 0, -10], ]
+    hoof2 += [[-8, 0, -6], [-9, 0, -1], [-8, 0, 4], ]
+    hoof2 += [[-5, 0, 9], [0, 0, 10], [5, 0, 9], ]
+    hoof2 += [[8, 0, 4], [9, 0, -1], [8, 0, -6], ]
+    hoof2 += [[7, 0, -10], [8, 0, -12], [8, 3, -13], ]
+    hoof2 += [[6, 6, -12], ]
     # Dictionary
     ctrl = {
         "cub": cub, 
@@ -1097,6 +968,11 @@ def ctrl(**kwargs):
         "ar1": ar1, 
         "ar2": ar2, 
         "ar3": ar3, 
+        "ar4": ar4, 
+        "pointer": pointer, 
+        "foot": foot, 
+        "hoof": hoof, 
+        "hoof2": hoof2, 
     }
     if kwargs:
         coordinate = [ctrl[i] for i in kwargs if kwargs[i]]
@@ -1165,7 +1041,7 @@ def keyOff(i=1): # i : interval
 def grpEmpty():
     sel = pm.ls(sl=True)
     for i in sel:
-        grp = pm.group(em=True, n=i + "_offset")
+        grp = pm.group(em=True, n=i + "_grp")
         pm.matchTransform(grp, i, pos=True, rot=True)
         try:
             # Selector's mom group.
@@ -1178,31 +1054,21 @@ def grpEmpty():
 
 # Select groups only.
 def selGrp():
+    '''If there is no shape and the object type is not 
+    'joint', 'ikEffector', 'ikHandle', 'Constraint', ...
+    then it is most likely a group.'''
     sel = pm.ls(sl=True, dag=True, type=['transform'])
     grp = []
     for i in sel:
+        typ = pm.objectType(i)
         A = pm.listRelatives(i, s=True)
-        B = pm.ls(i, type='joint')
-        C = pm.ls(i, type='parentConstraint')
+        B = typ in ['joint', 'ikEffector', 'ikHandle',]
+        C = 'Constraint' in typ
         if not (A or B or C):
             grp.append(i)
         else:
             continue
     pm.select(grp)
-
-
-# is group or not
-def isGrp():
-    sel = pm.ls(sl=True, dag=True, type=['transform'])
-    grp = []
-    for i in sel:
-        A = pm.listRelatives(i, s=True)
-        B = pm.ls(i, type='joint')
-        C = pm.ls(i, type='parentConstraint')
-        if not (A or B or C):
-            grp.append(i)
-        else:
-            continue
     return grp
 
 
@@ -1243,34 +1109,58 @@ def zeroPivot():
 
 
 # rename function used in maya
-def rename(txt: str) -> None:
+# txt -> 'testName23_17_grp'
+def rename(*arg: str) -> None:
     """ Rename by incrementing the last digit in the string. """
-    # txt -> 'testName23_17_grp'
-    # txtList -> ['testName', '23', '_', '17', '_grp']
-    txtList = re.split(r'([^0-9]+)([0-9]*)', txt)
-    txtList = [i for i in txtList if i]
-    # txtDict -> {1: 23, 3: 17}
-    txtDict = {i: int(n) for i, n in enumerate(txtList) if n.isdigit()}
-    # sel: The selected object.
+    numArg = len(arg)
     sel = pm.ls(sl=True)
-    if len(txtDict):
-        # idx -> 3
-        idx = max(txtDict)
-        # num -> 17
-        num = txtDict[max(txtDict)]
-        for j, k in enumerate(sel):
-            txtList[idx] = str(num + j)
-            # new -> 'testName23_17_grp'
-            new = ''.join(txtList)
-            pm.rename(k, new)
+    # Given a single argument, create a new name.
+    if numArg == 1:
+        txt = arg[0]
+        # txtList -> ['testName', '23', '_', '17', '_grp']
+        txtList = re.split(r'([^0-9]+)([0-9]*)', txt)
+        txtList = [i for i in txtList if i]
+        # txtDict -> {1: (23, 2), 3: (17, 2)}
+        txtDict = {}
+        for i, n in enumerate(txtList):
+            if n.isdigit():
+                txtDict[i] = (int(n), len(n))
+            else:
+                continue
+        if len(txtDict):
+            idx = max(txtDict) # idx -> 3
+            numTuple = txtDict[idx] # numTuple -> (17, 2)
+            num = numTuple[0] # num -> 17
+            numDigit = numTuple[1] # numDigit -> 2
+            for j, k in enumerate(sel):
+                numStr = str(num + j) # increase by j
+                numLen = len(numStr) # digit of numStr
+                # Match <numStr> with the input <numDigit>
+                if numLen < numDigit:
+                    sub = numDigit - numLen
+                    numStr = '0'*sub + numStr
+                txtList[idx] = numStr
+                new = ''.join(txtList) # new -> 'testName23_17_grp'
+                pm.rename(k, new)
+        else:
+            for j, k in enumerate(sel):
+                new = ''.join(txtList) + str(j)
+                pm.rename(k, new)
+    # Two arguments replace words.
+    elif numArg == 2:
+        before = arg[0]
+        after = arg[1]
+        for obj in sel:
+            new = obj.replace(before, after)
+            pm.rename(obj, new)
     else:
-        for j, k in enumerate(sel):
-            new = ''.join(txtList) + str(j)
-            pm.rename(k, new)
+        msg = "Given a single argument, create a new name. "
+        msg += "Two arguments replace words."
+        om.MGlobal.displayError(msg)
 
 
 # Get the poleVector's position in maya.
-def pvp():
+def poleVector():
     '''Create temporary joints, and use aimConstraint's worldUpObject 
     to find the position of the poleVector.'''
     sel = pm.ls(sl=True) # Select three objects.
@@ -1308,4 +1198,10 @@ def pvp():
 # 72 docstring or comments line ========================================
 
 
-rename('org_1')
+# grpEmpty()
+# poleVector()
+# ctrl(hoof=True, hoof2=True)
+# rename('metal_black_aldkf_adlkadf', 'metal')
+# MatchPivot()
+# MirrorCopy(x=True)
+# grpEmpty()
