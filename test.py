@@ -1,3 +1,4 @@
+import os
 import re
 import hjk
 import maya.OpenMaya as om
@@ -59,4 +60,3 @@ def color(**kwargs):
         pm.setAttr(f"{i}.overrideColor", idx)
 
 
-color()

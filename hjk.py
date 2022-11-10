@@ -1,6 +1,7 @@
 import re
 import os
 import json
+import pathlib
 import maya.OpenMaya as om
 import pymel.core as pm
 import maya.mel as mel
@@ -1052,6 +1053,15 @@ def grpEmpty():
         pm.parent(i, grp)
 
 
+# Select mesh only.
+def selObj():
+    sel = pm.ls(sl=True, s=True, dag=True)
+    meshList = {i.getParent() for i in sel if pm.objectType(i) == "mesh"}
+    result = list(meshList)
+    # pm.select(result)
+    return result
+
+
 # Select groups only.
 def selGrp():
     '''If there is no shape and the object type is not 
@@ -1070,22 +1080,6 @@ def selGrp():
             continue
     pm.select(grp)
     return grp
-
-
-# Select mesh only.
-def selObj():
-    sel = pm.ls(sl=True, dag=True, type=['transform'])
-    obj = []
-    for i in sel:
-        A = pm.listRelatives(i, s=True)
-        B = pm.ls(i, type='joint')
-        C = pm.ls(i, type='parentConstraint')
-        if not (not A or B or C):
-            obj.append(i)
-        else:
-            continue
-    pm.select(obj)
-    return obj
 
 
 # Select objects with duplicate names.
@@ -1223,3 +1217,54 @@ def color(**kwargs):
 # MatchPivot()
 # MirrorCopy(x=True)
 # grpEmpty()
+# selGrp()
+
+
+# Create reference and their handle.
+def createRef(fullPath):
+    src = fullPath # r"C:\Users\jkhong\Desktop\a.abc"
+    fileName = os.path.basename(src)
+    name, ext = os.path.splitext(fileName)
+    resolvedName = pm.createReference(
+        src, # full path
+        gl=True, # groupLocator
+        shd="shadingNetworks", # sharedNodes
+        mnc=False, # mergeNamespacesOnClash
+        ns=name # namespace
+    )
+    refName = pm.referenceQuery(resolvedName, rfn=True) # reference name
+    refNS = pm.referenceQuery(resolvedName, ns=True) # namespace
+    return refName, refNS
+
+
+# fullPath = pm.Env().sceneName()
+sel = selObj()
+refList = {i for i in sel if pm.referenceQuery(i, inr=True)}
+result = list(refList)
+refPath = {pm.referenceQuery(i, f=True) for i in result}
+refPath = list(refPath)
+for i in refPath:
+    if 'mdl/pub' in i:
+        abcPath = i.replace('scenes', 'data/alembic')
+        abcPath = pathlib.Path(abcPath)
+        abcPath = abcPath.parent
+        abcPath = abcPath.glob('*.abc')
+for i in abcPath:
+    resolvedName = pm.createReference(
+        i, # full path
+        gl=True, # groupLocator
+        shd="shadingNetworks", # sharedNodes
+        mnc=False, # mergeNamespacesOnClash
+        ns=i.stem # namespace
+    )
+# refName = pm.referenceQuery(resolvedName, rfn=True) # reference name
+refNS = pm.referenceQuery(resolvedName, ns=True) # namespace
+ns = refNS[1:]
+refObj = pm.ls(s=True, dag=True)
+print(refObj)
+print(f'{ns}:')
+for i in refObj:
+    print(i)
+    if f'{ns}:' in i:
+        print(i)
+

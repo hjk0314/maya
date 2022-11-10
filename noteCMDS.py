@@ -1,4 +1,6 @@
+import os
 import maya.cmds as cmds
+import pymel.core as pm
 
 
 # Create channel
@@ -22,6 +24,21 @@ shp = cmds.ls(sl=True, dag=True, s=True)[0]
 obj = cmds.listRelatives(shp, p=True)[0]
 shd = cmds.listConnections(shp, type='shadingEngine')[0]
 mat = cmds.ls(cmds.listConnections(shd), mat=True)[0]
+
+
+# Create reference and their handle.
+src = r"C:\Users\jkhong\Desktop\a.abc"
+fileName = os.path.basename(src)
+name, ext = os.path.splitext(fileName)
+resolvedName = pm.createReference(
+    src, # full path
+    gl=True, # groupLocator
+    shd="shadingNetworks", # sharedNodes
+    mnc=False, # mergeNamespacesOnClash
+    ns=name # namespace
+)
+refName = pm.referenceQuery(resolvedName, rfn=True) # reference name
+refNS = pm.referenceQuery(resolvedName, ns=True) # namespace
 
 
 # 79 char line ================================================================
