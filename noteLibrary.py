@@ -161,9 +161,18 @@ print(result)
 # 네임드튜플은 인덱스뿐만 아니라 키(key)로도 데이터에 접근할 수 있다.
 
 
-# collections.Counter: 리스트나 문자열과 같은 자료형의 요소 중 
-# 같은 요소가 몇 개인지 확인할 때 사용하는 클래스이다.
-
+# collections.Counter: 리스트나 문자열등을 비교.
+""" 리스트가 갖고 있는 요소들을 카운트해주는 함수인데, 
+순서는 고려하지 않고 비교를 한다.
+같은 요소가 몇 개인지 비교할 때 사용하는 클래스이다.
+arr1 = [1, 2, 3]
+arr2 = [3, 2, 1]
+arr3 = [3, 2, 1, 0]
+if collections.Counter(arr1) == collections.Counter(arr2):
+    print("arr1 == arr2")
+if collections.Counter(arr1) != collections.Counter(arr3):
+    print("arr1 != arr3")
+ """
 
 # collections.defaultdict는 값에 초깃값을 지정하여 딕셔너리를 생성한다.
 

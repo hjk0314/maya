@@ -1,5 +1,6 @@
 import os
 import re
+import subprocess
 import hjk
 import maya.OpenMaya as om
 import pymel.core as pm
@@ -60,3 +61,11 @@ def color(**kwargs):
         pm.setAttr(f"{i}.overrideColor", idx)
 
 
+# Open the Windows folder and copy the fullPath to the clipboard.
+def locationThisFile():
+    fullPath = pm.Env().sceneName()
+    dir = os.path.dirname(fullPath)
+    # copy the fullPath to the clipboard.
+    subprocess.run("clip", text=True, input=fullPath)
+    # Open the Windows folder
+    os.startfile(dir)
