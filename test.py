@@ -1,10 +1,7 @@
 import os
-import re
 import subprocess
-import hjk
 import maya.OpenMaya as om
 import pymel.core as pm
-
 
 
 # 79 char line ================================================================
@@ -69,3 +66,5 @@ def locationThisFile():
     subprocess.run("clip", text=True, input=fullPath)
     # Open the Windows folder
     os.startfile(dir)
+
+

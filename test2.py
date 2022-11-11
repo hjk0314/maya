@@ -1,5 +1,4 @@
 import os
-import pathlib
 import pymel.core as pm
 
 
@@ -74,7 +73,8 @@ for i in abc:
 
 
 sel = pm.ls(sel, dag=True, s=True)
-deformed = [i for i in sel if 'Deformed' in i]
+print(sel)
+deformed = [i for i in sel if 'Deformed' in i.name()]
 
 
-
+print(deformed)
