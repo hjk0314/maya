@@ -39,6 +39,8 @@ resolvedName = pm.createReference(
 )
 refName = pm.referenceQuery(resolvedName, rfn=True) # reference name
 refNS = pm.referenceQuery(resolvedName, ns=True) # namespace
+# pm.FileReference(resolvedName).remove()
+# pm.FileReference(referencedName).remove()
 
 
 # 79 char line ================================================================
