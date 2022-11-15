@@ -115,3 +115,4 @@ for i in syncDict:
     diffList = [i for i in attrADict if attrADict[i] != attrBDict[i]]
     for i in diffList:
         pm.setAttr(f"{B}.{i}", attrADict[i])
+

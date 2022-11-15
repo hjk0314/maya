@@ -116,6 +116,12 @@ textwrap.fill(longStr, width=45)
 temp = re.compile('(\d{6})[-](\d{7})')
 print(temp.sub('\g<1>-*******', data))
  """
+""" attr = pCylinderShape1Deformed.aiSubdivType
+tmp = re.search('((.*)Deformed)(.*)', attr)
+org = tmp.group(1) # -> pCylinderShape1Deformed
+new = tmp.group(2) # -> pCylinderShape1
+mod = tmp.group(3) # -> .aiSubdivType
+ """
 
 
 # struct: C언어로 만든 구조체 이진 데이터를 처리할 때 활요하는 모듈.
