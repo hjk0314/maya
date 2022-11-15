@@ -12,7 +12,7 @@ import maya.mel as mel
 
 
 # Export to json file and shading networks. And assign to them.
-class Abc():
+class Abc:
     def __init__(self):
         min = pm.playbackOptions(q=True, min=True)
         max = pm.playbackOptions(q=True, max=True)
@@ -257,7 +257,7 @@ class Abc():
 
 # Got this code from the internet.
 # Modified to class.
-class SoftSel():
+class SoftSel:
     def __init__(self):
         self.createSoftCluster()
     
@@ -296,7 +296,7 @@ class SoftSel():
 
 # Delete the node named 'vaccine_gene' and "breed_gene" in the ma file.
 # It is related to mayaScanner distributed by autodesk.
-class Vaccine():
+class Vaccine:
     def __init__(self):
         self.setupUI()
 
@@ -415,7 +415,7 @@ class Vaccine():
 
 
 # Transform HanGeul unicode to bytes. Otherside too.
-class Han():
+class Han:
     def __init__(self):
         self.btnHan1 = b'\xec\x9d\xb8\xec\xbd\x94\xeb\x94\xa9'
         self.btnHan2 = b'\xec\xa7\x80\xec\x9a\xb0\xea\xb8\xb0'
@@ -457,7 +457,7 @@ class Han():
 
 
 # Create wheels that rotate automatically
-class AutoWheel():
+class AutoWheel:
     def __init__(self):
         self.main()
     
@@ -562,7 +562,7 @@ class AutoWheel():
 
 
 # Matching the direction of the pivot.
-class MatchPivot():
+class MatchPivot:
     def __init__(self):
         self.main()
 
@@ -771,7 +771,7 @@ class PenetratingCurve:
 
 
 # Match the curve shape from A to B.
-class ccShape():
+class MatchCurveShape:
     def __init__(self):
         self.main()
 
@@ -1135,15 +1135,15 @@ def cuvPath(startFrame, endFrame):
 # Place locators first, and select them, and call this function.
 def cuvLoc(cl=False): # cl = closed
     sel = pm.ls(sl=True) # select locators
-    locatorPosition = [pm.xform(i, q=True, ws=True, rp=True) for i in sel]
+    posLocator = [pm.xform(i, q=True, ws=True, rp=True) for i in sel]
     if cl:
         # if closed : first, creates a circle, and change its shape.
         cuvName = pm.circle(nr=(0, 1, 0), ch=False, s=len(sel))[0]
-        for j, k in enumerate(locatorPosition):
+        for j, k in enumerate(posLocator):
             pm.move(k[0], k[1], k[2], '%s.cv[%d]' % (cuvName, j), ws=True)
     else:
         print("# ex : cuvLoc(cl=True)")
-        cuvName = pm.curve(p=locatorPosition)
+        cuvName = pm.curve(p=posLocator)
 
 
 # Attempt to delete unused plugins.
