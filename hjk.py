@@ -908,24 +908,26 @@ class MatchAttr:
     def getAttrStr(self, compare: dict) -> dict:
         result = {}
         for ref, rig in compare.items():
-            A = pm.listAttr(ref, r=True, sa=True, lf=True)
-            B = pm.listAttr(rig, r=True, sa=True, lf=True)
+            A = pm.listAttr(ref, r=True, sa=True, lf=True, fp=True)
+            B = pm.listAttr(rig, r=True, sa=True, lf=True, fp=True)
             attrA = {}
             for i in A:
                 try:
                     attrA[i] = pm.getAttr(f'{ref}.{i}')
                 except:
                     continue
+            print(attrA)
             attrB = {}
             for i in B:
                 try:
                     attrB[i] = pm.getAttr(f'{rig}.{i}')
                 except:
                     continue
+            print(attrB)
             diff = [i for i in attrA if attrA[i] != attrB[i]]
-            # The 'intermediateObject' must be different, 
+            # The 'intermediateObject' and 'boundingBox' must be different, 
             # so remove it in diff list.
-            diff.remove('intermediateObject')
+            # diff = ['aiSubdivType', 'aiSubdivIterations']
             if not diff:
                 result = False
             else:
@@ -960,26 +962,6 @@ def grp(cp=False):
         grp = pm.group(i, n="%s_grp" % i)
         if not cp:
             pm.move(0,0,0, grp+".scalePivot", grp+".rotatePivot", rpr=True)
-
-
-# Create locators in boundingBox.
-# Default parameter is True.
-def loc(bb=True):
-    sel = pm.ls(sl=True)
-    for i in sel:
-        loc = pm.spaceLocator(p=(0, 0, 0), n=f"loc_{i}")
-        # bb is boundingBox
-        if bb:
-            bbCoordinate = pm.xform(i, q=True, boundingBox=True)
-            xMin, yMin, zMin, xMax, yMax, zMax = bbCoordinate
-            x = (xMin + xMax) / 2
-            y = (yMin + yMax) / 2
-            z = (zMin + zMax) / 2
-            pos = (x, y, z)
-        else:
-            pos = pm.xform(i, q=True, t=True, ws=True)
-        pm.xform(loc, t=pos, ws=True)
-        pm.matchTransform(loc, i, rot=True)
 
 
 # Create a curve controller.
@@ -1344,6 +1326,34 @@ def openSaved():
     subprocess.run("clip", text=True, input=fullPath)
     # Open the Windows folder
     os.startfile(dir)
+
+
+# Create locators in boundingBox.
+# 'jnt=True' option available.
+def createLoc(**kwargs):
+    sel = pm.ls(sl=True)
+    if not sel:
+        pass
+    else:
+        # bb is boundingBox
+        bb = pm.xform(sel, q=True, bb=True, ws=True)
+        xMin, yMin, zMin, xMax, yMax, zMax = bb
+        x = (xMin + xMax) / 2
+        y = (yMin + yMax) / 2
+        z = (zMin + zMax) / 2
+        loc = pm.spaceLocator()
+        pm.move(loc, x, y, z)
+        if not kwargs:
+            pass
+        else:
+            for key, value in kwargs.items():
+                if key == "jnt" and value:
+                    pm.select(cl=True)
+                    jnt = pm.joint(p=(0,0,0), rad=10)
+                    pm.matchTransform(jnt, loc, pos=True)
+                    pm.delete(loc)
+                else:
+                    pass
 
 
 # 79 char line ================================================================
