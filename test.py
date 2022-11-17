@@ -65,12 +65,13 @@ class MatchAttr:
             ref = self.getReferenced(shp)
             rig = self.getDeformed(shp)
             cmp = self.getCompared(ref, rig)
-            attrStr = self.getAttrStr(cmp)
-            if not attrStr:
-                print("Nothing to do.")
-            else:
-                print("# Matched the attributes. #")
-                self.makeTheSame(attrStr)
+            print(rig)
+            # attrStr = self.getAttrStr(cmp)
+            # if not attrStr:
+            #     print("Nothing to do.")
+            # else:
+            #     print("# Matched the attributes. #")
+            #     self.makeTheSame(attrStr)
 
 
     # 1. Select only objects that object type is mesh,
@@ -112,12 +113,13 @@ class MatchAttr:
     def getCompared(self, ref: list, rig: list) -> dict:
         result = {}
         for i in rig:
-            tmp = re.search('(.*)Deformed', i.name())
-            obj = tmp.group(1)
+            tmp = re.search('(.*)Deformed', i.name()) # (abcd_efg)Defromed
+            obj = tmp.group(1) # abcd_efg
             for j in ref:
-                ref = j.rsplit(":", 1)[-1]
+                ref = j.rsplit(":", 1)[-1] # namespace:abcd_efg
                 if obj == ref:
-                    result[j] = i
+                    result[j] = i # {"referencedAttr": "DeformedAttr"}
+                    print(result)
                 else:
                     continue
         return result
@@ -125,39 +127,20 @@ class MatchAttr:
 
     # 4. Get a string to use 'pm.setAttr()'.
     def getAttrStr(self, compare: dict) -> dict:
-        result = {}
+        attrName = [
+            'aiSubdivType', 
+            'aiSubdivIterations', 
+        ]
+        diff = {}
         for ref, rig in compare.items():
-            A = pm.listAttr(ref, r=True, sa=True, lf=True, fp=True)
-            B = pm.listAttr(rig, r=True, sa=True, lf=True, fp=True)
-            attrA = {}
-            for i in A:
-                try:
-                    attrA[i] = pm.getAttr(f'{ref}.{i}')
-                except:
+            for i in attrName:
+                refAttr = pm.getAttr(f"{ref}.{i}")
+                rigAttr = pm.getAttr(f"{rig}.{i}")
+                if refAttr == rigAttr:
                     continue
-            attrB = {}
-            for i in B:
-                try:
-                    attrB[i] = pm.getAttr(f'{rig}.{i}')
-                except:
-                    continue
-            # diff = []
-            # for i in attrA:
-            #     if attrA[i] == attrB[i]:
-            #         pass
-            #     elif 'intermediateObject' in i:
-            #         pass
-            #     elif 'boundingBox' in i:
-            #         pass
-            #     else:
-            #         diff.append(i)
-            diff = ['aiSubdivType', 'aiSubdivIterations']
-            if not diff:
-                result = False
-            else:
-                for i in diff:
-                    result[f"{rig}.{i}"] = attrA[i]
-            return result
+                else:
+                    diff[f"{rig}.{i}"] = refAttr
+        return diff
 
 
     # 5. And match the attributes of Deformed and Referenced

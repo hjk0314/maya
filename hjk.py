@@ -1034,7 +1034,7 @@ def selObj():
     sel = pm.ls(sl=True, s=True, dag=True)
     meshList = {i.getParent() for i in sel if pm.objectType(i) == "mesh"}
     result = list(meshList)
-    # pm.select(result)
+    pm.select(result)
     return result
 
 
