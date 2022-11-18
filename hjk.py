@@ -1224,3 +1224,8 @@ def createLoc(**kwargs):
 # 72 docstring or comments line ========================================
 
 
+# createLoc(jnt=True)
+# grp(cp=True)
+# rename('jnt_R_1')
+# selObj()
+grpEmpty()

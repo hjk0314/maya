@@ -86,7 +86,7 @@ class MatchAttr:
 
     # And match the attributes to Deformed.
     def syncAttrDeformed(self, attrInfo: dict, deformed: list) -> list:
-        """ First, remove the 'Deformed' letter from the shape. 
+        """ Remove the 'Deformed' letter from the shape. 
         Compares the name of the reference. 
         Get attributes information, applied to deformed shape.
          """
