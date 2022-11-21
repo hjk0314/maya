@@ -62,4 +62,16 @@ pm.FileReference(resolvedName).remove()
 pm.FileReference(refName).remove()
 
 
+# 커브 - 써클 만들기
+cuv = pm.circle(nr=(1,0,0), ch=True)
+cuv = cuv[0]
+
+
+""" 조인트 - 프리즈, 오리엔트, ikSCsolver """
+# 생략 가능: t=True, r=True, s=True
+pm.makeIdentity('joint1', 'joint2', a=True, jo=True, n=0)
+pm.joint('startJoint', e=True, oj='xyz', sao='yup', ch=True, zso=True)
+pm.joint('endJoint', e=True, oj='none', ch=True, zso=True)
+ikH = pm.ikHandle(sj='startJoint', ee='endJoint', sol='ikSCsolver')
+
 
