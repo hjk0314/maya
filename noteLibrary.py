@@ -140,8 +140,7 @@ HJK = datetime.date(1978, 3, 14)
 SYR = datetime.date(1991, 4, 12)
 HSE = datetime.date(2020, 3, 30)
 WED = datetime.date(2018, 10, 28)
-THO = datetime.timedelta(days=1000)
- """
+THO = datetime.timedelta(days=1000) """
 
 
 # calendar.isleap: 인수로 입력한 연도가 윤년인지를 확인할 때 사용.

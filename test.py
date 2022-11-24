@@ -156,7 +156,7 @@ class MatchAttr:
             mod = tmp.group(3) # -> .aiSubdivType
             renameDict[org] = new
             print(f"{attr} -> {new}{mod} = {value}")
-        for org, new in renameDict.items():
+            """ for org, new in renameDict.items():
             # pm.rename('pCylinderShape1Deformed', 'pCylinderShape1')
             pm.rename(org, new)
-
+             """
