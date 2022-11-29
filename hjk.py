@@ -487,7 +487,7 @@ class AutoWheel:
     # Create variables.
     def createVar(self, rad: float) -> tuple:
         rad *= 1.1
-        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False, n='cc_Ft_wheel_mid_R_3')
+        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False, n='cc_wheel_R_Ft_sub_1')
         cuv = cuv[0]
         jnt = cuv + '_jnt'
         null = cuv + '_null_grp'
@@ -1232,7 +1232,7 @@ def createLoc(**kwargs):
 
 
 # Get a human dummy to determine size.
-class human:
+class Human:
     def __init__(self):
         '''When to start modeling in Maya, 
         Load a human character into the scene 
@@ -1278,3 +1278,9 @@ class human:
 # 72 docstring or comments line ========================================
 
 
+# grpEmpty()
+# AutoWheel()
+# MatchPivot()
+# createLoc()
+
+ctrl(pip=True)
