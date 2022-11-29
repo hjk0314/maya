@@ -1278,9 +1278,28 @@ class Human:
 # 72 docstring or comments line ========================================
 
 
-# grpEmpty()
+grpEmpty()
 # AutoWheel()
 # MatchPivot()
-# createLoc()
+# Human().remove()
+# rename('joint', 'bls_jnt_spring_L_Ft_1_')
 
-ctrl(pip=True)
+# createLoc(jnt=False)
+# createLoc(jnt=True)
+
+""" for i in range(16, 3521, 16):
+    vtx = f"spring_L_Ft_1_steel_bls.vtx[{i}:{i+15}]"
+    pm.select(cl=True)
+    pm.select(vtx)
+    createLoc(jnt=True)
+ """
+
+
+""" for i in range(222):
+    num = i
+    num1 = i + 1
+    if num1 < 222:
+        pm.parent(f"joint{num1}", f"joint{num}")
+ """
+
+
