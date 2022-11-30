@@ -5,6 +5,7 @@ import subprocess
 import maya.OpenMaya as om
 import pymel.core as pm
 import maya.mel as mel
+import sympy
 
 
 # Export to json file and shading networks. And assign to them.
@@ -1278,7 +1279,7 @@ class Human:
 # 72 docstring or comments line ========================================
 
 
-grpEmpty()
+# grpEmpty()
 # AutoWheel()
 # MatchPivot()
 # Human().remove()
@@ -1303,3 +1304,28 @@ grpEmpty()
  """
 
 
+    
+
+            
+def makeEquation(pointList: list):
+    sel = pm.ls(sl=True, fl=True)
+    pointList = [i for i in sel[0].getPosition(space='world')]
+    pointList += [i for i in sel[-1].getPosition(space='world')]
+    # Equation of a straight line in 3D
+    x1, y1, z1, x2, y2, z2 = pointList
+    a, b, c = (x2 - x1), (y2 - y1), (z2 - z1)
+    x, y, z = sympy.symbols('x y z')
+    expr1 = sympy.Eq(b*x - a*y, b*x1 - a*y1)
+    expr2 = sympy.Eq(c*y - b*z, c*y1 - b*z1)
+    expr3 = sympy.Eq(a*z - c*x, a*z1 - c*x1)
+    f1 = expr1.subs(x, 2)
+    f2 = expr1.subs(x, 2)
+    f3 = expr3.subs(x, 2)
+    result = sympy.solve([f1, f2, f3], [y, z])
+
+    result[x] = 2
+    p1, p2, p3 = result[x], result[y], result[z]
+    p1 = float(p1)
+    p2 = float(p2)
+    p3 = float(p3)
+    pm.move(p1, p2, p3, 'locator1')
