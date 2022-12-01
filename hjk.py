@@ -819,6 +819,49 @@ class MatchCurveShape:
             om.MGlobal.displayInfo(message)
 
 
+# Get a human dummy to determine size.
+class Human:
+    def __init__(self):
+        '''When to start modeling in Maya, 
+        Load a human character into the scene 
+        to compare the size of the modeling to be made.
+        1. human()
+        2. human().remove()
+        '''
+        # src is the path for human modeling.
+        src = "T:/AssetTeam/Share/WorkSource/human/human176.obj"
+        assert os.path.isfile(src)
+        self.src = src
+        self.main()
+
+
+    # Maya default settings when fetching references.
+    def createReference(self) -> None:
+        fileName = os.path.basename(self.src)
+        name, ext = os.path.splitext(fileName)
+        pm.createReference(
+            self.src, # full path
+            gl=True, # groupLocator
+            shd="shadingNetworks", # sharedNodes
+            mnc=False, # mergeNamespacesOnClash
+            ns=name # namespace
+        )
+
+
+    # Remove human character
+    def remove(self) -> None:
+        pm.FileReference(self.src).remove()
+
+
+    # Check the reference with the same path as "src" in the scene.
+    def main(self) -> None:
+        ref = pm.ls(rn = True, type=["transform"])
+        tmp = [i for i in ref if self.src == pm.referenceQuery(i, f=True)]
+        # If the same file does not exist, the human character is loaded.
+        if not tmp:
+            self.createReference()
+
+
 # Grouping itself and named own
 # cp is centerPivot
 def grp(cp=False):
@@ -1091,7 +1134,6 @@ def zeroPivot():
 
 
 # rename function used in maya
-# txt -> 'testName23_17_grp'
 def rename(*arg: str) -> None:
     """ Rename by incrementing the last digit in the string. """
     numArg = len(arg)
@@ -1205,8 +1247,8 @@ def openSaved():
 
 
 # Create locators in boundingBox.
-# 'jnt=True' option available.
 def createLoc(**kwargs):
+    '''Usage: createLoc(jnt=True)'''
     sel = pm.ls(sl=True)
     if not sel:
         pass
@@ -1232,100 +1274,143 @@ def createLoc(**kwargs):
                     pass
 
 
-# Get a human dummy to determine size.
-class Human:
-    def __init__(self):
-        '''When to start modeling in Maya, 
-        Load a human character into the scene 
-        to compare the size of the modeling to be made.
-        1. human()
-        2. human().remove()
-        '''
-        # src is the path for human modeling.
-        src = "T:/AssetTeam/Share/WorkSource/human/human176.obj"
-        assert os.path.isfile(src)
-        self.src = src
-        self.main()
-
-
-    # Maya default settings when fetching references.
-    def createReference(self) -> None:
-        fileName = os.path.basename(self.src)
-        name, ext = os.path.splitext(fileName)
-        pm.createReference(
-            self.src, # full path
-            gl=True, # groupLocator
-            shd="shadingNetworks", # sharedNodes
-            mnc=False, # mergeNamespacesOnClash
-            ns=name # namespace
+def createLine():
+    sel = pm.ls(sl=True, fl=True)
+    sLoc, eLoc = sel
+    sPos, ePos = [pm.xform(i, q=True, ws=True, rp=True) for i in [sLoc, eLoc]]
+    tmp = pm.curve(d=1, p=[sPos, ePos])
+    sPiv = f"{tmp}.scalePivot"
+    rPiv = f"{tmp}.rotatePivot"
+    p1, p2, p3 = sPos
+    pm.move(p1, p2, p3, sPiv, rPiv, rpr=True)
+    pm.aimConstraint(eLoc, sLoc)
+    pm.delete(sLoc, cn=True)
+    pm.parent(tmp, sLoc)
+    pm.makeIdentity(tmp, a=True, t=1, r=1, s=1, n=0, pn=1)
+    pm.parent(tmp, w=True)
+    pm.rebuildCurve(tmp, d=1, 
+        ch=False, # constructionHistory
+        s=3, # spans
+        rpo=True, # replaceOriginal
+        end=1, # endKnots
+        kr=0, # keepRange
+        kt=0, # keepTangents
         )
 
 
-    # Remove human character
-    def remove(self) -> None:
-        pm.FileReference(self.src).remove()
+# Arrange the points in a straight line.
+def makeStraight():
+    '''Use the equation of a straight line in space 
+    to make a curved line a straight line.
+    1. Create an equation
+    2. Check the condition.
+    3. Make a straight line.
+    '''
+    sel = pm.ls(sl=True, fl=True)
+    if not sel:
+        print('Nothing selected.')
+    else:
+        sp = sel[0]
+        ep = sel[-1]
+        # makeEquation
+        X1, Y1, Z1 = sp.getPosition(space="world")
+        X2, Y2, Z2 = ep.getPosition(space="world")
+        A, B, C = (X2 - X1), (Y2 - Y1), (Z2 - Z1)
+        MAX = max([abs(i) for i in [A, B, C]])
+        x, y, z = sympy.symbols('x y z')
+        expr1 = sympy.Eq(B*x - A*y, B*X1 - A*Y1)
+        expr2 = sympy.Eq(C*y - B*z, C*Y1 - B*Z1)
+        expr3 = sympy.Eq(A*z - C*x, A*Z1 - C*X1)
+        # Conditions
+        if abs(A) == MAX:
+            idx = 0
+            xyz = x
+            variables = [y, z]
+            expr = [expr1, expr3]
+        elif abs(B) == MAX:
+            idx = 1
+            xyz = y
+            variables = [x, z]
+            expr = [expr1, expr2]
+        elif abs(C) == MAX:
+            idx = 2
+            xyz = z
+            variables = [x, y]
+            expr = [expr2, expr3]
+        else:
+            pass
+        # makeStraight
+        for i in sel:
+            point = i.getPosition(space="world")
+            value = point[idx]
+            fx = [i.subs(xyz, value) for i in expr]
+            sol = sympy.solve(fx, variables)
+            sol[xyz] = value
+            p1, p2, p3 = [round(float(sol[var]), 4) for var in [x, y, z]]
+            pm.move(p1, p2, p3, i)
+    
+
+# Line up points using 'rebuild' in Maya.
+def makeStraight2():
+    '''This way does not create an equation, 
+    but uses rebuild to create a straight line.'''
+    sel = pm.ls(sl=True, fl=True)
+    spans = len(sel) - 1
+    startPoint = sel[0].getPosition(space="world")
+    endPoint = sel[-1].getPosition(space="world")
+    temp = pm.curve(d=1, p=[startPoint, endPoint])
+    pm.rebuildCurve(temp, d=1, 
+        ch=False, # constructionHistory
+        s=spans, # spans
+        rpo=True, # replaceOriginal
+        end=1, # endKnots
+        kr=0, # keepRange
+        kt=0, # keepTangents
+        )
+    '''Activate this section 
+    to move the points of the 'original curve' to the 'temp curve'.
+    for j, k in enumerate(sel):
+        x, y, z = pm.pointPosition(f"{temp}.cv[{j}]")
+        pm.move(x, y, z, k)
+    '''
 
 
-    # Check the reference with the same path as "src" in the scene.
-    def main(self) -> None:
-        ref = pm.ls(rn = True, type=["transform"])
-        tmp = [i for i in ref if self.src == pm.referenceQuery(i, f=True)]
-        # If the same file does not exist, the human character is loaded.
-        if not tmp:
-            self.createReference()
+# joint on motionPath
+def pathAni(num: int) -> None:
+    '''Create a number of joints and 
+    apply a motionPath to the curve.
+    '''
+    sel = pm.ls(sl=True)
+    if not sel:
+        print("Select a curve.")
+    else:
+        mod = 1 / (num - 1) if num > 1 else 0
+        cuv = sel[0]
+        for i in range(num):
+            pm.select(cl=True)
+            jnt = pm.joint(p=(0,0,0))
+            val = i * mod
+            tmp = pm.pathAnimation(jnt, c=cuv, 
+                fm=True, # fractionMode
+                f=True, # follow
+                fa='x', # followAxis
+                ua='y', # upAxis
+                wut='vector', # worldUpType
+                wu=(0,1,0) # worldUpVector
+                )
+            pm.cutKey(tmp, cl=True, at='u')
+            pm.setAttr(f"{tmp}.uValue", val)
 
 
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 
 
+# makeStraight2()
 # grpEmpty()
-# AutoWheel()
-# MatchPivot()
-# Human().remove()
-# rename('joint', 'bls_jnt_spring_L_Ft_1_')
-
-# createLoc(jnt=False)
-# createLoc(jnt=True)
-
-""" for i in range(16, 3521, 16):
-    vtx = f"spring_L_Ft_1_steel_bls.vtx[{i}:{i+15}]"
-    pm.select(cl=True)
-    pm.select(vtx)
-    createLoc(jnt=True)
- """
+# createLoc()
+# createLine()
+# pathAni(9)
+# rename('jnt_sus_R_Bk_1')
 
 
-""" for i in range(222):
-    num = i
-    num1 = i + 1
-    if num1 < 222:
-        pm.parent(f"joint{num1}", f"joint{num}")
- """
-
-
-    
-
-            
-def makeEquation(pointList: list):
-    sel = pm.ls(sl=True, fl=True)
-    pointList = [i for i in sel[0].getPosition(space='world')]
-    pointList += [i for i in sel[-1].getPosition(space='world')]
-    # Equation of a straight line in 3D
-    x1, y1, z1, x2, y2, z2 = pointList
-    a, b, c = (x2 - x1), (y2 - y1), (z2 - z1)
-    x, y, z = sympy.symbols('x y z')
-    expr1 = sympy.Eq(b*x - a*y, b*x1 - a*y1)
-    expr2 = sympy.Eq(c*y - b*z, c*y1 - b*z1)
-    expr3 = sympy.Eq(a*z - c*x, a*z1 - c*x1)
-    f1 = expr1.subs(x, 2)
-    f2 = expr1.subs(x, 2)
-    f3 = expr3.subs(x, 2)
-    result = sympy.solve([f1, f2, f3], [y, z])
-
-    result[x] = 2
-    p1, p2, p3 = result[x], result[y], result[z]
-    p1 = float(p1)
-    p2 = float(p2)
-    p3 = float(p3)
-    pm.move(p1, p2, p3, 'locator1')
