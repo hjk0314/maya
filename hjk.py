@@ -945,6 +945,11 @@ def ctrl(**kwargs):
     ar4 += [(11, 0, 0), (8, 0, -3), (8, 0, -2), ]
     ar4 += [(6, 0, -2), (5, 0, -5), (2, 0, -6), ]
     ar4 += [(2, 0, -8), (3, 0, -8), (0, 0, -11), ]
+    # Arrow5
+    ar5 = [(-2, 0, -1), (2, 0, -1), (2, 0, -2), ]
+    ar5 += [(4, 0, 0), (2, 0, 2), (2, 0, 1), ]
+    ar5 += [(-2, 0, 1), (-2, 0, 2), (-4, 0, 0), ]
+    ar5 += [(-2, 0, -2), (-2, 0, -1), ]
     # Pointer shape
     pointer = [(-1, 0, 0), (-0.7, 0, 0.7), (0, 0, 1), ]
     pointer += [(0.7, 0, 0.7), (1, 0, 0), (0.7, 0, -0.7), ]
@@ -999,6 +1004,7 @@ def ctrl(**kwargs):
         "ar2": ar2, 
         "ar3": ar3, 
         "ar4": ar4, 
+        "ar5": ar5, 
         "pointer": pointer, 
         "foot": foot, 
         "hoof": hoof, 
@@ -1406,11 +1412,16 @@ def pathAni(num: int) -> None:
 # 72 docstring or comments line ========================================
 
 
-# makeStraight2()
+# makeStraight()
 # grpEmpty()
 # createLoc()
 # createLine()
-# pathAni(9)
-# rename('jnt_sus_R_Bk_1')
-
-
+# pathAni(111)
+# rename('_1', '')
+# MatchPivot()
+# poleVector()
+# ctrl(ar5=True)
+# color(green=True)
+# color(red=True)
+# color(blue=True)
+# color(yellow=True)
