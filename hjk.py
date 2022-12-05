@@ -1413,11 +1413,11 @@ def pathAni(num: int) -> None:
 
 
 # makeStraight()
-# grpEmpty()
-# createLoc()
+grpEmpty()
+# createLoc(jnt=True)
 # createLine()
 # pathAni(111)
-# rename('_1', '')
+# rename('leg_L_Ft_1')
 # MatchPivot()
 # poleVector()
 # ctrl(ar5=True)
@@ -1425,3 +1425,4 @@ def pathAni(num: int) -> None:
 # color(red=True)
 # color(blue=True)
 # color(yellow=True)
+# grp()
