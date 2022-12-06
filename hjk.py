@@ -862,6 +862,103 @@ class Human:
             self.createReference()
 
 
+class bridgeLine:
+    def __init__(self):
+        sel = pm.ls(sl=True)
+        self.locator1, self.locator2 = sel
+        self.cuv = self.createLine(sel)
+        self.cuvLen = pm.arclen(self.cuv)
+        self.cuvLen = round(self.cuvLen, 3)
+        self.main()
+
+
+    def main(self):
+        pm.xform(self.cuv, cpc=True)
+        self.createAttr()
+        self.createExression()
+        self.grp = self.createGroup()
+        upVector = self.createUpVector()
+        self.createConstraint(upVector)
+
+
+    # create curve
+    def createLine(self, sel: list) -> str:
+        sLoc, eLoc = sel
+        temp = []
+        for i in [sLoc, eLoc]:
+            coordinates = pm.xform(i, q=True, ws=True, rp=True)
+            temp.append(coordinates)
+        sPos, ePos = temp
+        cuv = pm.curve(d=1, p=[sPos, ePos])
+        sPiv = f"{cuv}.scalePivot"
+        rPiv = f"{cuv}.rotatePivot"
+        p1, p2, p3 = sPos
+        pm.move(p1, p2, p3, sPiv, rPiv, rpr=True)
+        pm.aimConstraint(eLoc, sLoc)
+        pm.delete(sLoc, cn=True)
+        pm.parent(cuv, sLoc)
+        pm.makeIdentity(cuv, a=True, t=1, r=1, s=1, n=0, pn=1)
+        pm.parent(cuv, w=True)
+        pm.rebuildCurve(cuv, d=1, 
+            ch=False, # constructionHistory
+            s=3, # spans
+            rpo=True, # replaceOriginal
+            end=1, # endKnots
+            kr=0, # keepRange
+            kt=0, # keepTangents
+            )
+        return cuv
+
+
+    # create attr to curve
+    def createAttr(self):
+        for attrName in ['Distance', 'Ratio']:
+            pm.addAttr(self.cuv, ln=attrName, at='double', dv=0)
+            pm.setAttr(f'{self.cuv}.{attrName}', e=True, k=True)
+
+
+    # create expression to curve attr
+    def createExression(self):
+        BR = "\n"
+        expr = f"float $uX = {self.locator1}.translateX;" + BR
+        expr += f"float $uY = {self.locator1}.translateY;" + BR
+        expr += f"float $uZ = {self.locator1}.translateZ;" + BR
+        expr += f"float $dX = {self.locator2}.translateX;" + BR
+        expr += f"float $dY = {self.locator2}.translateY;" + BR
+        expr += f"float $dZ = {self.locator2}.translateZ;" + BR
+        expr += "float $D = `mag<<$dX-$uX, $dY-$uY, $dZ-$uZ>>`;" + BR
+        expr += f"{self.cuv}.Distance = $D;" + BR
+        expr += f"{self.cuv}.Ratio = $D / {self.cuvLen};"
+        pm.expression(s=expr, o='', ae=1, uc='all')
+
+
+    # create group
+    def createGroup(self):
+        grp = pm.group(em=True, n = f"{self.cuv}_grp")
+        pm.matchTransform(grp, self.cuv, pos=True, rot=True)
+        pm.parent(self.cuv, grp)
+        return grp
+
+
+    # create upVector
+    def createUpVector(self):
+        upVector = pm.duplicate(self.locator1, rr=True)[0]
+        pm.matchTransform(upVector, self.grp, pos=True)
+        pm.parent(upVector, self.grp)
+        length = pm.getAttr(f"{self.cuv}.Distance")
+        pm.move(0, length, 0, upVector, r=True, ls=True, wd=True)
+        pm.parent(upVector, w=True)
+        return upVector
+
+
+    # create constraint
+    def createConstraint(self, upVector: str) -> None:
+        for locator in [self.locator1, self.locator2]:
+            pm.pointConstraint(locator, self.grp, mo=False, w=0.5)
+        pm.aimConstraint(self.locator2, self.grp, wut="object", wuo=upVector)
+        pm.connectAttr(f'{self.cuv}.Ratio', f'{self.cuv}.scaleX', f=True)
+
+
 # Grouping itself and named own
 # cp is centerPivot
 def grp(cp=False):
@@ -1079,7 +1176,7 @@ def keyOff(i=1): # i : interval
 def grpEmpty():
     sel = pm.ls(sl=True)
     for i in sel:
-        grp = pm.group(em=True, n=i + "_grp")
+        grp = pm.group(em=True, n = i + "_grp")
         pm.matchTransform(grp, i, pos=True, rot=True)
         try:
             # Selector's mom group.
@@ -1284,17 +1381,17 @@ def createLine():
     sel = pm.ls(sl=True, fl=True)
     sLoc, eLoc = sel
     sPos, ePos = [pm.xform(i, q=True, ws=True, rp=True) for i in [sLoc, eLoc]]
-    tmp = pm.curve(d=1, p=[sPos, ePos])
-    sPiv = f"{tmp}.scalePivot"
-    rPiv = f"{tmp}.rotatePivot"
+    cuv = pm.curve(d=1, p=[sPos, ePos])
+    sPiv = f"{cuv}.scalePivot"
+    rPiv = f"{cuv}.rotatePivot"
     p1, p2, p3 = sPos
     pm.move(p1, p2, p3, sPiv, rPiv, rpr=True)
     pm.aimConstraint(eLoc, sLoc)
     pm.delete(sLoc, cn=True)
-    pm.parent(tmp, sLoc)
-    pm.makeIdentity(tmp, a=True, t=1, r=1, s=1, n=0, pn=1)
-    pm.parent(tmp, w=True)
-    pm.rebuildCurve(tmp, d=1, 
+    pm.parent(cuv, sLoc)
+    pm.makeIdentity(cuv, a=True, t=1, r=1, s=1, n=0, pn=1)
+    pm.parent(cuv, w=True)
+    pm.rebuildCurve(cuv, d=1, 
         ch=False, # constructionHistory
         s=3, # spans
         rpo=True, # replaceOriginal
@@ -1302,6 +1399,7 @@ def createLine():
         kr=0, # keepRange
         kt=0, # keepTangents
         )
+    return cuv
 
 
 # Arrange the points in a straight line.
@@ -1413,8 +1511,8 @@ def pathAni(num: int) -> None:
 
 
 # makeStraight()
-grpEmpty()
-# createLoc(jnt=True)
+# grpEmpty()
+# createLoc(jnt=False)
 # createLine()
 # pathAni(111)
 # rename('leg_L_Ft_1')
@@ -1426,3 +1524,6 @@ grpEmpty()
 # color(blue=True)
 # color(yellow=True)
 # grp()
+# cuvLoc()
+# createLine()
+bridgeLine()
