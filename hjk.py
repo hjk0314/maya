@@ -1,6 +1,7 @@
 import re
 import os
 import json
+import shutil
 import subprocess
 import maya.OpenMaya as om
 import pymel.core as pm
@@ -666,7 +667,7 @@ class MirrorCopy:
 
 
 # Create a through curve or joint.
-class PenetratingCurve:
+class ThroughCurve:
     def __init__(self):
         self.setupUI()
 
@@ -768,7 +769,7 @@ class PenetratingCurve:
 
 
 # Match the curve shape from A to B.
-class MatchCurveShape:
+class MatchCuvShape:
     def __init__(self):
         self.main()
 
@@ -862,7 +863,7 @@ class Human:
             self.createReference()
 
 
-class bridgeLine:
+class LineBridge:
     def __init__(self):
         sel = pm.ls(sl=True)
         self.locator1, self.locator2 = sel
@@ -957,16 +958,6 @@ class bridgeLine:
             pm.pointConstraint(locator, self.grp, mo=False, w=0.5)
         pm.aimConstraint(self.locator2, self.grp, wut="object", wuo=upVector)
         pm.connectAttr(f'{self.cuv}.Ratio', f'{self.cuv}.scaleX', f=True)
-
-
-# Grouping itself and named own
-# cp is centerPivot
-def grp(cp=False):
-    sel = pm.ls(sl=True)
-    for i in sel:
-        grp = pm.group(i, n="%s_grp" % i)
-        if not cp:
-            pm.move(0,0,0, grp+".scalePivot", grp+".rotatePivot", rpr=True)
 
 
 # Create a curve controller.
@@ -1170,6 +1161,16 @@ def keyOff(i=1): # i : interval
     sel = pm.ls(sl=True, fl=True)
     for j, k in enumerate(sel):
         pm.keyframe(k, e=True, r=True, tc = j * i)
+
+
+# Grouping itself and named own
+# cp is centerPivot
+def grp(cp=False):
+    sel = pm.ls(sl=True)
+    for i in sel:
+        grp = pm.group(i, n="%s_grp" % i)
+        if not cp:
+            pm.move(0,0,0, grp+".scalePivot", grp+".rotatePivot", rpr=True)
 
 
 # Create an empty group and match the pivot with the selector.
@@ -1399,7 +1400,13 @@ def createLine():
         kr=0, # keepRange
         kt=0, # keepTangents
         )
-    return cuv
+    cuvD3Point = [pm.pointPosition(f"{cuv}.cv[{i}]") for i in range(4)]
+    cuvD3 = pm.curve(d=3, p=cuvD3Point)
+    pm.xform(cuvD3, cpc=True)
+    pm.parent(cuvD3, cuv)
+    pm.makeIdentity(cuvD3, a=True, t=1, r=1, s=1, n=0, pn=1)
+    pm.parent(cuvD3, w=True)
+    return cuv, cuvD3
 
 
 # Arrange the points in a straight line.
@@ -1506,24 +1513,63 @@ def pathAni(num: int) -> None:
             pm.setAttr(f"{tmp}.uValue", val)
 
 
+# JSON decorator
+def rwJSON(original_func):
+    def wrapper(*args, **kwargs):
+        fullPath = pm.Env().sceneName()
+        if not fullPath:
+            print("File not saved.")
+        else:
+            dir = os.path.dirname(fullPath)
+            name_Ext = os.path.basename(fullPath)
+            name, ext = os.path.splitext(name_Ext)
+            jsonFile = dir + "/" + name + ".json"
+            chk = os.path.isfile(jsonFile)
+            if chk:
+                with open(jsonFile) as JSON:
+                    data = json.load(JSON)
+            else:
+                data = {}
+            result = original_func(data, *args, **kwargs)
+            with open(jsonFile, 'w') as JSON:
+                json.dump(data, JSON, indent=4)
+            return result
+    return wrapper
+
+
+@rwJSON
+def writeJSON(data):
+    sel = pm.ls(sl=True)
+    if not sel:
+        print("Nothing selected.")
+    else:
+        for j, k in enumerate(sel):
+            if j % 2:
+                continue
+            else:
+                obj = sel[j+1].name()
+                cc = k.name()
+                pm.parentConstraint(cc, obj, mo=True, w=1)
+                pm.scaleConstraint(cc, obj, mo=True, w=1)
+                data[obj] = cc
+
+
+@rwJSON
+def loadJSON(data):
+    for obj, cc in data.items():
+        pm.parentConstraint(cc, obj, mo=True, w=1)
+        pm.scaleConstraint(cc, obj, mo=True, w=1)
+
+
+# Copy <hjk.py in git folder> to <maya in documents folder>
+def hjkCopy():
+    gitFolder = r"C:\Users\jkhong\Desktop\git\maya\hjk.py"
+    docFolder = r"C:\Users\jkhong\Documents\maya\scripts\hjk.py"
+    shutil.copy(gitFolder, docFolder)
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 
 
-# makeStraight()
-# grpEmpty()
-# createLoc(jnt=False)
-# createLine()
-# pathAni(111)
-# rename('leg_L_Ft_1')
-# MatchPivot()
-# poleVector()
-# ctrl(ar5=True)
-# color(green=True)
-# color(red=True)
-# color(blue=True)
-# color(yellow=True)
-# grp()
-# cuvLoc()
-# createLine()
-bridgeLine()
+pathAni(9)
