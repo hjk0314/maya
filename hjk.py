@@ -1371,7 +1371,7 @@ def createLoc(**kwargs):
             for key, value in kwargs.items():
                 if key == "jnt" and value:
                     pm.select(cl=True)
-                    jnt = pm.joint(p=(0,0,0), rad=10)
+                    jnt = pm.joint(p=(0,0,0), rad=0.1)
                     pm.matchTransform(jnt, loc, pos=True)
                     pm.delete(loc)
                 else:
@@ -1572,4 +1572,3 @@ def hjkCopy():
 # 72 docstring or comments line ========================================
 
 
-pathAni(9)
