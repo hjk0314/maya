@@ -34,6 +34,13 @@ else:
     pm.button(l='pathAni', c=lambda x: hjk.pathAni())
     pm.button(l='writeJSON', c=lambda x: hjk.writeJSON())
     pm.button(l='loadJSON', c=lambda x: hjk.loadJSON())
+    pm.button(l='orientJnt', c=lambda x: hjk.orientJnt())
+    pm.button(l='jntNone', c=lambda x: hjk.jntNone(2))
+    pm.button(l='jntBone', c=lambda x: hjk.jntNone(0))
+    pm.button(l='hjkCopy', c=lambda x: hjk.hjkCopy())
     pm.setParent("..", u=True)
     pm.separator(h=10)
     pm.showWindow(win)
+
+
+

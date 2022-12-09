@@ -1,3 +1,4 @@
+import re
 import os
 import json
 import pymel.core as pm
@@ -12,15 +13,25 @@ def rwJSON(original_func):
             dir = os.path.dirname(fullPath)
             name_Ext = os.path.basename(fullPath)
             name, ext = os.path.splitext(name_Ext)
-            jsonFile = dir + "/" + name + ".json"
-            chk = os.path.isfile(jsonFile)
-            if chk:
+            jsonAll = [i for i in os.listdir(dir) if i.endswith('.json')]
+            verDict = {}
+            for i in jsonAll:
+                tmp = re.search('(.*)[_v]([0-9]{4})[.].*', i)
+                num = int(tmp.group(2))
+                verDict[num] = tmp.group(1)
+            verMax = max(verDict.keys())
+            print(verMax)
+            if not verMax:
+                jsonFile = dir + "/" + name + ".json"
+                data = {}
+            else:
+                jsonFile = f"{dir}/{verDict[verMax]}v%04d.json" % verMax
                 with open(jsonFile) as JSON:
                     data = json.load(JSON)
-            else:
-                data = {}
+            print(jsonFile)
             result = original_func(data, *args, **kwargs)
-            with open(jsonFile, 'w') as JSON:
+            print(data)
+            with open(dir + "/" + name + ".json", 'w') as JSON:
                 json.dump(data, JSON, indent=4)
             return result
     return wrapper
@@ -28,6 +39,7 @@ def rwJSON(original_func):
 
 @rwJSON
 def writeJSON(data):
+    print(data)
     sel = pm.ls(sl=True)
     if not sel:
         print("Nothing selected.")
@@ -50,5 +62,7 @@ def loadJson(data):
         pm.scaleConstraint(cc, obj, mo=True, w=1)
 
 
-writeJSON()
+# writeJSON()
 # loadJson()
+
+

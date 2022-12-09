@@ -1523,15 +1523,25 @@ def rwJSON(original_func):
             dir = os.path.dirname(fullPath)
             name_Ext = os.path.basename(fullPath)
             name, ext = os.path.splitext(name_Ext)
-            jsonFile = dir + "/" + name + ".json"
-            chk = os.path.isfile(jsonFile)
-            if chk:
+            jsonAll = [i for i in os.listdir(dir) if i.endswith('.json')]
+            verDict = {}
+            for i in jsonAll:
+                tmp = re.search('(.*)[_v]([0-9]{4})[.].*', i)
+                num = int(tmp.group(2))
+                verDict[num] = tmp.group(1)
+            verMax = max(verDict.keys())
+            print(verMax)
+            if not verMax:
+                jsonFile = dir + "/" + name + ".json"
+                data = {}
+            else:
+                jsonFile = f"{dir}/{verDict[verMax]}v%04d.json" % verMax
                 with open(jsonFile) as JSON:
                     data = json.load(JSON)
-            else:
-                data = {}
+            print(jsonFile)
             result = original_func(data, *args, **kwargs)
-            with open(jsonFile, 'w') as JSON:
+            print(data)
+            with open(dir + "/" + name + ".json", 'w') as JSON:
                 json.dump(data, JSON, indent=4)
             return result
     return wrapper
@@ -1561,6 +1571,42 @@ def loadJSON(data):
         pm.scaleConstraint(cc, obj, mo=True, w=1)
 
 
+# Freeze and Orient joints
+def orientJnt() -> list:
+    '''Select only "joint", freeze and orient. 
+    And the end joints inherit the orient of the parent joint.'''
+    sel = pm.ls(sl=True)
+    pm.select(sel, hi=True)
+    allJnt = [i for i in pm.ls(sl=True) if pm.objectType(i) == 'joint']
+    endJnt = [i for i in allJnt if not i.getChildren()]
+    pm.select(cl=True)
+    # freeze joints
+    pm.makeIdentity(allJnt, a=True, jo=True, n=0)
+    # orient joints
+    pm.joint(sel[0], e=True, oj='xyz', sao='yup', ch=True, zso=True)
+    # orient end joints
+    for i in endJnt:
+        pm.joint(i, e=True, oj='none', ch=True, zso=True)
+    return allJnt
+
+
+def jntNone(num: int) -> None:
+    '''Change the drawing style of a joint.
+    0: Bone
+    1: Multi Child as Box
+    2: None
+    '''
+    sel = pm.ls(sl=True)
+    if num < 0 or num > 2:
+        print("[0, 1, 2] numbers allowed")
+    elif not sel:
+        print("Nothing selected.")
+    else:
+        jnt = [i for i in sel if pm.objectType(i) == 'joint']
+        for i in jnt:
+            pm.setAttr(f"{i}.drawStyle", num)
+
+
 # Copy <hjk.py in git folder> to <maya in documents folder>
 def hjkCopy():
     gitFolder = r"C:\Users\jkhong\Desktop\git\maya\hjk.py"
@@ -1572,3 +1618,8 @@ def hjkCopy():
 # 72 docstring or comments line ========================================
 
 
+
+# rename('_leg', '_legSpring')
+# rename('_L', '_R')
+# ctrl(sph=True)
+MirrorCopy(x=True)
