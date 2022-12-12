@@ -610,62 +610,6 @@ class MatchPivot:
             pm.delete(obj)
 
 
-# Create mirror copy of selection with group.
-# Example: mirrorCopy(x=True or z=True)
-class MirrorCopy:
-    def __init__(self, **kwargs):
-        self.sel = pm.ls(sl=True)
-        self.dir = [i.lower() for i in kwargs if kwargs[i]]
-        self.main()
-
-
-    def mirrorCopy(self, idx):
-        for i in self.sel:
-            if idx == 'x':
-                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
-                pm.matchTransform(grp, i, pos=True, rot=True)
-                t = pm.getAttr(f'{grp}.translate')
-                r = pm.getAttr(f'{grp}.rotate')
-                tX = t[0] * -1
-                rX = r[0] + (180 if r[0] < 0 else -180)
-                rY = r[1] * -1
-                rZ = r[2] * -1
-                pm.setAttr(f'{grp}.translateX', tX)
-                pm.setAttr(f'{grp}.rotateX', rX)
-                pm.setAttr(f'{grp}.rotateY', rY)
-                pm.setAttr(f'{grp}.rotateZ', rZ)
-            elif idx == 'z':
-                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
-                pm.matchTransform(grp, i, pos=True, rot=True)
-                t = pm.getAttr(f'{grp}.translate')
-                r = pm.getAttr(f'{grp}.rotate')
-                grp = pm.group(em=True, n=f'{i}_mirrorCopy')
-                pm.matchTransform(grp, i, pos=True, rot=True)
-                t = pm.getAttr(f'{grp}.translate')
-                r = pm.getAttr(f'{grp}.rotate')
-                tZ = t[2] * -1
-                rZ = r[2] + (180 if r[2] < 0 else -180)
-                pm.setAttr(f'{grp}.translateZ', tZ)
-                pm.setAttr(f'{grp}.rotateZ', rZ)
-            else:
-                continue
-
-
-    def main(self):
-        if not self.sel:
-            om.MGlobal.displayError("Nothing selected.")
-        elif not self.dir:
-            om.MGlobal.displayError("Direction is required.")
-        elif not self.dir:
-            om.MGlobal.displayError("X and Z directions are available.")
-        elif 'x' in self.dir:
-            self.mirrorCopy('x')
-        elif 'z' in self.dir:
-            self.mirrorCopy('y')
-        else:
-            om.MGlobal.displayError("Example: mirrorCopy(x=True or z=True)")
-
-
 # Create a through curve or joint.
 class ThroughCurve:
     def __init__(self):
@@ -950,6 +894,85 @@ class LineBridge:
         pm.move(0, length, 0, upVector, r=True, ls=True, wd=True)
         pm.parent(upVector, w=True)
         return upVector
+
+
+class MirrorCopy:
+    def __init__(self, idx: str):
+        '''Copy the group and mirror it in the direction. 
+        If there is a curve in it, copy the curve and mirror it.
+        '''
+        self.idx = idx
+        self.sel = pm.ls(sl=True)
+        self.main()
+
+
+    # Check the conditions.
+    def main(self):
+        if self.idx != 'x' and self.idx != 'z':
+            print("X and Z directions are available.")
+        elif not self.sel:
+            print("Nothing selected.")
+        else:
+            for i in self.sel:
+                self.mirrorCopy(i)
+
+
+    # If there is a curve in the group, copy the curve and mirror it.
+    def mirrorCopy(self, selection):
+        cuv = selection.getChildren()
+        shp = pm.ls(cuv, dag=True, s=True)
+        typ = 'nurbsCurve'
+        objList = {i.getParent().name() for i in shp if pm.objectType(i)==typ}
+        objList = list(objList)
+        if not objList:
+            self.mirrorGroup(selection)
+        else:
+            for obj in objList:
+                name = self.swapLR(obj)
+                copy = pm.duplicate(obj, rr=True, n=name)
+                pm.parent(copy, w=True)
+                grp = pm.group(em=True)
+                pm.parent(copy, grp)
+                direction = [-1, 1, 1] if self.idx == 'x' else [1, 1, -1]
+                pm.scale(grp, direction, r=True)
+                mirrorGrp = self.mirrorGroup(selection)
+                pm.parent(copy, mirrorGrp)
+                pm.makeIdentity(copy, a=True, t=1, r=1, s=1, n=0, pn=1)
+                pm.delete(grp)
+        
+
+    # Replace letter L with R
+    def swapLR(self, objName):
+        if '_L' in objName:
+            result = objName.replace('_L', '_R')
+        elif '_R' in objName:
+            result = objName.replace('_R', '_L')
+        else:
+            result = ''
+        return result
+
+
+    # Create a mirrored group.
+    def mirrorGroup(self, selection):
+        name = self.swapLR(selection.name())
+        grp = pm.group(em=True, n=name)
+        pm.matchTransform(grp, selection, pos=True, rot=True)
+        tra = pm.getAttr(f'{grp}.translate')
+        rot = pm.getAttr(f'{grp}.rotate')
+        tx, ty, tz = tra
+        rx, ry, rz = rot
+        if self.idx == 'x':
+            tx *= -1
+            rx += (180 if rx < 0 else -180)
+            ry *= -1
+            rz *= -1
+        else:
+            tz *= -1
+            rz += (180 if rz < 0 else -180)
+        attr = {'tx': tx, 'ty': ty, 'tz': tz, 'rx': rx, 'ry': ry, 'rz': rz}
+        for j, k in attr.items():
+            pm.setAttr(f'{grp}.{j}', k)
+        return grp
 
 
     # create constraint
@@ -1618,8 +1641,6 @@ def hjkCopy():
 # 72 docstring or comments line ========================================
 
 
-
-# rename('_leg', '_legSpring')
-# rename('_L', '_R')
 # ctrl(sph=True)
-MirrorCopy(x=True)
+# rename('jnt', 'joint')
+
