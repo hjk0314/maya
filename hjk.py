@@ -1187,13 +1187,11 @@ def keyOff(i=1): # i : interval
 
 
 # Grouping itself and named own
-# cp is centerPivot
-def grp(cp=False):
+def grp():
     sel = pm.ls(sl=True)
     for i in sel:
         grp = pm.group(i, n="%s_grp" % i)
-        if not cp:
-            pm.move(0,0,0, grp+".scalePivot", grp+".rotatePivot", rpr=True)
+        pm.move(0,0,0, grp+".scalePivot", grp+".rotatePivot", rpr=True)
 
 
 # Create an empty group and match the pivot with the selector.
@@ -1643,4 +1641,6 @@ def hjkCopy():
 
 # ctrl(sph=True)
 # rename('jnt', 'joint')
-
+# orientJnt()
+# jntNone(2)
+# grpEmpty()
