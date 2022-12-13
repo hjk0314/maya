@@ -1125,12 +1125,10 @@ def ctrl(**kwargs):
     }
     if kwargs:
         coordinate = [ctrl[i] for i in kwargs if kwargs[i]]
-        for i in coordinate:
-            pm.curve(d=1, p=i)
+        result = [pm.curve(d=1, p=i) for i in coordinate]
     else:
-        shapes = list(ctrl.keys())
-        om.MGlobal.displayInfo(f"Shape list : {shapes}")
-        om.MGlobal.displayInfo(f"How to use : ctrl(cub=True, sph=True, ...)")
+        result = []
+    return result
 
 
 # This function works even if you select a point.
@@ -1197,8 +1195,9 @@ def grp():
 # Create an empty group and match the pivot with the selector.
 def grpEmpty():
     sel = pm.ls(sl=True)
+    grpList = []
     for i in sel:
-        grp = pm.group(em=True, n = i + "_grp")
+        grp = pm.group(em=True, n = i + "_null")
         pm.matchTransform(grp, i, pos=True, rot=True)
         try:
             # Selector's mom group.
@@ -1207,6 +1206,8 @@ def grpEmpty():
         except:
             pass
         pm.parent(i, grp)
+        grpList.append(grp)
+    return grpList
 
 
 # Select mesh only.
@@ -1639,8 +1640,45 @@ def hjkCopy():
 # 72 docstring or comments line ========================================
 
 
-# ctrl(sph=True)
-# rename('jnt', 'joint')
-# orientJnt()
-# jntNone(2)
-# grpEmpty()
+def cc_addAttr():
+    sel = pm.ls(sl=True, l=True)
+    pm.addAttr(sel[0], ln='RotY', at='double', dv=0)
+    pm.setAttr(f'{sel[0]}.RotY', e=True, k=True)
+    pm.addAttr(sel[0], ln='RotZ', at='double', dv=0)
+    pm.setAttr(f'{sel[0]}.RotZ', e=True, k=True)
+    pm.addAttr(sel[1], ln='FootFollow', at='double', min=0, max=1, dv=1)
+    pm.setAttr(f'{sel[1]}.FootFollow', e=True, k=True)
+
+
+def renameIKH():
+    sel = pm.ls(sl=True)
+    typ = ['footSpring', 'footRP', 'footSC']
+    end = '_R_Bk'
+    renameList = [pm.rename(k, f"ikH_{typ[j]}{end}") for j, k in enumerate(sel)]
+    pm.parent(renameList[1], renameList[0])
+    pm.select(renameList[0], renameList[2])
+    grpList = grpEmpty()
+    pm.select(grpList)
+    pm.group(n=f'ikH{end}_grp')
+    
+
+def poleFollow():
+    sel = pm.ls(sl=True)
+    sub = 'cc_sub'
+    foot = 'cc_foot'
+    pole = 'cc_poleVector'
+    for i in sel:
+        tmp = re.search('cc_foot(.*)', i.name())
+        end = tmp.group(1)
+        pm.parentConstraint(sub, f"{pole}{end}_null", mo=True, w=0)
+        pm.parentConstraint(f"{foot}{end}", f"{pole}{end}_null", mo=True, w=1)
+
+for i in range(1, 17):
+    par = 'cc_antenna_R_%d' % i
+    chi = 'jnt_antenna_R_%d' % i
+    pm.parentConstraint(par, chi, mo=True, w=1)
+
+
+
+
+
