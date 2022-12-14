@@ -1551,18 +1551,15 @@ def rwJSON(original_func):
                 tmp = re.search('(.*)[_v]([0-9]{4})[.].*', i)
                 num = int(tmp.group(2))
                 verDict[num] = tmp.group(1)
-            verMax = max(verDict.keys())
-            print(verMax)
-            if not verMax:
+            if not verDict:
                 jsonFile = dir + "/" + name + ".json"
                 data = {}
             else:
+                verMax = max(verDict.keys())
                 jsonFile = f"{dir}/{verDict[verMax]}v%04d.json" % verMax
                 with open(jsonFile) as JSON:
                     data = json.load(JSON)
-            print(jsonFile)
             result = original_func(data, *args, **kwargs)
-            print(data)
             with open(dir + "/" + name + ".json", 'w') as JSON:
                 json.dump(data, JSON, indent=4)
             return result
@@ -1673,12 +1670,28 @@ def poleFollow():
         pm.parentConstraint(sub, f"{pole}{end}_null", mo=True, w=0)
         pm.parentConstraint(f"{foot}{end}", f"{pole}{end}_null", mo=True, w=1)
 
-for i in range(1, 17):
-    par = 'cc_antenna_R_%d' % i
-    chi = 'jnt_antenna_R_%d' % i
-    pm.parentConstraint(par, chi, mo=True, w=1)
+
+def createAntennaCC():
+    for i in range(1, 17):
+        par = 'cc_antenna_R_%d' % i
+        chi = 'jnt_antenna_R_%d' % i
+        pm.parentConstraint(par, chi, mo=True, w=1)
+
+
+# sel = pm.ls(sl=True)
+# for i in sel:
+#     pm.addAttr(i, ln='LegFollow', at='double', min=0, max=1, dv=1)
+#     pm.setAttr(f'{i}.LegFollow', e=True, k=True)
 
 
 
-
+# sel = pm.ls(sl=True)
+# for i in sel:
+#     fbx = i.name()
+#     rig = i.name()
+#     rig = rig.replace('joint', 'jnt')
+#     print(fbx, rig)
+#     pm.select(cl=True)
+#     pm.select([rig, fbx])
+#     writeJSON()
 
