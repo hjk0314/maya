@@ -1197,7 +1197,7 @@ def grpEmpty():
     sel = pm.ls(sl=True)
     grpList = []
     for i in sel:
-        grp = pm.group(em=True, n = i + "_null")
+        grp = pm.group(em=True, n = i + "_grp")
         pm.matchTransform(grp, i, pos=True, rot=True)
         try:
             # Selector's mom group.
@@ -1695,3 +1695,15 @@ def createAntennaCC():
 #     pm.select([rig, fbx])
 #     writeJSON()
 
+
+# createLoc(jnt=True)
+# rename('_L', '_R')
+# rename('loc_passengerKan_1')
+# ctrl(pointer=True)
+
+
+def connA():
+    sel = pm.ls(sl=True)
+    org = "jnt_Ft_wheel_mid_L_3"
+    for i in sel:
+        pm.connectAttr(f"{org}.rotateX", f"{i}.rotateX", f=True)
