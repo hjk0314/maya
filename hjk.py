@@ -1639,24 +1639,31 @@ def hjkCopy():
 
 def cc_addAttr():
     sel = pm.ls(sl=True, l=True)
-    pm.addAttr(sel[0], ln='RotY', at='double', dv=0)
-    pm.setAttr(f'{sel[0]}.RotY', e=True, k=True)
-    pm.addAttr(sel[0], ln='RotZ', at='double', dv=0)
-    pm.setAttr(f'{sel[0]}.RotZ', e=True, k=True)
-    pm.addAttr(sel[1], ln='FootFollow', at='double', min=0, max=1, dv=1)
-    pm.setAttr(f'{sel[1]}.FootFollow', e=True, k=True)
+    for controller in sel:
+        # pm.addAttr(controller, ln='Ball', at='double', dv=0)
+        # pm.setAttr(f'{controller}.Ball', e=True, k=True)
+        # pm.addAttr(controller, ln='RotY', at='double', dv=0)
+        # pm.setAttr(f'{controller}.RotY', e=True, k=True)
+        # pm.addAttr(controller, ln='RotZ', at='double', dv=0)
+        # pm.setAttr(f'{controller}.RotZ', e=True, k=True)
+        pm.addAttr(controller, ln='Foot_Follow', at='double', min=0, max= 1, dv=0)
+        pm.setAttr(f'{controller}.Foot_Follow', e=True, k=True)
+
+
+# cc_addAttr()
 
 
 def renameIKH():
     sel = pm.ls(sl=True)
-    typ = ['footSpring', 'footRP', 'footSC']
-    end = '_R_Bk'
+    typ = ['spring', 'rp', 'sc1', 'sc2']
+    end = '_R_mid'
     renameList = [pm.rename(k, f"ikH_{typ[j]}{end}") for j, k in enumerate(sel)]
     pm.parent(renameList[1], renameList[0])
-    pm.select(renameList[0], renameList[2])
-    grpList = grpEmpty()
-    pm.select(grpList)
-    pm.group(n=f'ikH{end}_grp')
+    pm.select(renameList[0], renameList[2], renameList[3])
+    grpEmpty()
+    
+
+# renameIKH()
     
 
 def poleFollow():
@@ -1665,10 +1672,28 @@ def poleFollow():
     foot = 'cc_foot'
     pole = 'cc_poleVector'
     for i in sel:
-        tmp = re.search('cc_foot(.*)', i.name())
+        tmp = re.search('cc_poleVector(.*)', i.name())
         end = tmp.group(1)
         pm.parentConstraint(sub, f"{pole}{end}_null", mo=True, w=0)
         pm.parentConstraint(f"{foot}{end}", f"{pole}{end}_null", mo=True, w=1)
+
+
+# poleFollow()
+
+
+def legFollow():
+    sel = pm.ls(sl=True)
+    sub = 'cc_sub'
+    foot = 'cc_foot'
+    leg = 'cc_leg'
+    for i in sel:
+        tmp = re.search('cc_foot(.*)', i.name())
+        end = tmp.group(1)
+        pm.scaleConstraint(sub, f"{foot}{end}_null", mo=True, w=0)
+        pm.scaleConstraint(f"{leg}{end}", f"{foot}{end}_null", mo=True, w=1)
+
+
+# legFollow()
 
 
 def createAntennaCC():
@@ -1680,8 +1705,8 @@ def createAntennaCC():
 
 # sel = pm.ls(sl=True)
 # for i in sel:
-#     pm.addAttr(i, ln='LegFollow', at='double', min=0, max=1, dv=1)
-#     pm.setAttr(f'{i}.LegFollow', e=True, k=True)
+#     pm.addAttr(i, ln='Leg_Follow', at='double', min=0, max=1, dv=0)
+#     pm.setAttr(f'{i}.Leg_Follow', e=True, k=True)
 
 
 
@@ -1697,9 +1722,11 @@ def createAntennaCC():
 
 
 # createLoc(jnt=True)
-# rename('_L', '_R')
-# rename('loc_passengerKan_1')
-# ctrl(pointer=True)
+# rename('leg_', 'legSpring_')
+# rename('_mid', '_Bk')
+# rename('jnt_leg_L_Bk_1')
+# ctrl(sph=True)
+# color(red=True)
 
 
 def connA():
