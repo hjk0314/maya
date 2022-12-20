@@ -1,121 +1,129 @@
+import re
 import pymel.core as pm
+from hjk import *
 
 
-class MirrorCopy:
-    def __init__(self, idx: str):
-        '''Copy the group and mirror it in the direction. 
-        If there is a curve in it, copy the curve and mirror it.
-        '''
-        self.idx = idx
-        self.sel = pm.ls(sl=True)
-        self.main()
+def cc_addAttr():
+    sel = pm.ls(sl=True, l=True)
+    for controller in sel:
+        # pm.addAttr(controller, ln='Ball', at='double', dv=0)
+        # pm.setAttr(f'{controller}.Ball', e=True, k=True)
+        # pm.addAttr(controller, ln='RotY', at='double', dv=0)
+        # pm.setAttr(f'{controller}.RotY', e=True, k=True)
+        # pm.addAttr(controller, ln='RotZ', at='double', dv=0)
+        # pm.setAttr(f'{controller}.RotZ', e=True, k=True)
+        pm.addAttr(controller, ln='Foot_Follow', at='double', min=0, max= 1, dv=0)
+        pm.setAttr(f'{controller}.Foot_Follow', e=True, k=True)
 
 
-    # Check the conditions.
-    def main(self):
-        if self.idx != 'x' and self.idx != 'z':
-            print("X and Z directions are available.")
-        elif not self.sel:
-            print("Nothing selected.")
-        else:
-            for i in self.sel:
-                self.mirrorCopy(i)
+# cc_addAttr()
 
 
-    # If there is a curve in the group, copy the curve and mirror it.
-    def mirrorCopy(self, selection):
-        cuv = selection.getChildren()
-        shp = pm.ls(cuv, dag=True, s=True)
-        typ = 'nurbsCurve'
-        objList = {i.getParent().name() for i in shp if pm.objectType(i)==typ}
-        objList = list(objList)
-        if not objList:
-            self.mirrorGroup(selection)
-        else:
-            for obj in objList:
-                name = self.swapLR(obj)
-                copy = pm.duplicate(obj, rr=True, n=name)
-                pm.parent(copy, w=True)
-                grp = pm.group(em=True)
-                pm.parent(copy, grp)
-                direction = [-1, 1, 1] if self.idx == 'x' else [1, 1, -1]
-                pm.scale(grp, direction, r=True)
-                mirrorGrp = self.mirrorGroup(selection)
-                pm.parent(copy, mirrorGrp)
-                pm.makeIdentity(copy, a=True, t=1, r=1, s=1, n=0, pn=1)
-                pm.delete(grp)
-        
-
-    # Replace letter L with R
-    def swapLR(self, objName):
-        if '_L' in objName:
-            result = objName.replace('_L', '_R')
-        elif '_R' in objName:
-            result = objName.replace('_R', '_L')
-        else:
-            result = ''
-        return result
-
-
-    # Create a mirrored group.
-    def mirrorGroup(self, selection):
-        name = self.swapLR(selection.name())
-        grp = pm.group(em=True, n=name)
-        pm.matchTransform(grp, selection, pos=True, rot=True)
-        tra = pm.getAttr(f'{grp}.translate')
-        rot = pm.getAttr(f'{grp}.rotate')
-        tx, ty, tz = tra
-        rx, ry, rz = rot
-        if self.idx == 'x':
-            tx *= -1
-            rx += (180 if rx < 0 else -180)
-            ry *= -1
-            rz *= -1
-        else:
-            tz *= -1
-            rz += (180 if rz < 0 else -180)
-        attr = {'tx': tx, 'ty': ty, 'tz': tz, 'rx': rx, 'ry': ry, 'rz': rz}
-        for j, k in attr.items():
-            pm.setAttr(f'{grp}.{j}', k)
-        return grp
-
-
-
-def createCC(ratio: int = 0.5):
+def renameIKH():
     sel = pm.ls(sl=True)
-    if not sel:
-        print("Noting selected.")
-    else:
-        for j, k in enumerate(sel):
-            name = k.replace('jnt', 'cc')
-            cuv = pm.circle(nr=(1,0,0), ch=True, n=name)
-            pm.matchTransform(cuv, k, pos=True, rot=True)
-            decrease = 1 - (ratio*j/len(sel))
-            pm.scale(cuv, [decrease, decrease, decrease], r=True)
+    typ = ['spring', 'rp', 'sc1', 'sc2']
+    end = '_R_mid'
+    renameList = [pm.rename(k, f"ikH_{typ[j]}{end}") for j, k in enumerate(sel)]
+    pm.parent(renameList[1], renameList[0])
+    pm.select(renameList[0], renameList[2], renameList[3])
+    grpEmpty()
+    
+
+# renameIKH()
+    
+
+def poleFollow():
+    sel = pm.ls(sl=True)
+    sub = 'cc_sub'
+    foot = 'cc_foot'
+    pole = 'cc_poleVector'
+    for i in sel:
+        tmp = re.search('cc_poleVector(.*)', i.name())
+        end = tmp.group(1)
+        pm.parentConstraint(sub, f"{pole}{end}_null", mo=True, w=0)
+        pm.parentConstraint(f"{foot}{end}", f"{pole}{end}_null", mo=True, w=1)
 
 
-def parentCC(num: int, name: str):
-    nameA = name
-    if '_L' in nameA:
-        nameB = name.replace('_L', '_R')
-    elif '_R' in nameA:
-        nameB = name.replace('_R', '_L')
-    else:
-        nameB = ''
-    if not nameB:
-        for i in range(1, num):
-            cc = nameA + '%d' % i
-            grp = nameA + '%d_grp' % (i+1)
-            pm.parent(grp, cc)
-    else:
-        for i in range(1, num):
-            cc = nameA + '%d' % i
-            grp = nameA + '%d_grp' % (i+1)
-            pm.parent(grp, cc)
-            cc = nameB + '%d' % i
-            grp = nameB + '%d_grp' % (i+1)
-            pm.parent(grp, cc)
+# poleFollow()
 
 
-# parentCC(5, 'cc_spine_')
-# createCC(0.75)
+def legFollow():
+    sel = pm.ls(sl=True)
+    sub = 'cc_sub'
+    foot = 'cc_foot'
+    leg = 'cc_leg'
+    for i in sel:
+        tmp = re.search('cc_foot(.*)', i.name())
+        end = tmp.group(1)
+        pm.scaleConstraint(sub, f"{foot}{end}_null", mo=True, w=0)
+        pm.scaleConstraint(f"{leg}{end}", f"{foot}{end}_null", mo=True, w=1)
+
+
+# legFollow()
+
+
+def createAntennaCC():
+    for i in range(1, 17):
+        par = 'cc_antenna_R_%d' % i
+        chi = 'jnt_antenna_R_%d' % i
+        pm.parentConstraint(par, chi, mo=True, w=1)
+
+
+# sel = pm.ls(sl=True)
+# for i in sel:
+#     pm.addAttr(i, ln='Leg_Follow', at='double', min=0, max=1, dv=0)
+#     pm.setAttr(f'{i}.Leg_Follow', e=True, k=True)
+
+
+
+# sel = pm.ls(sl=True)
+# for i in sel:
+#     fbx = i.name()
+#     rig = i.name()
+#     rig = rig.replace('joint', 'jnt')
+#     print(fbx, rig)
+#     pm.select(cl=True)
+#     pm.select([rig, fbx])
+#     writeJSON()
+
+
+# createLoc(jnt=True)
+# rename('leg_', 'legSpring_')
+# rename('_mid', '_Bk')
+# rename('jnt_leg_L_Bk_1')
+# ctrl(sph=True)
+# color(red=True)
+
+
+def connA():
+    sel = pm.ls(sl=True)
+    org = "jnt_Ft_wheel_mid_L_3"
+    for i in sel:
+        pm.connectAttr(f"{org}.rotateX", f"{i}.rotateX", f=True)
+
+
+def selSomething(typ):
+    sel = pm.ls(sl=True, dag=True)
+    lst = [i for i in sel if pm.objectType(i) == typ]
+    return lst
+
+
+# pm.delete(selSomething('scaleConstraint'))
+
+
+def temp():
+    jointList = selSomething('joint')
+    # pm.select(jointList)
+    # jointList = pm.ls(sl=True)
+    for i in jointList:
+        # pm.scaleConstraint('cc_head_grp', i, mo=True, w=1)
+        pm.connectAttr('cc_antenna_grp.scale', f'{i}.scale', f=True)
+
+
+# sel = pm.ls(sl=True)
+# for fbx in sel:
+#     rig = fbx.replace('joint_', 'jnt_')
+#     pm.parentConstraint(rig, fbx, mo=True, w=1)
+
+
+color(pink=True)
