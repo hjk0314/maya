@@ -480,4 +480,3 @@ class MatchCatclark:
 # pep8: 79 char line ==========================================================
 # pep8: 72 docstring or comments line ==================================
 
-
