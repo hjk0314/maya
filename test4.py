@@ -44,6 +44,6 @@ from hjk import *
 # pm.FileReference(refName).remove()
 
 
-# rename('jnt_mainGear_R_mainPistonLink_3_1')
+# rename('jnt_noseGear_10')
 # rename('mainGear_L', 'mainGear_R')
 # rename('sideGear_L', 'sideGear_R')

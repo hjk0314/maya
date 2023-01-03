@@ -1638,3 +1638,43 @@ def hjkCopy():
 # 72 docstring or comments line ========================================
 
 
+def growingJoint():
+    sel = pm.ls(sl=True)
+    pointList = []
+    jointList = []
+    pm.select(cl=True)
+    for i in sel:
+        jntName = i.replace('loc_', 'jnt_')
+        print(jntName)
+        point = pm.xform(i, q=1, ws=1, rp=1)
+        joint = pm.joint(p=point, n=jntName, rad=50)
+        pointList.append(point)
+        jointList.append(joint)
+    pm.select(jointList[0])
+    orientJnt()
+    ikHName = jointList[0].replace('jnt_', 'ikH_')
+    pm.ikHandle(sj=jointList[0], ee=jointList[1], sol='ikSCsolver', n=ikHName)
+    Dimension = pm.distanceDimension(sp=pointList[0], ep=pointList[1])
+    Distance = pm.getAttr(f"{Dimension}.distance")
+    Distance = round(Distance, 3)
+    expr = f"{jointList[0]}.scaleX = {Dimension}.distance / {Distance};"
+    pm.expression(s=expr, o='', ae=1, uc='all')
+
+
+# growingJoint()
+# rename('sideGear_L', 'sideGear_R')
+
+
+def grpNull():
+    sel = pm.ls(sl=True)
+    for i in sel:
+        grp = pm.group(i, n=f"{i}_null", r=True, )
+        x, y, z = pm.xform(i, q=1, ws=1, rp=1)
+        sp = f"{grp}.scalePivot"
+        rp = f"{grp}.rotatePivot"
+        pm.move(x, y, z, sp, rp, rpr=True)
+
+        
+
+
+# grpNull()
