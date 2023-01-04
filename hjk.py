@@ -1662,7 +1662,7 @@ def growingJoint():
 
 
 # growingJoint()
-# rename('sideGear_L', 'sideGear_R')
+# rename('spoiler_L', 'spoiler_R')
 
 
 def grpNull():
@@ -1678,3 +1678,8 @@ def grpNull():
 
 
 # grpNull()
+# ctrl(pointer=True)
+# color(red=True)
+# color(blue=True)
+# color(pink=True)
+# color(green=True)
