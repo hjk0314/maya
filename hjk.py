@@ -1349,9 +1349,12 @@ def color(**kwargs):
     sel = pm.ls(sl=True)
     colors = {
         "blue": 6, 
+        "blue2": 18, 
         "pink": 9, 
         "red": 13, 
+        "red2": 21, 
         "green": 14, 
+        "green2": 23, 
         "yellow": 17, 
     }
     idxList = [colors[i] for i in kwargs if kwargs[i]]
@@ -1681,5 +1684,9 @@ def grpNull():
 # ctrl(pointer=True)
 # color(red=True)
 # color(blue=True)
+# color(blue2=True)
 # color(pink=True)
 # color(green=True)
+# color(green2=True)
+# color(red2=True)
+# color(yellow=True)
