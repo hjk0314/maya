@@ -7,6 +7,7 @@ import maya.OpenMaya as om
 import pymel.core as pm
 import maya.mel as mel
 import sympy
+from math import *
 
 
 # Export to json file and shading networks. And assign to them.
@@ -558,6 +559,88 @@ class AutoWheel:
         pm.orientConstraint(null, orient, mo=False)
         pm.expression(s=expr, o='', ae=1, uc='all')
 
+
+# Set the key on the wheel to turn automatically.
+class AutoWheel2:
+    def __init__(self):
+        self.Min = pm.playbackOptions(q=True, min=True)
+        self.Max = pm.playbackOptions(q=True, max=True)
+        self.setupUI()
+
+
+    def setupUI(self):
+        if pm.window('AutoWheel2', exists=True):
+            pm.deleteUI('AutoWheel2')
+        else:
+            title = "Set the key on the wheel to turn automatically."
+            win = pm.window('AutoWheel2', t=title, s=True, rtf=True)
+            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=210)
+            pm.separator(h=10)
+            pm.rowColumnLayout(nc=4, cw=[(1, 55), (2, 50), (3, 15), (4, 50)])
+            pm.text("Frame : ")
+            self.startF = pm.intField("startFrame", ed=True, v=self.Min)
+            pm.text(" - ")
+            self.endF = pm.intField("endFrame", v=self.Max)
+            pm.setParent("..", u=True)
+            pm.button(l='Auto Rotation', c=lambda x: self.main())
+            pm.button(l='Delete Key', c=lambda x: self.deleteKey())
+            pm.separator(h=10)
+            pm.showWindow(win)
+    
+
+    def main(self):
+        sel = pm.ls(sl=True)
+        radiusCheck = []
+        for i in sel:
+            attrCheck = pm.attributeQuery('Radius', node=i, ex=True)
+            if not attrCheck:
+                radiusCheck.append(i)
+        if not sel:
+            print("Nothing Selected.")
+        elif radiusCheck:
+            print("The controller does not have a radius attribute.")
+        else:
+            for i in sel:
+                self.autoRotate(i)
+
+
+    def autoRotate(self, obj):
+        startFrame = self.startF.getValue()
+        endFrame = self.endF.getValue()
+        rad = pm.getAttr(f"{obj}.Radius")
+        size = pm.xform(obj, q=True, s=True, ws=True)
+        size = max(size)
+        pointList = {}
+        for i in range(startFrame, endFrame + 1):
+            pm.currentTime(i)
+            pm.setKeyframe(at="rotateX")
+            pos = pm.xform(obj, q=True, ws=True, rp=True)
+            pos = [round(j, 3) for j in pos]
+            pointList[i] = pos
+            if len(pointList) < 2:
+                continue
+            else:
+                x1, y1, z1 = pointList[i - 1]
+                x2, y2, z2 = pointList[i]
+                dx = x2 - x1
+                dy = y2 - y1
+                dz = z2 - z1
+                d = sqrt(pow(dx, 2) + pow(dy, 2) + pow(dz, 2))
+                d = round(d, 3)
+                pm.currentTime(i - 1)
+                angle = pm.getAttr(f"{obj}.rotateX")
+                angle += d * 360 / (2 * 3.14159 * rad * size)
+                pm.currentTime(i)
+                pm.setKeyframe(obj, v=angle, at="rotateX")
+
+
+    def deleteKey(self):
+        sel = pm.ls(sl=True)
+        startFrame = self.startF.getValue()
+        endFrame = self.endF.getValue()
+        for i in sel:
+            pm.cutKey(i, cl=True, at="rx", t=(startFrame, endFrame))
+        
 
 # Matching the direction of the pivot.
 class MatchPivot:
@@ -1677,8 +1760,6 @@ def grpNull():
         rp = f"{grp}.rotatePivot"
         pm.move(x, y, z, sp, rp, rpr=True)
 
-        
-
 
 # grpNull()
 # ctrl(pointer=True)
@@ -1690,3 +1771,13 @@ def grpNull():
 # color(green2=True)
 # color(red2=True)
 # color(yellow=True)
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+
+sel = pm.ls(sl=True)
+for obj in sel:
+    size = pm.xform(obj, q=True, s=True, ws=True)
+    print(size)
