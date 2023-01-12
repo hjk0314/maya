@@ -1777,7 +1777,20 @@ def grpNull():
 # 72 docstring or comments line ========================================
 
 
-sel = pm.ls(sl=True)
-for obj in sel:
-    size = pm.xform(obj, q=True, s=True, ws=True)
-    print(size)
+def cleanFBX():
+    sel = pm.ls(sl=True)
+    obj, jnt = sel
+    fullPath = pm.Env().sceneName()
+    bName = os.path.basename(fullPath)
+    name, ext = os.path.splitext(bName)
+    pm.rename(obj, name)
+    pm.select(jnt, hi=True)
+    pm.delete(sc=True, uac=False, hi=0, cp=0, s=0)
+    rename("Bip01FBXASC032", "jnt_")
+    rename("FBXASC032", "_")
+    pm.rename(jnt, 'jnt_root')
+    pm.currentUnit(t="film")
+
+
+# a = om.MFileIO_currentFile()
+# om.MFileIO_open('C:/users/jkhong/Desktop/a.ma')
