@@ -1617,9 +1617,11 @@ def pathAni(num: int) -> None:
     else:
         mod = 1 / (num - 1) if num > 1 else 0
         cuv = sel[0]
+        jntName = []
         for i in range(num):
             pm.select(cl=True)
             jnt = pm.joint(p=(0,0,0))
+            jntName.append(jnt)
             val = i * mod
             tmp = pm.pathAnimation(jnt, c=cuv, 
                 fm=True, # fractionMode
@@ -1631,6 +1633,7 @@ def pathAni(num: int) -> None:
                 )
             pm.cutKey(tmp, cl=True, at='u')
             pm.setAttr(f"{tmp}.uValue", val)
+    return jntName
 
 
 # JSON decorator
@@ -1731,7 +1734,77 @@ def hjkCopy():
     shutil.copy(gitFolder, docFolder)
 
 
+def createSpline(num: int):
+    sel = pm.ls(sl=True)
+    for cuv in sel:
+        dup = pm.duplicate(cuv, rr=True)
+        tmp = pathAni(num)
+        newName = cuv.replace('cuv_', 'jnt_')
+        jntList = []
+        for j, k in enumerate(tmp):
+            pm.select(cl=True)
+            jnt = pm.joint(n=f"{newName}_%d" % j, p=(0, 0, 0), rad=5)
+            jntList.append(jnt)
+            pm.matchTransform(jnt, k, pos=True)
+        pm.delete(dup, tmp)
+        for n in range(num):
+            if n + 1 < num:
+                pm.parent(jntList[n + 1], jntList[n])
+            else:
+                continue
+        sJnt = jntList[0]
+        mJnt = jntList[int(num/2)]
+        eJnt = jntList[-1]
+        newName = cuv.replace('cuv_', 'ikH_')
+        pm.select(sJnt)
+        orientJnt()
+        ikH = pm.ikHandle(sol="ikSplineSolver", 
+            n=newName, # name
+            sj=sJnt, # startJoint
+            ee=eJnt, # endEffector
+            c=cuv, # curve
+            ccv=False, # createCurve
+            scv=False, # simplifyCurve
+            cra=True, # createRootAxis
+            ns=3 # numSpans
+        )
+        ikH = ikH[0]
+        newName = cuv.replace('cuv_', 'loc_')
+        loc = pm.spaceLocator(n=newName)
+        pm.matchTransform(loc, mJnt, pos=True, rot=True)
+        pm.select(loc)
+        grpEmpty()
+        pm.move(0, 30, 0, loc, r=True, os=True, wd=True)
+        pm.setAttr(f"{ikH}.dTwistControlEnable", 1)
+        pm.setAttr(f"{ikH}.dWorldUpType", 1)
+        pm.setAttr(f"{ikH}.dForwardAxis", 0)
+        pm.setAttr(f"{ikH}.dWorldUpAxis", 0)
+        pm.connectAttr(f"{loc}.worldMatrix[0]", f"{ikH}.dWorldUpMatrix")
+
+
+def createStroke():
+    sel = pm.ls(sl=True)
+    for cuv in sel:
+        pm.select(cl=True)
+        pm.select(cuv)
+        mel.eval("AttachBrushToCurves;")
+        strok = pm.ls(sl=True, dag=True, s=True)
+        strok = strok[0]
+        brush = [i for i in strok.inputs() if pm.nodeType(i)=="brush"]
+        brush = brush[0]
+        pm.setAttr(f'{brush}.globalScale', 30)
+        mel.eval("doPaintEffectsToPoly(1, 0, 1, 1, 100000);")
+        pTube = [i.getParent() for i in pm.ls(sl=True)]
+        pTube = pTube[0]
+        pTubeGrp = pTube.getParent()
+        newName = cuv.replace('cuv_', 'newObj_')
+        pm.parent(pTube, w=True)
+        pm.rename(pTube, newName)
+        pm.delete(pTubeGrp)
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
+
 
 
