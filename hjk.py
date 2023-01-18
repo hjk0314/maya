@@ -489,8 +489,8 @@ class AutoWheel:
 
     # Create variables.
     def createVar(self, rad: float) -> tuple:
-        rad *= 1.1
-        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False, n='cc_wheel_R_Ft_sub_1')
+        rad *= 1.2
+        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False, n='cc_wheel_L_Bk')
         cuv = cuv[0]
         jnt = cuv + '_jnt'
         null = cuv + '_null_grp'
@@ -1108,6 +1108,27 @@ def ctrl(**kwargs):
     con = [(0, 2, 0), (-0.87, 0, -0), (0.87, 0, 0), ]
     con += [(0, 2, 0), (0, 0, 1), (-0.87, 0, -0), ]
     con += [(0.87, 0, 0), (0, 0, 1), ]
+    # car shape coordinates
+    car = [(90.878, 114.928, 109.126), (90.878, 100.171, 227.195), ]
+    car += [(90.878, 29.606, 227.195), (90.878, 29.606, 113.598), ]
+    car += [(90.878, 29.606, -113.598), (90.878, 29.606, -227.195), ]
+    car += [(90.878, 114.928, -227.195), (90.878, 114.928, -164.271), ]
+    car += [(90.878, 161.491, -102.348), (90.878, 161.491, 54.004), ]
+    car += [(90.878, 114.928, 109.126), (-90.878, 114.928, 109.126), ]
+    car += [(-90.878, 100.171, 227.195), (-90.878, 29.606, 227.195), ]
+    car += [(-90.878, 29.606, 113.598), (-90.878, 29.606, -113.598), ]
+    car += [(-90.878, 29.606, -227.195), (-90.878, 114.928, -227.195), ]
+    car += [(-90.878, 114.928, -164.271), (-90.878, 161.491, -102.348), ]
+    car += [(90.878, 161.491, -102.348), (90.878, 114.928, -164.271), ]
+    car += [(-90.878, 114.928, -164.271), (-90.878, 114.928, -227.195), ]
+    car += [(90.878, 114.928, -227.195), (90.878, 29.606, -227.195), ]
+    car += [(-90.878, 29.606, -227.195), (-90.878, 29.606, -113.598), ]
+    car += [(-90.878, 29.606, 113.598), (-90.878, 29.606, 227.195), ]
+    car += [(90.878, 29.606, 227.195), (90.878, 100.171, 227.195), ]
+    car += [(-90.878, 100.171, 227.195), (-90.878, 114.928, 109.126), ]
+    car += [(-90.878, 161.491, 54.004), (-90.878, 161.491, -102.348), ]
+    car += [(90.878, 161.491, -102.348), (90.878, 161.491, 54.004), ]
+    car += [(-90.878, 161.491, 54.004), ]
     # Arrow1 shape coordinates
     ar1 = [(0, 0, 2), (2, 0, 1), (1, 0, 1), ]
     ar1 += [(1, 0, -2), (-1, 0, -2), (-1, 0, 1), ]
@@ -1194,6 +1215,7 @@ def ctrl(**kwargs):
         "cyl": cyl, 
         "pip": pip, 
         "con": con, 
+        "car": car, 
         "ar1": ar1, 
         "ar2": ar2, 
         "ar3": ar3, 
@@ -1734,6 +1756,7 @@ def hjkCopy():
     shutil.copy(gitFolder, docFolder)
 
 
+# Create joints and apply them to splineHandleTool
 def createSpline(num: int):
     sel = pm.ls(sl=True)
     for cuv in sel:
@@ -1782,29 +1805,77 @@ def createSpline(num: int):
         pm.connectAttr(f"{loc}.worldMatrix[0]", f"{ikH}.dWorldUpMatrix")
 
 
-def createStroke():
-    sel = pm.ls(sl=True)
-    for cuv in sel:
-        pm.select(cl=True)
-        pm.select(cuv)
-        mel.eval("AttachBrushToCurves;")
-        strok = pm.ls(sl=True, dag=True, s=True)
-        strok = strok[0]
-        brush = [i for i in strok.inputs() if pm.nodeType(i)=="brush"]
-        brush = brush[0]
-        pm.setAttr(f'{brush}.globalScale', 30)
-        mel.eval("doPaintEffectsToPoly(1, 0, 1, 1, 100000);")
-        pTube = [i.getParent() for i in pm.ls(sl=True)]
-        pTube = pTube[0]
-        pTubeGrp = pTube.getParent()
-        newName = cuv.replace('cuv_', 'newObj_')
-        pm.parent(pTube, w=True)
-        pm.rename(pTube, newName)
-        pm.delete(pTubeGrp)
+# Create strokes and convert them to polygons
+def createStroke(cuv):
+    pm.select(cl=True)
+    pm.select(cuv)
+    mel.eval("AttachBrushToCurves;")
+    strok = pm.ls(sl=True, dag=True, s=True)
+    strok = strok[0]
+    brush = [i for i in strok.inputs() if pm.nodeType(i)=="brush"]
+    brush = brush[0]
+    pm.setAttr(f'{brush}.globalScale', 30)
+    mel.eval("doPaintEffectsToPoly(1, 0, 1, 1, 100000);")
+    pTube = [i.getParent() for i in pm.ls(sl=True)]
+    pTube = pTube[0]
+    pTubeGrp = pTube.getParent()
+    newName = cuv.replace('cuv_', 'newObj_')
+    pm.parent(pTube, w=True)
+    pm.rename(pTube, newName)
+    pm.delete(pTubeGrp)
+
+
+# Point position to create a controller
+def pointPosition():
+    sel = pm.ls(sl=True, fl=True)
+    pos = [pm.pointPosition(i) for i in sel]
+    point = [tuple([round(j, 3) for j in i]) for i in pos]
+    print(point)
+    return point
 
 
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 
 
+# rename("cuv_mainGear_R_subPiston_1")
 
+def temp():
+    sel = pm.ls(sl=True)
+    for j, k in enumerate(sel):
+        name = k.replace('cuv_', 'clt_')
+        pm.cluster(f"{k}.cv[0:2]", n=f"{name}_1")
+        grpEmpty()
+        pm.cluster(f"{k}.cv[3:5]", n=f"{name}_2")
+        grpEmpty()
+        createStroke(k)
+
+
+# temp()
+
+
+# for i in range(1, 21):
+#     pm.connectAttr("multiplyDivide7.outputX", "defaultBrush%d.globalScale" % i, f=True)
+
+
+# ctrl(ar3=True)
+# ctrl(cub=True)
+
+# AutoWheel()
+
+
+def createAttr():
+    sel = pm.ls(sl=True, l=True)
+    for i in sel:
+        pm.addAttr(i, ln='Sub_Ctrl', at='bool')
+        pm.setAttr(f'{i}.Sub_Ctrl', e=True, k=True)
+        pm.addAttr(i, ln='Geo_Hide', at='bool')
+        pm.setAttr(f'{i}.Geo_Hide', e=True, k=True)
+
+
+
+# createAttr()
+# color(red=True)
+# color(blue=True)
+# color(yellow=True)
+# color(pink=True)
