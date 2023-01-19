@@ -1838,44 +1838,22 @@ def pointPosition():
 # 72 docstring or comments line ========================================
 
 
-# rename("cuv_mainGear_R_subPiston_1")
-
-def temp():
+def createChannels():
     sel = pm.ls(sl=True)
-    for j, k in enumerate(sel):
-        name = k.replace('cuv_', 'clt_')
-        pm.cluster(f"{k}.cv[0:2]", n=f"{name}_1")
-        grpEmpty()
-        pm.cluster(f"{k}.cv[3:5]", n=f"{name}_2")
-        grpEmpty()
-        createStroke(k)
-
-
-# temp()
-
-
-# for i in range(1, 21):
-#     pm.connectAttr("multiplyDivide7.outputX", "defaultBrush%d.globalScale" % i, f=True)
-
-
-# ctrl(ar3=True)
-# ctrl(cub=True)
-
-# AutoWheel()
-
-
-def createAttr():
-    sel = pm.ls(sl=True, l=True)
+    channelList = [
+        "hoof_roll", 
+        "hoof_lean", 
+        "hoof_twist", 
+        "fetlock_roll", 
+        "fetlock_lean", 
+        "fetlock_twist", 
+        "leg_twist", 
+        ]
     for i in sel:
-        pm.addAttr(i, ln='Sub_Ctrl', at='bool')
-        pm.setAttr(f'{i}.Sub_Ctrl', e=True, k=True)
-        pm.addAttr(i, ln='Geo_Hide', at='bool')
-        pm.setAttr(f'{i}.Geo_Hide', e=True, k=True)
+        for cName in channelList:
+            pm.addAttr(i, ln=cName, at='double', dv=0)
+            pm.setAttr(f'{i}.{cName}', e=True, k=True)
 
 
 
-# createAttr()
-# color(red=True)
-# color(blue=True)
-# color(yellow=True)
-# color(pink=True)
+# createChannels()
