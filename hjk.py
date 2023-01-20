@@ -1840,20 +1840,33 @@ def pointPosition():
 
 def createChannels():
     sel = pm.ls(sl=True)
+    # channelList = [
+    #     "Toe", 
+    #     "Bank", 
+    #     "Twist", 
+    #     "Heel", 
+    #     "Ball", 
+    #     "Down", 
+    #     ]
     channelList = [
-        "hoof_roll", 
-        "hoof_lean", 
-        "hoof_twist", 
-        "fetlock_roll", 
-        "fetlock_lean", 
-        "fetlock_twist", 
-        "leg_twist", 
+        "FKIK_L_F", 
+        "FKIK_R_F", 
+        "FKIK_L_B", 
+        "FKIK_R_B", 
         ]
     for i in sel:
         for cName in channelList:
-            pm.addAttr(i, ln=cName, at='double', dv=0)
+            pm.addAttr(i, ln=cName, at='double', min=0, max=10, dv=0)
             pm.setAttr(f'{i}.{cName}', e=True, k=True)
 
 
 
 # createChannels()
+# ctrl(sph=True)
+# rename("FK", "IK")
+# sel = pm.ls(sl=True)
+# new = sel[0]
+# old = sel[1]
+# pm.matchTransform(new, old, pos=True)
+
+# pm.rename(new, old)
