@@ -1482,6 +1482,15 @@ def color(**kwargs):
         pm.setAttr(f"{shp}.overrideColor", idx)
 
 
+# color(yellow=True)
+# color(pink=True)
+# color(blue=True)
+# color(blue2=True)
+# color(red2=True)
+# color(red=True)
+# color(green2=True)
+
+
 # Open the Windows folder and copy the fullPath to the clipboard.
 def openSaved():
     fullPath = pm.Env().sceneName()
@@ -1885,11 +1894,17 @@ def createBlendColors(SWITCH, setR, IK, FK, FBX):
 
 
 # createChannels()
-# ctrl(cub=True)
-# rename("clt_tailIK_1")
+# ctrl(pointer=True)
+# rename("cc_tailIK_3")
+# rename("cc_spineIn_1")
 # sel = pm.ls(sl=True)
 # new = sel[0]
 # old = sel[1]
 # pm.matchTransform(new, old, pos=True)
 # pm.rename(new, old)
 # connectBlendColors()
+# sel = pm.ls(sl=True)
+# for i in sel:
+#     pm.connectAttr("multiplyDivide6.output", f"{i}.scale", f=True)
+
+
