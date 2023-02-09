@@ -2,6 +2,7 @@ import pymel.core as pm
 import maya.mel as mel
 import re
 import os
+from math import *
 
 
 folder = "U:/DOJ/Rnd/Horse/Output/ABC/horseGroomV0006_sim_v0102"

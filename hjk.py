@@ -1849,3 +1849,39 @@ def pointPosition():
 
 
 
+# rename('jnt_saddleLeater_wing_L_mid_1')
+
+
+def createBone():
+    sel = pm.ls(sl=True)
+    for i in sel:
+        pm.select(d=True)
+        jnt = pm.joint(p=(0,0,0), rad=3)
+        pm.matchTransform(jnt, i, pos=True)
+
+
+def parentBone():
+    sel = pm.ls(sl=True)
+    for j, k in enumerate(sel):
+        if (j + 1) < len(sel):
+            pm.parent(sel[j+1], k)
+        else:
+            continue
+
+
+def connScale():
+    sel = pm.ls(sl=True)
+    for i in sel:
+        pm.connectAttr("multiplyDivide10.output", f"{i}.scale", f=True)
+
+
+# createBone()
+# parentBone()
+# rename('txt_anJang_R_1')
+# SoftSel()
+# MatchPivot()
+# ctrl(cub=True)
+# color(red=True)
+# color(blue=True)
+# color(yellow=True)
+color(pink=True)
