@@ -7,7 +7,6 @@ import maya.OpenMaya as om
 import pymel.core as pm
 import maya.mel as mel
 import sympy
-import itertools
 from math import *
 
 
@@ -1459,6 +1458,7 @@ def poleVector():
         pm.matchTransform(loc, temp2, pos=True, rot=True)
         # Delete temporarily used joints.
         pm.delete(temp1)
+        return loc
 
 
 # Change the color of the controllers.
@@ -1848,11 +1848,7 @@ def pointPosition():
 # 72 docstring or comments line ========================================
 
 
-
-# rename('jnt_saddleLeater_wing_L_mid_1')
-
-
-def createBone():
+def createBones():
     sel = pm.ls(sl=True)
     for i in sel:
         pm.select(d=True)
@@ -1875,15 +1871,3 @@ def connScale():
         pm.connectAttr("multiplyDivide10.output", f"{i}.scale", f=True)
 
 
-# createBone()
-# parentBone()
-# rename('txt_anJang_R_1')
-# SoftSel()
-# MatchPivot()
-# ctrl(sph=True)
-# color(red=True)
-# color(red2=True)
-# color(blue=True)
-# color(blue2=True)
-# color(yellow=True)
-# color(pink=True)
