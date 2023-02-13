@@ -8,8 +8,8 @@ jntDict = {
     'jnt_spine_3': ['cc_spine_3_grp'], 
     'jnt_spine_4': ['cc_spine_4_grp'], 
     'jnt_neck_1': ['cc_neck_1_grp'], 
-    'jnt_neck_2': ['cc_neck_2_grp'], 
-    'jnt_head_1': ['cc_head_grp'], 
+    'jnt_neck_2': ['cc_head_grp'], 
+    'jnt_head_1': [], 
     'jnt_head_end': [], 
     'jnt_scapula_L': ['cc_scapula_L_grp'], 
     'jnt_shoulder_L': ['cc_shoulderIK_L_grp', 'cc_shoulderFK_L_grp'], 
@@ -338,12 +338,12 @@ def createPV():
     leg_R = ['jnt_hip_R', 'jnt_knee_R', 'jnt_ankle_R']
     arm_L = ['jnt_shoulder_L', 'jnt_elbow_L', 'jnt_wrist_L']
     arm_R = ['jnt_shoulder_R', 'jnt_elbow_R', 'jnt_wrist_R']
-    pv = [
-        'cc_legPole_L_grp', 
-        'cc_legPole_R_grp', 
-        'cc_armPole_L_grp', 
-        'cc_armPole_R_grp'
-    ]
+    # pv = [
+    #     'cc_legPole_L_grp', 
+    #     'cc_legPole_R_grp', 
+    #     'cc_armPole_L_grp', 
+    #     'cc_armPole_R_grp'
+    # ]
     pm.select(cl=True)
     pm.select(leg_L)
     loc = poleVector()
@@ -380,7 +380,7 @@ def createPV():
 # rename('clt_spine_1')
 # grpEmpty()
 # rename('jnt_', 'fbx_')
-# rename('IK', 'FK')
+# rename('IK', '')
 
 # batchCC()
 # poleVector()
@@ -394,6 +394,7 @@ def createPV():
 # color(green2=True)
 
 # armIKSetting()
+# legIKSetting()
 # footConnect()
 
 
@@ -401,3 +402,6 @@ def createPV():
 # connectFollow(leg_R_1, leg_R_2)
 # connectFollow(arm_L_1, arm_L_2)
 # connectFollow(arm_R_1, arm_R_2)
+
+
+# allCCBatch()
