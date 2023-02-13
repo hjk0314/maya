@@ -75,3 +75,12 @@ pm.joint('endJoint', e=True, oj='none', ch=True, zso=True)
 ikH = pm.ikHandle(sj='startJoint', ee='endJoint', sol='ikSCsolver')
 
 
+# 피벗 위치 변경
+pm.move(1, 2, 3, "pCube1.scalePivot", "pCube1.rotatePivot", r=True)
+
+
+# group, grouping, 그룹, 그룹핑
+# C:\Program Files\Autodesk\Maya2016\scripts\others\doGroup.mel
+# xform -os -piv 0 0 0
+grp = pm.group('pSphere1')
+pm.xform(grp, os=True, piv=(0,0,0))
