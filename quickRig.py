@@ -363,17 +363,27 @@ def createPV():
 
 
 
+# allCCBatch()
+# batchCC()
 # createIKSplineHandle()
 # parentCluster()
-
+# poleVector()
+# armIKSetting()
+# legIKSetting()
+# footConnect()
+# connectFollow(leg_L_1, leg_L_2)
+# connectFollow(leg_R_1, leg_R_2)
+# connectFollow(arm_L_1, arm_L_2)
+# connectFollow(arm_R_1, arm_R_2)
+# parentSel()
 # parentCCtoJnt()
+
+
 # createFingerCC()
 # createSelCC()
-# parentSel()
 # addNameFKIK("IK")
 # addNameFKIK("FK")
 # createChannels()
-
 # ctrl(cub=True)
 # orientJnt()
 # MirrorCopy('x')
@@ -382,8 +392,6 @@ def createPV():
 # rename('jnt_', 'fbx_')
 # rename('IK', '')
 
-# batchCC()
-# poleVector()
 
 # color(yellow=True)
 # color(pink=True)
@@ -391,17 +399,9 @@ def createPV():
 # color(red2=True)
 # color(blue=True)
 # color(blue2=True)
+# color(green=True)
 # color(green2=True)
 
-# armIKSetting()
-# legIKSetting()
-# footConnect()
 
+# rename("cuv_skirt_1")
 
-# connectFollow(leg_L_1, leg_L_2)
-# connectFollow(leg_R_1, leg_R_2)
-# connectFollow(arm_L_1, arm_L_2)
-# connectFollow(arm_R_1, arm_R_2)
-
-
-# allCCBatch()

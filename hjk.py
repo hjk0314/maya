@@ -1355,6 +1355,25 @@ def selGrp():
     return grp
 
 
+def selectJnt():
+    '''If there is no shape and the object type is not 
+    'ikEffector', 'ikHandle', 'Constraint', ...
+    then it is most likely a group.'''
+    sel = pm.ls(sl=True, dag=True, type=['transform'])
+    grp = []
+    for i in sel:
+        typ = pm.objectType(i)
+        A = pm.listRelatives(i, s=True)
+        B = typ in ['joint', 'ikEffector', 'ikHandle',]
+        C = 'Constraint' in typ
+        if not (A or B or C):
+            grp.append(i)
+        else:
+            continue
+    pm.select(grp)
+    return grp
+
+
 # Select objects with duplicate names.
 def sameName():
     sel = pm.ls(tr=True)
@@ -1481,15 +1500,6 @@ def color(**kwargs):
         shp = i.getShape()
         pm.setAttr(f"{shp}.overrideEnabled", enb)
         pm.setAttr(f"{shp}.overrideColor", idx)
-
-
-# color(yellow=True)
-# color(pink=True)
-# color(blue=True)
-# color(blue2=True)
-# color(red2=True)
-# color(red=True)
-# color(green2=True)
 
 
 # Open the Windows folder and copy the fullPath to the clipboard.
@@ -1869,5 +1879,22 @@ def connScale():
     sel = pm.ls(sl=True)
     for i in sel:
         pm.connectAttr("multiplyDivide10.output", f"{i}.scale", f=True)
+
+
+# pathAni(9)
+# rename('cc_cuvSkirt1_1')
+# rename('cc_cuvSkirt2_1')
+# rename('cc_cuvSkirt3_1')
+# rename('cc_cuvSkirt4_1')
+# rename('cc_cuvSkirt5_1')
+
+
+sel = pm.ls(sl=True)
+for i in sel:
+    cc = i.replace("clt_", "cc_")
+    cc = cc.replace("_grp", "")
+    # pm.matchTransform(cc, i, pos=True)
+    pm.setAttr(f"{i}.visibility", 0)
+    pm.parent(i, cc)
 
 
