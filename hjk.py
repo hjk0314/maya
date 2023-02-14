@@ -1289,57 +1289,48 @@ def keyOff(i=1): # i : interval
         pm.keyframe(k, e=True, r=True, tc = j * i)
 
 
-# Grouping itself and named own
-def grp():
+def grouping():
+    """ Grouping itself and named own """
     sel = pm.ls(sl=True)
     for i in sel:
         grp = pm.group(i, n="%s_grp" % i)
-        pm.move(0,0,0, grp+".scalePivot", grp+".rotatePivot", rpr=True)
+        pm.xform(grp, os=True, piv=(0,0,0))
 
 
-# Grouping null
-def grpNull():
+def groupingNull():
+    """ Grouping null """
     sel = pm.ls(sl=True)
     for i in sel:
         grp = pm.group(i, n=f"{i}_null", r=True, )
-        x, y, z = pm.xform(i, q=1, ws=1, rp=1)
-        sp = f"{grp}.scalePivot"
-        rp = f"{grp}.rotatePivot"
-        pm.move(x, y, z, sp, rp, rpr=True)
+        pm.xform(grp, os=True, piv=(0,0,0))
 
 
-# Create an empty group and match the pivot with the selector.
-def grpEmpty():
+def groupingEmpty():
+    """ Create an empty group and match the pivot with the selector. """
     sel = pm.ls(sl=True)
-    grpList = []
     for i in sel:
         grp = pm.group(em=True, n = i + "_grp")
         pm.matchTransform(grp, i, pos=True, rot=True)
         try:
-            # Selector's mom group.
-            iParent = "".join(pm.listRelatives(i, p=True))
-            pm.parent(grp, iParent)
+            mom = i.getParent()
+            pm.parent(grp, mom)
         except:
             pass
         pm.parent(i, grp)
-        grpList.append(grp)
-    return grpList
 
 
-# Select mesh only.
-def selObj():
-    sel = pm.ls(sl=True, s=True, dag=True)
-    meshList = {i.getParent() for i in sel if pm.objectType(i) == "mesh"}
-    result = list(meshList)
+def selectObj():
+    """ Select mesh only. """
+    sel = pm.ls(sl=True, dag=True, type=['mesh', 'nurbsSurface'])
+    obj = {i.getParent() for i in sel}
+    result = list(obj)
     pm.select(result)
-    return result
 
 
-# Select groups only.
-def selGrp():
-    '''If there is no shape and the object type is not 
-    'joint', 'ikEffector', 'ikHandle', 'Constraint', ...
-    then it is most likely a group.'''
+def selectGrp():
+    """ If there is no shape and the object type is not 
+    'joint', 'ikEffector', 'ikHandle', and 'Constraint', 
+    then it is most likely a group. """
     sel = pm.ls(sl=True, dag=True, type=['transform'])
     grp = []
     for i in sel:
@@ -1352,37 +1343,29 @@ def selGrp():
         else:
             continue
     pm.select(grp)
-    return grp
 
 
 def selectJnt():
-    '''If there is no shape and the object type is not 
-    'ikEffector', 'ikHandle', 'Constraint', ...
-    then it is most likely a group.'''
+    """ Select only joints. """
     sel = pm.ls(sl=True, dag=True, type=['transform'])
     grp = []
     for i in sel:
         typ = pm.objectType(i)
-        A = pm.listRelatives(i, s=True)
-        B = typ in ['joint', 'ikEffector', 'ikHandle',]
-        C = 'Constraint' in typ
-        if not (A or B or C):
-            grp.append(i)
-        else:
+        if typ != 'joint':
             continue
+        else:
+            grp.append(i)
     pm.select(grp)
-    return grp
 
 
-# Select objects with duplicate names.
-def sameName():
-    sel = pm.ls(tr=True)
+def selectDup():
+    """ Select objects with duplicate names. """
+    sel = pm.ls(tr=True) # tr: transform object
     dup = [i for i in sel if "|" in i]
-    if dup:
-        pm.select(dup)
-        om.MGlobal.displayError("Same name selected in outliner.")
+    if not dup:
+        print("No duplicated names.")
     else:
-        om.MGlobal.displayInfo("No duplicated names.")
+        pm.select(dup)
 
 
 # Moving pivot to zero.
@@ -1394,13 +1377,12 @@ def zeroPivot():
         pm.move(0, 0, 0, j, k, rpr=True)
 
 
-# rename function used in maya
 def rename(*arg: str) -> None:
     """ Rename by incrementing the last digit in the string. """
-    numArg = len(arg)
+    legArg = len(arg)
     sel = pm.ls(sl=True)
     # Given a single argument, create a new name.
-    if numArg == 1:
+    if legArg == 1:
         txt = arg[0]
         # txtList -> ['testName', '23', '_', '17', '_grp']
         txtList = re.split(r'([^0-9]+)([0-9]*)', txt)
@@ -1432,7 +1414,7 @@ def rename(*arg: str) -> None:
                 new = ''.join(txtList) + str(j)
                 pm.rename(k, new)
     # Two arguments replace words.
-    elif numArg == 2:
+    elif legArg == 2:
         before = arg[0]
         after = arg[1]
         for obj in sel:
@@ -1441,16 +1423,14 @@ def rename(*arg: str) -> None:
     else:
         msg = "Given a single argument, create a new name. "
         msg += "Two arguments replace words."
-        om.MGlobal.displayError(msg)
+        print(msg)
 
 
-# Get the poleVector's position in maya.
 def poleVector():
-    '''Create temporary joints, and use aimConstraint's worldUpObject 
-    to find the position of the poleVector.'''
+    """ Get the poleVector's position from 3 joints. """
     sel = pm.ls(sl=True) # Select three objects.
     if len(sel) != 3:
-        om.MGlobal.displayError('Select three objects.')
+        print('Select three objects.')
     else:
         midJnt = sel[1]
         endJnt = sel[2]
@@ -1477,7 +1457,6 @@ def poleVector():
         pm.matchTransform(loc, temp2, pos=True, rot=True)
         # Delete temporarily used joints.
         pm.delete(temp1)
-        return loc
 
 
 # Change the color of the controllers.
@@ -1512,15 +1491,12 @@ def openSaved():
     os.startfile(dir)
 
 
-# Create locators in boundingBox.
 def createLoc(**kwargs):
-    '''Usage: createLoc(jnt=True)'''
+    """ Creates locator or joint in boundingBox.
+    Usage: createLoc(jnt=True) """
     sel = pm.ls(sl=True)
-    if not sel:
-        pass
-    else:
-        # bb is boundingBox
-        bb = pm.xform(sel, q=True, bb=True, ws=True)
+    for i in sel:
+        bb = pm.xform(i, q=True, bb=True, ws=True)
         xMin, yMin, zMin, xMax, yMax, zMax = bb
         x = (xMin + xMax) / 2
         y = (yMin + yMax) / 2
@@ -1531,37 +1507,36 @@ def createLoc(**kwargs):
             pass
         else:
             for key, value in kwargs.items():
-                if key == "jnt" and value:
+                if key=="jnt" and value:
                     pm.select(cl=True)
-                    jnt = pm.joint(p=(0,0,0), rad=0.1)
+                    jnt = pm.joint(p=(0,0,0), rad=1)
                     pm.matchTransform(jnt, loc, pos=True)
                     pm.delete(loc)
                 else:
-                    pass
+                    continue
 
 
 def createLine():
     sel = pm.ls(sl=True, fl=True)
-    sLoc, eLoc = sel
-    sPos, ePos = [pm.xform(i, q=True, ws=True, rp=True) for i in [sLoc, eLoc]]
-    cuv = pm.curve(d=1, p=[sPos, ePos])
-    sPiv = f"{cuv}.scalePivot"
-    rPiv = f"{cuv}.rotatePivot"
-    p1, p2, p3 = sPos
-    pm.move(p1, p2, p3, sPiv, rPiv, rpr=True)
-    pm.aimConstraint(eLoc, sLoc)
-    pm.delete(sLoc, cn=True)
-    pm.parent(cuv, sLoc)
+    if len(sel) < 2:
+        return 0
+    sP = sel[0]
+    eP = sel[-1]
+    try:
+        sPoint, ePoint = [pm.pointPosition(i) for i in [sP, eP]]
+    except:
+        sPoint, ePoint = [pm.xform(i, q=1, ws=1, rp=1) for i in [sP, eP]]
+    cuv = pm.curve(d=1, p=[sPoint, ePoint])
+    sPivot = f"{cuv}.scalePivot"
+    rPivot = f"{cuv}.rotatePivot"
+    p1, p2, p3 = sPoint
+    pm.move(p1, p2, p3, sPivot, rPivot, rpr=True)
+    pm.aimConstraint(eP, sP)
+    pm.delete(sP, cn=True)
+    pm.parent(cuv, sP)
     pm.makeIdentity(cuv, a=True, t=1, r=1, s=1, n=0, pn=1)
     pm.parent(cuv, w=True)
-    pm.rebuildCurve(cuv, d=1, 
-        ch=False, # constructionHistory
-        s=3, # spans
-        rpo=True, # replaceOriginal
-        end=1, # endKnots
-        kr=0, # keepRange
-        kt=0, # keepTangents
-        )
+    pm.rebuildCurve(cuv, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
     cuvD3Point = [pm.pointPosition(f"{cuv}.cv[{i}]") for i in range(4)]
     cuvD3 = pm.curve(d=3, p=cuvD3Point)
     pm.xform(cuvD3, cpc=True)
@@ -1569,7 +1544,7 @@ def createLine():
     pm.makeIdentity(cuvD3, a=True, t=1, r=1, s=1, n=0, pn=1)
     pm.parent(cuvD3, w=True)
     return cuv, cuvD3
-
+createLine()
 
 # Arrange the points in a straight line.
 def makeStraight():
@@ -1816,7 +1791,7 @@ def createSpline(num: int):
         loc = pm.spaceLocator(n=newName)
         pm.matchTransform(loc, mJnt, pos=True, rot=True)
         pm.select(loc)
-        grpEmpty()
+        groupingEmpty()
         pm.move(0, 30, 0, loc, r=True, os=True, wd=True)
         pm.setAttr(f"{ikH}.dTwistControlEnable", 1)
         pm.setAttr(f"{ikH}.dWorldUpType", 1)
@@ -1889,12 +1864,12 @@ def connScale():
 # rename('cc_cuvSkirt5_1')
 
 
-sel = pm.ls(sl=True)
-for i in sel:
-    cc = i.replace("clt_", "cc_")
-    cc = cc.replace("_grp", "")
-    # pm.matchTransform(cc, i, pos=True)
-    pm.setAttr(f"{i}.visibility", 0)
-    pm.parent(i, cc)
+# sel = pm.ls(sl=True)
+# for i in sel:
+#     cc = i.replace("clt_", "cc_")
+#     cc = cc.replace("_grp", "")
+#     # pm.matchTransform(cc, i, pos=True)
+#     pm.setAttr(f"{i}.visibility", 0)
+#     pm.parent(i, cc)
 
 

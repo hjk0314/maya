@@ -219,7 +219,7 @@ def legIKSetting():
         endJnt = sel[i+1]
         name = startJnt.replace('jnt_', 'ikH_')
         ikH = pm.ikHandle(sj=startJnt, ee=endJnt, sol=solver, n=name)
-        tmp = grpEmpty()
+        tmp = groupingEmpty()
         ikHList.append(ikH[0])
         grpList.append(tmp)
     pm.parent(ikHList[1], grpList[0])
@@ -228,7 +228,7 @@ def legIKSetting():
     new = f"{ikHList[2]}_grp"
     pm.rename(grpList[1], new)
     pm.select(new)
-    tmp = grpEmpty()
+    tmp = groupingEmpty()
     pm.rename(new, new.replace('_grp', '_null'))
     pm.rename(tmp, new)
 
@@ -242,7 +242,7 @@ def armIKSetting():
         endJnt = sel[i+1]
         name = startJnt.replace('jnt_', 'ikH_')
         pm.ikHandle(sj=startJnt, ee=endJnt, sol=solver, n=name)
-        grpEmpty()
+        groupingEmpty()
 
 
 def footConnect():
@@ -292,7 +292,7 @@ def parentCluster():
     for j, k in enumerate(sel):
         rename(k.name(), f"clt_spine_{j}")
         pm.select(k)
-        tmp = grpEmpty()
+        tmp = groupingEmpty()
         cltGrpList.append(tmp)
     for i in range(2):
         pm.matchTransform(ccGrpList[i], cltGrpList[i], pos=True)
