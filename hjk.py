@@ -2,7 +2,6 @@ import re
 import os
 import json
 import shutil
-import subprocess
 import maya.OpenMaya as om
 import pymel.core as pm
 import maya.mel as mel
@@ -10,254 +9,9 @@ import sympy
 from math import *
 
 
-# Export to json file and shading networks. And assign to them.
-class Abc:
-    def __init__(self):
-        min = pm.playbackOptions(q=True, min=True)
-        max = pm.playbackOptions(q=True, max=True)
-        self.setupUI(min, max)
-
-
-    # UI.
-    def setupUI(self, min, max):
-        winStr = 'exportABC_withShader'
-        ttl = 'Export to Alembic with Shader'
-        if pm.window(winStr, exists=True):
-            pm.deleteUI(winStr)
-        else:
-            win = pm.window(winStr, t=ttl, s=True, rtf=True)
-            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=380)
-            pm.separator(h=10)
-            btnStr = 'Create JSON and export shadingEngines'
-            pm.button(l=btnStr, c=lambda x: self.jsonButton())
-            rStr = 'Range : '
-            self.frameRange = pm.intFieldGrp(l=rStr, nf=2, v1=min, v2=max)
-            oStr = 'One File : '
-            self.oneFileCheck = pm.checkBoxGrp(l=oStr, ncb=1, v1=True)
-            pm.button(l='Export ABC', c=lambda x: self.exportButton())
-            pm.button(l='Import ABC', c=lambda x: self.importButton())
-            btnStr = 'Assign shaders to objects'
-            pm.button(l=btnStr, c=lambda x: self.assignButton())
-            pm.separator(h=10)
-            pm.showWindow(win)
-
-
-    # This function works when the json button is pressed.
-    def jsonButton(self):
-        sel = pm.ls(sl=True, dag=True, s=True)
-        if not sel:
-            om.MGlobal.displayError("Nothing Selected.")
-        elif self.checkSameName(sel):
-            om.MGlobal.displayError("Same name exists.")
-        else:
-            shdEngList = self.getShadingEngine(sel)
-            ffStr = 'json (*.json);; All Files (*.*)'
-            jsonPath = pm.fileDialog2(fm=0, ff=ffStr)
-            if not jsonPath:
-                om.MGlobal.displayInfo('Canceled.')
-            else:
-                jsonPath = ''.join(jsonPath)
-                self.writeJson(shdEngList, jsonPath)
-                self.exportShader(shdEngList, jsonPath)
-
-
-    # If there is a "|" in the object name, 
-    # It is considered a duplicate name.
-    def checkSameName(self, nameList):
-        sameName = [i for i in nameList if "|" in i]
-        return sameName
-
-
-    # If the object is connected to the shading engine,
-    # It is returned as a dictionary.
-    def getShadingEngine(self, sel):
-        dic = {}
-        for i in sel:
-            try:
-                shadingEngine = i.shadingGroups()[0].name()
-            except:
-                continue
-            objName = i.getParent().name()
-            objName = objName.split(":")[-1] if ":" in objName else objName
-            dic[objName] = shadingEngine
-        return dic
-
-
-    # Create a json file.
-    def writeJson(self, dic, jsonPath):
-        with open(jsonPath, 'w') as JSON:
-            json.dump(dic, JSON, indent=4)
-
-
-    # Export the shading network and save it as a .ma file.
-    def exportShader(self, dic, fullPath):
-        (dir, ext) = os.path.splitext(fullPath)
-        exportPath = "%s_shader" % dir
-        shdEngList = list(set(dic.values()))
-        pm.select(cl=True)
-        pm.select(shdEngList, ne=True)
-        pm.exportSelected(exportPath, type="mayaAscii", f=True)
-
-
-    # This function works when the Export button is pressed.
-    def exportButton(self):
-        sel = pm.ls(sl=True, long=True)
-        # multiple abc files or one abc file. If True then one file.
-        oneFileCheck = pm.checkBoxGrp(self.oneFileCheck, q=True, v1=True)
-        fullPath = self.getExportPath(oneFileCheck)
-        if not fullPath:
-            om.MGlobal.displayInfo("Canceled.")
-        else:
-            if oneFileCheck:
-                selection = ""
-                for i in sel:
-                    selection += " -root " + i
-                exportOpt = self.createJstring(fullPath[0], selection)
-                pm.AbcExport(j=exportOpt)
-            else:
-                for i in sel:
-                    selection = " -root " + i
-                    newPath = fullPath[0] + "/" + i + ".abc"
-                    exportOpt = self.createJstring(newPath, selection)
-                    pm.AbcExport(j=exportOpt)
-
-
-    # Select a folder or specify a file name.
-    def getExportPath(self, oneFileCheck):
-        ffStr = 'Alembic (*.abc);; All Files (*.*)'
-        if oneFileCheck:
-            abcPath = pm.fileDialog2(fm=0, ff=ffStr)
-        else:
-            abcPath = pm.fileDialog2(fm=2, ds=1)
-        return abcPath
-
-
-    # Jstring is required to export.
-    def createJstring(self, fullPath, selection):
-        startFrame = pm.intFieldGrp(self.frameRange, q=True, v1=True)
-        endFrame = pm.intFieldGrp(self.frameRange, q=True, v2=True)
-        abc = " -file %s" % fullPath
-        frameRange = "-frameRange %s %s" % (str(startFrame), str(endFrame))
-        # ======= options start ==================================
-        exportOpt = frameRange
-        # exportOpt += " -noNormals"
-        exportOpt += " -ro"
-        exportOpt += " -stripNamespaces"
-        exportOpt += " -uvWrite"
-        exportOpt += " -writeColorSets"
-        exportOpt += " -writeFaceSets"
-        exportOpt += " -wholeFrameGeo"
-        exportOpt += " -worldSpace"
-        exportOpt += " -writeVisibility"
-        exportOpt += " -eulerFilter"
-        exportOpt += " -autoSubd"
-        exportOpt += " -writeUVSets"
-        exportOpt += " -dataFormat ogawa"
-        exportOpt += selection
-        exportOpt += abc
-        # ======= options end ====================================
-        return exportOpt
-
-
-    # This function works when the Import button is pressed. 
-    def importButton(self):
-        ffStr = 'Alembic (*.abc);; All Files (*.*)'
-        importDir = pm.fileDialog2(fm=1, ff=ffStr)
-        if importDir:
-            pm.AbcImport(importDir, m='import')
-        else:
-            om.MGlobal.displayInfo("Canceled.")
-
-
-    # This function works when the Assign button is pressed.
-    # "_shader.ma" is loaded as a reference and associated with objects.
-    def assignButton(self):
-        sel = pm.ls(sl=True, dag=True, s=True)
-        if not sel:
-            om.MGlobal.displayError('Nothing selected.')
-        else:
-            ffStr = 'json (*.json);; All Files (*.*)'
-            jsonPath = pm.fileDialog2(fm=1, ff=ffStr)
-            shaderPath = self.getShaderPath(jsonPath)
-            if not jsonPath:
-                om.MGlobal.displayInfo("Canceled.")
-            elif not shaderPath:
-                om.MGlobal.displayError('There are no "_shader.ma" files.')
-            else:
-                self.makeReference(shaderPath)
-                jsonDic = self.readJson(jsonPath)
-                failLst = self.assignShd(sel, jsonDic)
-                if failLst:
-                    msg = "Some objects failed to connect."
-                else:
-                    msg =  "Completed successfully."
-                om.MGlobal.displayInfo(msg)
-
-
-    # Attempts to assign, and returns a list that fails.
-    def assignShd(self, sel, jsonDic):
-        assignFailed = []
-        for i in sel:
-            objName = i.getParent().name()
-            sepName = objName.split(":")[-1] if ":" in objName else objName
-            if sepName in jsonDic:
-                try:
-                    pm.sets(jsonDic[sepName], fe=objName)
-                except:
-                    assignFailed.append(objName)
-            else:
-                continue
-        return assignFailed
-
-
-    # Load Reference "_shader.ma" file.
-    def makeReference(self, shaderPath):
-        try:
-            # If a reference aleady exists, get reference's node name.
-            referenceName = pm.referenceQuery(shaderPath, referenceNode=True)
-        except:
-            referenceName = False
-        if referenceName:
-            # This is a replacement reference.
-            pm.loadReference(shaderPath, op='v=0')
-        else:
-            # This is a new reference.
-            pm.createReference(shaderPath, 
-                r=True, # r=reference
-                typ='mayaAscii', 
-                iv=True, # iv=ignoreVersion
-                gl=True, # gl=groupLocator
-                mnc=True, # mnc=mergeNamespacesOnClash
-                op='v=0', # op=option
-                ns=':' # ns=nameSpace
-            )
-
-
-    # Read shading information from Json file.
-    def readJson(self, jsonPath):
-        try:
-            with open(jsonPath[0], 'r') as JSON:
-                jsonDic = json.load(JSON)
-            return jsonDic
-        except:
-            return False
-
-
-    # There should be a "_shader.ma" file in the json's same folder.
-    def getShaderPath(self, jsonPath):
-        try:
-            (dir, ext) = os.path.splitext(jsonPath[0])
-            shaderPath = dir + "_shader.ma"
-            checkFile = os.path.isfile(shaderPath)
-            return shaderPath if checkFile else False
-        except:
-            return False
-
-
-# Got this code from the internet.
-# Modified to class.
 class SoftSel:
     def __init__(self):
+        """ Get this code from internet. Modified to class. """
         self.createSoftCluster()
     
     
@@ -293,129 +47,9 @@ class SoftSel:
         pm.select(cluster[1], r=True)
 
 
-# Delete the node named 'vaccine_gene' and "breed_gene" in the ma file.
-# It is related to mayaScanner distributed by autodesk.
-class Vaccine:
-    def __init__(self):
-        self.setupUI()
-
-
-    # UI.
-    def setupUI(self):
-        winStr = 'Delete_vaccine'
-        ttl = 'Clean Malware called vaccine'
-        if pm.window(winStr, exists=True):
-            pm.deleteUI(winStr)
-        else:
-            win = pm.window(winStr, t=ttl, s=True, rtf=True)
-            pm.columnLayout(cat=('both', 4), rs=2, columnWidth=200)
-            # pm.separator(h=10)
-            # pm.text("--- Select a File or Folder ---", h=23)
-            pm.separator(h=10)
-            pm.button(l='File', c=lambda x: self.deleteMain(one=True))
-            btnStr = 'Clean All Files in Folder'
-            pm.button(l=btnStr, c=lambda x: self.deleteMain(one=False))
-            pm.separator(h=10)
-            pm.showWindow(win)
-
-
-    # Delete below strings in ASCII file.
-    def deleteVaccineString(self, fullPath):
-        vcc = "vaccine_gene"
-        brd = "breed_gene"
-        crt = "createNode"
-        with open(fullPath, "r") as txt:
-            lines = txt.readlines()
-        # List up the line numbers containing 'vaccine_gene'
-        vccList = [j for j, k in enumerate(lines) if vcc in k and crt in k]
-        # List up the line numbers containing 'breed_gene'
-        brdList = [j for j, k in enumerate(lines) if brd in k and crt in k]
-        # List up the line numbers containing 'createNode'
-        crtList = [j for j, k in enumerate(lines) if crt in k]
-        sum = vccList + brdList # ex) [16, 21, 84, 105]
-        deleteList = []
-        # List lines to delete consecutively
-        for min in sum:
-            max = crtList[crtList.index(min) + 1]
-            deleteList += [i for i in range(min, max)]
-        new, ext = os.path.splitext(fullPath)
-        new += "_cleaned" + ext
-        # Delete the 'vaccine_gene' or 'breed_gene' paragraph in .ma
-        # Write '//Deleted here' instead of the deleted line.
-        with open(new, "w") as txt:
-            for j, k in enumerate(lines):
-                if j in deleteList:
-                    txt.write("// Deleted here.\n")
-                else:
-                    txt.write(k)
-        return new
-
-
-    # Delete the files : "vaccine.py", "vaccine.pyc", "userSetup.py"
-    def deleteVaccineFiles(self):
-        # Folder with that files.
-        dir = pm.internalVar(uad=True) + "scripts/"
-        fileList = ["vaccine.py", "vaccine.pyc", "userSetup.py"]
-        for i in fileList:
-            try:
-                os.remove(dir + i)
-            except:
-                pass
-
-
-    # Checking First, if the file is infected or not.
-    def checkVaccineString(self, fullPath):        
-        with open(fullPath, "r") as txt:
-            lines = txt.readlines()
-        for i in lines:
-            if "vaccine_gene" in i or "breed_gene" in i:
-                result = fullPath
-                break
-            else:
-                result = False
-        return result
-
-
-    # retrun <.ma> file list.
-    def getMaFile(self, one):
-        fileType = 'Infected Files (*.ma);; All Files (*.*)'
-        if one:
-            sel = pm.fileDialog2(fm=0, ff=fileType)
-        else:
-            sel = pm.fileDialog2(fm=2, ds=1)
-        if sel:
-            selStr = ''.join(sel)
-            ext = os.path.splitext(selStr)[-1]
-            if ext:
-                result = sel if ext == ".ma" else []
-            else:
-                dir = os.listdir(selStr)
-                result = []
-                for i in dir:
-                    chk = os.path.splitext(i)[-1]
-                    if chk == ".ma":
-                        result.append(f'{selStr}/{i}')
-        else:
-            result = []
-        return result
-
-
-    # This is the main function.
-    def deleteMain(self, one):
-        maFileList = self.getMaFile(one)
-        infectedFile = [i for i in maFileList if self.checkVaccineString(i)]
-        if infectedFile:
-            for j, k in enumerate(infectedFile):
-                result = self.deleteVaccineString(k)
-                om.MGlobal.displayInfo(f"{j} : {result}")
-            self.deleteVaccineFiles()
-        else:
-            om.MGlobal.displayInfo("No infected files were found.")
-
-
-# Transform HanGeul unicode to bytes. Otherside too.
 class Han:
     def __init__(self):
+        """ Transform HanGeul unicode to bytes. Otherside too. """
         self.btnHan1 = b'\xec\x9d\xb8\xec\xbd\x94\xeb\x94\xa9'
         self.btnHan2 = b'\xec\xa7\x80\xec\x9a\xb0\xea\xb8\xb0'
         self.HanGeul = b'\xed\x95\x9c\xea\xb8\x80'
@@ -455,9 +89,9 @@ class Han:
             self.btn.setLabel(self.btnHan1)
 
 
-# Create wheels that rotate automatically
-class AutoWheel:
+class AutoWheel_Rig:
     def __init__(self):
+        """ Create wheels that rotate automatically """
         self.main()
     
 
@@ -560,9 +194,9 @@ class AutoWheel:
         pm.expression(s=expr, o='', ae=1, uc='all')
 
 
-# Set the key on the wheel to turn automatically.
-class AutoWheel2:
+class AutoWheel_Key:
     def __init__(self):
+        """ Set the key on the wheel to turn automatically. """
         self.Min = pm.playbackOptions(q=True, min=True)
         self.Max = pm.playbackOptions(q=True, max=True)
         self.setupUI()
@@ -642,9 +276,9 @@ class AutoWheel2:
             pm.cutKey(i, cl=True, at="rx", t=(startFrame, endFrame))
         
 
-# Matching the direction of the pivot.
 class MatchPivot:
     def __init__(self):
+        """ Matching the direction of the pivot using 3points. """
         self.main()
 
 
@@ -693,117 +327,15 @@ class MatchPivot:
             pm.delete(obj)
 
 
-# Create a through curve or joint.
-class ThroughCurve:
+class MatchCurveShape:
     def __init__(self):
-        self.setupUI()
-
-
-    # UI.
-    def setupUI(self):
-        id = "Penetrating_Curve"
-        tt = "Creates curves or joints through the edge loop"
-        if pm.window(id, exists=True):
-            pm.deleteUI(id)
-        else:
-            win = pm.window(id, t=tt, s=True, rtf=True)
-            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=180)
-            pm.separator(h=8)
-            self.chk = pm.radioButtonGrp(la2=['Curve', 'Joint'], nrb=2, sl=1)
-            pm.separator(h=8)
-            pm.button(l='Create', c=lambda x: self.main())
-            pm.separator(h=8)
-            pm.showWindow(win)
-
-
-    # Get the edge number.
-    def getEdgeNumber(self, edg: str) -> int:
-        '''polygon.e[123] -> 123'''
-        result = []
-        for i in edg:
-            num = re.search(r"\[([0-9]+)\]", i.name())
-            num = num.group(1)
-            num = int(num)
-            result.append(num)
-        return result
-
-
-    # Get the smallest number in the list.
-    def getSmallNumber(self, obj: str, num: int) -> int:
-        '''When getting the edge loop information, 
-        it is necessary to match the starting number.'''
-        # el: edgeLoop, ns: noSelection
-        edgeLoop = pm.polySelect(obj, el=num, ns=True)
-        # Ignore the first number because it is the selected edge number.
-        edgeLoop = sorted(edgeLoop[1:])
-        result = edgeLoop[0] if edgeLoop else num
-        return result
-
-
-    # Get the coordinates of the cluster.
-    def getCoordinates(self, obj: str, edges: list) -> list:
-        '''Create a cluster for every edge loop 
-        and get the coordinates of its center.'''
-        points = []
-        for i in edges:
-            pm.polySelect(obj, el=i)
-            clt = pm.cluster()
-            cltHandle = clt[0].name() + 'HandleShape.origin'
-            pos = pm.getAttr(cltHandle)
-            points.append(pos)
-            # After getting the coordinates, the cluster is deleted.
-            pm.delete(clt)
-        return points
-
-
-    # Creates curves or joints.
-    def create(self, point: list, check: int) -> None:
-        '''check: 1=curve, 2=joint'''
-        if check == 2:
-            for i in point:
-                pm.joint(p=i)
-        else:
-            pm.curve(p=point)
-
-
-    def main(self) -> None:
-        '''Variables
-        1. edg: Edge is selected.
-        2. obj: Object name is returned even when edge is selected.
-        3. num: Get only numbers from string.
-        4. min: Get the smallest number in the list.
-        5. edges: All edge numbers between start and end.
-        6. check: Curve or Joint.
-        7. point: Center pivots of every edge loop.
-        '''
-        edg = pm.ls(os=True, fl=True)
-        obj = pm.ls(sl=True, o=True)
-        if not obj:
-            om.MGlobal.displayError("Nothing selected.")
-        else:
-            num = self.getEdgeNumber(edg)
-            min = {self.getSmallNumber(obj, i) for i in num}
-            min = list(min)
-            min.sort()
-            edges = pm.polySelect(obj, erp=(min[0], min[-1]))
-            check = pm.radioButtonGrp(self.chk, q=True, sl=True)
-            if edges == None:
-                msg = 'The "starting edges" should be a loop.'
-                om.MGlobal.displayError(msg)
-            else:
-                point = self.getCoordinates(obj, edges)
-                self.create(point, check)
-
-
-# Match the curve shape from A to B.
-class MatchCuvShape:
-    def __init__(self):
+        """ Match the curve shape from A to B.
+        Select only nurbsCurves. """
         self.main()
 
 
     # Number of Object's cv.
     def numberOfCV(self, obj: str) -> int:
-        '''Number of object's cv'''
         cv = f'{obj}.cv[0:]'
         pm.select(cv)
         cvSel = pm.ls(sl=True, fl=True)
@@ -814,8 +346,8 @@ class MatchCuvShape:
 
         
     # Match the point to point.
+    # Change the shape of the curve controller from A to B
     def matchShape(self, obj: list) -> list:
-        '''Change the shape of the curve controller from A to B'''
         A_list = obj[0:-1]
         B = obj[-1] # The last selection is Base.
         numB = self.numberOfCV(B) # number of B.cv
@@ -833,150 +365,17 @@ class MatchCuvShape:
         return failed
 
 
+    # Select at least 2.
     def main(self):
-        '''Select only "nurbsCurve" and match the shape.'''
         sel = pm.ls(sl=True, dag=True, type=['nurbsCurve'])
-        # Select at least 2.
         if len(sel) < 2:
-            om.MGlobal.displayError('Select two or more "nurbsCurves".')
+            print('Select two or more "nurbsCurves".')
         else:
             result = self.matchShape(sel)
             failed = 'Check this objects : %s' % result
             success = 'Successfully done.'
             message = failed if result else success
-            om.MGlobal.displayInfo(message)
-
-
-# Get a human dummy to determine size.
-class Human:
-    def __init__(self):
-        '''When to start modeling in Maya, 
-        Load a human character into the scene 
-        to compare the size of the modeling to be made.
-        1. human()
-        2. human().remove()
-        '''
-        # src is the path for human modeling.
-        src = "T:/AssetTeam/Share/WorkSource/human/human176.obj"
-        assert os.path.isfile(src)
-        self.src = src
-        self.main()
-
-
-    # Maya default settings when fetching references.
-    def createReference(self) -> None:
-        fileName = os.path.basename(self.src)
-        name, ext = os.path.splitext(fileName)
-        pm.createReference(
-            self.src, # full path
-            gl=True, # groupLocator
-            shd="shadingNetworks", # sharedNodes
-            mnc=False, # mergeNamespacesOnClash
-            ns=name # namespace
-        )
-
-
-    # Remove human character
-    def remove(self) -> None:
-        pm.FileReference(self.src).remove()
-
-
-    # Check the reference with the same path as "src" in the scene.
-    def main(self) -> None:
-        ref = pm.ls(rn = True, type=["transform"])
-        tmp = [i for i in ref if self.src == pm.referenceQuery(i, f=True)]
-        # If the same file does not exist, the human character is loaded.
-        if not tmp:
-            self.createReference()
-
-
-class LineBridge:
-    def __init__(self):
-        sel = pm.ls(sl=True)
-        self.locator1, self.locator2 = sel
-        self.cuv = self.createLine(sel)
-        self.cuvLen = pm.arclen(self.cuv)
-        self.cuvLen = round(self.cuvLen, 3)
-        self.main()
-
-
-    def main(self):
-        pm.xform(self.cuv, cpc=True)
-        self.createAttr()
-        self.createExression()
-        self.grp = self.createGroup()
-        upVector = self.createUpVector()
-        self.createConstraint(upVector)
-
-
-    # create curve
-    def createLine(self, sel: list) -> str:
-        sLoc, eLoc = sel
-        temp = []
-        for i in [sLoc, eLoc]:
-            coordinates = pm.xform(i, q=True, ws=True, rp=True)
-            temp.append(coordinates)
-        sPos, ePos = temp
-        cuv = pm.curve(d=1, p=[sPos, ePos])
-        sPiv = f"{cuv}.scalePivot"
-        rPiv = f"{cuv}.rotatePivot"
-        p1, p2, p3 = sPos
-        pm.move(p1, p2, p3, sPiv, rPiv, rpr=True)
-        pm.aimConstraint(eLoc, sLoc)
-        pm.delete(sLoc, cn=True)
-        pm.parent(cuv, sLoc)
-        pm.makeIdentity(cuv, a=True, t=1, r=1, s=1, n=0, pn=1)
-        pm.parent(cuv, w=True)
-        pm.rebuildCurve(cuv, d=1, 
-            ch=False, # constructionHistory
-            s=3, # spans
-            rpo=True, # replaceOriginal
-            end=1, # endKnots
-            kr=0, # keepRange
-            kt=0, # keepTangents
-            )
-        return cuv
-
-
-    # create attr to curve
-    def createAttr(self):
-        for attrName in ['Distance', 'Ratio']:
-            pm.addAttr(self.cuv, ln=attrName, at='double', dv=0)
-            pm.setAttr(f'{self.cuv}.{attrName}', e=True, k=True)
-
-
-    # create expression to curve attr
-    def createExression(self):
-        BR = "\n"
-        expr = f"float $uX = {self.locator1}.translateX;" + BR
-        expr += f"float $uY = {self.locator1}.translateY;" + BR
-        expr += f"float $uZ = {self.locator1}.translateZ;" + BR
-        expr += f"float $dX = {self.locator2}.translateX;" + BR
-        expr += f"float $dY = {self.locator2}.translateY;" + BR
-        expr += f"float $dZ = {self.locator2}.translateZ;" + BR
-        expr += "float $D = `mag<<$dX-$uX, $dY-$uY, $dZ-$uZ>>`;" + BR
-        expr += f"{self.cuv}.Distance = $D;" + BR
-        expr += f"{self.cuv}.Ratio = $D / {self.cuvLen};"
-        pm.expression(s=expr, o='', ae=1, uc='all')
-
-
-    # create group
-    def createGroup(self):
-        grp = pm.group(em=True, n = f"{self.cuv}_grp")
-        pm.matchTransform(grp, self.cuv, pos=True, rot=True)
-        pm.parent(self.cuv, grp)
-        return grp
-
-
-    # create upVector
-    def createUpVector(self):
-        upVector = pm.duplicate(self.locator1, rr=True)[0]
-        pm.matchTransform(upVector, self.grp, pos=True)
-        pm.parent(upVector, self.grp)
-        length = pm.getAttr(f"{self.cuv}.Distance")
-        pm.move(0, length, 0, upVector, r=True, ls=True, wd=True)
-        pm.parent(upVector, w=True)
-        return upVector
+            print(message)
 
 
 class MirrorCopy:
@@ -1064,6 +463,181 @@ class MirrorCopy:
             pm.pointConstraint(locator, self.grp, mo=False, w=0.5)
         pm.aimConstraint(self.locator2, self.grp, wut="object", wuo=upVector)
         pm.connectAttr(f'{self.cuv}.Ratio', f'{self.cuv}.scaleX', f=True)
+
+
+def createCuv_throughPoint(startFrame: int, endFrame: int) -> list:
+    """ Creates a curve through points.
+    This function works even if you select a point.
+     """
+    sel = pm.ls(sl=True, fl=True)
+    result = []
+    for j in sel:
+        pos = []
+        for k in range(startFrame, endFrame + 1):
+            pm.currentTime(k)
+            try:
+                pos.append(pm.pointPosition(j)) # vertex
+            except:
+                pos.append(pm.xform(j, q=1, ws=1, rp=1)) # object
+        cuv = pm.curve(p=pos)
+        result.append(cuv)
+    return result
+
+
+def createCuv_throughLoc(**kwargs) -> str:
+    """ Creates a curve along the locator's points.
+    Place locators first, and select them, and call this function.
+    ex) cl=True -> Create a closed curve.
+     """
+    sel = pm.ls(sl=True) # select locators
+    pos = [pm.xform(i, q=1, ws=1, rp=1) for i in sel]
+    tmp = kwargs['cl'] if 'cl' in kwargs.keys() else False
+    if tmp:
+        cuv = pm.circle(nr=(0, 1, 0), ch=False, s=len(sel))
+        cuv = cuv[0]
+        for j, k in enumerate(pos):
+            pm.move(k[0], k[1], k[2], f'{cuv}.cv[{j}]', ws=True)
+    else:
+        cuv = pm.curve(p=pos)
+    return cuv
+
+
+def createLoc(**kwargs):
+    """ Creates locator or joint in boundingBox.
+    Usage: createLoc(jnt=True) """
+    sel = pm.ls(sl=True)
+    for i in sel:
+        bb = pm.xform(i, q=True, bb=True, ws=True)
+        xMin, yMin, zMin, xMax, yMax, zMax = bb
+        x = (xMin + xMax) / 2
+        y = (yMin + yMax) / 2
+        z = (zMin + zMax) / 2
+        loc = pm.spaceLocator()
+        pm.move(loc, x, y, z)
+        if not kwargs:
+            pass
+        else:
+            for key, value in kwargs.items():
+                if key=="jnt" and value:
+                    pm.select(cl=True)
+                    jnt = pm.joint(p=(0,0,0), rad=1)
+                    pm.matchTransform(jnt, loc, pos=True)
+                    pm.delete(loc)
+                else:
+                    continue
+
+
+def createLine() -> str:
+    """ Create a line connecting two points. """
+    sel = pm.ls(sl=True, fl=True)
+    if len(sel) < 2:
+        print("Two points are needed.")
+    else:
+        alpha = sel[0]
+        omega = sel[-1]
+        try:
+            aPos, oPos = [pm.pointPosition(i) for i in [alpha, omega]]
+        except:
+            aPos, oPos = [pm.xform(i, q=1, ws=1, rp=1) for i in [alpha, omega]]
+        cuv = pm.curve(d=1, p=[aPos, oPos])
+        sPiv = f"{cuv}.scalePivot"
+        rPiv = f"{cuv}.rotatePivot"
+        aLoc = pm.spaceLocator()
+        oLoc = pm.spaceLocator()
+        a1, a2, a3 = aPos
+        o1, o2, o3 = oPos
+        pm.move(a1, a2, a3, aLoc, r=True)
+        pm.move(o1, o2, o3, oLoc, r=True)
+        pm.move(a1, a2, a3, sPiv, rPiv, rpr=True)
+        pm.aimConstraint(oLoc, aLoc)
+        pm.delete(aLoc, cn=True)
+        pm.parent(cuv, aLoc)
+        pm.makeIdentity(cuv, a=True, t=1, r=1, s=1, n=0, pn=1)
+        pm.parent(cuv, w=True)
+        pm.rebuildCurve(cuv, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
+        return cuv
+
+
+def createMotionPath(*arg: int) -> None:
+    '''Create a number of joints and 
+    apply a motionPath to the curve.
+    '''
+    sel = pm.ls(sl=True)
+    if not sel:
+        print("No curves selected.")
+        return 0
+    num = arg[0] if arg else int(input())
+    mod = 1/(num-1) if num > 1 else 0
+    cuv = sel[0]
+    for i in range(num):
+        pm.select(cl=True)
+        jnt = pm.joint(p=(0,0,0))
+        val = i * mod
+        tmp = pm.pathAnimation(jnt, c=cuv, 
+            fm=True, # fractionMode
+            f=True, # follow
+            fa='x', # followAxis
+            ua='y', # upAxis
+            wut='vector', # worldUpType
+            wu=(0,1,0) # worldUpVector
+            )
+        pm.cutKey(tmp, cl=True, at='u')
+        pm.setAttr(f"{tmp}.uValue", val)
+
+
+def createJson(original_func):
+    """ A decorator for creating Json files. """
+    def wrapper(*args, **kwargs):
+        fullPath = pm.Env().sceneName()
+        if not fullPath:
+            print("File not saved.")
+        else:
+            dir = os.path.dirname(fullPath)
+            name_Ext = os.path.basename(fullPath)
+            name, ext = os.path.splitext(name_Ext)
+            jsonAll = [i for i in os.listdir(dir) if i.endswith('.json')]
+            verDict = {}
+            for i in jsonAll:
+                tmp = re.search('(.*)[_v]([0-9]{4})[.].*', i)
+                num = int(tmp.group(2))
+                verDict[num] = tmp.group(1)
+            if not verDict:
+                jsonFile = dir + "/" + name + ".json"
+                data = {}
+            else:
+                verMax = max(verDict.keys())
+                jsonFile = f"{dir}/{verDict[verMax]}v%04d.json" % verMax
+                with open(jsonFile) as JSON:
+                    data = json.load(JSON)
+            result = original_func(data, *args, **kwargs)
+            with open(dir + "/" + name + ".json", 'w') as JSON:
+                json.dump(data, JSON, indent=4)
+            return result
+    return wrapper
+
+
+@createJson
+def writeJSON(data: dict) -> None:
+    sel = pm.ls(sl=True)
+    if not sel:
+        print("Nothing selected.")
+    else:
+        for j, k in enumerate(sel):
+            if j % 2:
+                continue
+            else:
+                obj = sel[j+1].name()
+                cc = k.name()
+                pm.parentConstraint(cc, obj, mo=True, w=1)
+                pm.scaleConstraint(cc, obj, mo=True, w=1)
+                data[obj] = cc
+
+
+@createJson
+def loadJSON(data: dict) -> None:
+    for obj, cc in data.items():
+        pm.parentConstraint(cc, obj, mo=True, w=1)
+        pm.scaleConstraint(cc, obj, mo=True, w=1)
 
 
 def ctrl(**kwargs) -> list:
@@ -1254,59 +828,6 @@ def ctrl(**kwargs) -> list:
     return result
 
 
-def createCuv_throughPoint(startFrame: int, endFrame: int) -> list:
-    """ Creates a curve through points.
-    This function works even if you select a point.
-     """
-    sel = pm.ls(sl=True, fl=True)
-    result = []
-    for j in sel:
-        pos = []
-        for k in range(startFrame, endFrame + 1):
-            pm.currentTime(k)
-            try:
-                pos.append(pm.pointPosition(j)) # vertex
-            except:
-                pos.append(pm.xform(j, q=1, ws=1, rp=1)) # object
-        cuv = pm.curve(p=pos)
-        result.append(cuv)
-    return result
-
-
-def createCuv_throughLoc(**kwargs) -> str:
-    """ Creates a curve along the locator's points.
-    Place locators first, and select them, and call this function.
-    ex) cl=True -> Create a closed curve.
-     """
-    sel = pm.ls(sl=True) # select locators
-    pos = [pm.xform(i, q=1, ws=1, rp=1) for i in sel]
-    tmp = kwargs['cl'] if 'cl' in kwargs.keys() else False
-    if tmp:
-        cuv = pm.circle(nr=(0, 1, 0), ch=False, s=len(sel))
-        cuv = cuv[0]
-        for j, k in enumerate(pos):
-            pm.move(k[0], k[1], k[2], f'{cuv}.cv[{j}]', ws=True)
-    else:
-        cuv = pm.curve(p=pos)
-    return cuv
-
-
-def deletePlugins():
-    """ Attempt to delete unused plugins. """
-    unknownList = pm.ls(type="unknown")
-    # Just delete Unknown type list.
-    pm.delete(unknownList)
-    pluginList = pm.unknownPlugin(q=True, l=True)
-    if not pluginList:
-        print("There are no unknown plugins.")
-    else:
-        for j, k in enumerate(pluginList):
-            pm.unknownPlugin(k, r=True)
-            # Print deleted plugin's names and number
-            print(f"{j} : {k}")
-        print('Delete completed.')
-
-
 def grouping():
     """ Grouping itself and named own """
     sel = pm.ls(sl=True)
@@ -1387,6 +908,22 @@ def selectDup():
         print("No duplicated names.")
     else:
         pm.select(dup)
+
+
+def deletePlugins():
+    """ Attempt to delete unused plugins. """
+    unknownList = pm.ls(type="unknown")
+    # Just delete Unknown type list.
+    pm.delete(unknownList)
+    pluginList = pm.unknownPlugin(q=True, l=True)
+    if not pluginList:
+        print("There are no unknown plugins.")
+    else:
+        for j, k in enumerate(pluginList):
+            pm.unknownPlugin(k, r=True)
+            # Print deleted plugin's names and number
+            print(f"{j} : {k}")
+        print('Delete completed.')
 
 
 def zeroPivot():
@@ -1506,89 +1043,6 @@ def openFolder():
     os.startfile(dir)
 
 
-def createLoc(**kwargs):
-    """ Creates locator or joint in boundingBox.
-    Usage: createLoc(jnt=True) """
-    sel = pm.ls(sl=True)
-    for i in sel:
-        bb = pm.xform(i, q=True, bb=True, ws=True)
-        xMin, yMin, zMin, xMax, yMax, zMax = bb
-        x = (xMin + xMax) / 2
-        y = (yMin + yMax) / 2
-        z = (zMin + zMax) / 2
-        loc = pm.spaceLocator()
-        pm.move(loc, x, y, z)
-        if not kwargs:
-            pass
-        else:
-            for key, value in kwargs.items():
-                if key=="jnt" and value:
-                    pm.select(cl=True)
-                    jnt = pm.joint(p=(0,0,0), rad=1)
-                    pm.matchTransform(jnt, loc, pos=True)
-                    pm.delete(loc)
-                else:
-                    continue
-
-
-def createLine() -> str:
-    """ Create a line connecting two points. """
-    sel = pm.ls(sl=True, fl=True)
-    if len(sel) < 2:
-        print("Two points are needed.")
-    else:
-        alpha = sel[0]
-        omega = sel[-1]
-        try:
-            aPos, oPos = [pm.pointPosition(i) for i in [alpha, omega]]
-        except:
-            aPos, oPos = [pm.xform(i, q=1, ws=1, rp=1) for i in [alpha, omega]]
-        cuv = pm.curve(d=1, p=[aPos, oPos])
-        sPiv = f"{cuv}.scalePivot"
-        rPiv = f"{cuv}.rotatePivot"
-        aLoc = pm.spaceLocator()
-        oLoc = pm.spaceLocator()
-        a1, a2, a3 = aPos
-        o1, o2, o3 = oPos
-        pm.move(a1, a2, a3, aLoc, r=True)
-        pm.move(o1, o2, o3, oLoc, r=True)
-        pm.move(a1, a2, a3, sPiv, rPiv, rpr=True)
-        pm.aimConstraint(oLoc, aLoc)
-        pm.delete(aLoc, cn=True)
-        pm.parent(cuv, aLoc)
-        pm.makeIdentity(cuv, a=True, t=1, r=1, s=1, n=0, pn=1)
-        pm.parent(cuv, w=True)
-        pm.rebuildCurve(cuv, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
-        return cuv
-
-
-def createMotionPath(*arg: int) -> None:
-    '''Create a number of joints and 
-    apply a motionPath to the curve.
-    '''
-    sel = pm.ls(sl=True)
-    if not sel:
-        print("No curves selected.")
-        return 0
-    num = arg[0] if arg else int(input())
-    mod = 1/(num-1) if num > 1 else 0
-    cuv = sel[0]
-    for i in range(num):
-        pm.select(cl=True)
-        jnt = pm.joint(p=(0,0,0))
-        val = i * mod
-        tmp = pm.pathAnimation(jnt, c=cuv, 
-            fm=True, # fractionMode
-            f=True, # follow
-            fa='x', # followAxis
-            ua='y', # upAxis
-            wut='vector', # worldUpType
-            wu=(0,1,0) # worldUpVector
-            )
-        pm.cutKey(tmp, cl=True, at='u')
-        pm.setAttr(f"{tmp}.uValue", val)
-
-
 def lineStraight():
     """ Arrange the points in a straight line.
     Use the equation of a straight line in space 
@@ -1601,6 +1055,9 @@ def lineStraight():
     if not sel:
         print('Nothing selected.')
         return 0
+    dup = pm.duplicate(sel, rr=True) # Copy the original backUp
+    dup = dup[0]
+    pm.setAttr(f"{dup}.visibility", 0)
     alpha = sel[0]
     omega = sel[-1]
     # makeEquation
@@ -1639,7 +1096,7 @@ def lineStraight():
         sol[xyz] = value
         p1, p2, p3 = [round(float(sol[var]), 4) for var in [x, y, z]]
         pm.move(p1, p2, p3, i)
-    
+
 
 def lineStraight_rebuild():
     """ This way does not create an equation, 
@@ -1657,61 +1114,6 @@ def lineStraight_rebuild():
         kr=0, # keepRange
         kt=0, # keepTangents
         )
-
-
-def createJson(original_func):
-    """ A decorator for creating Json files. """
-    def wrapper(*args, **kwargs):
-        fullPath = pm.Env().sceneName()
-        if not fullPath:
-            print("File not saved.")
-        else:
-            dir = os.path.dirname(fullPath)
-            name_Ext = os.path.basename(fullPath)
-            name, ext = os.path.splitext(name_Ext)
-            jsonAll = [i for i in os.listdir(dir) if i.endswith('.json')]
-            verDict = {}
-            for i in jsonAll:
-                tmp = re.search('(.*)[_v]([0-9]{4})[.].*', i)
-                num = int(tmp.group(2))
-                verDict[num] = tmp.group(1)
-            if not verDict:
-                jsonFile = dir + "/" + name + ".json"
-                data = {}
-            else:
-                verMax = max(verDict.keys())
-                jsonFile = f"{dir}/{verDict[verMax]}v%04d.json" % verMax
-                with open(jsonFile) as JSON:
-                    data = json.load(JSON)
-            result = original_func(data, *args, **kwargs)
-            with open(dir + "/" + name + ".json", 'w') as JSON:
-                json.dump(data, JSON, indent=4)
-            return result
-    return wrapper
-
-
-@createJson
-def writeJSON(data: dict) -> None:
-    sel = pm.ls(sl=True)
-    if not sel:
-        print("Nothing selected.")
-    else:
-        for j, k in enumerate(sel):
-            if j % 2:
-                continue
-            else:
-                obj = sel[j+1].name()
-                cc = k.name()
-                pm.parentConstraint(cc, obj, mo=True, w=1)
-                pm.scaleConstraint(cc, obj, mo=True, w=1)
-                data[obj] = cc
-
-
-@createJson
-def loadJSON(data: dict) -> None:
-    for obj, cc in data.items():
-        pm.parentConstraint(cc, obj, mo=True, w=1)
-        pm.scaleConstraint(cc, obj, mo=True, w=1)
 
 
 def orientJnt() -> list:
@@ -1761,130 +1163,7 @@ def copyHJK():
     shutil.copy(gitFolder, docFolder)
 
 
-# Create joints and apply them to splineHandleTool
-def createSpline(num: int):
-    sel = pm.ls(sl=True)
-    for cuv in sel:
-        dup = pm.duplicate(cuv, rr=True)
-        tmp = createMotionPath(num)
-        newName = cuv.replace('cuv_', 'jnt_')
-        jntList = []
-        for j, k in enumerate(tmp):
-            pm.select(cl=True)
-            jnt = pm.joint(n=f"{newName}_%d" % j, p=(0, 0, 0), rad=5)
-            jntList.append(jnt)
-            pm.matchTransform(jnt, k, pos=True)
-        pm.delete(dup, tmp)
-        for n in range(num):
-            if n + 1 < num:
-                pm.parent(jntList[n + 1], jntList[n])
-            else:
-                continue
-        sJnt = jntList[0]
-        mJnt = jntList[int(num/2)]
-        eJnt = jntList[-1]
-        newName = cuv.replace('cuv_', 'ikH_')
-        pm.select(sJnt)
-        orientJnt()
-        ikH = pm.ikHandle(sol="ikSplineSolver", 
-            n=newName, # name
-            sj=sJnt, # startJoint
-            ee=eJnt, # endEffector
-            c=cuv, # curve
-            ccv=False, # createCurve
-            scv=False, # simplifyCurve
-            cra=True, # createRootAxis
-            ns=3 # numSpans
-        )
-        ikH = ikH[0]
-        newName = cuv.replace('cuv_', 'loc_')
-        loc = pm.spaceLocator(n=newName)
-        pm.matchTransform(loc, mJnt, pos=True, rot=True)
-        pm.select(loc)
-        groupingEmpty()
-        pm.move(0, 30, 0, loc, r=True, os=True, wd=True)
-        pm.setAttr(f"{ikH}.dTwistControlEnable", 1)
-        pm.setAttr(f"{ikH}.dWorldUpType", 1)
-        pm.setAttr(f"{ikH}.dForwardAxis", 0)
-        pm.setAttr(f"{ikH}.dWorldUpAxis", 0)
-        pm.connectAttr(f"{loc}.worldMatrix[0]", f"{ikH}.dWorldUpMatrix")
-
-
-# Create strokes and convert them to polygons
-def createStroke(cuv):
-    pm.select(cl=True)
-    pm.select(cuv)
-    mel.eval("AttachBrushToCurves;")
-    strok = pm.ls(sl=True, dag=True, s=True)
-    strok = strok[0]
-    brush = [i for i in strok.inputs() if pm.nodeType(i)=="brush"]
-    brush = brush[0]
-    pm.setAttr(f'{brush}.globalScale', 30)
-    mel.eval("doPaintEffectsToPoly(1, 0, 1, 1, 100000);")
-    pTube = [i.getParent() for i in pm.ls(sl=True)]
-    pTube = pTube[0]
-    pTubeGrp = pTube.getParent()
-    newName = cuv.replace('cuv_', 'newObj_')
-    pm.parent(pTube, w=True)
-    pm.rename(pTube, newName)
-    pm.delete(pTubeGrp)
-
-
-# Point position to create a controller
-def pointPosition():
-    sel = pm.ls(sl=True, fl=True)
-    pos = [pm.pointPosition(i) for i in sel]
-    point = [tuple([round(j, 3) for j in i]) for i in pos]
-    print(point)
-    return point
-
-
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
-
-
-def createBones():
-    sel = pm.ls(sl=True)
-    for i in sel:
-        pm.select(d=True)
-        jnt = pm.joint(p=(0,0,0), rad=3)
-        pm.matchTransform(jnt, i, pos=True)
-
-
-def parentBone():
-    sel = pm.ls(sl=True)
-    for j, k in enumerate(sel):
-        if (j + 1) < len(sel):
-            pm.parent(sel[j+1], k)
-        else:
-            continue
-
-
-def connScale():
-    sel = pm.ls(sl=True)
-    for i in sel:
-        pm.connectAttr("multiplyDivide10.output", f"{i}.scale", f=True)
-
-
-# pathAni(9)
-# rename('cc_cuvSkirt1_1')
-# rename('cc_cuvSkirt2_1')
-# rename('cc_cuvSkirt3_1')
-# rename('cc_cuvSkirt4_1')
-# rename('cc_cuvSkirt5_1')
-
-def temp():
-    sel = pm.ls(sl=True)
-    for i in sel:
-        jnt = i.replace("cc_", "jnt_")
-        # tmp = ctrl(cub=True)
-        # tmp = tmp[0]
-        # pm.rename(tmp, cc)
-        # pm.select(cc)
-        # grp = groupingEmpty()
-        # pm.matchTransform(grp, i, pos=True, rot=True)
-        pm.parentConstraint(i, jnt, mo=True, w=1.0)
-
-
 
 
