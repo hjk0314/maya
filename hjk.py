@@ -1066,16 +1066,34 @@ class MirrorCopy:
         pm.connectAttr(f'{self.cuv}.Ratio', f'{self.cuv}.scaleX', f=True)
 
 
-# Create a curve controller.
-def ctrl(**kwargs):
-    # Cube shape coordinates
+def ctrl(**kwargs) -> list:
+    """ Create a controller,
+    "cub": cub, 
+    "sph": sph, 
+    "cyl": cyl, 
+    "pip": pip, 
+    "con": con, 
+    "car": car, 
+    "ar1": ar1, 
+    "ar2": ar2, 
+    "ar3": ar3, 
+    "ar4": ar4, 
+    "ar5": ar5, 
+    "pointer": pointer, 
+    "foot": foot, 
+    "hoof": hoof, 
+    "hoof2": hoof2, 
+    "sqr": sqr, 
+    "cross": cross, 
+     """
+    # Cube
     cub = [(-1, 1, -1), (-1, 1, 1), (1, 1, 1), ]
     cub += [(1, 1, -1), (-1, 1, -1), (-1, -1, -1), ]
     cub += [(-1, -1, 1), (1, -1, 1), (1, -1, -1), ]
     cub += [(-1, -1, -1), (-1, -1, 1), (-1, 1, 1), ]
     cub += [(1, 1, 1), (1, -1, 1), (1, -1, -1), ]
     cub += [(1, 1, -1), ]
-    # Sphere shape coordinates
+    # Sphere
     sph = [(0, 1, 0), (0, 0.7, 0.7), (0, 0, 1), ]
     sph += [(0, -0.7, 0.7), (0, -1, 0), (0, -0.7, -0.7), ]
     sph += [(0, 0, -1), (0, 0.7, -0.7), (0, 1, 0), ]
@@ -1085,7 +1103,7 @@ def ctrl(**kwargs):
     sph += [(-1, 0, 0), (-0.7, -0.7, 0), (0, -1, 0), ]
     sph += [(0.7, -0.7, 0), (1, 0, 0), (0.7, 0.7, 0), ]
     sph += [(0, 1, 0), ]
-    # Cylinder shape coordinates
+    # Cylinder
     cyl = [(-1, 1, 0), (-0.7, 1, 0.7), (0, 1, 1), ]
     cyl += [(0.7, 1, 0.7), (1, 1, 0), (0.7, 1, -0.7), ]
     cyl += [(0, 1, -1), (0, 1, 1), (0, -1, 1), ]
@@ -1095,7 +1113,7 @@ def ctrl(**kwargs):
     cyl += [(0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), ]
     cyl += [(1, 1, 0), (1, -1, 0), (-1, -1, 0), ]
     cyl += [(-1, 1, 0), ]
-    # Pipe shape coordinates
+    # Pipe
     pip = [(0, 1, 1), (0, -1, 1), (0.7, -1, 0.7), ]
     pip += [(1, -1, 0), (1, 1, 0), (0.7, 1, -0.7), ]
     pip += [(0, 1, -1), (0, -1, -1), (-0.7, -1, -0.7), ]
@@ -1104,11 +1122,11 @@ def ctrl(**kwargs):
     pip += [(1, -1, 0), (0.7, -1, -0.7), (0, -1, -1), ]
     pip += [(0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), ]
     pip += [(-1, -1, 0), (-0.7, -1, 0.7), (0, -1, 1), ]
-    # Cone shape coordinates
+    # Cone
     con = [(0, 2, 0), (-0.87, 0, -0), (0.87, 0, 0), ]
     con += [(0, 2, 0), (0, 0, 1), (-0.87, 0, -0), ]
     con += [(0.87, 0, 0), (0, 0, 1), ]
-    # car shape coordinates
+    # car
     car = [(90.878, 114.928, 109.126), (90.878, 100.171, 227.195), ]
     car += [(90.878, 29.606, 227.195), (90.878, 29.606, 113.598), ]
     car += [(90.878, 29.606, -113.598), (90.878, 29.606, -227.195), ]
@@ -1129,11 +1147,11 @@ def ctrl(**kwargs):
     car += [(-90.878, 161.491, 54.004), (-90.878, 161.491, -102.348), ]
     car += [(90.878, 161.491, -102.348), (90.878, 161.491, 54.004), ]
     car += [(-90.878, 161.491, 54.004), ]
-    # Arrow1 shape coordinates
+    # Arrow1
     ar1 = [(0, 0, 2), (2, 0, 1), (1, 0, 1), ]
     ar1 += [(1, 0, -2), (-1, 0, -2), (-1, 0, 1), ]
     ar1 += [(-2, 0, 1), (0, 0, 2), ]
-    # Arrow2 shape coordinates
+    # Arrow2
     ar2 = [(0, 1, 4), (4, 1, 2), (2, 1, 2), ]
     ar2 += [(2, 1, -4), (-2, 1, -4), (-2, 1, 2), ]
     ar2 += [(-4, 1, 2), (0, 1, 4), (0, -1, 4), ]
@@ -1143,12 +1161,12 @@ def ctrl(**kwargs):
     ar2 += [(2, 1, 2), (2, 1, -4), (2, -1, -4), ]
     ar2 += [(-2, -1, -4), (-2, 1, -4), (-2, 1, 2), ]
     ar2 += [(-4, 1, 2), (-4, -1, 2), ]
-    # Arrow3 shape coordinates
+    # Arrow3
     ar3 = [(7, 0, 0), (5, 0, -5), (0, 0, -7), ]
     ar3 += [(-5, 0, -5), (-7, 0, 0), (-5, 0, 5), ]
     ar3 += [(0, 0, 7), (5, 0, 5), (7, 0, 0), ]
     ar3 += [(5, 0, 2), (7, 0, 3), (7, 0, 0), ]
-    # Arrow4 shape coordinates
+    # Arrow4
     ar4 = [(0, 0, -11), (-3, 0, -8), (-2.0, 0, -8), ]
     ar4 += [(-2, 0, -6), (-5, 0, -5), (-6, 0, -2), ]
     ar4 += [(-8, 0, -2), (-8, 0, -3), (-11, 0, 0), ]
@@ -1165,12 +1183,12 @@ def ctrl(**kwargs):
     ar5 += [(4, 0, 0), (2, 0, 2), (2, 0, 1), ]
     ar5 += [(-2, 0, 1), (-2, 0, 2), (-4, 0, 0), ]
     ar5 += [(-2, 0, -2), (-2, 0, -1), ]
-    # Pointer shape
+    # Pointer
     pointer = [(-1, 0, 0), (-0.7, 0, 0.7), (0, 0, 1), ]
     pointer += [(0.7, 0, 0.7), (1, 0, 0), (0.7, 0, -0.7), ]
     pointer += [(0, 0, -1), (-0.7, 0, -0.7), (-1, 0, 0), ]
     pointer += [(0, 0, 0), (0, 2, 0), ]
-    # Foot shape
+    # Foot
     foot = [(-4, 0, -4), (-4, 0, -7), (-3, 0, -11), ]
     foot += [(-1, 0, -12), (0, 0, -12), (1, 0, -12), ]
     foot += [(3, 0, -11), (4, 0, -7), (4, 0, -4), ]
@@ -1179,7 +1197,7 @@ def ctrl(**kwargs):
     foot += [(2, 0, 15), (4, 0, 12), (5, 0, 6), ]
     foot += [(5, 0, 1), (4, 0, -4), (-4, 0, -4), ]
     foot += [(4, 0, -4), ]
-    # Hoof shape
+    # Hoof
     hoof = [(-6, 0, -5), (-6.5, 0, -1), (-6, 0, 3), ]
     hoof += [(-5.2, 0, 5.5), (-3, 0, 7.5), (0, 0, 8.2), ]
     hoof += [(3, 0, 7.5), (5.2, 0, 5.5), (6, 0, 3), ]
@@ -1191,7 +1209,7 @@ def ctrl(**kwargs):
     hoof += [(5.5, 0, -6.5), (4.5, 0, -10), (2.2, 0, -12.2), ]
     hoof += [(0, 0, -12.2), (-2.2, 0, -12.2), (-4.5, 0, -10), ]
     hoof += [(-5.5, 0, -6.5), ]
-    # Hoof2 shape
+    # Hoof2
     hoof2 = [(6, 6, -12), (0, 8, -12), (-6, 6, -12), ]
     hoof2 += [(-8, 3, -13), (-8, 0, -12), (-7, 0, -10), ]
     hoof2 += [(-8, 0, -6), (-9, 0, -1), (-8, 0, 4), ]
@@ -1236,57 +1254,57 @@ def ctrl(**kwargs):
     return result
 
 
-# This function works even if you select a point.
-def cuvPath(startFrame, endFrame):
+def createCuv_throughPoint(startFrame: int, endFrame: int) -> list:
+    """ Creates a curve through points.
+    This function works even if you select a point.
+     """
     sel = pm.ls(sl=True, fl=True)
+    result = []
     for j in sel:
-        pointList = []
+        pos = []
         for k in range(startFrame, endFrame + 1):
             pm.currentTime(k)
             try:
-                # vtx position
-                pointList.append(pm.pointPosition(j))
+                pos.append(pm.pointPosition(j)) # vertex
             except:
-                # obj position
-                pointList.append(pm.xform(j, q=True, ws=True, rp=True))
-        pm.curve(p=pointList)
+                pos.append(pm.xform(j, q=1, ws=1, rp=1)) # object
+        cuv = pm.curve(p=pos)
+        result.append(cuv)
+    return result
 
 
-# Creates a curve along the locator's points.
-# Place locators first, and select them, and call this function.
-def cuvLoc(cl=False): # cl = closed
+def createCuv_throughLoc(**kwargs) -> str:
+    """ Creates a curve along the locator's points.
+    Place locators first, and select them, and call this function.
+    ex) cl=True -> Create a closed curve.
+     """
     sel = pm.ls(sl=True) # select locators
-    posLocator = [pm.xform(i, q=True, ws=True, rp=True) for i in sel]
-    if cl:
-        # if closed : first, creates a circle, and change its shape.
-        cuvName = pm.circle(nr=(0, 1, 0), ch=False, s=len(sel))[0]
-        for j, k in enumerate(posLocator):
-            pm.move(k[0], k[1], k[2], '%s.cv[%d]' % (cuvName, j), ws=True)
+    pos = [pm.xform(i, q=1, ws=1, rp=1) for i in sel]
+    tmp = kwargs['cl'] if 'cl' in kwargs.keys() else False
+    if tmp:
+        cuv = pm.circle(nr=(0, 1, 0), ch=False, s=len(sel))
+        cuv = cuv[0]
+        for j, k in enumerate(pos):
+            pm.move(k[0], k[1], k[2], f'{cuv}.cv[{j}]', ws=True)
     else:
-        print("# ex : cuvLoc(cl=True)")
-        cuvName = pm.curve(p=posLocator)
+        cuv = pm.curve(p=pos)
+    return cuv
 
 
-# Attempt to delete unused plugins.
-def delPlugin():
+def deletePlugins():
+    """ Attempt to delete unused plugins. """
     unknownList = pm.ls(type="unknown")
-    pm.delete(unknownList) # Just delete Unknown type list.
+    # Just delete Unknown type list.
+    pm.delete(unknownList)
     pluginList = pm.unknownPlugin(q=True, l=True)
-    if pluginList:
+    if not pluginList:
+        print("There are no unknown plugins.")
+    else:
         for j, k in enumerate(pluginList):
             pm.unknownPlugin(k, r=True)
             # Print deleted plugin's names and number
-            print("%d : %s" % (j, k))
+            print(f"{j} : {k}")
         print('Delete completed.')
-    else:
-        om.MGlobal.displayWarning("There are no unknown plugins.")
-
-
-# Offset the Keys
-def keyOff(i=1): # i : interval
-    sel = pm.ls(sl=True, fl=True)
-    for j, k in enumerate(sel):
-        pm.keyframe(k, e=True, r=True, tc = j * i)
 
 
 def grouping():
@@ -1308,8 +1326,10 @@ def groupingNull():
 def groupingEmpty():
     """ Create an empty group and match the pivot with the selector. """
     sel = pm.ls(sl=True)
+    grpName = []
     for i in sel:
         grp = pm.group(em=True, n = i + "_grp")
+        grpName.append(grp)
         pm.matchTransform(grp, i, pos=True, rot=True)
         try:
             mom = i.getParent()
@@ -1317,6 +1337,7 @@ def groupingEmpty():
         except:
             pass
         pm.parent(i, grp)
+    return grpName
 
 
 def selectObj():
@@ -1368,8 +1389,8 @@ def selectDup():
         pm.select(dup)
 
 
-# Moving pivot to zero.
 def zeroPivot():
+    """ Move pivot to zero. """
     sel = pm.ls(sl=True)
     for i in sel:
         j = f"{i}.scalePivot"
@@ -1430,37 +1451,30 @@ def poleVector():
     """ Get the poleVector's position from 3 joints. """
     sel = pm.ls(sl=True) # Select three objects.
     if len(sel) != 3:
-        print('Select three objects.')
+        print('Select three joints.')
     else:
         midJnt = sel[1]
         endJnt = sel[2]
-        # List the coordinates of the joint
         points = [pm.xform(i, q=True, ws=True, rp=True) for i in sel]
         p1, p2, p3 = [i for i in points]
-        # It's good to clear the selection before creating the joint.
         pm.select(cl=True)
-        # Temporarily create two joints.
-        temp1 = pm.joint(p=p1)
-        temp2 = pm.joint(p=p3)
-        # Use Maya's <Orient joint> menu.
-        pm.joint(temp1, e=True, oj='xyz', sao='yup', ch=True, zso=True)
-        pm.joint(temp2, e=True, oj='none', ch=True, zso=True)
+        tmp1 = pm.joint(p=p1)
+        tmp2 = pm.joint(p=p3)
+        pm.joint(tmp1, e=True, oj='xyz', sao='yup', ch=True, zso=True)
+        pm.joint(tmp2, e=True, oj='none', ch=True, zso=True)
         # o: offset, wut: worldUpType, wuo: worldUpObject
-        pm.aimConstraint(endJnt, temp1, o=(0,0,90), wut='object', wuo=midJnt)
+        pm.aimConstraint(endJnt, tmp1, o=(0,0,90), wut='object', wuo=midJnt)
         # cn: constraint
-        pm.delete(temp1, cn=True)
-        # Position to the middle joint.
-        pm.matchTransform(temp1, midJnt, pos=True)
-        # Create a locator and 
+        pm.delete(tmp1, cn=True)
+        pm.matchTransform(tmp1, midJnt, pos=True)
         loc = pm.spaceLocator()
-        # place it at the poleVector position.
-        pm.matchTransform(loc, temp2, pos=True, rot=True)
+        pm.matchTransform(loc, tmp2, pos=True, rot=True)
         # Delete temporarily used joints.
-        pm.delete(temp1)
+        pm.delete(tmp1)
 
 
-# Change the color of the controllers.
-def color(**kwargs):
+def colors(**kwargs):
+    """ Change the color of the shape. """
     sel = pm.ls(sl=True)
     colors = {
         "blue": 6, 
@@ -1472,22 +1486,23 @@ def color(**kwargs):
         "green2": 23, 
         "yellow": 17, 
     }
-    idxList = [colors[i] for i in kwargs if kwargs[i]]
-    enb = 1 if idxList else 0
-    idx = idxList[0] if idxList else 0
+    idxs = [colors[i] for i in kwargs if kwargs[i]]
+    enb = 1 if idxs else 0
+    idx = idxs[0] if idxs else 0
     for i in sel:
         shp = i.getShape()
         pm.setAttr(f"{shp}.overrideEnabled", enb)
         pm.setAttr(f"{shp}.overrideColor", idx)
 
 
-# Open the Windows folder and copy the fullPath to the clipboard.
-def openSaved():
+def openFolder():
+    """ Open the Windows folder 
+    and copy the fullPath to the clipboard.
+     """
     fullPath = pm.Env().sceneName()
     dir = os.path.dirname(fullPath)
     # copy the fullPath to the clipboard.
-    subprocess.run("clip", text=True, input=fullPath)
-    # Open the Windows folder
+    # subprocess.run("clip", text=True, input=fullPath)
     os.startfile(dir)
 
 
@@ -1516,98 +1531,125 @@ def createLoc(**kwargs):
                     continue
 
 
-def createLine():
+def createLine() -> str:
+    """ Create a line connecting two points. """
     sel = pm.ls(sl=True, fl=True)
     if len(sel) < 2:
-        return 0
-    sP = sel[0]
-    eP = sel[-1]
-    try:
-        sPoint, ePoint = [pm.pointPosition(i) for i in [sP, eP]]
-    except:
-        sPoint, ePoint = [pm.xform(i, q=1, ws=1, rp=1) for i in [sP, eP]]
-    cuv = pm.curve(d=1, p=[sPoint, ePoint])
-    sPivot = f"{cuv}.scalePivot"
-    rPivot = f"{cuv}.rotatePivot"
-    p1, p2, p3 = sPoint
-    pm.move(p1, p2, p3, sPivot, rPivot, rpr=True)
-    pm.aimConstraint(eP, sP)
-    pm.delete(sP, cn=True)
-    pm.parent(cuv, sP)
-    pm.makeIdentity(cuv, a=True, t=1, r=1, s=1, n=0, pn=1)
-    pm.parent(cuv, w=True)
-    pm.rebuildCurve(cuv, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
-    cuvD3Point = [pm.pointPosition(f"{cuv}.cv[{i}]") for i in range(4)]
-    cuvD3 = pm.curve(d=3, p=cuvD3Point)
-    pm.xform(cuvD3, cpc=True)
-    pm.parent(cuvD3, cuv)
-    pm.makeIdentity(cuvD3, a=True, t=1, r=1, s=1, n=0, pn=1)
-    pm.parent(cuvD3, w=True)
-    return cuv, cuvD3
-createLine()
+        print("Two points are needed.")
+    else:
+        alpha = sel[0]
+        omega = sel[-1]
+        try:
+            aPos, oPos = [pm.pointPosition(i) for i in [alpha, omega]]
+        except:
+            aPos, oPos = [pm.xform(i, q=1, ws=1, rp=1) for i in [alpha, omega]]
+        cuv = pm.curve(d=1, p=[aPos, oPos])
+        sPiv = f"{cuv}.scalePivot"
+        rPiv = f"{cuv}.rotatePivot"
+        aLoc = pm.spaceLocator()
+        oLoc = pm.spaceLocator()
+        a1, a2, a3 = aPos
+        o1, o2, o3 = oPos
+        pm.move(a1, a2, a3, aLoc, r=True)
+        pm.move(o1, o2, o3, oLoc, r=True)
+        pm.move(a1, a2, a3, sPiv, rPiv, rpr=True)
+        pm.aimConstraint(oLoc, aLoc)
+        pm.delete(aLoc, cn=True)
+        pm.parent(cuv, aLoc)
+        pm.makeIdentity(cuv, a=True, t=1, r=1, s=1, n=0, pn=1)
+        pm.parent(cuv, w=True)
+        pm.rebuildCurve(cuv, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
+        return cuv
 
-# Arrange the points in a straight line.
-def makeStraight():
-    '''Use the equation of a straight line in space 
+
+def createMotionPath(*arg: int) -> None:
+    '''Create a number of joints and 
+    apply a motionPath to the curve.
+    '''
+    sel = pm.ls(sl=True)
+    if not sel:
+        print("No curves selected.")
+        return 0
+    num = arg[0] if arg else int(input())
+    mod = 1/(num-1) if num > 1 else 0
+    cuv = sel[0]
+    for i in range(num):
+        pm.select(cl=True)
+        jnt = pm.joint(p=(0,0,0))
+        val = i * mod
+        tmp = pm.pathAnimation(jnt, c=cuv, 
+            fm=True, # fractionMode
+            f=True, # follow
+            fa='x', # followAxis
+            ua='y', # upAxis
+            wut='vector', # worldUpType
+            wu=(0,1,0) # worldUpVector
+            )
+        pm.cutKey(tmp, cl=True, at='u')
+        pm.setAttr(f"{tmp}.uValue", val)
+
+
+def lineStraight():
+    """ Arrange the points in a straight line.
+    Use the equation of a straight line in space 
     to make a curved line a straight line.
     1. Create an equation
     2. Check the condition.
     3. Make a straight line.
-    '''
+     """
     sel = pm.ls(sl=True, fl=True)
     if not sel:
         print('Nothing selected.')
+        return 0
+    alpha = sel[0]
+    omega = sel[-1]
+    # makeEquation
+    X1, Y1, Z1 = alpha.getPosition(space="world")
+    X2, Y2, Z2 = omega.getPosition(space="world")
+    A, B, C = (X2 - X1), (Y2 - Y1), (Z2 - Z1)
+    MAX = max([abs(i) for i in [A, B, C]])
+    x, y, z = sympy.symbols('x y z')
+    expr1 = sympy.Eq(B*x - A*y, B*X1 - A*Y1)
+    expr2 = sympy.Eq(C*y - B*z, C*Y1 - B*Z1)
+    expr3 = sympy.Eq(A*z - C*x, A*Z1 - C*X1)
+    # Conditions
+    if abs(A) == MAX:
+        idx = 0
+        xyz = x
+        variables = [y, z]
+        expr = [expr1, expr3]
+    elif abs(B) == MAX:
+        idx = 1
+        xyz = y
+        variables = [x, z]
+        expr = [expr1, expr2]
+    elif abs(C) == MAX:
+        idx = 2
+        xyz = z
+        variables = [x, y]
+        expr = [expr2, expr3]
     else:
-        sp = sel[0]
-        ep = sel[-1]
-        # makeEquation
-        X1, Y1, Z1 = sp.getPosition(space="world")
-        X2, Y2, Z2 = ep.getPosition(space="world")
-        A, B, C = (X2 - X1), (Y2 - Y1), (Z2 - Z1)
-        MAX = max([abs(i) for i in [A, B, C]])
-        x, y, z = sympy.symbols('x y z')
-        expr1 = sympy.Eq(B*x - A*y, B*X1 - A*Y1)
-        expr2 = sympy.Eq(C*y - B*z, C*Y1 - B*Z1)
-        expr3 = sympy.Eq(A*z - C*x, A*Z1 - C*X1)
-        # Conditions
-        if abs(A) == MAX:
-            idx = 0
-            xyz = x
-            variables = [y, z]
-            expr = [expr1, expr3]
-        elif abs(B) == MAX:
-            idx = 1
-            xyz = y
-            variables = [x, z]
-            expr = [expr1, expr2]
-        elif abs(C) == MAX:
-            idx = 2
-            xyz = z
-            variables = [x, y]
-            expr = [expr2, expr3]
-        else:
-            pass
-        # makeStraight
-        for i in sel:
-            point = i.getPosition(space="world")
-            value = point[idx]
-            fx = [i.subs(xyz, value) for i in expr]
-            sol = sympy.solve(fx, variables)
-            sol[xyz] = value
-            p1, p2, p3 = [round(float(sol[var]), 4) for var in [x, y, z]]
-            pm.move(p1, p2, p3, i)
+        pass
+    # makeStraight
+    for i in sel:
+        point = i.getPosition(space="world")
+        value = point[idx]
+        fx = [i.subs(xyz, value) for i in expr]
+        sol = sympy.solve(fx, variables)
+        sol[xyz] = value
+        p1, p2, p3 = [round(float(sol[var]), 4) for var in [x, y, z]]
+        pm.move(p1, p2, p3, i)
     
 
-# Line up points using 'rebuild' in Maya.
-def makeStraight2():
-    '''This way does not create an equation, 
-    but uses rebuild to create a straight line.'''
+def lineStraight_rebuild():
+    """ This way does not create an equation, 
+    but uses rebuild to create a straight line. """
     sel = pm.ls(sl=True, fl=True)
     spans = len(sel) - 1
-    startPoint = sel[0].getPosition(space="world")
-    endPoint = sel[-1].getPosition(space="world")
-    temp = pm.curve(d=1, p=[startPoint, endPoint])
-    pm.rebuildCurve(temp, d=1, 
+    alpha = sel[0].getPosition(space="world")
+    omega = sel[-1].getPosition(space="world")
+    cuv = pm.curve(d=1, p=[alpha, omega])
+    pm.rebuildCurve(cuv, d=1, 
         ch=False, # constructionHistory
         s=spans, # spans
         rpo=True, # replaceOriginal
@@ -1615,46 +1657,10 @@ def makeStraight2():
         kr=0, # keepRange
         kt=0, # keepTangents
         )
-    '''Activate this section 
-    to move the points of the 'original curve' to the 'temp curve'.
-    for j, k in enumerate(sel):
-        x, y, z = pm.pointPosition(f"{temp}.cv[{j}]")
-        pm.move(x, y, z, k)
-    '''
 
 
-# joint on motionPath
-def pathAni(num: int) -> None:
-    '''Create a number of joints and 
-    apply a motionPath to the curve.
-    '''
-    sel = pm.ls(sl=True)
-    if not sel:
-        print("Select a curve.")
-    else:
-        mod = 1 / (num - 1) if num > 1 else 0
-        cuv = sel[0]
-        jntName = []
-        for i in range(num):
-            pm.select(cl=True)
-            jnt = pm.joint(p=(0,0,0))
-            jntName.append(jnt)
-            val = i * mod
-            tmp = pm.pathAnimation(jnt, c=cuv, 
-                fm=True, # fractionMode
-                f=True, # follow
-                fa='x', # followAxis
-                ua='y', # upAxis
-                wut='vector', # worldUpType
-                wu=(0,1,0) # worldUpVector
-                )
-            pm.cutKey(tmp, cl=True, at='u')
-            pm.setAttr(f"{tmp}.uValue", val)
-    return jntName
-
-
-# JSON decorator
-def rwJSON(original_func):
+def createJson(original_func):
+    """ A decorator for creating Json files. """
     def wrapper(*args, **kwargs):
         fullPath = pm.Env().sceneName()
         if not fullPath:
@@ -1684,8 +1690,8 @@ def rwJSON(original_func):
     return wrapper
 
 
-@rwJSON
-def writeJSON(data):
+@createJson
+def writeJSON(data: dict) -> None:
     sel = pm.ls(sl=True)
     if not sel:
         print("Nothing selected.")
@@ -1701,20 +1707,21 @@ def writeJSON(data):
                 data[obj] = cc
 
 
-@rwJSON
-def loadJSON(data):
+@createJson
+def loadJSON(data: dict) -> None:
     for obj, cc in data.items():
         pm.parentConstraint(cc, obj, mo=True, w=1)
         pm.scaleConstraint(cc, obj, mo=True, w=1)
 
 
-# Freeze and Orient joints
 def orientJnt() -> list:
-    '''Select only "joint", freeze and orient. 
-    And the end joints inherit the orient of the parent joint.'''
+    """ Freeze and Orient joints
+    Select only "joint", freeze and orient. 
+    And the end joints inherit the orient of the parent joint.
+     """
     sel = pm.ls(sl=True)
     pm.select(sel, hi=True)
-    allJnt = [i for i in pm.ls(sl=True) if pm.objectType(i) == 'joint']
+    allJnt = [i for i in pm.ls(sl=True) if pm.objectType(i)=='joint']
     endJnt = [i for i in allJnt if not i.getChildren()]
     pm.select(cl=True)
     # freeze joints
@@ -1724,28 +1731,31 @@ def orientJnt() -> list:
     # orient end joints
     for i in endJnt:
         pm.joint(i, e=True, oj='none', ch=True, zso=True)
-    return allJnt
 
 
-def jntNone(num: int) -> None:
+def jntNone(*arg: int) -> None:
     '''Change the drawing style of a joint.
     0: Bone
     1: Multi Child as Box
     2: None
     '''
+    num = 2 if not arg else arg[0]
     sel = pm.ls(sl=True)
     if num < 0 or num > 2:
-        print("[0, 1, 2] numbers allowed")
+        msg = "Allowed numbers are "
+        msg += "[0: Bone, 1: Multi Child as Box, 2: None]"
+        print(msg)
     elif not sel:
         print("Nothing selected.")
     else:
-        jnt = [i for i in sel if pm.objectType(i) == 'joint']
+        jnt = [i for i in sel if pm.objectType(i)=='joint']
         for i in jnt:
             pm.setAttr(f"{i}.drawStyle", num)
 
 
-# Copy <hjk.py in git folder> to <maya in documents folder>
-def hjkCopy():
+def copyHJK():
+    """ Copy hjk.py 
+    from <in git folder> to <maya folder in MyDocuments> """
     gitFolder = r"C:\Users\jkhong\Desktop\git\maya\hjk.py"
     docFolder = r"C:\Users\jkhong\Documents\maya\scripts\hjk.py"
     shutil.copy(gitFolder, docFolder)
@@ -1756,7 +1766,7 @@ def createSpline(num: int):
     sel = pm.ls(sl=True)
     for cuv in sel:
         dup = pm.duplicate(cuv, rr=True)
-        tmp = pathAni(num)
+        tmp = createMotionPath(num)
         newName = cuv.replace('cuv_', 'jnt_')
         jntList = []
         for j, k in enumerate(tmp):
@@ -1863,13 +1873,18 @@ def connScale():
 # rename('cc_cuvSkirt4_1')
 # rename('cc_cuvSkirt5_1')
 
+def temp():
+    sel = pm.ls(sl=True)
+    for i in sel:
+        jnt = i.replace("cc_", "jnt_")
+        # tmp = ctrl(cub=True)
+        # tmp = tmp[0]
+        # pm.rename(tmp, cc)
+        # pm.select(cc)
+        # grp = groupingEmpty()
+        # pm.matchTransform(grp, i, pos=True, rot=True)
+        pm.parentConstraint(i, jnt, mo=True, w=1.0)
 
-# sel = pm.ls(sl=True)
-# for i in sel:
-#     cc = i.replace("clt_", "cc_")
-#     cc = cc.replace("_grp", "")
-#     # pm.matchTransform(cc, i, pos=True)
-#     pm.setAttr(f"{i}.visibility", 0)
-#     pm.parent(i, cc)
+
 
 
