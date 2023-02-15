@@ -384,7 +384,7 @@ def createPV():
 # addNameFKIK("IK")
 # addNameFKIK("FK")
 # createChannels()
-# ctrl(cub=True)
+# ctrl(pointer=True)
 # orientJnt()
 # MirrorCopy('x')
 # rename('clt_spine_1')
