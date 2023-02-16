@@ -1177,6 +1177,19 @@ def copyHJK():
     shutil.copy(gitFolder, docFolder)
 
 
+def vertexNum() -> list:
+    """ Make a list of vertex numbers only. """
+    sel = pm.ls(sl=True, fl=True)
+    com = re.compile(".*[.vtx[]([0-9]*)[]]")
+    result = []
+    for i in sel:
+        tmp = com.search(i.name())
+        num = tmp.group(1)
+        num = int(num)
+        result.append(num)
+    return result
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 
