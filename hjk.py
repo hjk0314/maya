@@ -2,11 +2,11 @@ import re
 import os
 import json
 import shutil
+import math
+import sympy
 import maya.OpenMaya as om
 import pymel.core as pm
 import maya.mel as mel
-import sympy
-from math import *
 
 
 class SoftSel:
@@ -259,7 +259,7 @@ class AutoWheel_Key:
                 dx = x2 - x1
                 dy = y2 - y1
                 dz = z2 - z1
-                d = sqrt(pow(dx, 2) + pow(dy, 2) + pow(dz, 2))
+                d = math.sqrt(pow(dx, 2) + pow(dy, 2) + pow(dz, 2))
                 d = round(d, 3)
                 pm.currentTime(i - 1)
                 angle = pm.getAttr(f"{obj}.rotateX")
@@ -327,7 +327,7 @@ class MatchPivot:
             pm.delete(obj)
 
 
-class MatchCurveShape:
+class MatchCuvShp:
     def __init__(self):
         """ Match the curve shape from A to B.
         Select only nurbsCurves. """
@@ -379,24 +379,33 @@ class MatchCurveShape:
 
 
 class MirrorCopy:
-    def __init__(self, idx: str):
-        '''Copy the group and mirror it in the direction. 
+    def __init__(self, **kwargs):
+        """ Parameter can be (x=True or z=True).
+        First Select groups.
+        Copy the group and mirror it in the direction. 
         If there is a curve in it, copy the curve and mirror it.
-        '''
-        self.idx = idx
-        self.sel = pm.ls(sl=True)
-        self.main()
+         """
+        if not kwargs:
+            print("Parameter is required. ex) x=True or z=True")
+            return
+        keys = [i for i in kwargs.keys() if i == ('x' or 'z')]
+        keys = [i for i in keys if kwargs[i]]
+        if not keys:
+            print("None of the parameters are True.")
+        else:
+            self.key = keys[0]
+            self.val = kwargs[self.key]
+            self.sel = pm.ls(sl=True)
+            self.main()
 
 
     # Check the conditions.
     def main(self):
-        if self.idx != 'x' and self.idx != 'z':
-            print("X and Z directions are available.")
-        elif not self.sel:
+        if not self.sel:
             print("Nothing selected.")
-        else:
-            for i in self.sel:
-                self.mirrorCopy(i)
+            return
+        for i in self.sel:
+            self.mirrorCopy(i)
 
 
     # If there is a curve in the group, copy the curve and mirror it.
@@ -404,18 +413,18 @@ class MirrorCopy:
         cuv = selection.getChildren()
         shp = pm.ls(cuv, dag=True, s=True)
         typ = 'nurbsCurve'
-        objList = {i.getParent().name() for i in shp if pm.objectType(i)==typ}
-        objList = list(objList)
-        if not objList:
+        objs = {i.getParent().name() for i in shp if pm.objectType(i)==typ}
+        objs = list(objs)
+        if not objs:
             self.mirrorGroup(selection)
         else:
-            for obj in objList:
+            for obj in objs:
                 name = self.swapLR(obj)
                 copy = pm.duplicate(obj, rr=True, n=name)
                 pm.parent(copy, w=True)
                 grp = pm.group(em=True)
                 pm.parent(copy, grp)
-                direction = [-1, 1, 1] if self.idx == 'x' else [1, 1, -1]
+                direction = [-1, 1, 1] if self.key=='x' else [1, 1, -1]
                 pm.scale(grp, direction, r=True)
                 mirrorGrp = self.mirrorGroup(selection)
                 pm.parent(copy, mirrorGrp)
@@ -443,7 +452,7 @@ class MirrorCopy:
         rot = pm.getAttr(f'{grp}.rotate')
         tx, ty, tz = tra
         rx, ry, rz = rot
-        if self.idx == 'x':
+        if self.key == 'x':
             tx *= -1
             rx += (180 if rx < 0 else -180)
             ry *= -1
@@ -457,15 +466,7 @@ class MirrorCopy:
         return grp
 
 
-    # create constraint
-    def createConstraint(self, upVector: str) -> None:
-        for locator in [self.locator1, self.locator2]:
-            pm.pointConstraint(locator, self.grp, mo=False, w=0.5)
-        pm.aimConstraint(self.locator2, self.grp, wut="object", wuo=upVector)
-        pm.connectAttr(f'{self.cuv}.Ratio', f'{self.cuv}.scaleX', f=True)
-
-
-def createCuv_throughPoint(startFrame: int, endFrame: int) -> list:
+def createCuv_thruPoint(startFrame: int, endFrame: int) -> list:
     """ Creates a curve through points.
     This function works even if you select a point.
      """
@@ -484,7 +485,7 @@ def createCuv_throughPoint(startFrame: int, endFrame: int) -> list:
     return result
 
 
-def createCuv_throughLoc(**kwargs) -> str:
+def createCuv_thruLoc(**kwargs) -> str:
     """ Creates a curve along the locator's points.
     Place locators first, and select them, and call this function.
     ex) cl=True -> Create a closed curve.
@@ -558,7 +559,7 @@ def createLine() -> str:
         return cuv
 
 
-def createMotionPath(*arg: int) -> None:
+def createJnt_MotionPath(*arg: int) -> None:
     '''Create a number of joints and 
     apply a motionPath to the curve.
     '''
@@ -583,61 +584,6 @@ def createMotionPath(*arg: int) -> None:
             )
         pm.cutKey(tmp, cl=True, at='u')
         pm.setAttr(f"{tmp}.uValue", val)
-
-
-def createJson(original_func):
-    """ A decorator for creating Json files. """
-    def wrapper(*args, **kwargs):
-        fullPath = pm.Env().sceneName()
-        if not fullPath:
-            print("File not saved.")
-        else:
-            dir = os.path.dirname(fullPath)
-            name_Ext = os.path.basename(fullPath)
-            name, ext = os.path.splitext(name_Ext)
-            jsonAll = [i for i in os.listdir(dir) if i.endswith('.json')]
-            verDict = {}
-            for i in jsonAll:
-                tmp = re.search('(.*)[_v]([0-9]{4})[.].*', i)
-                num = int(tmp.group(2))
-                verDict[num] = tmp.group(1)
-            if not verDict:
-                jsonFile = dir + "/" + name + ".json"
-                data = {}
-            else:
-                verMax = max(verDict.keys())
-                jsonFile = f"{dir}/{verDict[verMax]}v%04d.json" % verMax
-                with open(jsonFile) as JSON:
-                    data = json.load(JSON)
-            result = original_func(data, *args, **kwargs)
-            with open(dir + "/" + name + ".json", 'w') as JSON:
-                json.dump(data, JSON, indent=4)
-            return result
-    return wrapper
-
-
-@createJson
-def writeJSON(data: dict) -> None:
-    sel = pm.ls(sl=True)
-    if not sel:
-        print("Nothing selected.")
-    else:
-        for j, k in enumerate(sel):
-            if j % 2:
-                continue
-            else:
-                obj = sel[j+1].name()
-                cc = k.name()
-                pm.parentConstraint(cc, obj, mo=True, w=1)
-                pm.scaleConstraint(cc, obj, mo=True, w=1)
-                data[obj] = cc
-
-
-@createJson
-def loadJSON(data: dict) -> None:
-    for obj, cc in data.items():
-        pm.parentConstraint(cc, obj, mo=True, w=1)
-        pm.scaleConstraint(cc, obj, mo=True, w=1)
 
 
 def ctrl(**kwargs) -> list:
@@ -820,12 +766,77 @@ def ctrl(**kwargs) -> list:
         "sqr": sqr, 
         "cross": cross, 
     }
-    if kwargs:
-        coordinate = [ctrl[i] for i in kwargs if kwargs[i]]
-        result = [pm.curve(d=1, p=i) for i in coordinate]
+    if not kwargs:
+        tmp = input()
+        coordinate = []
+        try:
+            for i in tmp.split(","):
+                key, val = i.strip().split("=")
+                if val == "True":
+                    coordinate.append(ctrl[key])
+                else:
+                    continue
+        except:
+            print("The parameter is incorrect.")
     else:
-        result = []
+        coordinate = [ctrl[i] for i in kwargs if kwargs[i]]
+    result = [pm.curve(d=1, p=i) for i in coordinate]
     return result
+
+
+def createJson(original_func):
+    """ A decorator for creating Json files. """
+    def wrapper(*args, **kwargs):
+        fullPath = pm.Env().sceneName()
+        if not fullPath:
+            print("File not saved.")
+        else:
+            dir = os.path.dirname(fullPath)
+            name_Ext = os.path.basename(fullPath)
+            name, ext = os.path.splitext(name_Ext)
+            jsonAll = [i for i in os.listdir(dir) if i.endswith('.json')]
+            verDict = {}
+            for i in jsonAll:
+                tmp = re.search('(.*)[_v]([0-9]{4})[.].*', i)
+                num = int(tmp.group(2))
+                verDict[num] = tmp.group(1)
+            if not verDict:
+                jsonFile = dir + "/" + name + ".json"
+                data = {}
+            else:
+                verMax = max(verDict.keys())
+                jsonFile = f"{dir}/{verDict[verMax]}v%04d.json" % verMax
+                with open(jsonFile) as JSON:
+                    data = json.load(JSON)
+            result = original_func(data, *args, **kwargs)
+            with open(dir + "/" + name + ".json", 'w') as JSON:
+                json.dump(data, JSON, indent=4)
+            return result
+    return wrapper
+
+
+@createJson
+def writeJSON(data: dict) -> None:
+    sel = pm.ls(sl=True)
+    if not sel:
+        print("Nothing selected.")
+    else:
+        for j, k in enumerate(sel):
+            if j % 2:
+                continue
+            else:
+                obj = sel[j+1].name()
+                cc = k.name()
+                pm.parentConstraint(cc, obj, mo=True, w=1)
+                # pm.scaleConstraint(cc, obj, mo=True, w=1)
+                data[obj] = cc
+
+
+@createJson
+def loadJSON(data: dict) -> None:
+    for obj, cc in data.items():
+        pm.parentConstraint(cc, obj, mo=True, w=1)
+        pm.scaleConstraint(cc, obj, mo=True, w=1)
 
 
 def grouping():
@@ -859,6 +870,22 @@ def groupingEmpty():
             pass
         pm.parent(i, grp)
     return grpName
+
+
+def deletePlugins():
+    """ Attempt to delete unused plugins. """
+    unknownList = pm.ls(type="unknown")
+    # Just delete Unknown type list.
+    pm.delete(unknownList)
+    pluginList = pm.unknownPlugin(q=True, l=True)
+    if not pluginList:
+        print("There are no unknown plugins.")
+    else:
+        for j, k in enumerate(pluginList):
+            pm.unknownPlugin(k, r=True)
+            # Print deleted plugin's names and number
+            print(f"{j} : {k}")
+        print('Delete completed.')
 
 
 def selectObj():
@@ -910,22 +937,6 @@ def selectDup():
         pm.select(dup)
 
 
-def deletePlugins():
-    """ Attempt to delete unused plugins. """
-    unknownList = pm.ls(type="unknown")
-    # Just delete Unknown type list.
-    pm.delete(unknownList)
-    pluginList = pm.unknownPlugin(q=True, l=True)
-    if not pluginList:
-        print("There are no unknown plugins.")
-    else:
-        for j, k in enumerate(pluginList):
-            pm.unknownPlugin(k, r=True)
-            # Print deleted plugin's names and number
-            print(f"{j} : {k}")
-        print('Delete completed.')
-
-
 def zeroPivot():
     """ Move pivot to zero. """
     sel = pm.ls(sl=True)
@@ -937,10 +948,14 @@ def zeroPivot():
 
 def rename(*arg: str) -> None:
     """ Rename by incrementing the last digit in the string. """
-    legArg = len(arg)
+    if not arg:
+        tmp = input()
+        arg = [i.strip() for i in tmp.split(",")]
+        arg = tuple(arg)
+    lenArg = len(arg)
     sel = pm.ls(sl=True)
     # Given a single argument, create a new name.
-    if legArg == 1:
+    if lenArg == 1:
         txt = arg[0]
         # txtList -> ['testName', '23', '_', '17', '_grp']
         txtList = re.split(r'([^0-9]+)([0-9]*)', txt)
@@ -972,16 +987,14 @@ def rename(*arg: str) -> None:
                 new = ''.join(txtList) + str(j)
                 pm.rename(k, new)
     # Two arguments replace words.
-    elif legArg == 2:
+    elif lenArg == 2:
         before = arg[0]
         after = arg[1]
         for obj in sel:
             new = obj.replace(before, after)
             pm.rename(obj, new)
     else:
-        msg = "Given a single argument, create a new name. "
-        msg += "Two arguments replace words."
-        print(msg)
+        print("<New name> or <Old name, New name>")
 
 
 def poleVector():
@@ -1054,12 +1067,13 @@ def lineStraight():
     sel = pm.ls(sl=True, fl=True)
     if not sel:
         print('Nothing selected.')
-        return 0
-    dup = pm.duplicate(sel, rr=True) # Copy the original backUp
-    dup = dup[0]
-    pm.setAttr(f"{dup}.visibility", 0)
+        return
     alpha = sel[0]
     omega = sel[-1]
+    # Copy the original backUp
+    tmp = pm.ls(sel, o=True)
+    dup = pm.duplicate(tmp, rr=True)
+    dup = dup[0]
     # makeEquation
     X1, Y1, Z1 = alpha.getPosition(space="world")
     X2, Y2, Z2 = omega.getPosition(space="world")
@@ -1165,5 +1179,4 @@ def copyHJK():
 
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
-
 
