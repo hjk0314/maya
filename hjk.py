@@ -1190,6 +1190,56 @@ def vertexNum() -> list:
     return result
 
 
+def reducedVtxNum(vertexNum: list) -> list:
+    """ Get number lists, select that vertex """
+    # sel = pm.ls(sl=True, o=True)
+    # obj = sel[0]
+    init = [i for i in vertexNum if not (i-1) in vertexNum]
+    last = [i for i in vertexNum if not (i+1) in vertexNum]
+    lenLst = len(init)
+    result = []
+    for i in range(lenLst):
+        if init[i] == last[i]:
+            result.append(f"[{init[i]}]")
+        else:
+            result.append(f"[{init[i]}:{last[i]}]")
+    # pm.select(result)
+    return result
+
+
+def createVtxInfo(jnt: str) -> dict:
+    """ Create a dictionary with joint names and vertex numbers. """
+    vtxInfo = {}
+    num = vertexNum()
+    val = reducedVtxNum(num)
+    vtxInfo[jnt] = val
+    dir = "C:/Users/jkhong/Desktop"
+    with open(dir + "/" + jnt + ".json", 'w') as JSON:
+        json.dump(vtxInfo, JSON, indent=4)
+
+
+def selectVtxInfo(jnt: str):
+    """ Load information from json file and select vertex. """
+    sel = pm.ls(sl=True, o=True)
+    if not sel:
+        return
+    obj = sel[0]
+    dir = "C:/Users/jkhong/Desktop"
+    with open(dir + "/" + jnt + ".json") as JSON:
+        data = json.load(JSON)
+    result = [f"{obj}.vtx{num}" for num in data[jnt]]
+    pm.select(result)
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 
+
+# createVtxInfo('spine_9')
+
+# selectVtxInfo('spine_11')
+# selectVtxInfo('spine_8')
+# selectVtxInfo('neck_1')
+# selectVtxInfo('neck_2')
+# selectVtxInfo('neck_3')
+# selectVtxInfo('neck_4')
