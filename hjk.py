@@ -473,7 +473,10 @@ class VertexSeletor:
         to json files in the same path of this scene.
          """
         self.jsonPath = self.getJsonPath()
-        self.setupUI()
+        if not self.jsonPath:
+            return
+        else:
+            self.setupUI()
     
 
     def getJsonPath(self):
