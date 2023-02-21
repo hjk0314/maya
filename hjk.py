@@ -602,6 +602,187 @@ class VertexSeletor:
         pm.select(result, af=ADD, tgl=TGL)
 
 
+class LineConnect:
+    def __init__(self):
+        """ Creates a line connecting two objects or two points.
+        If you select a point initially, 
+        the last one you select must also be a point. 
+        If you have selected an object, you must select the object last.
+        input() is where you put the name of the line..
+         """
+        self.sel = pm.ls(sl=True, fl=True)
+        try:
+            self.name = input()
+        except:
+            print("Cancled.")
+            return
+        self.main()
+
+
+    def main(self):
+        """ Make a line first. 
+        Create an expression that calculates the distance between two points, 
+        and create a channel to write it. 
+        Connect each with pointConstraint and aimConstraint. 
+        upVector is used for aimConstraint.
+         """
+        if not self.sel:
+            print("Nothing selected.")
+        elif len(self.sel) < 2:
+            print("Two points are needed.")
+        else:
+            # cuv: curve
+            # cuvLen: length of curve
+            # aloc: start object or point
+            # oloc: last object or point
+            # grp: group of curve
+            # upV: up vector of the curve
+            cuv, aloc, oloc = self.makeLine()
+            cuvLen = pm.arclen(cuv)
+            cuvLen = round(cuvLen, 3)
+            self.makeAttr(cuv)
+            self.makeExression(aloc, oloc, cuv, cuvLen)
+            grp = self.makeGroup(cuv)
+            upV = self.makeUpVector(cuv, grp)
+            self.makeConstraint(aloc, oloc, cuv, upV)
+
+
+    # Create a line connecting two points.
+    def makeLine(self) -> str:
+        alpha = self.sel[0]
+        omega = self.sel[-1]
+        try:
+            aPos, oPos = [pm.pointPosition(i) for i in [alpha, omega]]
+        except:
+            tmp = []
+            for i in [alpha, omega]:
+                pos = pm.xform(i, q=1, ws=1, rp=1)
+                tmp.append(pos)
+            aPos, oPos = tmp
+        cuv = pm.curve(d=1, p=[aPos, oPos], n=self.name)
+        sPiv = f"{cuv}.scalePivot"
+        rPiv = f"{cuv}.rotatePivot"
+        aLoc = pm.spaceLocator(n=f"{cuv}_startLoc")
+        oLoc = pm.spaceLocator(n=f"{cuv}_endLoc")
+        a1, a2, a3 = aPos
+        o1, o2, o3 = oPos
+        pm.move(a1, a2, a3, aLoc, r=True)
+        pm.move(o1, o2, o3, oLoc, r=True)
+        pm.move(a1, a2, a3, sPiv, rPiv, rpr=True)
+        pm.aimConstraint(oLoc, aLoc)
+        pm.delete(aLoc, cn=True)
+        pm.parent(cuv, aLoc)
+        pm.makeIdentity(cuv, a=True, t=1, r=1, s=1, n=0, pn=1)
+        pm.parent(cuv, w=True)
+        pm.rebuildCurve(cuv, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
+        pm.xform(cuv, cpc=True)
+        return cuv, aLoc, oLoc
+
+
+    # create attr to curve
+    def makeAttr(self, cuv):
+        for attrName in ['Distance', 'Ratio']:
+            pm.addAttr(cuv, ln=attrName, at='double', dv=0)
+            pm.setAttr(f'{cuv}.{attrName}', e=True, k=True)
+
+
+    # create expression to curve attr
+    def makeExression(self, Loc1, Loc2, cuv, cuvLen):
+        BR = "\n"
+        expr = f"float $uX = {Loc1}.translateX;" + BR
+        expr += f"float $uY = {Loc1}.translateY;" + BR
+        expr += f"float $uZ = {Loc1}.translateZ;" + BR
+        expr += f"float $dX = {Loc2}.translateX;" + BR
+        expr += f"float $dY = {Loc2}.translateY;" + BR
+        expr += f"float $dZ = {Loc2}.translateZ;" + BR
+        expr += "float $D = `mag<<$dX-$uX, $dY-$uY, $dZ-$uZ>>`;" + BR
+        expr += f"{cuv}.Distance = $D;" + BR
+        expr += f"{cuv}.Ratio = $D / {cuvLen};"
+        pm.expression(s=expr, o='', ae=1, uc='all')
+
+
+    # create group
+    def makeGroup(self, obj):
+        grp = pm.group(em=True, n=f"{obj}_grp")
+        pm.matchTransform(grp, obj, pos=True, rot=True)
+        pm.parent(obj, grp)
+        return grp
+
+
+    # create upVector
+    def makeUpVector(self, cuv, grp):
+        locUpVector = pm.spaceLocator(n=f'{cuv}_upVector')
+        length = pm.getAttr(f"{cuv}.Distance")
+        pm.matchTransform(locUpVector, cuv, pos=True, rot=True)
+        pm.parent(locUpVector, grp)
+        pm.move(0, length, 0, locUpVector, r=True, ls=True, wd=True)
+        # pm.parent(locUpVector, w=True)
+        return locUpVector
+
+
+    # The line is centered between the two points.
+    def makeConstraint(self, Loc1, Loc2, cuv, upVector):
+        up = upVector.name(long=True)
+        pm.pointConstraint(Loc1, cuv, mo=True, w=0.5)
+        pm.pointConstraint(Loc2, cuv, mo=True, w=0.5)
+        pm.aimConstraint(Loc2, cuv, wut="object", wuo=up)
+        for i in ["sx", "sy", "sz"]:
+            pm.connectAttr(f"{cuv}.Ratio", f"{cuv}.{i}")
+
+
+class Colors:
+    def __init__(self):
+        """ Change the color of the shape. """
+        self.setupUI()
+
+
+    # UI
+    def setupUI(self):
+        winName = 'colorsButton'
+        if pm.window(winName, exists=True):
+            pm.deleteUI(winName)
+        else:
+            win = pm.window(winName, t='Colors', s=True, rtf=True)
+            pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=188)
+            pm.separator(h=10)
+            pm.rowColumnLayout(nc=2, cw=[(1, 90), (2, 90)])
+            pm.button(l='colors_blue', c=lambda x: self.colors(blue=True))
+            pm.button(l='colors_blue2', c=lambda x: self.colors(blue2=True))
+            pm.button(l='colors_pink', c=lambda x: self.colors(pink=True))
+            pm.button(l='colors_red', c=lambda x: self.colors(red=True))
+            pm.button(l='colors_red2', c=lambda x: self.colors(red2=True))
+            pm.button(l='colors_green', c=lambda x: self.colors(green=True))
+            pm.button(l='colors_green2', c=lambda x: self.colors(green2=True))
+            pm.button(l='colors_yellow', c=lambda x: self.colors(yellow=True))
+            pm.setParent("..", u=True)
+            pm.separator(h=10)
+            pm.button(l="Close", c=lambda x: pm.deleteUI(winName))
+            pm.separator(h=10)
+            pm.showWindow(win)
+
+
+    # This is Main function.
+    def colors(self, **kwargs):
+        sel = pm.ls(sl=True)
+        colors = {
+            "blue": 6, 
+            "blue2": 18, 
+            "pink": 9, 
+            "red": 13, 
+            "red2": 21, 
+            "green": 14, 
+            "green2": 23, 
+            "yellow": 17, 
+        }
+        idxs = [colors[i] for i in kwargs if kwargs[i]]
+        enb = 1 if idxs else 0
+        idx = idxs[0] if idxs else 0
+        for i in sel:
+            shp = i.getShape()
+            pm.setAttr(f"{shp}.overrideEnabled", enb)
+            pm.setAttr(f"{shp}.overrideColor", idx)
+
+
 def createCuv_thruPoint(startFrame: int, endFrame: int) -> list:
     """ Creates a curve through points.
     This function works even if you select a point.
@@ -1063,7 +1244,24 @@ def selectJnt():
     pm.select(grp)
 
 
-def selectDup():
+def selectVerts_influenced():
+    """ Select the bone first, and the mesh at the end. """
+    sel = pm.ls(sl=True)
+    num = len(sel)
+    if num != 2:
+        return
+    bone = sel[0]
+    mesh = sel[-1]
+    if pm.objectType(bone) != 'joint':
+        print("Select the bone first.")
+    elif not mesh.getShape():
+        print("the mesh at the end.")
+    else:
+        skin = mesh.listHistory(type="skinCluster")
+        pm.skinCluster(skin, e=True, siv=bone)
+
+
+def check_sameName():
     """ Select objects with duplicate names. """
     sel = pm.ls(tr=True) # tr: transform object
     dup = [i for i in sel if "|" in i]
@@ -1157,28 +1355,6 @@ def poleVector():
         pm.matchTransform(loc, tmp2, pos=True, rot=True)
         # Delete temporarily used joints.
         pm.delete(tmp1)
-
-
-def colors(**kwargs):
-    """ Change the color of the shape. """
-    sel = pm.ls(sl=True)
-    colors = {
-        "blue": 6, 
-        "blue2": 18, 
-        "pink": 9, 
-        "red": 13, 
-        "red2": 21, 
-        "green": 14, 
-        "green2": 23, 
-        "yellow": 17, 
-    }
-    idxs = [colors[i] for i in kwargs if kwargs[i]]
-    enb = 1 if idxs else 0
-    idx = idxs[0] if idxs else 0
-    for i in sel:
-        shp = i.getShape()
-        pm.setAttr(f"{shp}.overrideEnabled", enb)
-        pm.setAttr(f"{shp}.overrideColor", idx)
 
 
 def openFolder():
@@ -1315,5 +1491,6 @@ def copyHJK():
 
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
+
 
 
