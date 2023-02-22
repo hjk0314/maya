@@ -1495,8 +1495,8 @@ def copyHJK():
 
 sel = pm.ls(sl=True)
 num = len(sel)
-print(num)
-countSetRange = (num // 3) + 1
+
+countSetRange = (num//3) + (1 if num%3 else 0)
 setRangeList = []
 for i in range(countSetRange):
     tmp = pm.shadingNode("setRange", au=True)
@@ -1510,14 +1510,14 @@ for i in range(countSetRange):
     pm.setAttr(f"{tmp}.oldMaxY", 2 + (i * 3))
     pm.setAttr(f"{tmp}.oldMaxZ", 3 + (i * 3))
     setRangeList.append(tmp)
-print(setRangeList)
+
 
 for j, k in enumerate(sel):
     prev = sel[j-1]
     curr = k
-    next = sel[0] if j+1 > num else sel[j+1]
+    next = sel[0] if j+1 >= num else sel[j+1]
     setRangeNode = setRangeList[j//3]
-
+    print(setRangeNode, j//3)
     plusMinusNode = pm.shadingNode("plusMinusAverage", au=True)
     pm.setAttr(f"{plusMinusNode}.operation", 2)
     pm.setAttr(f"{plusMinusNode}.input1D[1]", 180)
