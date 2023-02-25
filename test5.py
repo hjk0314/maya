@@ -798,3 +798,22 @@ def temp():
 #     print(pm.skinPercent(skin, point, v=True, ib=0.041, q=True))
 
 
+# countSetRange = (num//3) + (1 if num%3 else 0)
+
+sel = pm.ls(sl=True)
+num = len(sel)
+setRangeList = []
+for j, k in enumerate(sel):
+    prev = sel[j-1]
+    curr = k
+    next = sel[0] if j+1 >= num else sel[j+1]
+    setRangeNode = setRangeList[j//3]
+    print(setRangeNode, j//3)
+    plusMinusNode = pm.shadingNode("plusMinusAverage", au=True)
+    pm.setAttr(f"{plusMinusNode}.operation", 2)
+    pm.setAttr(f"{plusMinusNode}.input1D[1]", 180)
+    out = ["outValueX", "outValueY", "outValueZ"]
+    pm.connectAttr(f"{setRangeNode}.{out[j%3]}", f"{k}.rotateX", f=True)
+    pm.connectAttr(f"{k}.rotateX", f"{plusMinusNode}.input1D[0]", f=True)
+    pm.connectAttr(f"{plusMinusNode}.output1D", f"{prev}.visibility", f=True)
+    
