@@ -816,4 +816,42 @@ for j, k in enumerate(sel):
     pm.connectAttr(f"{setRangeNode}.{out[j%3]}", f"{k}.rotateX", f=True)
     pm.connectAttr(f"{k}.rotateX", f"{plusMinusNode}.input1D[0]", f=True)
     pm.connectAttr(f"{plusMinusNode}.output1D", f"{prev}.visibility", f=True)
-    
+
+
+
+def temp():
+    sel = pm.ls(sl=True)
+    end = sel[-1]
+    pos = pm.xform(end, q=True, ws=True, rp=True)
+    for i in sel:
+        if i == end:
+            continue
+        else:
+            pm.xform(i, os=True, piv=pos)
+            grp = pm.group(em=True, n = i + "_grp")
+            pm.matchTransform(grp, i, pos=True, rot=True)
+            try:
+                mom = i.getParent()
+                pm.parent(grp, mom)
+            except:
+                pass
+            pm.parent(i, grp)
+
+
+def temp2():
+    sel = pm.ls(sl=True)
+    cuv = "curve3"
+    for i in sel:
+        tmp = pm.duplicate(cuv, rr=True)
+        dup = tmp[0]
+        loc = i.name()
+        new = loc.replace("loc_", "cc_")
+        pm.rename(dup, new)
+        pm.matchTransform(new, i, pos=True)
+
+
+sel = pm.ls(sl=True)
+# num = len(sel)
+for i in sel:
+    tmp = pm.listConnections(i, scn=True)
+    print(tmp[0])

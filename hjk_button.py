@@ -21,6 +21,7 @@ else:
     pm.button(l='VertexSelector', c=lambda x: hjk.VertexSeletor())
     pm.button(l='LineConnect', c=lambda x: hjk.LineConnect())
     pm.button(l='Colors', c=lambda x: hjk.Colors())
+    pm.button(l='SolariBoard', c=lambda x: hjk.SolariBoard())
     pm.button(l='cuv_thruLoc', c=lambda x: hjk.createCuv_thruLoc())
     pm.button(l='cuv_thruLoc_Closed', c=lambda x: hjk.createCuv_thruLoc(cl=True))
     pm.button(l='creatLoc', c=lambda x: hjk.createLoc())
