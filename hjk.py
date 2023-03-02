@@ -991,25 +991,24 @@ def createLoc(**kwargs):
     """ Creates locator or joint in boundingBox.
     Usage: createLoc(jnt=True) """
     sel = pm.ls(sl=True)
-    for i in sel:
-        bb = pm.xform(i, q=True, bb=True, ws=True)
-        xMin, yMin, zMin, xMax, yMax, zMax = bb
-        x = (xMin + xMax) / 2
-        y = (yMin + yMax) / 2
-        z = (zMin + zMax) / 2
-        loc = pm.spaceLocator()
-        pm.move(loc, x, y, z)
-        if not kwargs:
-            pass
-        else:
-            for key, value in kwargs.items():
-                if key=="jnt" and value:
-                    pm.select(cl=True)
-                    jnt = pm.joint(p=(0,0,0), rad=1)
-                    pm.matchTransform(jnt, loc, pos=True)
-                    pm.delete(loc)
-                else:
-                    continue
+    bb = pm.xform(sel, q=True, bb=True, ws=True)
+    xMin, yMin, zMin, xMax, yMax, zMax = bb
+    x = (xMin + xMax) / 2
+    y = (yMin + yMax) / 2
+    z = (zMin + zMax) / 2
+    loc = pm.spaceLocator()
+    pm.move(loc, x, y, z)
+    if not kwargs:
+        pass
+    else:
+        for key, value in kwargs.items():
+            if key=="jnt" and value:
+                pm.select(cl=True)
+                jnt = pm.joint(p=(0,0,0), rad=1)
+                pm.matchTransform(jnt, loc, pos=True)
+                pm.delete(loc)
+            else:
+                continue
 
 
 def createLine() -> str:
