@@ -1338,9 +1338,9 @@ def groupingNull():
         pm.xform(grp, os=True, piv=(0,0,0))
 
 
-def groupingEmpty():
+def groupingEmpty(*arg: str) -> list:
     """ Create an empty group and match the pivot with the selector. """
-    sel = pm.ls(sl=True)
+    sel = arg if arg else pm.ls(sl=True)
     grpName = []
     for i in sel:
         grp = pm.group(em=True, n = i + "_grp")
@@ -1647,6 +1647,24 @@ def jntNone(*arg: int) -> None:
             pm.setAttr(f"{i}.drawStyle", num)
 
 
+def makeFolder():
+    """ Copy Source folder to New Folder """
+    src = r"T:\AssetTeam\Share\Templates\MayaProjectSample"
+    folder = pm.fileDialog2(fm=0, ds=2, okc='Create', cap='Create Folder')
+    srcCheck = os.path.isdir(src)
+    if not srcCheck:
+        print("There is no source folder.\n", src)
+        return
+    elif folder == None:
+        return
+    else:
+        folder = folder[0]
+        folderPath = os.path.splitext(folder)[0]
+        shutil.copytree(src, folderPath)
+        os.startfile(folderPath)
+        return folderPath
+
+
 def copyHJK():
     """ Copy hjk.py 
     from <in git folder> to <maya folder in MyDocuments> """
@@ -1659,3 +1677,25 @@ def copyHJK():
 # 72 docstring or comments line ========================================
 
 
+def temp():
+    cuv = "curve1"
+    sel = pm.ls(sl=True)
+    for i in sel:
+        tmp = i.rsplit("_", 1)
+        tmp = tmp[0]
+        new = "cc_" + tmp
+        dup = pm.duplicate(cuv, rr=True, n=new)
+        dup = dup[0]
+        pm.matchTransform(dup, i, pos=True)
+        pm.parentConstraint(dup, i, mo=True, w=1)
+        groupingEmpty(dup)
+
+
+sel = pm.ls(sl=True)
+end = sel[-1]
+num = len(sel)
+for j, k in enumerate(sel):
+    if j < (num - 1):
+        pm.connectAttr(f"{end}.rotateX", f"{k}.rotateX", f=True)
+    else:
+        continue
