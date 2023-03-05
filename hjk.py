@@ -1691,11 +1691,30 @@ def temp():
         groupingEmpty(dup)
 
 
-sel = pm.ls(sl=True)
-end = sel[-1]
-num = len(sel)
-for j, k in enumerate(sel):
-    if j < (num - 1):
-        pm.connectAttr(f"{end}.rotateX", f"{k}.rotateX", f=True)
-    else:
-        continue
+# sel = pm.ls(sl=True)
+# end = sel[-1]
+# num = len(sel)
+# for j, k in enumerate(sel):
+#     if j < (num - 1):
+#         pm.connectAttr(f"{end}.rotateX", f"{k}.rotateX", f=True)
+#     else:
+#         continue
+
+
+def temp2():
+    sel = pm.ls(sl=True, fl=True)
+    leaf = "leaf_1"
+    for i in sel:
+        dup = pm.duplicate(leaf, rr=True)
+        pos = pm.pointPosition(i, w=True)
+        pm.move(pos[0], pos[1], pos[2], dup)
+
+
+
+# Offset the Keys
+def keyOff(i=1): # i : interval
+    sel = pm.ls(sl=True, fl=True)
+    for j, k in enumerate(sel):
+        pm.keyframe(k, e=True, r=True, tc = j * i)
+
+
