@@ -1691,16 +1691,6 @@ def temp():
         groupingEmpty(dup)
 
 
-# sel = pm.ls(sl=True)
-# end = sel[-1]
-# num = len(sel)
-# for j, k in enumerate(sel):
-#     if j < (num - 1):
-#         pm.connectAttr(f"{end}.rotateX", f"{k}.rotateX", f=True)
-#     else:
-#         continue
-
-
 def temp2():
     sel = pm.ls(sl=True, fl=True)
     leaf = "leaf_1"
@@ -1716,5 +1706,34 @@ def keyOff(i=1): # i : interval
     sel = pm.ls(sl=True, fl=True)
     for j, k in enumerate(sel):
         pm.keyframe(k, e=True, r=True, tc = j * i)
+
+
+
+def createAttr():
+    sel = pm.ls(sl=True)
+    attr = ["Geo_Hide", "Sub_Ctrl"]
+    for cuv in sel:
+        for attrName in attr:
+            pm.addAttr(cuv, ln=attrName, at='bool')
+            pm.setAttr(f'{cuv}.{attrName}', e=True, k=True)
+
+
+def temp3():
+    sel = pm.ls(sl=True)
+    for i in sel:
+        pm.select(cl=True)
+        jnt = pm.joint(p=(0,0,0), rad=1)
+        pm.matchTransform(jnt, i, pos=True)
+
+
+def temp4():
+    sel = pm.ls(sl=True)
+    end = sel[-1]
+    num = len(sel)
+    for j, k in enumerate(sel):
+        if j < (num - 1):
+            pm.connectAttr(f"{end}.rotateX", f"{k}.rotateX", f=True)
+        else:
+            continue
 
 
