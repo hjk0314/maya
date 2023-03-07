@@ -786,8 +786,8 @@ class Colors:
 class SolariBoard:
     def __init__(self):
         """ A Class to create a solariBoard. 
-        Select the cards in order and call the class. 
-        Enter the name of the controller in the "input() window". 
+        Select the cards in order and call this function. 
+        Enter the <name of the controller> in the "input() window". 
         The number of cards must be 5 or more. 
         Use setRange node, plusMinusEverage node and expression. 
         Cards turned upside down can be problematic.
@@ -1647,6 +1647,30 @@ def jntNone(*arg: int) -> None:
             pm.setAttr(f"{i}.drawStyle", num)
 
 
+def attr_geoHide():
+    """ Create and connect <Geo_Hide> channels """
+    sel = pm.ls(sl=True)
+    geo = sel.pop()
+    attr = "Geo_Hide"
+    vis = "visibility"
+    for ctrl in sel:
+        pm.addAttr(ctrl, ln=attr, at='bool')
+        pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
+        pm.connectAttr(f"{ctrl}.{attr}", f"{geo}.{vis}", f=True)
+
+
+def attr_subCtrl():
+    """ Create and connect <Sub_Ctrl> channels """
+    sel = pm.ls(sl=True)
+    grp = sel.pop()
+    attr = "Sub_Ctrl"
+    vis = "visibility"
+    for ctrl in sel:
+        pm.addAttr(ctrl, ln=attr, at='bool')
+        pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
+        pm.connectAttr(f"{ctrl}.{attr}", f"{grp}.{vis}", f=True)
+
+
 def makeFolder():
     """ Copy Source folder to New Folder """
     src = r"T:\AssetTeam\Share\Templates\MayaProjectSample"
@@ -1677,30 +1701,6 @@ def copyHJK():
 # 72 docstring or comments line ========================================
 
 
-def temp():
-    cuv = "curve1"
-    sel = pm.ls(sl=True)
-    for i in sel:
-        tmp = i.rsplit("_", 1)
-        tmp = tmp[0]
-        new = "cc_" + tmp
-        dup = pm.duplicate(cuv, rr=True, n=new)
-        dup = dup[0]
-        pm.matchTransform(dup, i, pos=True)
-        pm.parentConstraint(dup, i, mo=True, w=1)
-        groupingEmpty(dup)
-
-
-def temp2():
-    sel = pm.ls(sl=True, fl=True)
-    leaf = "leaf_1"
-    for i in sel:
-        dup = pm.duplicate(leaf, rr=True)
-        pos = pm.pointPosition(i, w=True)
-        pm.move(pos[0], pos[1], pos[2], dup)
-
-
-
 # Offset the Keys
 def keyOff(i=1): # i : interval
     sel = pm.ls(sl=True, fl=True)
@@ -1709,31 +1709,22 @@ def keyOff(i=1): # i : interval
 
 
 
-def createAttr():
-    sel = pm.ls(sl=True)
-    attr = ["Geo_Hide", "Sub_Ctrl"]
-    for cuv in sel:
-        for attrName in attr:
-            pm.addAttr(cuv, ln=attrName, at='bool')
-            pm.setAttr(f'{cuv}.{attrName}', e=True, k=True)
-
-
-def temp3():
-    sel = pm.ls(sl=True)
-    for i in sel:
-        pm.select(cl=True)
-        jnt = pm.joint(p=(0,0,0), rad=1)
-        pm.matchTransform(jnt, i, pos=True)
-
-
-def temp4():
-    sel = pm.ls(sl=True)
-    end = sel[-1]
-    num = len(sel)
-    for j, k in enumerate(sel):
-        if j < (num - 1):
-            pm.connectAttr(f"{end}.rotateX", f"{k}.rotateX", f=True)
-        else:
-            continue
-
+# Create strokes and convert them to polygons
+def createStroke(cuv):
+    pm.select(cl=True)
+    pm.select(cuv)
+    mel.eval("AttachBrushToCurves;")
+    strok = pm.ls(sl=True, dag=True, s=True)
+    strok = strok[0]
+    brush = [i for i in strok.inputs() if pm.nodeType(i)=="brush"]
+    brush = brush[0]
+    pm.setAttr(f'{brush}.globalScale', 30)
+    mel.eval("doPaintEffectsToPoly(1, 0, 1, 1, 100000);")
+    pTube = [i.getParent() for i in pm.ls(sl=True)]
+    pTube = pTube[0]
+    pTubeGrp = pTube.getParent()
+    newName = cuv.replace('cuv_', 'newObj_')
+    pm.parent(pTube, w=True)
+    pm.rename(pTube, newName)
+    pm.delete(pTubeGrp)
 

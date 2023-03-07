@@ -532,36 +532,6 @@ def standalone_template():
     # cmds.file(s=True, f=True)
 
 
-# folder = "U:/DOJ/Rnd/Horse/Output/ABC/horseGroomV0006_sim_v0102"
-# searchList = ['hair', 'add', ]
-# extension = '.abc'
-# fileList = os.listdir(folder)
-# for i in fileList:
-#     name, ext = os.path.splitext(i)
-#     for j in searchList:
-#         if ext != extension:
-#             continue
-#         elif re.match(f'.*{j}.*', i):
-#             print(f"{folder}/{i}")
-#             pm.importFile(f"{folder}/{i}")
-#         else:
-#             print(f"There are no files matching the {j}")
-
-    #     tmp.group(1)
-
-    # print(checkList)
-    # for k in checkList:
-    #     if ext == extension:
-    #     else:
-    #         continue
-
-
-# for i in sel:
-#     tmp = re.match(f'(.*){search}(.*)', i)
-
-# print(tmp)
-
-
 def createChannels():
     sel = pm.ls(sl=True)
     channelList = [
@@ -607,128 +577,12 @@ def createBlendColors(SWITCH, setR, IK, FK, FBX):
     pm.connectAttr(f"{setR}.outValueX", f"{bls}.blender", f=True)
 
 
-
-# createChannels()
-# ctrl(pointer=True)
-# rename("cc_tailIK_3")
-# rename("cc_spineIn_1")
-# sel = pm.ls(sl=True)
-# new = sel[0]
-# old = sel[1]
-# pm.matchTransform(new, old, pos=True)
-# pm.rename(new, old)
-# connectBlendColors()
-# sel = pm.ls(sl=True)
-# for i in sel:
-#     pm.connectAttr("multiplyDivide6.output", f"{i}.scale", f=True)
-
-
-
 def getDistance(sp: list, ep: list):
     x1, y1, z1 = sp
     x2, y2, z2 = ep
     result = sqrt(pow(x1-x2, 2) + pow(y1-y2, 2) + pow(z1-z2, 2))
     result = round(result, 3)
     return result
-
-
-def getSum(numList):
-    sum = 0
-    for num in numList:
-        sum += num
-    return sum
-
-
-def aald():
-    sel = pm.ls(sl=True, fl=True)
-    jntList = ['joint3', 'joint4', 'joint6']
-    disDict = {}
-    for point in sel:
-        tmp = {}
-        for jnt in jntList:
-            posJoint = pm.xform(jnt, q=True, ws=True, rp=True)
-            posPoint = point.getPosition()
-            distance = getDistance(posPoint, posJoint)
-            tmp[jnt] = distance
-        sum = getSum(tmp.values())
-        for key, value in tmp.items():
-            tmp[key] = sum / value
-        sum = getSum(tmp.values())
-        for key, value in tmp.items():
-            tmp[key] = round(value/sum, 3)
-        disDict[point.name()] = tmp
-    return disDict
-
-
-
-
-# Create joints and apply them to splineHandleTool
-# def createSpline(num: int):
-#     sel = pm.ls(sl=True)
-#     for cuv in sel:
-#         dup = pm.duplicate(cuv, rr=True)
-#         # tmp = createMotionPath(num)
-#         newName = cuv.replace('cuv_', 'jnt_')
-#         jntList = []
-#         for j, k in enumerate(tmp):
-#             pm.select(cl=True)
-#             jnt = pm.joint(n=f"{newName}_%d" % j, p=(0, 0, 0), rad=5)
-#             jntList.append(jnt)
-#             pm.matchTransform(jnt, k, pos=True)
-#         pm.delete(dup, tmp)
-#         for n in range(num):
-#             if n + 1 < num:
-#                 pm.parent(jntList[n + 1], jntList[n])
-#             else:
-#                 continue
-#         sJnt = jntList[0]
-#         mJnt = jntList[int(num/2)]
-#         eJnt = jntList[-1]
-#         newName = cuv.replace('cuv_', 'ikH_')
-#         pm.select(sJnt)
-#         # orientJnt()
-#         ikH = pm.ikHandle(sol="ikSplineSolver", 
-#             n=newName, # name
-#             sj=sJnt, # startJoint
-#             ee=eJnt, # endEffector
-#             c=cuv, # curve
-#             ccv=False, # createCurve
-#             scv=False, # simplifyCurve
-#             cra=True, # createRootAxis
-#             ns=3 # numSpans
-#         )
-#         ikH = ikH[0]
-#         newName = cuv.replace('cuv_', 'loc_')
-#         loc = pm.spaceLocator(n=newName)
-#         pm.matchTransform(loc, mJnt, pos=True, rot=True)
-#         pm.select(loc)
-#         # groupingEmpty()
-#         pm.move(0, 30, 0, loc, r=True, os=True, wd=True)
-#         pm.setAttr(f"{ikH}.dTwistControlEnable", 1)
-#         pm.setAttr(f"{ikH}.dWorldUpType", 1)
-#         pm.setAttr(f"{ikH}.dForwardAxis", 0)
-#         pm.setAttr(f"{ikH}.dWorldUpAxis", 0)
-#         pm.connectAttr(f"{loc}.worldMatrix[0]", f"{ikH}.dWorldUpMatrix")
-
-
-# Create strokes and convert them to polygons
-def createStroke(cuv):
-    pm.select(cl=True)
-    pm.select(cuv)
-    mel.eval("AttachBrushToCurves;")
-    strok = pm.ls(sl=True, dag=True, s=True)
-    strok = strok[0]
-    brush = [i for i in strok.inputs() if pm.nodeType(i)=="brush"]
-    brush = brush[0]
-    pm.setAttr(f'{brush}.globalScale', 30)
-    mel.eval("doPaintEffectsToPoly(1, 0, 1, 1, 100000);")
-    pTube = [i.getParent() for i in pm.ls(sl=True)]
-    pTube = pTube[0]
-    pTubeGrp = pTube.getParent()
-    newName = cuv.replace('cuv_', 'newObj_')
-    pm.parent(pTube, w=True)
-    pm.rename(pTube, newName)
-    pm.delete(pTubeGrp)
 
 
 # Point position to create a controller
@@ -738,8 +592,6 @@ def pointPosition():
     point = [tuple([round(j, 3) for j in i]) for i in pos]
     print(point)
     return point
-
-
 
 
 def createBones():
@@ -759,99 +611,3 @@ def parentBone():
             continue
 
 
-def connScale():
-    sel = pm.ls(sl=True)
-    for i in sel:
-        pm.connectAttr("multiplyDivide10.output", f"{i}.scale", f=True)
-
-
-# pathAni(9)
-# rename('cc_cuvSkirt1_1')
-# rename('cc_cuvSkirt2_1')
-# rename('cc_cuvSkirt3_1')
-# rename('cc_cuvSkirt4_1')
-# rename('cc_cuvSkirt5_1')
-
-def temp():
-    sel = pm.ls(sl=True)
-    for i in sel:
-        jnt = i.replace("cc_", "jnt_")
-        # tmp = ctrl(cub=True)
-        # tmp = tmp[0]
-        # pm.rename(tmp, cc)
-        # pm.select(cc)
-        # grp = groupingEmpty()
-        # pm.matchTransform(grp, i, pos=True, rot=True)
-        pm.parentConstraint(i, jnt, mo=True, w=1.0)
-
-
-
-
-
-
-
-# skin = 'skinCluster1'
-# data = aald()
-# print(data)
-# for point, jntValue in data.items():
-#     tvList = [(jnt, value) for jnt, value in jntValue.items()]
-#     print(pm.skinPercent(skin, point, v=True, ib=0.041, q=True))
-
-
-# countSetRange = (num//3) + (1 if num%3 else 0)
-
-sel = pm.ls(sl=True)
-num = len(sel)
-setRangeList = []
-for j, k in enumerate(sel):
-    prev = sel[j-1]
-    curr = k
-    next = sel[0] if j+1 >= num else sel[j+1]
-    setRangeNode = setRangeList[j//3]
-    print(setRangeNode, j//3)
-    plusMinusNode = pm.shadingNode("plusMinusAverage", au=True)
-    pm.setAttr(f"{plusMinusNode}.operation", 2)
-    pm.setAttr(f"{plusMinusNode}.input1D[1]", 180)
-    out = ["outValueX", "outValueY", "outValueZ"]
-    pm.connectAttr(f"{setRangeNode}.{out[j%3]}", f"{k}.rotateX", f=True)
-    pm.connectAttr(f"{k}.rotateX", f"{plusMinusNode}.input1D[0]", f=True)
-    pm.connectAttr(f"{plusMinusNode}.output1D", f"{prev}.visibility", f=True)
-
-
-
-def temp():
-    sel = pm.ls(sl=True)
-    end = sel[-1]
-    pos = pm.xform(end, q=True, ws=True, rp=True)
-    for i in sel:
-        if i == end:
-            continue
-        else:
-            pm.xform(i, os=True, piv=pos)
-            grp = pm.group(em=True, n = i + "_grp")
-            pm.matchTransform(grp, i, pos=True, rot=True)
-            try:
-                mom = i.getParent()
-                pm.parent(grp, mom)
-            except:
-                pass
-            pm.parent(i, grp)
-
-
-def temp2():
-    sel = pm.ls(sl=True)
-    cuv = "curve3"
-    for i in sel:
-        tmp = pm.duplicate(cuv, rr=True)
-        dup = tmp[0]
-        loc = i.name()
-        new = loc.replace("loc_", "cc_")
-        pm.rename(dup, new)
-        pm.matchTransform(new, i, pos=True)
-
-
-sel = pm.ls(sl=True)
-# num = len(sel)
-for i in sel:
-    tmp = pm.listConnections(i, scn=True)
-    print(tmp[0])

@@ -217,8 +217,8 @@ print(result)
     THURSDAY = 4
     FRIDAY = 5
     SATURDAY = 6
-    SUNDAY = 7
- """
+    SUNDAY = 7 """
+
 
 
 # graphlib.TopologicalSorter: 그래프 위상 정렬에 사용하는 클래스.(파이썬 3.9)

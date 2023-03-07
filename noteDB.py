@@ -44,8 +44,8 @@ def sql2DB():
 
 
 # Using pyodbc, pandas
-# Read only.
 def readDB():
+    """ Read only. """
     conn_str = (
         r"Driver={Microsoft Access Driver (*.mdb, *.accdb)};"
         r"DBQ=../folder/file.accdb;"
