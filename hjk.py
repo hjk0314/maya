@@ -1708,7 +1708,6 @@ def keyOff(i=1): # i : interval
         pm.keyframe(k, e=True, r=True, tc = j * i)
 
 
-
 # Create strokes and convert them to polygons
 def createStroke(cuv):
     pm.select(cl=True)
