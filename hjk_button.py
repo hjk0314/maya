@@ -48,6 +48,8 @@ else:
     pm.button(l='orientJnt', c=lambda x: hjk.orientJnt())
     pm.button(l='jntNone', c=lambda x: hjk.jntNone(2))
     pm.button(l='jntBone', c=lambda x: hjk.jntNone(0))
+    pm.button(l='attr_geoHide', c=lambda x: hjk.attr_geoHide())
+    pm.button(l='attr_subCtrl', c=lambda x: hjk.attr_subCtrl())
     pm.button(l='copyHJK', c=lambda x: hjk.copyHJK())
     pm.setParent("..", u=True)
     pm.separator(h=10)

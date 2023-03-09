@@ -1648,26 +1648,32 @@ def jntNone(*arg: int) -> None:
 
 
 def attr_geoHide():
-    """ Create and connect <Geo_Hide> channels """
+    """ Create and connect <Geo_Hide> channels
+    1. Select a few geo group.
+    2. The Last one should be the Controller. 
+     """
     sel = pm.ls(sl=True)
-    geo = sel.pop()
+    ctrl = sel.pop()
     attr = "Geo_Hide"
     vis = "visibility"
-    for ctrl in sel:
-        pm.addAttr(ctrl, ln=attr, at='bool')
-        pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
+    pm.addAttr(ctrl, ln=attr, at='bool')
+    pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
+    for geo in sel:
         pm.connectAttr(f"{ctrl}.{attr}", f"{geo}.{vis}", f=True)
 
 
 def attr_subCtrl():
-    """ Create and connect <Sub_Ctrl> channels """
+    """ Create and connect <Sub_Ctrl> channels
+    1. Select a few <sub ctrl> group.
+    2. The Last one should be the Controller. 
+     """
     sel = pm.ls(sl=True)
-    grp = sel.pop()
+    ctrl = sel.pop()
     attr = "Sub_Ctrl"
     vis = "visibility"
-    for ctrl in sel:
-        pm.addAttr(ctrl, ln=attr, at='bool')
-        pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
+    pm.addAttr(ctrl, ln=attr, at='bool')
+    pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
+    for grp in sel:
         pm.connectAttr(f"{ctrl}.{attr}", f"{grp}.{vis}", f=True)
 
 
@@ -1726,4 +1732,5 @@ def createStroke(cuv):
     pm.parent(pTube, w=True)
     pm.rename(pTube, newName)
     pm.delete(pTubeGrp)
+
 
