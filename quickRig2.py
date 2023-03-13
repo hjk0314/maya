@@ -2,39 +2,49 @@
 import pymel.core as pm
 
 
-# class JointName:
-#     """ Build a temporary joint to position the joint """
-#     root = ['jnt_root']
-#     spine = [f'jnt_spine_{i}' for i in range(1, 5)]
-#     neck = ['jnt_neck_1', 'jnt_neck_2']
-#     head = ['jnt_head', 'jnt_head_end'] 
-#     arm_L = []
-#     arm_R = []
-#     for i in ['scapula', 'shoulder', 'elbow', 'wrist', 'parm']:
-#         arm_L.append(f'jnt_{i}_L')
-#         arm_R.append(f'jnt_{i}_R')
-#     leg_L = []
-#     leg_R = []
-#     for j in ['hip', 'knee', 'ankle', 'ball', 'toe']:
-#         leg_L.append(f'jnt_{j}_L')
-#         leg_R.append(f'jnt_{j}_R')
-#     thumb_L = [f'jnt_thumb_L_{i}' for i in range(1, 5)]
-#     index_L = [f'jnt_index_L_{i}' for i in range(1, 5)]
-#     middle_L = [f'jnt_middle_L_{i}' for i in range(1, 5)]
-#     ring_L = [f'jnt_ring_L_{i}' for i in range(1, 5)]
-#     pinky_L = [f'jnt_pinky_L_{i}' for i in range(1, 5)]
-#     thumb_R = [f'jnt_thumb_R_{i}' for i in range(1, 5)]
-#     index_R = [f'jnt_index_R_{i}' for i in range(1, 5)]
-#     middle_R = [f'jnt_middle_R_{i}' for i in range(1, 5)]
-#     ring_R = [f'jnt_ring_R_{i}' for i in range(1, 5)]
-#     pinky_R = [f'jnt_pinky_R_{i}' for i in range(1, 5)]
+class Coordinates:
+    ctrl = {
+        "cub": [
+            (-1, 1, -1), (-1, 1, 1), (1, 1, 1), 
+            (1, 1, -1), (-1, 1, -1), (-1, -1, -1), 
+            (-1, -1, 1), (1, -1, 1), (1, -1, -1), 
+            (-1, -1, -1), (-1, -1, 1), (-1, 1, 1), 
+            (1, 1, 1), (1, -1, 1), (1, -1, -1), (1, 1, -1), 
+        ], 
+        "sph": [
+            (0, 1, 0), (0, 0.7, 0.7), (0, 0, 1), 
+            (0, -0.7, 0.7), (0, -1, 0), (0, -0.7, -0.7), 
+            (0, 0, -1), (0, 0.7, -0.7), (0, 1, 0), 
+            (-0.7, 0.7, 0), (-1, 0, 0), (-0.7, 0, 0.7), 
+            (0, 0, 1), (0.7, 0, 0.7), (1, 0, 0), 
+            (0.7, 0, -0.7), (0, 0, -1), (-0.7, 0, -0.7), 
+            (-1, 0, 0), (-0.7, -0.7, 0), (0, -1, 0), 
+            (0.7, -0.7, 0), (1, 0, 0), (0.7, 0.7, 0), (0, 1, 0), 
+        ], 
+        "head": [
+            (13, 0, -11), (0, 10, -15), (-13, 0, -11), 
+            (-14, -9, 0), (-13, 0, 11), (0, 10, 15), 
+            (13, 0, 11), (14, -9, 0)
+        ], 
+        "scapula": [
+            (2, 10, -11), (0, 0, -11), (-2, 10, -11), 
+            (-3, 18, 0), (-2, 10, 11), (0, 0, 11), 
+            (2, 10, 11), (3, 18, 0)
+        ], 
+        "foot": [
+            (-6, 12, -14), (-6, 12, 6), (6, 12, 6), 
+            (6, 12, -14), (-6, 12, -14), (-6, 0, -14), 
+            (-6, 0, 18), (6, 0, 18), (6, 0, -14), 
+            (-6, 0, -14), (-6, 0, 18), (-6, 12, 6), 
+            (6, 12, 6), (6, 0, 18), (6, 0, -14), (6, 12, -14), 
+        ], 
+    }
 
 
-class Coordinate:
     jnt = {
         'root': {'jnt_root': (0.0, 91.146, -2.311)}, 
         'spine': {
-            'jnt_spine_1': (-0.0, 101.79, -0.828), 
+            'jnt_spine_1': (0.0, 101.79, -0.828), 
             'jnt_spine_2': (-0.0, 112.04, -0.291), 
             'jnt_spine_3': (-0.0, 121.978, -0.795), 
             'jnt_spine_4': (-0.0, 130.703, -2.506), 
@@ -57,23 +67,23 @@ class Coordinate:
         'arm_R': {
             'jnt_scapula_R': (-7.581, 133.499, -4.058), 
             'jnt_shoulder_R': (-16.671, 129.738, -3.624), 
-            'jnt_elbow_R': (-41.018, 127.428, -3.083), 
-            'jnt_wrist_R': (-66.062, 125.053, -1.862), 
-            'jnt_parm_R': (-71.332, 124.072, -1.542), 
+            'jnt_elbow_R': (-41.006, 127.424, -4.551), 
+            'jnt_wrist_R': (-66.078, 125.041, -4.841), 
+            'jnt_parm_R': (-71.356, 124.058, -4.841), 
         }, 
         'leg_L': {
             'jnt_hip_L': (10.968, 82.407, -0.453), 
-            'jnt_knee_L': (16.924, 45.846, -3.606), 
-            'jnt_ankle_L': (22.447, 9.76, -8.165), 
-            'jnt_ball_L': (26.036, 1.972, 0.594), 
-            'jnt_toe_L': (28.191, 0.807, 8.479), 
+            'jnt_knee_L': (13.083, 45.307, -1.572), 
+            'jnt_ankle_L': (14.812, 8.647, -4.123), 
+            'jnt_ball_L': (17.597, 1.022, 5.062), 
+            'jnt_toe_L': (19.642, 0.075, 13.005), 
         }, 
         'leg_R': {
             'jnt_hip_R': (-10.968, 82.407, -0.453), 
-            'jnt_knee_R': (-16.924, 45.846, -3.606), 
-            'jnt_ankle_R': (-22.447, 9.76, -8.165), 
-            'jnt_ball_R': (-26.036, 1.972, 0.594), 
-            'jnt_toe_R': (-28.191, 0.807, 8.479), 
+            'jnt_knee_R': (-13.082, 45.307, -1.572), 
+            'jnt_ankle_R': (-14.812, 8.647, -4.123), 
+            'jnt_ball_R': (-17.597, 1.022, 5.062), 
+            'jnt_toe_R': (-19.642, 0.075, 13.005), 
         }, 
         'thumb_L': {
             'jnt_thumb_L_1': (69.91, 123.216, -2.033), 
@@ -89,81 +99,81 @@ class Coordinate:
         }, 
         'middle_L': {
             'jnt_middle_L_1': (75.236, 123.622, -4.757), 
-            'jnt_middle_L_2': (77.686, 123.756, -5.131), 
-            'jnt_middle_L_3': (80.136, 123.89, -5.505), 
-            'jnt_middle_L_4': (82.586, 124.024, -5.879), 
+            'jnt_middle_L_2': (77.687, 123.519, -5.131), 
+            'jnt_middle_L_3': (80.139, 123.415, -5.505), 
+            'jnt_middle_L_4': (82.59, 123.312, -5.88), 
         }, 
         'ring_L': {
             'jnt_ring_L_1': (74.493, 123.638, -6.872), 
-            'jnt_ring_L_2': (76.421, 123.986, -8.153), 
-            'jnt_ring_L_3': (78.348, 124.335, -9.434), 
-            'jnt_ring_L_4': (80.275, 124.683, -10.716), 
+            'jnt_ring_L_2': (76.437, 123.465, -8.164), 
+            'jnt_ring_L_3': (78.381, 123.293, -9.456), 
+            'jnt_ring_L_4': (80.324, 123.12, -10.749), 
         }, 
         'pinky_L': {
             'jnt_pinky_L_1': (72.929, 123.458, -8.344), 
-            'jnt_pinky_L_2': (73.702, 123.805, -9.991), 
-            'jnt_pinky_L_3': (74.475, 124.153, -11.637), 
-            'jnt_pinky_L_4': (75.247, 124.501, -13.284), 
+            'jnt_pinky_L_2': (73.715, 123.357, -10.018), 
+            'jnt_pinky_L_3': (74.501, 123.257, -11.692), 
+            'jnt_pinky_L_4': (75.286, 123.158, -13.366), 
         }, 
         'thumb_R': {
-            'jnt_thumb_R_1': (-70.239, 123.472, 1.438), 
-            'jnt_thumb_R_2': (-71.716, 123.13, 3.402), 
-            'jnt_thumb_R_3': (-73.194, 122.788, 5.367), 
-            'jnt_thumb_R_4': (-74.671, 122.448, 7.332), 
+            'jnt_thumb_R_1': (-69.91, 123.216, -2.033), 
+            'jnt_thumb_R_2': (-71.54, 122.745, -0.221), 
+            'jnt_thumb_R_3': (-73.169, 122.275, 1.591), 
+            'jnt_thumb_R_4': (-74.799, 121.804, 3.403), 
         }, 
         'index_R': {
-            'jnt_index_R_1': (-74.746, 123.923, 0.801), 
-            'jnt_index_R_2': (-77.065, 123.821, 1.678), 
-            'jnt_index_R_3': (-79.385, 123.718, 2.555), 
-            'jnt_index_R_4': (-81.705, 123.616, 3.432), 
+            'jnt_index_R_1': (-74.697, 123.363, -2.847), 
+            'jnt_index_R_2': (-77.057, 123.282, -2.082), 
+            'jnt_index_R_3': (-79.417, 123.2, -1.318), 
+            'jnt_index_R_4': (-81.777, 123.119, -0.554), 
         }, 
         'middle_R': {
-            'jnt_middle_R_1': (-75.541, 123.844, -1.26), 
-            'jnt_middle_R_2': (-78.019, 123.951, -1.366), 
-            'jnt_middle_R_3': (-80.496, 124.056, -1.472), 
-            'jnt_middle_R_4': (-82.974, 124.162, -1.578), 
+            'jnt_middle_R_1': (-75.236, 123.622, -4.757), 
+            'jnt_middle_R_2': (-77.687, 123.519, -5.131), 
+            'jnt_middle_R_3': (-80.139, 123.415, -5.505), 
+            'jnt_middle_R_4': (-82.59, 123.312, -5.88), 
         }, 
         'ring_R': {
-            'jnt_ring_R_1': (-74.697, 123.749, -3.267), 
-            'jnt_ring_R_2': (-76.68, 123.701, -4.508), 
-            'jnt_ring_R_3': (-78.664, 123.653, -5.75), 
-            'jnt_ring_R_4': (-80.647, 123.605, -6.991), 
+            'jnt_ring_R_1': (-74.493, 123.638, -6.872), 
+            'jnt_ring_R_2': (-76.437, 123.465, -8.164), 
+            'jnt_ring_R_3': (-78.381, 123.293, -9.456), 
+            'jnt_ring_R_4': (-80.324, 123.12, -10.749), 
         }, 
         'pinky_R': {
-            'jnt_pinky_R_1': (-72.958, 123.528, -4.738), 
-            'jnt_pinky_R_2': (-73.615, 123.304, -6.454), 
-            'jnt_pinky_R_3': (-74.272, 123.081, -8.171), 
-            'jnt_pinky_R_4': (-74.929, 122.857, -9.888), 
+            'jnt_pinky_R_1': (-72.929, 123.458, -8.344), 
+            'jnt_pinky_R_2': (-73.715, 123.357, -10.018), 
+            'jnt_pinky_R_3': (-74.501, 123.257, -11.692), 
+            'jnt_pinky_R_4': (-75.285, 123.158, -13.366), 
         }, 
     }
 
 
-class BuildJoint:
-    def __init__(self):
-        self.main()
-
-
-    def main(self) -> str:
-        all = Coordinate.jnt
-        head = [list(i.keys())[0] for i in all.values()]
-        for jntDict in all.values():
-            pm.select(cl=True)
-            for name, pos in jntDict.items():
-                jnt = pm.joint(p=(0, 0, 0), n=name, rad=10)
-                pm.move(jnt, pos)
-            jntList = list(jntDict)
-            self.orientJnt(jntList)
-        cuv = self.createCuv()
-        pm.parent(head, cuv)
-
-
-    def createCuv(self) -> str:
-        cuv = pm.circle(nr=(0, 1, 0), ch=False)
-        pm.scale(cuv, [50, 50, 50])
+class Curves:
+    def createCuv(self, size: float, **kwargs) -> str:
+        nor = {
+            "x": (1, 0, 0), 
+            "y": (0, 1, 0), 
+            "z": (0, 0, 1), 
+        }
+        if not kwargs:
+            axis = (0, 1, 0)
+        else:
+            for k, v in kwargs.items():
+                if not k in nor.keys():
+                    axis = (0, 1, 0)
+                    continue
+                elif not v:
+                    axis = (0, 1, 0)
+                    continue
+                else:
+                    axis = nor[k]
+        cuv = pm.circle(nr=axis, ch=False)
+        pm.scale(cuv, [size, size, size])
         pm.makeIdentity(cuv, a=True, n=0)
         return cuv
 
 
+class Joints:
     def orientJnt(self, jnt: list) -> None:
         init = jnt[0]
         last = jnt[-1]
@@ -172,6 +182,18 @@ class BuildJoint:
         pm.joint(last, e=True, oj='none', ch=True, zso=True)
                 
 
-
+def tempJnt() -> str:
+    all = Coordinates.jnt
+    head = [list(i.keys())[0] for i in all.values()]
+    for jntDict in all.values():
+        pm.select(cl=True)
+        for name, pos in jntDict.items():
+            jnt = pm.joint(p=(0, 0, 0), n=name, rad=10)
+            pm.move(jnt, pos)
+        jntList = list(jntDict)
+        Joints().orientJnt(jntList)
+    cuv = Curves().createCuv(50)
+    pm.parent(head, cuv)
+    return cuv
 
 
