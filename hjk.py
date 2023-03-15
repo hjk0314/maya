@@ -1229,6 +1229,12 @@ def ctrl(**kwargs) -> list:
     cross += [(0, -5, -1), (0, -5, 1), (0, -1, 1), ]
     cross += [(0, -1, 5), (0, 1, 5), (0, 1, 1), ]
     cross += [(0, 5, 1), ]
+    # hat
+    hat = [(14.158, 8.715, 0.095), (-0.0, 14.378, 0.095), ]
+    hat += [(-14.158, 8.715, 0.095), (-7.218, -4.689, 0.095), ]
+    hat += [(-28.71, -6.706, 0.095), (-0.0, -6.706, 0.095), ]
+    hat += [(28.71, -6.706, 0.095), (7.218, -4.689, 0.095), ]
+    hat += [(14.158, 8.715, 0.095), ]
     # Dictionary
     ctrl = {
         "cub": cub, 
@@ -1248,6 +1254,7 @@ def ctrl(**kwargs) -> list:
         "hoof2": hoof2, 
         "sqr": sqr, 
         "cross": cross, 
+        "hat": hat, 
     }
     if not kwargs:
         tmp = input()
@@ -1675,6 +1682,20 @@ def attr_subCtrl():
     pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
     for grp in sel:
         pm.connectAttr(f"{ctrl}.{attr}", f"{grp}.{vis}", f=True)
+
+
+def getPointPosition():
+    """ Returns the coordinates of points as a list. """
+    sel = pm.ls(sl=True, fl=True)
+    result = []
+    for i in sel:
+        x, y, z = pm.pointPosition(i)
+        x = round(x, 3)
+        y = round(y, 3)
+        z = round(z, 3)
+        result.append((x, y, z))
+    print(result)
+    return result
 
 
 def makeFolder():

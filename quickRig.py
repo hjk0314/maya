@@ -410,6 +410,34 @@ def createPV():
 # 72 docstring or comments line ========================================
 
 
+# class JointName:
+#     """ Build a temporary joint to position the joint """
+#     root = ['jnt_root']
+#     spine = [f'jnt_spine_{i}' for i in range(1, 5)]
+#     neck = ['jnt_neck_1', 'jnt_neck_2']
+#     head = ['jnt_head', 'jnt_head_end'] 
+#     arm_L = []
+#     arm_R = []
+#     for i in ['scapula', 'shoulder', 'elbow', 'wrist', 'parm']:
+#         arm_L.append(f'jnt_{i}_L')
+#         arm_R.append(f'jnt_{i}_R')
+#     leg_L = []
+#     leg_R = []
+#     for j in ['hip', 'knee', 'ankle', 'ball', 'toe']:
+#         leg_L.append(f'jnt_{j}_L')
+#         leg_R.append(f'jnt_{j}_R')
+#     thumb_L = [f'jnt_thumb_L_{i}' for i in range(1, 5)]
+#     index_L = [f'jnt_index_L_{i}' for i in range(1, 5)]
+#     middle_L = [f'jnt_middle_L_{i}' for i in range(1, 5)]
+#     ring_L = [f'jnt_ring_L_{i}' for i in range(1, 5)]
+#     pinky_L = [f'jnt_pinky_L_{i}' for i in range(1, 5)]
+#     thumb_R = [f'jnt_thumb_R_{i}' for i in range(1, 5)]
+#     index_R = [f'jnt_index_R_{i}' for i in range(1, 5)]
+#     middle_R = [f'jnt_middle_R_{i}' for i in range(1, 5)]
+#     ring_R = [f'jnt_ring_R_{i}' for i in range(1, 5)]
+#     pinky_R = [f'jnt_pinky_R_{i}' for i in range(1, 5)]
+
+
 
 def makeCircle(name, **kwargs):
     axis = {"x": (1, 0, 0), "y": (0, 1, 0), "z": (0, 0, 1)}
