@@ -374,7 +374,7 @@ def createPV():
 # connectFollow(leg_L_1, leg_L_2)
 # connectFollow(leg_R_1, leg_R_2)
 # connectFollow(arm_L_1, arm_L_2)
-# connectFollow(arm_R_1, arm_R_2)
+connectFollow(arm_R_1, arm_R_2)
 # parentSel()
 # parentCCtoJnt()
 
