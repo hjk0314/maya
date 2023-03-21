@@ -191,21 +191,6 @@ class Coordinates:
     }
 
 
-def tempJnt() -> str:
-    all = Coordinates.jnt
-    head = [list(i.keys())[0] for i in all.values()]
-    for jntDict in all.values():
-        pm.select(cl=True)
-        for name, pos in jntDict.items():
-            jnt = pm.joint(p=(0, 0, 0), n=name, rad=10)
-            pm.move(jnt, pos)
-        jntList = list(jntDict)
-        Tools().orientJnt(jntList)
-    cuv = Tools().createCuv(50)
-    pm.parent(head, cuv)
-    return cuv
-
-
 class Tools:
     def __init__(self):
         pass
@@ -219,7 +204,7 @@ class Tools:
         pm.joint(last, e=True, oj='none', ch=True, zso=True)
 
 
-    def createCuv(self, size: float, **kwargs) -> str:
+    def createCuv(self, name: str, size: float, **kwargs) -> str:
         nor = {
             "x": (1, 0, 0), 
             "y": (0, 1, 0), 
@@ -237,13 +222,13 @@ class Tools:
                     continue
                 else:
                     axis = nor[k]
-        cuv = pm.circle(nr=axis, ch=False)[0]
-        pm.scale(cuv, [size, size, size])
-        pm.makeIdentity(cuv, a=True, n=0)
+        cuv = pm.circle(nr=axis, n=name, ch=False, r=size)[0]
+        # pm.scale(cuv, [size, size, size])
+        # pm.makeIdentity(cuv, a=True, n=0)
         return cuv
 
 
-    def getHeadJnt(self, *arg):
+    def getHeadJntName(self, *arg):
         sel = pm.ls(arg, dag=True, type=['transform'])
         jnt = []
         for i in sel:
@@ -255,11 +240,118 @@ class Tools:
         return jnt
 
 
-class quickRig_CAR:
+    def groupingEmpty(self, *arg) -> list:
+        """ Create an empty group and match the pivot with the selector. """
+        sel = arg if arg else pm.ls(sl=True)
+        grpName = []
+        for i in sel:
+            grp = pm.group(em=True, n = i + "_grp")
+            grpName.append(grp)
+            pm.matchTransform(grp, i, pos=True, rot=True)
+            try:
+                mom = i.getParent()
+                pm.parent(grp, mom)
+            except:
+                pass
+            pm.parent(i, grp)
+        return grpName
+
+
+    def createRadius(self, *arg):
+        attr = "Radius"
+        ctrl = arg[0]
+        pm.addAttr(ctrl, ln=attr, at='double', min=0.0001, dv=1)
+        pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
+
+
+class AutoWheel:
+    def __init__(self, *arg: list):
+        sel = arg[0] if arg else pm.ls(sl=True)
+        for i in sel:
+            self.main(i)
+
+
+    def main(self, ctrl: str):
+        tmp = self.createVariables(ctrl)
+        self.createCtrlChannel(ctrl)
+        self.createCtrlGroup(ctrl, tmp)
+        self.createExpression(ctrl, tmp)
+
+
+    def createCtrlChannel(self, ctrl: str) -> None:
+        pm.addAttr(ctrl, ln='AutoRoll', at='long', min=0, max=1, dv=1)
+        pm.setAttr(f'{ctrl}.AutoRoll', e=True, k=True)
+        for i in ['X', 'Y', 'Z']:
+            pm.addAttr(ctrl, ln=f'PrevPos{i}', at='double', dv=0)
+            pm.setAttr(f'{ctrl}.PrevPos{i}', e=True, k=True)
+
+
+    def createCtrlGroup(self, ctrl: str, tmp: list):
+        null, prev, orient, expr = tmp
+        pm.group(n=null, em=True, p=ctrl)
+        pm.group(n=prev, em=True, p=ctrl.getParent())
+        pm.group(n=orient, em=True, p=prev)
+
+
+    def createExpression(self, ctrl: str, tmp: list):
+        null, prev, orient, expr = tmp
+        pm.aimConstraint(ctrl, prev, mo=False)
+        pm.orientConstraint(null, orient, mo=False)
+        pm.expression(s=expr, o='', ae=1, uc='all')
+
+
+    def createCtrlLocator(self, ctrl):
+        loc = pm.spaceLocator(n='loc_' + ctrl)
+        pm.matchTransform(loc, ctrl, pos=True)
+        pm.parent(loc, ctrl)
+        return loc
+
+
+    def createVariables(self, ctrl: str) -> list:
+        loc = self.createCtrlLocator(ctrl)
+        null = ctrl + '_null_grp'
+        prev = ctrl + '_prev_grp'
+        orient = ctrl + '_orient_Grp'
+        br = '\n'
+        # expression1 ==================================================
+        expr1 = f'float $R = {ctrl}.Radius;{br}'
+        expr1 += f'float $A = {ctrl}.AutoRoll;{br}'
+        expr1 += f'float $J = {loc}.rotateX;{br}'
+        expr1 += f'float $C = 2 * 3.141 * $R;{br}' # 2*pi*r
+        expr1 += f'float $O = {orient}.rotateY;{br}'
+        expr1 += f'float $S = 1;{br}' # Connect the global scale.
+        expr1 += f'float $pX = {ctrl}.PrevPosX;{br}'
+        expr1 += f'float $pY = {ctrl}.PrevPosY;{br}'
+        expr1 += f'float $pZ = {ctrl}.PrevPosZ;{br}'
+        expr1 += f'{prev}.translateX = $pX;{br}'
+        expr1 += f'{prev}.translateY = $pY;{br}'
+        expr1 += f'{prev}.translateZ = $pZ;{br}'
+        expr1 += f'float $nX = {ctrl}.translateX;{br}'
+        expr1 += f'float $nY = {ctrl}.translateY;{br}'
+        expr1 += f'float $nZ = {ctrl}.translateZ;{br*2}'
+        # expression2: Distance between two points.
+        expr2 = f'float $D = `mag<<$nX-$pX, $nY-$pY, $nZ-$pZ>>`;{br*2}'
+        # expression3: Insert value into jonit rotation.
+        expr3 = f'{loc}.rotateX = $J' # Original rotation value.
+        expr3 += ' + ($D/$C) * 360' # Proportional: (d / 2*pi*r) * 360
+        expr3 += ' * $A' # Auto roll switch.
+        expr3 += ' * 1' # Create other switches.
+        expr3 += ' * sin(deg_to_rad($O))' # When the wheel turns.
+        expr3 += f' / $S;{br*2}' # Resizing the global scale.
+        # expression4
+        expr4 = f'{ctrl}.PrevPosX = $nX;{br}'
+        expr4 += f'{ctrl}.PrevPosY = $nY;{br}'
+        expr4 += f'{ctrl}.PrevPosZ = $nZ;{br}'
+        # expression Final =============================================
+        expr = expr1 + expr2 + expr3 + expr4
+        # Result
+        result = [null, prev, orient, expr]
+        return result
+
+
+class QuickRig_CAR:
     def __init__(self):
         self.setupUI()
-        # self.createJoint()
-        # self.createCtrl()
 
 
     def setupUI(self):
@@ -269,9 +361,11 @@ class quickRig_CAR:
         win = pm.window(winName, t='Car Rig', s=True, rtf=True)
         pm.columnLayout(cat=('both', 4), rs=2, cw=178)
         pm.separator(h=10)
-        self.tempCircle = pm.textField(ed=True)
+        self.txt1 = pm.textField(ed=True, en=0)
+        self.txt2 = pm.textField(ed=True, pht="wheel's Radius")
         pm.button(l="Create Joints", c=lambda x: self.createJoint())
         pm.button(l="Create Ctrls", c=lambda x: self.createCtrl())
+        pm.button(l="Get Radius", c=lambda x: self.getRadius())
         pm.button(l="Close", c=lambda x: pm.deleteUI(winName))
         pm.separator(h=10)
         pm.showWindow(win)
@@ -290,45 +384,62 @@ class quickRig_CAR:
         init = branch.pop(0)
         for j in branch:
                 pm.parent(j, init)
-        cuv = Tools().createCuv(300, y=True)
-        self.tempCircle.setText(cuv)
+        cuv = Tools().createCuv('tempCircle', 300, y=True)
+        self.txt1.setText(cuv)
         pm.parent(init, cuv)
         
 
+    # Return obj's radius.
+    def getRadius(self, *arg) -> list:
+        sel = arg if arg else pm.ls(sl=True)
+        result = []
+        for obj in sel:
+            bbObj = pm.xform(obj, q=True, bb=True)
+            xMin, yMin, zMin, xMax, yMax, zMax = bbObj
+            x = (xMax - xMin) / 2
+            y = (yMax - yMin) / 2
+            z = (zMax - zMin) / 2
+            bb = max([x, y, z])
+            bb = round(bb, 3)
+            result.append(bb)
+            print(f"{obj} -> {bb}")
+        txt = [j if isinstance(j, str) else str(j) for j in result]
+        self.txt2.setText(str(' '.join(txt)))
+        return result
+
+
     def createCtrl(self):
-        cir = self.tempCircle.getText()
+        cir = self.txt1.getText()
         pos = Coordinates.CTRL
-        jnt = Tools().getHeadJnt(cir)
+        jnt = Tools().getHeadJntName(cir)
         ccList = []
         for i in jnt:
             if i == "jnt_root":
-                cc_main = pm.circle(nr=(0, 1, 0), n="cc_main", r=300, ch=0)
-                cc_main = cc_main[0]
+                cc_main = pm.circle(nr=(0, 1, 0), n="cc_main", r=300, ch=0)[0]
                 cc_sub = pm.curve(d=1, p=pos["car2"], n="cc_sub")
-                ccList.append(cc_main)
-                ccList.append(cc_sub)
+                subGrp = Tools().groupingEmpty(cc_main, cc_sub)[-1]
+                pm.parent(subGrp, cc_main)
             elif i == "jnt_body":
                 cc_body = pm.curve(d=1, p=pos["car"], n="cc_body")
-                ccList.append(cc_body)
                 pm.matchTransform(cc_body, i, pos=True)
+                bodyGrp = Tools().groupingEmpty(cc_body)
+                pm.parent(bodyGrp, "cc_sub")
             else:
                 ccName = i.replace("jnt_", "cc_")
                 cc_etc = pm.circle(nr=(1, 0, 0), n=ccName, r=40, ch=0)
-                ccList.append(cc_etc)
+                cc_etc = cc_etc[0]
+                nameList = cc_etc.split("_")
+                if nameList[1] == "wheel":
+                    Tools().createRadius(cc_etc)
                 pm.matchTransform(cc_etc, i, pos=True)
+                ccList.append(cc_etc)
+        grp = [Tools().groupingEmpty(j) for j in ccList]
+        pm.parent(grp, "cc_sub")
+        AutoWheel(ccList)
+        pm.delete(cir)
 
 
-        # cirScale = pm.getAttr(f"{cir}.scale")
-        
-        # print(cc_body, cc_sub, cc_main)
-        # pm.makeIdentity(cc_main, a=True, n=0)
-        # pm.scale(cc_body, cirScale)
-        # pm.scale(cc_sub, cirScale)
-        # pm.delete(cir)
-        
+QuickRig_CAR()
 
-
-
-    
 
 

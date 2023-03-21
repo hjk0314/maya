@@ -125,7 +125,7 @@ class AutoWheel_Rig:
     # Create variables.
     def createVar(self, rad: float) -> tuple:
         rad *= 1.2
-        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False, n='cc_wheel_L_Bk')
+        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False, n='temp')
         cuv = cuv[0]
         jnt = cuv + '_jnt'
         null = cuv + '_null_grp'
@@ -1755,4 +1755,3 @@ def createStroke(cuv):
     pm.delete(pTubeGrp)
 
 
-ctrl(car=True, car2=True)
