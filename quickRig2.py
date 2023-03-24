@@ -314,7 +314,7 @@ class Tools:
 
 class AutoWheel:
     def __init__(self, *arg: list):
-        sel = arg[0] if arg else pm.ls(sl=True)
+        sel = arg if arg else pm.ls(sl=True)
         for i in sel:
             self.main(i)
 
@@ -520,7 +520,7 @@ class QuickRig_CAR:
             pm.scaleConstraint(parent, child, mo=True, w=1)
 
 
-QuickRig_CAR()
+tmp = AutoWheel()
 
 
 
