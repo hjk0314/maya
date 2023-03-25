@@ -1085,11 +1085,14 @@ def ctrl(**kwargs) -> list:
     "ar5": ar5, 
     "pointer": pointer, 
     "foot": foot, 
+    "foot2": foot2, 
     "hoof": hoof, 
     "hoof2": hoof2, 
     "sqr": sqr, 
     "cross": cross, 
     "hat": hat, 
+    "head": head, 
+    "scapula": scapula, 
      """
     # Cube
     cub = [(-1, 1, -1), (-1, 1, 1), (1, 1, 1), ]
@@ -1132,19 +1135,19 @@ def ctrl(**kwargs) -> list:
     con += [(0, 2, 0), (0, 0, 1), (-0.87, 0, -0), ]
     con += [(0.87, 0, 0), (0, 0, 1), ]
     # car
-    car = [(81, 115, 119), (89, 101, 251), (89, 33, 251), ]
-    car += [(89, 33, 117), (89, 33, -117), (89, 33, -229), ]
-    car += [(81, 115, -229), (81, 115, -159), (69, 156, -105), ]
-    car += [(69, 156, 63), (81, 115, 119), (-81, 115, 119), ]
-    car += [(-89, 101, 251), (-89, 33, 251), (-89, 33, 117), ]
-    car += [(-89, 33, -117), (-89, 33, -229), (-81, 115, -229), ]
-    car += [(-81, 115, -159), (-69, 156, -105), (69, 156, -105), ]
-    car += [(81, 115, -159), (-81, 115, -159), (-81, 115, -229), ]
-    car += [(81, 115, -229), (89, 33, -229), (-89, 33, -229), ]
-    car += [(-89, 33, -117), (-89, 33, 117), (-89, 33, 251), ]
-    car += [(89, 33, 251), (89, 101, 251), (-89, 101, 251), ]
-    car += [(-81, 115, 119), (-69, 156, 63), (-69, 156, -105), ]
-    car += [(69, 156, -105), (69, 156, 63), (-69, 156, 63)]
+    car = [(81, 70, 119), (89, 56, 251), (89, -12, 251), ]
+    car += [(89, -12, 117), (89, -12, -117), (89, -12, -229), ]
+    car += [(81, 70, -229), (81, 70, -159), (69, 111, -105), ]
+    car += [(69, 111, 63), (81, 70, 119), (-81, 70, 119), ]
+    car += [(-89, 56, 251), (-89, -12, 251), (-89, -12, 117), ]
+    car += [(-89, -12, -117), (-89, -12, -229), (-81, 70, -229), ]
+    car += [(-81, 70, -159), (-69, 111, -105), (69, 111, -105), ]
+    car += [(81, 70, -159), (-81, 70, -159), (-81, 70, -229), ]
+    car += [(81, 70, -229), (89, -12, -229), (-89, -12, -229), ]
+    car += [(-89, -12, -117), (-89, -12, 117), (-89, -12, 251), ]
+    car += [(89, -12, 251), (89, 56, 251), (-89, 56, 251), ]
+    car += [(-81, 70, 119), (-69, 111, 63), (-69, 111, -105), ]
+    car += [(69, 111, -105), (69, 111, 63), (-69, 111, 63), ]
     # car2
     car2 = [(165, 0, -195), (0, 0, -276), (-165, 0, -195), ]
     car2 += [(-97, 0, -0), (-165, -0, 195), (-0, -0, 276), ]
@@ -1199,6 +1202,12 @@ def ctrl(**kwargs) -> list:
     foot += [(2, 0, 15), (4, 0, 12), (5, 0, 6), ]
     foot += [(5, 0, 1), (4, 0, -4), (-4, 0, -4), ]
     foot += [(4, 0, -4), ]
+    # foot2
+    foot2 = [(-6, 12, -14), (-6, 12, 6), (6, 12, 6), ]
+    foot2 += [(6, 12, -14), (-6, 12, -14), (-6, 0, -14), ]
+    foot2 += [(-6, 0, 18), (6, 0, 18), (6, 0, -14), ]
+    foot2 += [(-6, 0, -14), (-6, 0, 18), (-6, 12, 6), ]
+    foot2 += [(6, 12, 6), (6, 0, 18), (6, 0, -14), (6, 12, -14), ]
     # Hoof
     hoof = [(-6, 0, -5), (-6.5, 0, -1), (-6, 0, 3), ]
     hoof += [(-5.2, 0, 5.5), (-3, 0, 7.5), (0, 0, 8.2), ]
@@ -1229,11 +1238,17 @@ def ctrl(**kwargs) -> list:
     cross += [(0, -1, 5), (0, 1, 5), (0, 1, 1), ]
     cross += [(0, 5, 1), ]
     # hat
-    hat = [(14.158, 8.715, 0.095), (-0.0, 14.378, 0.095), ]
-    hat += [(-14.158, 8.715, 0.095), (-7.218, -4.689, 0.095), ]
-    hat += [(-28.71, -6.706, 0.095), (-0.0, -6.706, 0.095), ]
-    hat += [(28.71, -6.706, 0.095), (7.218, -4.689, 0.095), ]
-    hat += [(14.158, 8.715, 0.095), ]
+    hat = [(14, 9, 0), (0, 15, 0), (-14, 9, 0), ]
+    hat += [(-7, -5, 0), (-29, -7, 0), (0, -7, 0), ]
+    hat += [(29, -7, 0), (7, -5, 0), (14, 9, 0), ]
+    # head
+    head = [(13, 0, -11), (0, 10, -15), (-13, 0, -11), ]
+    head += [(-14, -9, 0), (-13, 0, 11), (0, 10, 15), ]
+    head += [(13, 0, 11), (14, -9, 0), ]
+    # scapula
+    scapula = [(2, 10, -11), (0, 0, -11), (-2, 10, -11), ]
+    scapula += [(-3, 18, 0), (-2, 10, 11), (0, 0, 11), ]
+    scapula += [(2, 10, 11), (3, 18, 0), ]
     # Dictionary
     ctrl = {
         "cub": cub, 
@@ -1250,11 +1265,14 @@ def ctrl(**kwargs) -> list:
         "ar5": ar5, 
         "pointer": pointer, 
         "foot": foot, 
+        "foot2": foot2, 
         "hoof": hoof, 
         "hoof2": hoof2, 
         "sqr": sqr, 
         "cross": cross, 
         "hat": hat, 
+        "head": head, 
+        "scapula": scapula, 
     }
     if not kwargs:
         tmp = input()
@@ -1698,6 +1716,33 @@ def getPointPosition():
     return result
 
 
+# Offset the Keys
+def keyOff(i=1): # i : interval
+    sel = pm.ls(sl=True, fl=True)
+    for j, k in enumerate(sel):
+        pm.keyframe(k, e=True, r=True, tc = j * i)
+
+
+# Create strokes and convert them to polygons
+def createStroke(cuv):
+    pm.select(cl=True)
+    pm.select(cuv)
+    mel.eval("AttachBrushToCurves;")
+    strok = pm.ls(sl=True, dag=True, s=True)
+    strok = strok[0]
+    brush = [i for i in strok.inputs() if pm.nodeType(i)=="brush"]
+    brush = brush[0]
+    pm.setAttr(f'{brush}.globalScale', 30)
+    mel.eval("doPaintEffectsToPoly(1, 0, 1, 1, 100000);")
+    pTube = [i.getParent() for i in pm.ls(sl=True)]
+    pTube = pTube[0]
+    pTubeGrp = pTube.getParent()
+    newName = cuv.replace('cuv_', 'newObj_')
+    pm.parent(pTube, w=True)
+    pm.rename(pTube, newName)
+    pm.delete(pTubeGrp)
+
+
 def makeFolder():
     """ Copy Source folder to New Folder """
     src = r"T:\AssetTeam\Share\Templates\MayaProjectSample"
@@ -1726,32 +1771,5 @@ def copyHJK():
 
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
-
-
-# Offset the Keys
-def keyOff(i=1): # i : interval
-    sel = pm.ls(sl=True, fl=True)
-    for j, k in enumerate(sel):
-        pm.keyframe(k, e=True, r=True, tc = j * i)
-
-
-# Create strokes and convert them to polygons
-def createStroke(cuv):
-    pm.select(cl=True)
-    pm.select(cuv)
-    mel.eval("AttachBrushToCurves;")
-    strok = pm.ls(sl=True, dag=True, s=True)
-    strok = strok[0]
-    brush = [i for i in strok.inputs() if pm.nodeType(i)=="brush"]
-    brush = brush[0]
-    pm.setAttr(f'{brush}.globalScale', 30)
-    mel.eval("doPaintEffectsToPoly(1, 0, 1, 1, 100000);")
-    pTube = [i.getParent() for i in pm.ls(sl=True)]
-    pTube = pTube[0]
-    pTubeGrp = pTube.getParent()
-    newName = cuv.replace('cuv_', 'newObj_')
-    pm.parent(pTube, w=True)
-    pm.rename(pTube, newName)
-    pm.delete(pTubeGrp)
 
 
