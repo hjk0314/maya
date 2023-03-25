@@ -1,19 +1,23 @@
 import pymel.core as pm
 
 
-def scaleUp_wheelCtrl(obj, ctrl, sizeUp):
-    """ Create the controller 1.2 times the size of the object.
-    The pmNode variable checks 
-    whether the input obj is a string or a pymel class, 
-    in order to use BoundingBox() method. """
-    pmNode = pm.nodetypes.Transform
-    obj = obj if isinstance(obj, pmNode) else pm.ls(obj)[0]
-    bb = obj.getBoundingBox()
-    diameter = bb.max() - bb.min()
-    scl = [round(i*0.5*sizeUp, 3) for i in diameter]
-    pm.scale(ctrl, scl)
-
-
+def getRadius(*args):
+    """ Create the controller 1.2 times the sizeUp of the object.
+    If no parameters are given, the selected object is used.
+     """
+    SIZEUP = 1.2
+    sel = args if args else pm.ls(sl=True)
+    result = []
+    for obj in sel:
+        bBox = pm.xform(obj, q=True, bb=True)
+        xMin, yMin, zMin, xMax, yMax, zMax = bBox
+        x = (xMax - xMin) / 2
+        y = (yMax - yMin) / 2
+        z = (zMax - zMin) / 2
+        radius = max([x, y, z])
+        radius = round(radius*SIZEUP, 3)
+        result.append(radius)
+    return result
 
 
 
