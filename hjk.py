@@ -1042,6 +1042,36 @@ def createLine() -> str:
         return cuv
 
 
+def createCircle(name: str, size: float, **kwargs) -> str:
+    """ Create a circle.
+    1. The circle name, 
+    2. Size
+    3. Normal direction
+    -> createCircle("name", 3, x=True)
+     """
+    normal = {
+        "x": (1, 0, 0), 
+        "y": (0, 1, 0), 
+        "z": (0, 0, 1), 
+    }
+    if not kwargs:
+        axis = (0, 1, 0)
+    else:
+        for k, v in kwargs.items():
+            if not k in normal.keys():
+                axis = (0, 1, 0)
+                continue
+            elif not v:
+                axis = (0, 1, 0)
+                continue
+            else:
+                axis = normal[k]
+    cuv = pm.circle(nr=axis, n=name, ch=False, r=size)[0]
+    # pm.scale(cuv, [size, size, size])
+    # pm.makeIdentity(cuv, a=True, n=0)
+    return cuv
+
+
 def createJnt_MotionPath(*arg: int) -> None:
     '''Create a number of joints and 
     apply a motionPath to the curve.
@@ -1633,23 +1663,31 @@ def lineStraight_rebuild():
         )
 
 
-def orientJnt() -> list:
+def orientJnt(arg=None):
     """ Freeze and Orient joints
     Select only "joint", freeze and orient. 
     And the end joints inherit the orient of the parent joint.
      """
-    sel = pm.ls(sl=True)
-    pm.select(sel, hi=True)
-    allJnt = [i for i in pm.ls(sl=True) if pm.objectType(i)=='joint']
-    endJnt = [i for i in allJnt if not i.getChildren()]
-    pm.select(cl=True)
-    # freeze joints
-    pm.makeIdentity(allJnt, a=True, jo=True, n=0)
-    # orient joints
-    pm.joint(sel[0], e=True, oj='xyz', sao='yup', ch=True, zso=True)
-    # orient end joints
-    for i in endJnt:
-        pm.joint(i, e=True, oj='none', ch=True, zso=True)
+    if arg == None:
+        sel = pm.ls(sl=True)
+    elif isinstance(arg, str):
+        sel = [arg]
+    elif isinstance(arg, list):
+        sel = arg
+    else:
+        return 0
+    for jnt in sel:
+        pm.select(jnt, hi=True)
+        allSel = pm.ls(sl=True)
+        isJnt = pm.objectType(jnt) == 'joint'
+        allJnt = [i for i in allSel if isJnt]
+        endJnt = [i for i in allJnt if not i.getChildren()]
+        pm.select(cl=True)
+        pm.makeIdentity(allJnt, a=True, jo=True, n=0)
+        pm.joint(jnt, e=True, oj='xyz', sao='yup', ch=True, zso=True)
+        for i in endJnt:
+            pm.joint(i, e=True, oj='none', ch=True, zso=True)
+    return sel
 
 
 def jntNone(*arg: int) -> None:
@@ -1773,3 +1811,4 @@ def copyHJK():
 # 72 docstring or comments line ========================================
 
 
+lineStraight()

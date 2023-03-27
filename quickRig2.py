@@ -205,7 +205,7 @@ class Tools:
 
 
     def createCuv(self, name: str, size: float, **kwargs) -> str:
-        nor = {
+        normal = {
             "x": (1, 0, 0), 
             "y": (0, 1, 0), 
             "z": (0, 0, 1), 
@@ -214,14 +214,14 @@ class Tools:
             axis = (0, 1, 0)
         else:
             for k, v in kwargs.items():
-                if not k in nor.keys():
+                if not k in normal.keys():
                     axis = (0, 1, 0)
                     continue
                 elif not v:
                     axis = (0, 1, 0)
                     continue
                 else:
-                    axis = nor[k]
+                    axis = normal[k]
         cuv = pm.circle(nr=axis, n=name, ch=False, r=size)[0]
         # pm.scale(cuv, [size, size, size])
         # pm.makeIdentity(cuv, a=True, n=0)
@@ -419,8 +419,9 @@ class QuickRig_CAR:
 
 
     def createJoint(self):
+        carJnt = Coordinates.CAR.values()
         branch = []
-        for i in Coordinates.CAR.values():
+        for i in carJnt:
             pm.select(cl=True)
             for name, pos in i.items():
                 jnt = pm.joint(p=(0, 0, 0), n=name, rad=10)
@@ -520,7 +521,7 @@ class QuickRig_CAR:
             pm.scaleConstraint(parent, child, mo=True, w=1)
 
 
-tmp = AutoWheel()
+# tmp = AutoWheel()
 
 
 
