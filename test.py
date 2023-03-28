@@ -136,42 +136,75 @@ class Coordinates:
     }
 
 
-
-def getRadius(*args):
-    """ Create the controller 1.2 times the sizeUp of the object.
-    If no parameters are given, the selected object is used.
-     """
-    SIZEUP = 1.2
-    sel = args if args else pm.ls(sl=True)
-    result = []
-    for obj in sel:
-        bBox = pm.xform(obj, q=True, bb=True)
-        xMin, yMin, zMin, xMax, yMax, zMax = bBox
-        x = (xMax - xMin) / 2
-        y = (yMax - yMin) / 2
-        z = (zMax - zMin) / 2
-        radius = max([x, y, z])
-        radius = round(radius*SIZEUP, 3)
-        result.append(radius)
-    return result
+class QuickRig_CAR:
+    def __init__(self):
+        self.circle = "carCircle"
+        self.jntList = ["jnt_body", "jnt_wheel"]
+        # self.createCarJoints()
 
 
+    def getRadius(self, obj_sizeUp: dict):
+        """ Create the controller 1.2 times the sizeUp of the object.
+        If no parameters are given, the selected object is used.
+         """
+        result = []
+        for obj, sizeUp in obj_sizeUp.items():
+            bBox = pm.xform(obj, q=True, bb=True)
+            xMin, yMin, zMin, xMax, yMax, zMax = bBox
+            x = (xMax - xMin) / 2
+            y = (yMax - yMin) / 2
+            z = (zMax - zMin) / 2
+            radius = max([x, y, z])
+            radius = round(radius*sizeUp, 3)
+            result.append(radius)
+        return result
 
-def createCarJoints():
-    carJnt = Coordinates.CAR.values()
-    branch = []
-    for i in carJnt:
-        pm.select(cl=True)
-        for name, pos in i.items():
-            jnt = pm.joint(p=(0, 0, 0), n=name, rad=10)
-            pm.move(jnt, pos)
-        headJnt = [j for j in i.keys()][0]
-        branch.append(headJnt)
-    hjk.orientJnt(branch)
-    firstJnt = branch.pop(0)
-    circle = hjk.createCircle("carCircle", 300, y=True)
-    pm.parent(branch, firstJnt)
-    pm.parent(firstJnt, circle)
+
+    def createCarJoints(self):
+        try: pm.delete(self.circle)
+        except: pass
+        carJnt = Coordinates.CAR.values()
+        branch = []
+        for i in carJnt:
+            pm.select(cl=True)
+            for name, pos in i.items():
+                jnt = pm.joint(p=(0, 0, 0), n=name, rad=10)
+                pm.move(jnt, pos)
+            headJnt = [j for j in i.keys()][0]
+            branch.append(headJnt)
+        hjk.orientJnt(branch)
+        firstJnt = branch.pop(0)
+        self.circle = hjk.createCircle("carCircle", 300, y=True)
+        pm.parent(branch, firstJnt)
+        pm.parent(firstJnt, self.circle)
 
 
-createCarJoints()
+    def makeWheelList(self):
+        pm.select(self.circle, hi=True)
+        selAll = pm.ls(sl=True)
+        A = "wheel"
+        B = "end"
+        result = []
+        for i in selAll:
+            tmp = i.split("_")
+            if A in tmp and B not in tmp:
+                result.append(i)
+            else:
+                continue
+        return result
+
+
+    def createCarCtrl(self):
+        ccDict = {"cc_main": "cir", "cc_sub": "car2", "cc_body": "car"}
+        ccWheelList = self.makeWheelList()
+        for ccName, typ in ccDict.items():
+            tmpCircle = hjk.ctrl(typ=True)[0]
+            pm.rename(tmpCircle, ccName)
+        # zig = ["_L", "_R"]
+        # zag = ["_Ft", "_Bk"]
+
+
+
+tmp = QuickRig_CAR()
+# tmp.createCarJoints()
+tmp.createCarCtrl()

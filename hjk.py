@@ -1101,6 +1101,7 @@ def createJnt_MotionPath(*arg: int) -> None:
 
 def ctrl(**kwargs) -> list:
     """ Create a controller,
+    "cir": cir, 
     "cub": cub, 
     "sph": sph, 
     "cyl": cyl, 
@@ -1124,6 +1125,10 @@ def ctrl(**kwargs) -> list:
     "head": head, 
     "scapula": scapula, 
      """
+    # Circle
+    cir = [(0.784, 0, -0.784), (0, 0, -1.108), (-0.784, 0, -0.784), ]
+    cir += [(-1.108, 0, -0), (-0.784, -0, 0.784), (-0, -0, 1.108), ]
+    cir += [(0.784, -0, 0.784), (1.108, -0, 0), (0.784, 0, -0.784), ]
     # Cube
     cub = [(-1, 1, -1), (-1, 1, 1), (1, 1, 1), ]
     cub += [(1, 1, -1), (-1, 1, -1), (-1, -1, -1), ]
@@ -1281,6 +1286,7 @@ def ctrl(**kwargs) -> list:
     scapula += [(2, 10, 11), (3, 18, 0), ]
     # Dictionary
     ctrl = {
+        "cir": cir, 
         "cub": cub, 
         "sph": sph, 
         "cyl": cyl, 
@@ -1377,25 +1383,25 @@ def loadJSON(data: dict) -> None:
         pm.scaleConstraint(cc, obj, mo=True, w=1)
 
 
-def grouping():
+def grouping(*args):
     """ Grouping itself and named own """
-    sel = pm.ls(sl=True)
+    sel = args if args else pm.ls(sl=True)
     for i in sel:
         grp = pm.group(i, n="%s_grp" % i)
         pm.xform(grp, os=True, piv=(0,0,0))
 
 
-def groupingNull():
+def groupingNull(*args):
     """ Grouping null """
-    sel = pm.ls(sl=True)
+    sel = args if args else pm.ls(sl=True)
     for i in sel:
         grp = pm.group(i, n=f"{i}_null", r=True, )
         pm.xform(grp, os=True, piv=(0,0,0))
 
 
-def groupingEmpty(*arg: str) -> list:
+def groupingEmpty(*args: str) -> list:
     """ Create an empty group and match the pivot with the selector. """
-    sel = arg if arg else pm.ls(sl=True)
+    sel = args if args else pm.ls(sl=True)
     grpName = []
     for i in sel:
         grp = pm.group(em=True, n = i + "_grp")
@@ -1811,4 +1817,3 @@ def copyHJK():
 # 72 docstring or comments line ========================================
 
 
-lineStraight()
