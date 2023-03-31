@@ -195,16 +195,65 @@ class QuickRig_CAR:
 
 
     def createCarCtrl(self):
-        ccDict = {"cc_main": "cir", "cc_sub": "car2", "cc_body": "car"}
-        ccWheelList = self.makeWheelList()
-        for ccName, typ in ccDict.items():
-            tmpCircle = hjk.ctrl(typ=True)[0]
-            pm.rename(tmpCircle, ccName)
-        # zig = ["_L", "_R"]
-        # zag = ["_Ft", "_Bk"]
+        ccDict = {
+            "cc_main": {"car3": True}, 
+            "cc_sub": {"car2": True}, 
+            "cc_body": {"car": True}, 
+        }
+        carCircleSize = pm.getAttr(f"{self.circle}.scale")
+        result = []
+        for ccName, ctrlName in ccDict.items():
+            tmp = hjk.ctrl(ctrlName)[0]
+            cuv = pm.rename(tmp, ccName)
+            pm.scale(cuv, carCircleSize)
+            pm.makeIdentity(cuv, t=0, r=0, s=1, n=0, pn=0, a=True)
+            if ccName == "cc_body":
+                jnt = ccName.replace("cc_", "jnt_")
+                pm.matchTransform(ccName, jnt, pos=True)
+            result.append(cuv)
+        return result
+
+
+    def createWheelCtrl(self):
+        carCircleSize = pm.getAttr(f"{self.circle}.scale")
+        s = max(carCircleSize)
+        jntWheelList = self.makeWheelList()
+        result = []
+        for i in jntWheelList:
+            cc = i.replace("jnt_", "cc_")
+            cc = pm.circle(nr=(1, 0, 0), n=cc, r=40, ch=0)[0]
+            pm.scale(cc, [s, s, s])
+            pm.makeIdentity(cc, t=0, r=0, s=1, n=0, pn=0, a=True)
+            pm.matchTransform(cc, i, pos=True)
+            result.append(cc)
+        return result
+        
+
+    def deleteCarCircle(self):
+        pm.delete(self.circle)
+
+
+    def createGroup(self, ccMain: list, ccWheel: list):
+        # Create groups with grpList.
+        grpList = ["rig", "MODEL", "controller"]
+        grpCtrl = [pm.group(em=True, n=i) for i in grpList].pop()
+        # Create cc_main groups.
+        grpMain = [hjk.groupingEmpty(i)[0] for i in ccMain]
+        init = grpMain.pop(0)
+        body = ccMain.pop(-1)
+        for idx in range(2):
+            pm.parent(grpMain[idx], ccMain[idx])
+        pm.parent(init, grpCtrl)
+        # Create cc_wheel groups.
+        grpWheel = [hjk.groupingEmpty(i)[0] for i in ccWheel]
+        pm.parent(grpWheel, grpCtrl)
+        
 
 
 
-tmp = QuickRig_CAR()
-# tmp.createCarJoints()
-tmp.createCarCtrl()
+car = QuickRig_CAR()
+car.createCarJoints()
+ccMain = car.createCarCtrl()
+ccWheel = car.createWheelCtrl()
+car.createGroup(ccMain, ccWheel)
+car.deleteCarCircle()

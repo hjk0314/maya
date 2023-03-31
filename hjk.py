@@ -1099,9 +1099,8 @@ def createJnt_MotionPath(*arg: int) -> None:
         pm.setAttr(f"{tmp}.uValue", val)
 
 
-def ctrl(**kwargs) -> list:
+def ctrl(*args: dict, **kwargs):
     """ Create a controller,
-    "cir": cir, 
     "cub": cub, 
     "sph": sph, 
     "cyl": cyl, 
@@ -1109,6 +1108,7 @@ def ctrl(**kwargs) -> list:
     "con": con, 
     "car": car, 
     "car2": car2, 
+    "car3": car3, 
     "ar1": ar1, 
     "ar2": ar2, 
     "ar3": ar3, 
@@ -1125,10 +1125,6 @@ def ctrl(**kwargs) -> list:
     "head": head, 
     "scapula": scapula, 
      """
-    # Circle
-    cir = [(0.784, 0, -0.784), (0, 0, -1.108), (-0.784, 0, -0.784), ]
-    cir += [(-1.108, 0, -0), (-0.784, -0, 0.784), (-0, -0, 1.108), ]
-    cir += [(0.784, -0, 0.784), (1.108, -0, 0), (0.784, 0, -0.784), ]
     # Cube
     cub = [(-1, 1, -1), (-1, 1, 1), (1, 1, 1), ]
     cub += [(1, 1, -1), (-1, 1, -1), (-1, -1, -1), ]
@@ -1187,6 +1183,10 @@ def ctrl(**kwargs) -> list:
     car2 = [(165, 0, -195), (0, 0, -276), (-165, 0, -195), ]
     car2 += [(-97, 0, -0), (-165, -0, 195), (-0, -0, 276), ]
     car2 += [(165, -0, 195), (97, -0, 0), (165, 0, -195), ]
+    # Car3
+    car3 = [(212, 0, -212), (0, 0, -300), (-212, 0, -212), ]
+    car3 += [(-300, 0, 0), (-212, 0, 212), (0, 0, 300), ]
+    car3 += [(212, 0, 212), (300, 0, 0), (212, 0, -212), ]
     # Arrow1
     ar1 = [(0, 0, 2), (2, 0, 1), (1, 0, 1), ]
     ar1 += [(1, 0, -2), (-1, 0, -2), (-1, 0, 1), ]
@@ -1286,7 +1286,6 @@ def ctrl(**kwargs) -> list:
     scapula += [(2, 10, 11), (3, 18, 0), ]
     # Dictionary
     ctrl = {
-        "cir": cir, 
         "cub": cub, 
         "sph": sph, 
         "cyl": cyl, 
@@ -1294,6 +1293,7 @@ def ctrl(**kwargs) -> list:
         "con": con, 
         "car": car, 
         "car2": car2, 
+        "car3": car3, 
         "ar1": ar1, 
         "ar2": ar2, 
         "ar3": ar3, 
@@ -1310,7 +1310,17 @@ def ctrl(**kwargs) -> list:
         "head": head, 
         "scapula": scapula, 
     }
-    if not kwargs:
+    inputs = {}
+    for tmp in args:
+        for key, val in tmp.items():
+            if isinstance(val, dict):
+                print("Dict in dict.")
+            else:
+                inputs[key] = val
+    for key, val in kwargs.items():
+        inputs[key] = val
+    # If there is no inputs...
+    if not inputs:
         tmp = input()
         coordinate = []
         try:
@@ -1321,9 +1331,9 @@ def ctrl(**kwargs) -> list:
                 else:
                     continue
         except:
-            print("The parameter is incorrect.")
+            print("Syntax is incorrect.")
     else:
-        coordinate = [ctrl[i] for i in kwargs if kwargs[i]]
+        coordinate = [ctrl[i] for i in inputs if inputs[i]]
     result = [pm.curve(d=1, p=i) for i in coordinate]
     return result
 
@@ -1817,3 +1827,4 @@ def copyHJK():
 # 72 docstring or comments line ========================================
 
 
+   

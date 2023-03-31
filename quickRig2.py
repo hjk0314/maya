@@ -521,7 +521,7 @@ class QuickRig_CAR:
             pm.scaleConstraint(parent, child, mo=True, w=1)
 
 
-# tmp = AutoWheel()
+QuickRig_CAR()
 
 
 
