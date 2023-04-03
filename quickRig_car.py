@@ -41,7 +41,7 @@ class QuickRig_Car:
         pm.separator(h=10)
         self.txt1 = pm.textField(ed=True)
         pm.button(l="Create Temp Joint", c=lambda x: self.createTempJoints())
-        pm.button(l="Create controllers", c=lambda x: self.main())
+        pm.button(l="Create controllers", c=lambda x: self.createCtrls())
         pm.button(l="Get Radius", c=lambda x: self.displayRadius())
         pm.button(l="Close", c=lambda x: pm.deleteUI(winName))
         pm.separator(h=10)
@@ -62,12 +62,12 @@ class QuickRig_Car:
             branch.append(headJnt)
         hjk.orientJnt(branch)
         firstJnt = branch.pop(0)
-        self.circle = hjk.createCircle("carCircle", 300, y=True)
+        self.circle = hjk.createCircle(self.circle, 300, y=True)
         pm.parent(branch, firstJnt)
         pm.parent(firstJnt, self.circle)
 
 
-    def main(self):
+    def createCtrls(self):
         ccMain = self.createMainCtrl()
         ccWheel = self.createWheelCtrl()
         self.createGroup(ccMain, ccWheel)
