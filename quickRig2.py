@@ -508,8 +508,8 @@ class QuickRig_CAR:
                 wheelList.append(ccWheel)
             else:
                 continue
-        AutoWheel(wheelList)
-        # self.constraint(wheelList)
+        # AutoWheel(wheelList)
+        self.constraint(wheelList)
         pm.delete(cir)
 
 
@@ -520,8 +520,6 @@ class QuickRig_CAR:
             pm.parentConstraint(parent, child, mo=True, w=1)
             pm.scaleConstraint(parent, child, mo=True, w=1)
 
-
-QuickRig_CAR()
 
 
 

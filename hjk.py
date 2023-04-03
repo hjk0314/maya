@@ -91,108 +91,103 @@ class Han:
 
 
 class AutoWheel_Rig:
-    def __init__(self):
-        """ Create wheels that rotate automatically """
+    def __init__(self, arg: list=None):
+        sel = arg if arg else pm.ls(sl=True)
+        self.ccDict = {}
+        for i in sel:
+            cc = pm.PyNode(i)
+            offset = pm.group(i, n=f"{i}_offset")
+            pm.xform(offset, os=True, piv=(0,0,0))
+            self.ccDict[cc] = offset
         self.main()
-    
+            
 
     def main(self):
-        sel = pm.ls(sl=True)
-        if not sel:
-            om.MGlobal.displayError('Nothing selected.')
-        else:
-            for i in sel:
-                rad = self.createRad(i)
-                var = self.createVar(rad)
-                self.createRig(i, var, rad)
-    
-
-    # Return obj's radius.
-    def createRad(self, obj: str) -> float:
-        # bb: bounding box
-        bbObj = pm.xform(obj, q=True, bb=True)
-        xMin, yMin, zMin, xMax, yMax, zMax = bbObj
-        x = (xMax - xMin) / 2
-        y = (yMax - yMin) / 2
-        z = (zMax - zMin) / 2
-        bbList = [x, y, z]
-        bbList.sort(reverse=True) # biggest
-        bb = bbList[0] # 0.12345678
-        result = round(bb, 3) # 0.123
-        return result
+        for ctrl, offset in self.ccDict.items():
+            var = self.createVariables(ctrl, offset)
+            self.createCtrlChannel(ctrl, offset)
+            self.createCtrlGroup(offset, var)
+            self.createExpression(offset, var)
 
 
-    # Create variables.
-    def createVar(self, rad: float) -> tuple:
-        rad *= 1.2
-        cuv = pm.circle(nr=(1,0,0), r=rad, ch=False, n='temp')
-        cuv = cuv[0]
-        jnt = cuv + '_jnt'
-        null = cuv + '_null_grp'
-        prev = cuv + '_prev_grp'
-        orient = cuv + '_orient_Grp'
+    def createCtrlChannel(self, ctrl, offset):
+        # Creates a Radius channel.
+        attrRad = "Radius"
+        pm.addAttr(ctrl, ln=attrRad, at='double', min=0.0001, dv=1)
+        pm.setAttr(f'{ctrl}.{attrRad}', e=True, k=True)
+        # Creates a AutoRoll channel.
+        attrAuto = 'AutoRoll'
+        pm.addAttr(ctrl, ln=attrAuto, at='long', min=0, max=1, dv=1)
+        pm.setAttr(f'{ctrl}.{attrAuto}', e=True, k=True)
+        # Creates a PrePos channel.
+        for i in ['X', 'Y', 'Z']:
+            pm.addAttr(offset, ln=f'PrevPos{i}', at='double', dv=0)
+            pm.setAttr(f'{offset}.PrevPos{i}', e=True, k=True)
+
+
+    def createCtrlGroup(self, offset, var):
+        null, prev, orient, expr = var
+        pm.group(n=null, em=True, p=offset)
+        pm.group(n=prev, em=True, p=offset.getParent())
+        ort = pm.group(n=orient, em=True, p=prev)
+        pos = [-0.001, -0.001, -0.001]
+        ort.translate.set(pos)
+
+
+    def createExpression(self, offset, var):
+        null, prev, orient, expr = var
+        pm.aimConstraint(offset, prev, mo=False)
+        pm.orientConstraint(null, orient, mo=False)
+        pm.expression(s=expr, o='', ae=1, uc='all')
+
+
+    def createCtrlLocator(self, ctrl):
+        loc = pm.spaceLocator(n='loc_' + ctrl)
+        pm.matchTransform(loc, ctrl, pos=True)
+        pm.parent(loc, ctrl)
+        return loc
+
+
+    def createVariables(self, ctrl, offset):
+        loc = self.createCtrlLocator(ctrl)
+        null = offset + '_null_grp'
+        prev = offset + '_prev_grp'
+        orient = offset + '_orient_grp'
         br = '\n'
         # expression1 ==================================================
-        expr1 = f'float $R = {cuv}.Radius;{br}'
-        expr1 += f'float $A = {cuv}.AutoRoll;{br}'
-        expr1 += f'float $J = {jnt}.rotateX;{br}'
+        expr1 = f'float $R = {ctrl}.Radius;{br}'
+        expr1 += f'float $A = {ctrl}.AutoRoll;{br}'
+        expr1 += f'float $J = {loc}.rotateX;{br}'
         expr1 += f'float $C = 2 * 3.141 * $R;{br}' # 2*pi*r
         expr1 += f'float $O = {orient}.rotateY;{br}'
-        expr1 += f'float $S = 1;{br}' # Connect the global scale.
-        expr1 += f'float $pX = {cuv}.PrevPosX;{br}'
-        expr1 += f'float $pY = {cuv}.PrevPosY;{br}'
-        expr1 += f'float $pZ = {cuv}.PrevPosZ;{br}'
+        expr1 += f'float $S = {offset}.scaleY;{br}' # Connect the global scale.
+        expr1 += f'float $pX = {offset}.PrevPosX;{br}'
+        expr1 += f'float $pY = {offset}.PrevPosY;{br}'
+        expr1 += f'float $pZ = {offset}.PrevPosZ;{br}'
         expr1 += f'{prev}.translateX = $pX;{br}'
         expr1 += f'{prev}.translateY = $pY;{br}'
         expr1 += f'{prev}.translateZ = $pZ;{br}'
-        expr1 += f'float $nX = {cuv}.translateX;{br}'
-        expr1 += f'float $nY = {cuv}.translateY;{br}'
-        expr1 += f'float $nZ = {cuv}.translateZ;{br*2}'
+        expr1 += f'float $nX = {offset}.translateX;{br}'
+        expr1 += f'float $nY = {offset}.translateY;{br}'
+        expr1 += f'float $nZ = {offset}.translateZ;{br*2}'
         # expression2: Distance between two points.
         expr2 = f'float $D = `mag<<$nX-$pX, $nY-$pY, $nZ-$pZ>>`;{br*2}'
         # expression3: Insert value into jonit rotation.
-        expr3 = f'{jnt}.rotateX = $J' # Original rotation value.
+        expr3 = f'{loc}.rotateX = $J' # Original rotation value.
         expr3 += ' + ($D/$C) * 360' # Proportional: (d / 2*pi*r) * 360
         expr3 += ' * $A' # Auto roll switch.
         expr3 += ' * 1' # Create other switches.
         expr3 += ' * sin(deg_to_rad($O))' # When the wheel turns.
         expr3 += f' / $S;{br*2}' # Resizing the global scale.
         # expression4
-        expr4 = f'{cuv}.PrevPosX = $nX;{br}'
-        expr4 += f'{cuv}.PrevPosY = $nY;{br}'
-        expr4 += f'{cuv}.PrevPosZ = $nZ;{br}'
+        expr4 = f'{offset}.PrevPosX = $nX;{br}'
+        expr4 += f'{offset}.PrevPosY = $nY;{br}'
+        expr4 += f'{offset}.PrevPosZ = $nZ;{br}'
         # expression Final =============================================
-        exprFinal = expr1 + expr2 + expr3 + expr4
+        expr = expr1 + expr2 + expr3 + expr4
         # Result
-        result = (cuv, jnt, null, prev, orient, exprFinal)
+        result = [null, prev, orient, expr]
         return result
-
-
-    # Construct a rig inside maya.
-    def createRig(self, obj: str, var: tuple, rad: float) -> None:
-        # variables
-        cuv, jnt, null, prev, orient, expr = var
-        # channel to cuv
-        pm.addAttr(cuv, ln='Radius', at='double', dv=1)
-        pm.setAttr(f'{cuv}.Radius', e=True, k=True)
-        pm.setAttr(f'{cuv}.Radius', rad)
-        pm.addAttr(cuv, ln='AutoRoll', at='long', min=0, max=1, dv=1)
-        pm.setAttr(f'{cuv}.AutoRoll', e=True, k=True)
-        for i in ['X', 'Y', 'Z']:
-            pm.addAttr(cuv, ln=f'PrevPos{i}', at='double', dv=0)
-            pm.setAttr(f'{cuv}.PrevPos{i}', e=True, k=True)
-        # create joint inside cuv
-        pm.joint(n=jnt, p=(0,0,0))
-        # create groups
-        pm.group(n=null, em=True, p=cuv)
-        pm.group(n=prev, em=True, w=True)
-        pm.group(n=orient, em=True, p=prev)
-        grp = pm.group(cuv, prev)
-        pm.matchTransform(grp, obj, pos=True)
-        # create constraints
-        pm.aimConstraint(cuv, prev, mo=False)
-        pm.orientConstraint(null, orient, mo=False)
-        pm.expression(s=expr, o='', ae=1, uc='all')
 
 
 class AutoWheel_Key:
@@ -1818,8 +1813,8 @@ def makeFolder():
 def copyHJK():
     """ Copy hjk.py 
     from <in git folder> to <maya folder in MyDocuments> """
-    gitFolder = r"C:\Users\jkhong\Desktop\git\maya\hjk.py"
-    docFolder = r"C:\Users\jkhong\Documents\maya\scripts\hjk.py"
+    gitFolder = r"C:\Users\hjk03\Desktop\git\maya\hjk.py"
+    docFolder = r"C:\Users\hjk03\Documents\maya\2022\scripts\hjk.py"
     shutil.copy(gitFolder, docFolder)
 
 
