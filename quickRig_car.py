@@ -131,7 +131,7 @@ class QuickRig_Car:
         # Create cc_main groups.
         grpMain = [hjk.groupingEmpty(i)[0] for i in ccMain]
         init = grpMain.pop(0)
-        body = ccMain.pop(-1)
+        # body = ccMain.pop(-1)
         for idx in range(2):
             pm.parent(grpMain[idx], ccMain[idx])
         pm.parent(init, grpCtrl)
@@ -141,11 +141,22 @@ class QuickRig_Car:
 
 
     def finish(self, ccMain, ccWheel):
-        ccSub = ccMain[1]
+        main, sub, body = ccMain
+        yellowList = [main, body]
+        pinkList = [sub]
+        redList = [ccWheel[i] for i in range(0, 4, 2)]
+        blueList = [ccWheel[i] for i in range(1, 4, 2)]
+        colorDict = {
+            "yellow": yellowList, 
+            "pink": pinkList, 
+            "red": redList, 
+            "blue": blueList, 
+        }
         for i in ccWheel:
             offset = i.getParent()
-            pm.parentConstraint(ccSub, offset, mo=True, w=1)
-            pm.scaleConstraint(ccSub, offset, mo=True, w=1)
+            pm.parentConstraint(sub, offset, mo=True, w=1)
+            pm.scaleConstraint(sub, offset, mo=True, w=1)
+        hjk.Colors.colors(colorDict)
         pm.delete(self.circle)
 
 

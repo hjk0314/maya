@@ -741,14 +741,14 @@ class Colors:
             pm.columnLayout(cat=('both', 4), rowSpacing=2, columnWidth=188)
             pm.separator(h=10)
             pm.rowColumnLayout(nc=2, cw=[(1, 90), (2, 90)])
-            pm.button(l='colors_blue', c=lambda x: self.colors(blue=True))
-            pm.button(l='colors_blue2', c=lambda x: self.colors(blue2=True))
-            pm.button(l='colors_pink', c=lambda x: self.colors(pink=True))
-            pm.button(l='colors_red', c=lambda x: self.colors(red=True))
-            pm.button(l='colors_red2', c=lambda x: self.colors(red2=True))
-            pm.button(l='colors_green', c=lambda x: self.colors(green=True))
-            pm.button(l='colors_green2', c=lambda x: self.colors(green2=True))
-            pm.button(l='colors_yellow', c=lambda x: self.colors(yellow=True))
+            pm.button(l='colors_blue', c=lambda x: self.colors("blue"))
+            pm.button(l='colors_blue2', c=lambda x: self.colors("blue2"))
+            pm.button(l='colors_pink', c=lambda x: self.colors("pink"))
+            pm.button(l='colors_red', c=lambda x: self.colors("red"))
+            pm.button(l='colors_red2', c=lambda x: self.colors("red2"))
+            pm.button(l='colors_green', c=lambda x: self.colors("green"))
+            pm.button(l='colors_green2', c=lambda x: self.colors("green2"))
+            pm.button(l='colors_yellow', c=lambda x: self.colors("yellow"))
             pm.setParent("..", u=True)
             pm.separator(h=10)
             pm.button(l="Close", c=lambda x: pm.deleteUI(winName))
@@ -757,9 +757,20 @@ class Colors:
 
 
     # This is Main function.
-    def colors(self, **kwargs):
-        sel = pm.ls(sl=True)
-        colors = {
+
+    def colors(arg=None):
+        tmp = {}
+        if arg == None:
+            print("arg is None.")
+            return
+        elif isinstance(arg, str):
+            sel = pm.ls(sl=True)
+            tmp[arg] = sel
+        elif isinstance(arg, dict):
+            tmp = arg
+        else:
+            return
+        pallette = {
             "blue": 6, 
             "blue2": 18, 
             "pink": 9, 
@@ -769,13 +780,14 @@ class Colors:
             "green2": 23, 
             "yellow": 17, 
         }
-        idxs = [colors[i] for i in kwargs if kwargs[i]]
-        enb = 1 if idxs else 0
-        idx = idxs[0] if idxs else 0
-        for i in sel:
-            shp = i.getShape()
-            pm.setAttr(f"{shp}.overrideEnabled", enb)
-            pm.setAttr(f"{shp}.overrideColor", idx)
+        for color, objList in tmp.items():
+            idx = pallette[color]
+            enb = 1 if idx else 0
+            for obj in objList:
+                obj = pm.PyNode(obj)
+                shp = obj.getShape()
+                pm.setAttr(f"{shp}.overrideEnabled", enb)
+                pm.setAttr(f"{shp}.overrideColor", idx)
 
 
 class SolariBoard:
@@ -1813,8 +1825,10 @@ def makeFolder():
 def copyHJK():
     """ Copy hjk.py 
     from <in git folder> to <maya folder in MyDocuments> """
-    gitFolder = r"C:\Users\hjk03\Desktop\git\maya\hjk.py"
-    docFolder = r"C:\Users\hjk03\Documents\maya\2022\scripts\hjk.py"
+    scriptsFolder = pm.internalVar(usd=True)
+    tmp = scriptsFolder.rsplit("/", 5)[0]
+    gitFolder = tmp + "/Desktop/git/maya/hjk.py"
+    docFolder = scriptsFolder + "hjk.py"
     shutil.copy(gitFolder, docFolder)
 
 
