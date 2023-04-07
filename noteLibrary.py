@@ -8,6 +8,7 @@ import heapq
 import pprint
 import bisect
 import enum
+# import graphlib
 import math
 import decimal
 import fractions
@@ -96,132 +97,267 @@ import traceback
 import typing
 
 
-# textwrap.shorten: 문자열을 원하는 길이에 맞게 줄여 표시(...)
-# textwrap.wrap: 긴 문자열을 원하는 길이로 줄 바꿈.
-# textwrap.fill: wrap과 같은 기능이지만 조금 더 간편하다.
-""" longStr = '''We are not now that strength which in old days 
-Moved earth and heaven; that which we are, we are; 
-One equal temper of heroic hearts, 
-Made weak by time and fate, but strong in will 
-To strive, to seek, to find, and not to yield. - Alfred Lord Tennyson
-'''
-textwrap.shorten(longStr, width=15, placeholder='...')
-textwrap.wrap(longStr, width=30)
-textwrap.fill(longStr, width=45)
- """
+def textwrap_sample():
+    """ textwrap.shorten: 문자열을 원하는 길이에 맞게 줄여 표시(...)
+    textwrap.wrap: 긴 문자열을 원하는 길이로 줄 바꿈.
+    textwrap.fill: wrap과 같은 기능이지만 조금 더 간편하다.
+      """
+    longStr = '''We are not now that strength which in old days 
+    Moved earth and heaven; that which we are, we are; 
+    One equal temper of heroic hearts, 
+    Made weak by time and fate, but strong in will 
+    To strive, to seek, to find, and not to yield. - Alfred Lord Tennyson
+    '''
+    result1 = textwrap.shorten(longStr, width=15, placeholder='...')
+    result2 = textwrap.wrap(longStr, width=30)
+    result3 = textwrap.fill(longStr, width=45)
+    print(f"result1 -> {result1}")
+    print(f"result2 -> {result2}")
+    print(f"result3 -> {result3}")
 
 
-# re: 정규표현식. 다양한 표현 방법이 있음
-""" data = '780314-1234567'
-temp = re.compile('(\d{6})[-](\d{7})')
-print(temp.sub('\g<1>-*******', data))
- """
-""" attr = pCylinderShape1Deformed.aiSubdivType
-tmp = re.search('((.*)Deformed)(.*)', attr)
-org = tmp.group(1) # -> pCylinderShape1Deformed
-new = tmp.group(2) # -> pCylinderShape1
-mod = tmp.group(3) # -> .aiSubdivType
- """
+def re_sample():
+    """ re: 정규표현식. 다양한 표현 방법이 있음 """
+    # 주민등록번호 샘플
+    data = '780314-1234567'
+    temp = re.compile('(\d{6})[-](\d{7})')
+    print(temp.sub('\g<1>-*******', data))
+    # 마야에서 Deformed 글자 search
+    attr = "pCylinderShape1Deformed.aiSubdivType"
+    tmp = re.search('((.*)Deformed)(.*)', attr)
+    org = tmp.group(1) # -> pCylinderShape1Deformed
+    new = tmp.group(2) # -> pCylinderShape1
+    mod = tmp.group(3) # -> .aiSubdivType
+    print(f"tmp -> {tmp}")
+    print(f"tmp -> {org}")
+    print(f"tmp -> {new}")
+    print(f"tmp -> {mod}")
 
 
-# struct: C언어로 만든 구조체 이진 데이터를 처리할 때 활요하는 모듈.
-""" C구조체로 만들어진 파일을 읽거나, 네트워크로 전달되는 C구조체 이진 데이터를
-파이썬에서 처리할 때 사용.
- """
+def struct_sample():
+    """ struct: C언어로 만든 구조체 이진 데이터를 처리할 때 활요하는 모듈. """
+    originalDoc = struct.__doc__
+    result = "C구조체로 만들어진 파일을 읽거나, "
+    result += "네트워크로 전달되는 C구조체 이진 데이터를 "
+    result += "파이썬에서 처리할 때 사용."
+    print(originalDoc)
+    print(result)
 
 
-# datetime.date: 년, 월, 일로 날짜를 표현.
-# datetime.timedelta: 두 날짜의 차이를 계산할 때 사용.
-""" today = datetime.date.today()
-year = today.year
-mon = today.month
-day = today.day
-HJK = datetime.date(1978, 3, 14)
-SYR = datetime.date(1991, 4, 12)
-HSE = datetime.date(2020, 3, 30)
-WED = datetime.date(2018, 10, 28)
-THO = datetime.timedelta(days=1000) """
+def datetime_sample():
+    """ datetime.date: 년, 월, 일로 날짜를 표현.
+    datetime.timedelta: 두 날짜의 차이를 계산할 때 사용.
+     """
+    today = datetime.date.today()
+    year = today.year
+    mon = today.month
+    day = today.day
+    HJK = datetime.date(1978, 3, 14)
+    SYR = datetime.date(1991, 4, 12)
+    HSE = datetime.date(2020, 3, 30)
+    WEDDING_DAY = datetime.date(2018, 10, 28)
+    THOUSAND_DAY = datetime.timedelta(days=1000)
+    print(f"today -> {today}")
+    print(f"year -> {year}")
+    print(f"mon -> {mon}")
+    print(f"day -> {day}")
+    print(f"HJK -> {HJK}")
+    print(f"SYR -> {SYR}")
+    print(f"HSE -> {HSE}")
+    print(f"WEDDING_DAY -> {WEDDING_DAY}")
+    print(f"THOUSAND_DAY -> {THOUSAND_DAY}")
 
 
-# calendar.isleap: 인수로 입력한 연도가 윤년인지를 확인할 때 사용.
-""" curr = datetime.date.today()
-year = curr.year
-if calendar.isleap(year):
-    print('It\'s a leap year.')
- """
+def calendar_sample():
+    """ calendar.isleap: 인수로 입력한 연도가 윤년인지를 확인할 때 사용. """
+    curr = datetime.date.today()
+    year = curr.year
+    if calendar.isleap(year):
+        print('It\'s a leap year.')
+    else:
+        print('It\'s not a leap year.')
+   
+
+def deque_sample():
+    """ collections.deque: 양방향 자료형. "데크"라 읽는다.
+    스택(stack)처럼 써도 되고, 큐(queue)처럼 써도 된다.
+    [1, 2, 3, 4, 5]이 다이얼을 오른쪽으로 2칸 돌려 [4, 5, 1, 2, 3]으로 바꾼다.
+     """
+    sampleList = [1, 2, 3, 4, 5]
+    dequed = collections.deque(sampleList)
+    dequed.rotate(2) # 음수 가능
+    result = list(dequed)
+    print(f"sampleList -> {sampleList}")
+    print(f"dequedList -> {result}")
+   
+
+def nametuple_sample():
+    """ collections.nametuple: 튜플은 인덱스를 통해서만 데이터에 접근할 수 있지만, 
+    네임드튜플은 인덱스뿐만 아니라 키(key)로도 데이터에 접근할 수 있다.
+    namedtuple 함수는 두 개의 인자를 받습니다. 
+    첫 번째 인자는 생성될 클래스 이름입니다. 
+    두 번째 인자는 공백으로 구분된 필드명의 문자열이나 문자열 리스트입니다.
+     """
+    # Point 클래스 생성
+    Point = collections.namedtuple('Point', ['x', 'y'])
+    # Point 클래스 객체 생성
+    p = Point(1, 2)
+    # 필드명으로 값에 접근
+    print(p.x)  # 1
+    print(p.y)  # 2
+    # 인덱스로도 접근 가능
+    print(p[0])  # 1
+    print(p[1])  # 2
 
 
-# collections.deque: 양방향 자료형. "데크"라 읽는다.
-# 스택(stack)처럼 써도 되고, 큐(queue)처럼 써도 된다.
-# [1, 2, 3, 4, 5]이 다이얼을 오른쪽으로 2칸 돌려 [4, 5, 1, 2, 3]으로 바꾼다.
-""" a = [1, 2, 3, 4, 5]
-q = collections.deque(a)
-q.rotate(2) # 음수 가능
-result = list(q)
-print(result)
- """
+def counter_sample():
+    """ collections.Counter: 리스트나 문자열등을 비교.
+    리스트가 갖고 있는 요소들을 카운트해주는 함수인데, 
+    순서는 고려하지 않고 비교를 한다.
+    같은 요소가 몇 개인지 비교할 때 사용하는 클래스이다.
+     """
+    arr1 = [1, 2, 3]
+    arr2 = [3, 2, 1]
+    arr3 = [3, 2, 1, 0]
+    if collections.Counter(arr1) == collections.Counter(arr2):
+        print("arr1 == arr2")
+    if collections.Counter(arr1) != collections.Counter(arr3):
+        print("arr1 != arr3")
+   
+
+def defaultdict_sample():
+    """ collections.defaultdict는 값에 초깃값을 지정하여 딕셔너리를 생성한다.
+    아래 예제에서 d는 defaultdict 객체입니다. 
+    int 타입의 디폴트 값으로 초기화되었습니다. 
+    d['apple'] += 1과 같이 딕셔너리 값 추가를 할 때, 
+    d가 int 타입 디폴트 값을 가진 defaultdict이기 때문에 
+    d['apple']이 처음 등장하는 경우, 디폴트 값인 0이 할당된 뒤 1이 더해집니다. 
+    따라서 print(d)를 호출하면 {'apple': 1, 'banana': 2, 'cherry': 3}와 같은 
+    딕셔너리가 출력됩니다. 또한, 존재하지 않는 키인 'durian'을 참조할 경우, 
+    자동으로 디폴트 값인 0이 할당되어 출력됩니다.
+     """
+    # defaultdict 생성
+    d = collections.defaultdict(int)  # int 타입의 디폴트 값
+    # 딕셔너리 값 추가
+    d['apple'] += 1
+    d['banana'] += 2
+    d['cherry'] += 3
+    # 딕셔너리 출력
+    print(d)  # defaultdict(<class 'int'>, {'apple': 1, 'banana': 2, 'cherry': 3})
+    # 존재하지 않는 키 참조
+    print(d['durian'])  # 0 (int 타입의 디폴트 값이 할당됨)
 
 
-# collections.nametuple: 튜플은 인덱스를 통해서만 데이터에 접근할 수 있지만, 
-# 네임드튜플은 인덱스뿐만 아니라 키(key)로도 데이터에 접근할 수 있다.
+def heapq_saple():
+    """ heapq: 순위가 가장 높은 자료를 가장 먼저 꺼내는 "우선순위 큐" 모듈이다. 
+    힙은 일종의 이진트리(binary tree) 자료구조로서, 
+    각 노드의 값이 그 자식 노드의 값보다 작은 최소 힙(min-heap)과 
+    각 노드의 값이 그 자식 노드의 값보다 큰 최대 힙(max-heap)으로 나눌 수 있습니다. 
+    heapq 모듈은 최소 힙(min-heap)만을 다룹니다.
+    이러한 과정을 리스트를 사용하여 직접 구현하기 어렵지 않지만, 
+    이런 작업에 최적화된 heapq를 사용해보는 것도 나쁘지 않다.
+     """
+    # 리스트를 힙으로 변환
+    lst = [5, 3, 1, 7, 4]
+    heapq.heapify(lst)
+    print(lst)  # [1, 3, 5, 7, 4]
+    # 힙에 원소 추가
+    heapq.heappush(lst, 2)
+    print(lst)  # [1, 2, 5, 7, 4, 3]
+    # 최소값 삭제 및 반환
+    min_value = heapq.heappop(lst)
+    print(min_value)  # 1
+    print(lst)  # [2, 3, 5, 7, 4]
+    # 원소 추가 및 최소값 삭제 및 반환
+    min_value = heapq.heappushpop(lst, 6)
+    print(min_value)  # 2
+    print(lst)  # [3, 4, 5, 7, 6]
 
 
-# collections.Counter: 리스트나 문자열등을 비교.
-""" 리스트가 갖고 있는 요소들을 카운트해주는 함수인데, 
-순서는 고려하지 않고 비교를 한다.
-같은 요소가 몇 개인지 비교할 때 사용하는 클래스이다.
-arr1 = [1, 2, 3]
-arr2 = [3, 2, 1]
-arr3 = [3, 2, 1, 0]
-if collections.Counter(arr1) == collections.Counter(arr2):
-    print("arr1 == arr2")
-if collections.Counter(arr1) != collections.Counter(arr3):
-    print("arr1 != arr3")
- """
-
-# collections.defaultdict는 값에 초깃값을 지정하여 딕셔너리를 생성한다.
-
-
-# heapq: 순위가 가장 높은 자료를 가장 먼저 꺼내는 "우선순위 큐" 모듈이다. 
-# 리스트를 사용하여 직접 구현하기 어렵지 않지만, 
-# 이런 작업에 최적화된 heapq를 사용하자.
-
-
-# pprint: 데이터를 보기 좋게 출력.
-
-
-# bisect: 이진 탐색 알고리즘을 구현한 모듈로, 
-# bisect.bisect() 함수는 정렬된 리스트에 값을 삽입할 때 
-# 정렬을 유지할 수 있는 인덱스를 반환한다.
-""" result = []
-scoreList = [33, 99, 77, 70, 89, 90, 100]
-gradeList = [60, 70, 80, 90]
-for i in scoreList:
-    # bisect.bisect_left()
-    idx = bisect.bisect(gradeList, i)
-    # 77은 70과 80 사이에 있으므로 인덱스 값 2를 반환한다.
-    print(f'idx: {idx}')
-    grade = 'FDCBA'[idx]
-    result.append(grade)
-bisect.insort(gradeList, 85) # insort()
-print(gradeList)
-print(result)
- """
+def pprint_sample():
+    """ pprint: 데이터를 보기 좋게 출력하는 Pretty Printer(PPrint)를 제공합니다.
+    이 함수는 다음과 같은 인자를 받습니다.
+     - object: 출력하고자 하는 객체
+     - stream: 출력할 스트림(stream)을 지정합니다. 기본값은 sys.stdout입니다.
+     - indent: 들여쓰기(indentation)할 너비를 지정합니다. 기본값은 1입니다.
+     - width: 출력할 줄의 최대 너비를 지정합니다. 기본값은 80입니다.
+     - depth: 출력할 객체의 중첩 깊이를 제한합니다. 기본값은 None입니다.
+     """
+    data = {
+        "name": "John Doe",
+        "age": 30,
+        "email": "johndoe@example.com",
+        "phone_numbers": ["010-1234-5678", "02-9876-5432"],
+        "address": {
+            "city": "Seoul",
+            "country": "South Korea"
+        }
+    }
+    pprint.pprint(data)
+    # 결과값: 
+    """ {'address': {'city': 'Seoul', 'country': 'South Korea'},
+    'age': 30,
+    'email': 'johndoe@example.com',
+    'name': 'John Doe',
+    'phone_numbers': ['010-1234-5678', '02-9876-5432']}
+     """
 
 
-# enum: 서로 관련이 있는 여러 개의 상수 집합을 정의할 때 사용.
-""" class Week(enum.IntEnum):
+def bisect_sample():
+    """ bisect는 이진 탐색 알고리즘을 구현한 모듈로, 
+    bisect.bisect() 함수는 정렬된 리스트에 값을 삽입할 때 정렬을 유지할 수 있는 
+    인덱스를 반환한다. bisect 라이브러리에서 가장 많이 사용되는 함수는 
+    bisect_left()와 bisect_right()입니다. 
+    이 함수들은 새로운 요소를 삽입할 위치를 찾아내는 함수로, 
+    리스트가 정렬된 상태를 유지할 수 있도록 도와줍니다. 
+    bisect_left() 함수는 새로운 요소가 삽입될 위치를 왼쪽부터 찾아냅니다. 
+    반면 bisect_right() 함수는 오른쪽부터 찾아냅니다.
+     """
+    result = []
+    scoreList = [33, 99, 77, 70, 89, 90, 100]
+    gradeList = [60, 70, 80, 90]
+    for i in scoreList:
+        # bisect.bisect_left()
+        idx = bisect.bisect(gradeList, i)
+        # 77은 70과 80 사이에 있으므로 인덱스 값 2를 반환한다.
+        print(f'idx: {idx}')
+        grade = 'FDCBA'[idx]
+        result.append(grade)
+    bisect.insort(gradeList, 85) # insort()
+    print(gradeList)
+    print(result)
+
+
+class Week(enum.IntEnum):
+    """ enum: 서로 관련이 있는 여러 개의 상수 집합을 정의할 때 사용. """
     MONDAY = 1
     TUESDAY = 2
     WEDNESDAY = 3
     THURSDAY = 4
     FRIDAY = 5
     SATURDAY = 6
-    SUNDAY = 7 """
+    SUNDAY = 7
 
 
+def graphlib_sample():
+    """ graphlib는 파이썬 3.9에서 추가된 그래프 처리를 위한 표준 라이브러리입니다. 
+    이 라이브러리는 유향 그래프와 무향 그래프 모두를 다룰 수 있으며, 
+    다양한 그래프 알고리즘을 제공합니다. 
+    graphlib에서 가장 많이 사용되는 클래스는 Graph 클래스입니다. 
+    이 클래스는 무향 그래프를 나타내는 클래스로, 
+    그래프의 노드와 엣지를 추가, 제거, 수정하는 등의 작업을 수행할 수 있습니다. 
+    Digraph 클래스는 유향 그래프를 다루는 클래스이며, 
+    TopologicalSorter 클래스는 위상 정렬(topological sort)을 수행하는 클래스입니다. 
+    이 외에도 다양한 그래프 알고리즘을 제공하므로, 
+    그래프 처리를 위한 작업을 할 때 유용하게 사용할 수 있습니다.
+    Graph 클래스의 객체를 생성하는 예제는 아래와 같지만 3.9서 사용 가능.
+     """
+    """ g = graphlib.Graph()
+    g.add_node('A')
+    g.add_node('B')
+    g.add_edge('A', 'B')
+     """
 
-# graphlib.TopologicalSorter: 그래프 위상 정렬에 사용하는 클래스.(파이썬 3.9)
 
 
 # math.gcd: 최대공약수
