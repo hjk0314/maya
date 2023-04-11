@@ -8,7 +8,7 @@ import heapq
 import pprint
 import bisect
 import enum
-# import graphlib
+import graphlib
 import math
 import decimal
 import fractions
@@ -49,10 +49,11 @@ import platform
 import ctypes
 import threading
 import multiprocessing
-import concurrent
+import concurrent.futures
 import subprocess
 import sched
 import asyncio
+import aiohttp
 import socket
 import ssl
 import select
@@ -64,12 +65,16 @@ import binascii
 import quopri
 import uu
 import html
-import xml.etree.ElementTree
+from html.parser import HTMLParser
+import xml.etree.ElementTree as ET
+import parse
 import webbrowser
 import cgi
 import cgitb
 import wsgiref
-import urllib
+from wsgiref.simple_server import make_server
+import urllib.parse
+import urllib.request
 import http.client
 import ftplib
 import poplib
@@ -352,10 +357,10 @@ def graphlib_sample():
     그래프 처리를 위한 작업을 할 때 유용하게 사용할 수 있습니다.
     Graph 클래스의 객체를 생성하는 예제는 아래와 같지만 3.9서 사용 가능.
      """
-    # g = graphlib.Graph()
-    # g.add_node('A')
-    # g.add_node('B')
-    # g.add_edge('A', 'B')
+    g = graphlib.Graph()
+    g.add_node('A')
+    g.add_node('B')
+    g.add_edge('A', 'B')
     
 
 def gcdLcm_sample():
@@ -1265,114 +1270,1508 @@ class argparse_sample():
     """
 
 
-# logging: 로그를 파일로 출력할 때 사용하는 모듈
-# getpass: 비밀번호를 입력할 때 화면에 노출하지 않도록 한다.
-# curses: 터미널 그래픽 애플리케이션을 만들 때 사용.
-# platform: 시스템 정보를 확인할 때 사용.
-# ctypes: C로 작성한 라이브러리를 파이썬에서 사용.
-# threading: 스레드를 이용하여 한 프로세스에서 2가지 이상의 일을 실행.
-# multiprocessing: 멀티 프로세스를 활용하여, 2가지 이상의 일을 동시에 실행.
-# concurrent.futures: 같은 규칙으로 threading과 multiprocessing을 더 쉽게 사용.
+class logging_sample:
+    """ logging은 파이썬에서 제공하는 모듈로, 
+    애플리케이션의 로그 메시지를 기록하는 기능을 제공합니다. 
+    로깅은 디버깅, 성능 향상, 오류 분석 등 다양한 목적으로 사용됩니다. 
+    logging 모듈은 여러 개의 로깅 레벨을 제공하며, 
+    이를 이용하여 어느 정도의 로그 메시지를 출력할지 결정할 수 있습니다. 
+    로깅 레벨은 다음과 같습니다. DEBUG: 디버깅 목적으로 자세한 정보를 기록합니다. 
+
+    
+    INFO: 애플리케이션의 주요 이벤트를 기록합니다. 
+    WARNING: 애플리케이션의 경고성 이벤트를 기록합니다. 
+    ERROR: 애플리케이션의 오류 이벤트를 기록합니다. 
+    CRITICAL: 심각한 오류가 발생한 경우 기록합니다. 
+
+    
+    logging 모듈은 다양한 로그 기록 방식을 제공합니다. 
+    대표적인 방식은 다음과 같습니다. 
+
+    
+    StreamHandler: 터미널에 로그 메시지를 출력합니다.
+    FileHandler: 파일에 로그 메시지를 출력합니다.
+    RotatingFileHandler: 크기나 날짜 등을 기준으로 로그 파일을 자동으로 교체합니다.
+    TimedRotatingFileHandler: 주기적으로 로그 파일을 자동으로 교체합니다.
+    logging 모듈을 사용하면 로그 메시지를 기록하고 관리하는 것이 편리해집니다. 
+    디버깅 및 애플리케이션 분석 시 유용한 정보를 제공하며, 
+    오류 및 경고 사항을 적절하게 처리할 수 있습니다.
+    """
 
 
-# subprocess: 시스템 명령을 수행.
-""" with open(r"C:\Users\jkhong\Desktop\file.txt", 'wb') as txt:
-    out = subprocess.run(['cmd', '/c', 'dir'], capture_output=True)
-    txt.write(out.stdout)
+    # 로그 레벨 설정
+    logging.basicConfig(level=logging.DEBUG)
+
+
+    # 로그 메시지 출력
+    logging.debug('Debugging message')
+    logging.info('Information message')
+    logging.warning('Warning message')
+    logging.error('Error message')
+    logging.critical('Critical message')
+
+
+class getpass_sample():
+    """ getpass 모듈은 사용자로부터 비밀번호나 기타 민감한 정보를 입력받을 때, 
+    터미널에서 입력한 내용이 화면에 표시되지 않도록 하는 기능을 제공합니다. 
+    getpass 모듈의 기본 함수는 getpass() 입니다. 
+    이 함수는 사용자로부터 입력받을 때, 입력한 내용을 터미널에 출력하지 않습니다. 
+    즉, 입력한 비밀번호나 민감한 정보가 화면에 노출되지 않습니다. 
+    아래는 getpass() 함수의 간단한 사용 예시입니다. 
+     """
+
+
+    password = getpass.getpass('Enter your password: ')
+    print('Your password is:', password)
+
+
+    """ 위 코드에서 getpass.getpass() 함수는 사용자로부터 입력받을 때, 
+    입력한 내용을 터미널에 출력하지 않습니다. 
+    대신 입력한 내용을 password 변수에 저장합니다. 
+    그리고 print() 함수를 이용하여 password 변수에 저장된 내용을 출력합니다. 
+    이처럼 getpass() 함수는 보안이 중요한 프로그램에서 사용자의 
+    민감한 정보를 입력받을 때, 사용될 수 있습니다.
+     """
+
+
+class curses_sample:
+    """ curses는 UNIX 및 UNIX-like 시스템의 터미널 환경에서 
+    텍스트 기반 인터페이스를 만들기 위한 라이브러리입니다. 
+    curses는 터미널에서 마우스 입력, 색상, 창 레이아웃 및 키보드 입력 등을 처리하며, 
+    터미널에서 프로그램을 실행할 때 사용자와 상호 작용하는 
+    인터페이스를 생성하는 데 사용됩니다.
+    Python에서 curses 모듈은 터미널 UI를 만들기 위한 기능을 제공합니다. 
+    이 모듈은 유닉스 계열 운영체제에서만 사용할 수 있으며, 
+    터미널에서 실행할 수 있는 프로그램을 만드는 데 사용됩니다. 
+    curses 모듈은 터미널에서 미리 정의된 화면 위치 및 색상을 사용하여 
+    텍스트 인터페이스를 생성할 수 있습니다.
+    curses 모듈의 주요 기능으로는 다음과 같은 것이 있습니다.
+    
+
+     - 유니코드를 지원하는 터미널 UI
+     - 마우스 및 키보드 이벤트 처리
+     - 다양한 색상과 스타일을 사용하여 텍스트 출력
+     - 다중 창 및 패널 지원
+     - 텍스트 애니메이션 및 유연한 레이아웃 제공
+
+
+    다음은 curses 모듈을 사용하여 간단한 텍스트 인터페이스를 만드는 예시입니다.
+     """
+
+
+    # curses 초기화
+    stdscr = curses.initscr()
+
+
+    # 사용자 정의 색상 설정
+    curses.start_color()
+    curses.init_pair(1, curses.COLOR_CYAN, curses.COLOR_BLACK)
+
+
+    # 메시지 출력
+    stdscr.addstr(5, 10, "Hello, World!", curses.color_pair(1))
+
+
+    # 키보드 입력 대기
+    stdscr.getch()
+
+
+    # curses 종료
+    curses.endwin()
+
+
+    """ 위 예시에서는 curses.initscr() 함수를 사용하여 curses를 초기화합니다. 
+    그리고 curses.start_color() 함수를 사용하여 사용자 정의 색상을 설정합니다. 
+    curses.init_pair() 함수를 사용하여 색상 쌍을 만들고, 
+    curses.color_pair() 함수를 사용하여 해당 색상 쌍을 선택합니다.
+    stdscr.addstr() 함수를 사용하여 메시지를 출력하고, 
+    stdscr.getch() 함수를 사용하여 키보드 입력을 대기합니다. 
+    마지막으로 curses.endwin() 함수를 사용하여 curses를 종료합니다.
+     """
+
+
+
+class platform_sample:
+    """ platform 모듈은 
+    파이썬에서 실행되는 시스템에 대한 정보를 제공하는 모듈입니다. 
+    이 모듈은 운영 체제, 버전, 프로세서, 파이썬 버전 등의 정보를 가져올 수 있습니다. 
+    platform 모듈을 사용하면 파이썬 코드를 운영 체제 또는 하드웨어와 관련된 
+    특정 작업을 수행하는 데 사용할 수 있습니다. 
+    예를 들어, 파이썬 코드를 특정 운영 체제에 맞게 조정하거나, 
+    코드를 실행할 시스템의 하드웨어 자원에 따라 다른 실행 경로를 선택할 수 있습니다. 
+    platform 모듈의 주요 함수와 속성으로는 다음과 같은 것들이 있습니다.
+
+    
+    1. platform.system(): 현재 시스템의 운영 체제를 반환합니다. 
+     - 예를 들어, Windows, Linux, macOS 등이 반환됩니다.
+    2. platform.release(): 현재 시스템의 운영 체제 버전을 반환합니다. 
+     - 예를 들어, Windows 10, Ubuntu 20.04 LTS 등이 반환됩니다.
+    3. platform.machine(): 현재 시스템의 프로세서 아키텍처를 반환합니다. 
+     - 예를 들어, x86_64, armv7l 등이 반환됩니다.
+    4. platform.processor(): 현재 시스템의 실제 프로세서 이름을 반환합니다. 
+     - 예를 들어, Intel(R) Core(TM) i5-8250U CPU @ 1.60GHz 등이 반환됩니다.
+    5. platform.python_version(): 현재 파이썬 인터프리터의 버전을 반환합니다. 
+     - 예를 들어, 3.9.4 등이 반환됩니다.
+    6. platform.platform(): 현재 시스템의 전체 플랫폼 이름을 반환합니다. 
+     - 예를 들어, Windows-10-10.0.19041-SP0 등이 반환됩니다.
+
+
+    이처럼 platform 모듈은 파이썬 코드를 운영 체제와 관련된 작업을 
+    수행하는 데 사용할 수 있습니다. 이 모듈은 파이썬 코드를 운영 체제에 맞게 
+    조정하는 데 매우 유용합니다.
+     """
+
+
+    # 현재 시스템의 운영 체제를 출력합니다.
+    print(f"Operating System: {platform.system()}")
+
+
+    # 현재 시스템의 운영 체제 버전을 출력합니다.
+    print(f"OS Version: {platform.release()}")
+
+
+    # 현재 시스템의 프로세서 아키텍처를 출력합니다.
+    print(f"Processor Architecture: {platform.machine()}")
+
+
+    # 현재 시스템의 실제 프로세서 이름을 출력합니다.
+    print(f"Processor Name: {platform.processor()}")
+
+
+    # 현재 파이썬 인터프리터의 버전을 출력합니다.
+    print(f"Python Version: {platform.python_version()}")
+
+
+    # 현재 시스템의 전체 플랫폼 이름을 출력합니다.
+    print(f"Platform Name: {platform.platform()}")
+
+
+class ctypes:
+    """ ctypes는 C 언어의 라이브러리 함수를 파이썬에서 사용할 수 있도록 
+    해주는 모듈입니다. ctypes 모듈을 사용하면 파이썬 코드에서 C 함수를 직접 
+    호출할 수 있으며, C 구조체 및 데이터 타입도 파이썬에서 사용할 수 있습니다.
+    ctypes 모듈을 사용하여 C 함수를 호출할 때는, 
+    해당 함수가 정의된 라이브러리 파일을 불러와야 합니다. 
+    이를 위해 ctypes 모듈의 CDLL 함수를 사용합니다. 
+    CDLL 함수는 라이브러리 파일의 경로를 인자로 받아 해당 라이브러리를 불러옵니다.
+    ctypes 모듈은 다양한 데이터 타입을 지원합니다. 
+    C의 데이터 타입과 대응하는 파이썬 데이터 타입으로는 다음과 같은 것들이 있습니다.
+
+
+    c_char: char 타입과 대응
+    c_short: short 타입과 대응
+    c_int: int 타입과 대응
+    c_long: long 타입과 대응
+    c_longlong: long long 타입과 대응
+    c_float: float 타입과 대응
+    c_double: double 타입과 대응
+    c_void_p: void 포인터 타입과 대응
+     """
+
+
+    # 라이브러리 파일을 불러옵니다.
+    my_lib = ctypes.CDLL("my_library.so")
+
+
+    # C 함수를 불러와 파이썬에서 호출합니다.
+    result = my_lib.my_function(1, 2)
+
+
+    # 결과를 출력합니다.
+    print(result)
+
+
+""" 위 코드에서 my_library.so는 C 언어로 작성된 라이브러리 파일입니다. 
+my_function은 해당 라이브러리에 정의된 C 함수입니다. 
+ctypes 모듈을 사용하여 이 함수를 불러와 파이썬에서 호출한 후, 결과를 출력합니다.
+ctypes 모듈을 사용하여 C 구조체를 파이썬에서 사용하는 예제 코드는 다음과 같습니다.
  """
 
 
-# sched: 지정된 시간에 원하는 이벤트를 실행하게 해주는 이벤트 스케줄러이다.
-# asyncio: 단일 스레드 작업을 병렬로 처리.
-# socket: TCP 서버/클라이언트 프로그램을 작성할 때 사용.
-# ssl: socket 모듈로 작성한 서버/클라이언트에 공개키 암호화 방식을 적용.
-# select: socket 프로그래밍에서 "I/O멀티플랙싱"을 가능하게 하는 모듈.
+# C 구조체를 정의합니다.
+class MyStruct(ctypes.Structure):
+    _fields_ = [("x", ctypes.c_int),
+                ("y", ctypes.c_int)]
 
 
-# selectors: select를 확장하여 "고수준I/O멀티플랙싱"을 가능하도록 한 모듈로, 
-""" select 대신 사용하도록 권장하는 모듈이다. """
+# 구조체를 생성합니다.
+my_struct = MyStruct()
 
 
-# signal: 특정 신호를 수신했을 때 사용자가 정의한 함수를 호출하도록 한다.
+# 구조체 멤버에 값을 할당합니다.
+my_struct.x = 1
+my_struct.y = 2
 
 
-# json: "json데이터"를 쉽게 처리. pickle, shelve 등과 비슷한 일을 한다. 
-""" 기본적으로 아스키 형태로 저장. 
-딕셔너리, 리스트나 튜플 같은 자료형도 처리 가능.
+# 구조체 멤버 값을 출력합니다.
+print(my_struct.x)
+print(my_struct.y)
+
+
+class threading_sample:
+    """ threading은 
+    스레드를 이용하여 한 프로세스에서 2가지 이상의 일을 실행할 때 쓰인다.
+    threading 모듈은 파이썬에서 스레드를 생성하고 관리하는 데 사용되는 모듈입니다. 
+    스레드란, 동시에 여러 작업을 처리하기 위해 사용되는 실행 흐름입니다. 
+    threading 모듈을 사용하여 여러 스레드를 생성하고 실행할 수 있습니다. 
+    threading 모듈에서 가장 기본적인 클래스는 Thread 클래스입니다. 
+    Thread 클래스는 스레드를 생성하고 실행하는 데 사용됩니다. 
+    스레드를 생성하려면, Thread 클래스의 생성자에 실행할 함수를 전달합니다. 
+    이후 start() 메서드를 호출하여 스레드를 실행합니다. 
+    다음은 Thread 클래스를 사용하여 스레드를 생성하고 실행하는 예제 코드입니다.
+     """
+
+
+    # 스레드에서 실행할 함수를 정의합니다.
+    def print_numbers():
+        for i in range(1, 11):
+            print(i)
+
+
+    # 스레드를 생성합니다.
+    my_thread = threading.Thread(target=print_numbers)
+
+
+    # 스레드를 실행합니다.
+    my_thread.start()
+
+
+class multiprocessing_sample:
+    """ multiprocessing은 
+    멀티 프로세스를 활용하여, 2가지 이상의 일을 동시에 실행할 때 쓰인다.
+    멀티프로세싱은 멀티코어 CPU를 사용하여 동시에 여러 작업을 처리하는 기술로, 
+    멀티스레딩과 비교하여 더 많은 작업을 처리할 수 있습니다.
+    multiprocessing 모듈은 threading 모듈과 유사한 인터페이스를 제공하며, 
+    Process 클래스를 사용하여 프로세스를 생성하고 실행합니다. 
+    Process 클래스는 스레드와 마찬가지로 target 인자에 실행할 함수를 전달하여 
+    프로세스를 생성합니다. 그러나 Process 클래스는 start() 메서드를 호출하여 
+    프로세스를 실행합니다.
+    다음은 multiprocessing 모듈을 사용하여 
+    프로세스를 생성하고 실행하는 예제 코드입니다.
+     """
+
+
+    # 프로세스에서 실행할 함수를 정의합니다.
+    def print_numbers():
+        for i in range(1, 11):
+            print(i)
+
+
+    # 프로세스를 생성합니다.
+    my_process = multiprocessing.Process(target=print_numbers)
+
+
+    # 프로세스를 실행합니다.
+    my_process.start()
+
+
+    """ 위 코드에서 print_numbers() 함수를 정의하고, 
+    Process 클래스의 생성자에 해당 함수를 전달하여 
+    my_process라는 프로세스 객체를 생성합니다. 
+    이후 my_process.start()를 호출하여 프로세스를 실행합니다.
+    multiprocessing 모듈에서는 스레드를 생성하고 관리하는 데에 
+    유용한 다양한 클래스와 메서드를 제공합니다. 
+    이 중 몇 가지를 살펴보겠습니다.
+
+    
+    1. Queue 클래스: 멀티프로세스 환경에서 프로세스 간 통신을 위해 사용됩니다. 
+     - 큐에 데이터를 넣고 빼는 작업을 할 수 있습니다.
+
+     
+    2. Pool 클래스: 동시에 실행 가능한 프로세스의 개수를 제한하고, 
+     - 작업을 분산하여 처리하는 데 사용됩니다.
+
+     
+    3. Manager 클래스: 멀티프로세스 환경에서 공유 자원을 관리하는 데 사용됩니다. 
+     - Lock, 
+     - Condition, 
+     - Event, 
+     - Semaphore, 
+     - Value, 
+     - Array, 
+     - Namespace 
+    등의 클래스와 메서드를 제공합니다.
+
+    
+    위 클래스와 메서드들은 multiprocessing 모듈에서 제공되는 
+    몇 가지 중요한 기능 중 일부입니다. multiprocessing 모듈을 사용하면 
+    멀티프로세싱 환경에서도 쉽게 프로그래밍할 수 있습니다.
+     """
+
+
+class concurrent_futures_sample:
+    """ concurrent.futures는 
+    threading과 multiprocessing을 더 쉽게 사용할 때 쓰인다.
+    concurrent.futures 모듈은 threading 및 multiprocessing 모듈과 같은 
+    멀티스레딩 및 멀티프로세싱에 대한 고수준의 추상화 계층을 제공하며, 
+    작업 처리를 간단하게 하고 병렬화할 수 있습니다.
+    concurrent.futures 모듈은 
+    ThreadPoolExecutor 클래스와 ProcessPoolExecutor 클래스를 제공합니다. 
+    ThreadPoolExecutor 클래스는 스레드 풀을 구현하고, 
+    ProcessPoolExecutor 클래스는 프로세스 풀을 구현합니다. 
+    두 클래스 모두 비동기식으로 작업을 실행하며, 
+    submit() 메서드를 사용하여 실행할 함수와 인자를 전달합니다.
+    다음은 concurrent.futures 모듈을 사용하여 
+    스레드와 프로세스를 생성하고 실행하는 예제 코드입니다.
+    """
+
+
+    # 스레드에서 실행할 함수를 정의합니다.
+    def countdown(n):
+        while n > 0:
+            print('T-minus', n)
+            n -= 1
+            time.sleep(1)
+
+
+    # 프로세스에서 실행할 함수를 정의합니다.
+    def countdown_proc(n):
+        while n > 0:
+            print('P-minus', n)
+            n -= 1
+            time.sleep(1)
+
+
+    # ThreadPoolExecutor를 사용하여 스레드를 생성합니다.
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # 스레드에 실행할 함수와 인자를 전달합니다.
+        future = executor.submit(countdown, 5)
+        # 실행 결과를 출력합니다.
+        print(future.result())
+
+
+    # ProcessPoolExecutor를 사용하여 프로세스를 생성합니다.
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        # 프로세스에 실행할 함수와 인자를 전달합니다.
+        future = executor.submit(countdown_proc, 5)
+        # 실행 결과를 출력합니다.
+        print(future.result())
+
+
+    """ 위 코드에서 countdown() 함수와 countdown_proc() 함수를 정의하고, 
+    ThreadPoolExecutor 클래스와 ProcessPoolExecutor 클래스를 사용하여 
+    각각의 스레드와 프로세스를 생성합니다. 
+    submit() 메서드를 사용하여 실행할 함수와 인자를 전달하고, 
+    future.result()를 사용하여 실행 결과를 출력합니다.
+    concurrent.futures 모듈은 
+    as_completed() 함수와 wait() 함수 등의 기능도 제공합니다. 
+    이들 함수를 사용하면 작업의 실행 순서나 실행 결과를 제어하는 데 유용합니다. 
+    이 모듈은 멀티스레딩 및 멀티프로세싱 작업을 처리하는 데에 있어서 간단하고 
+    효율적인 방법을 제공합니다.
+    """
+
+
+class subprocess_sample:
+    """ subprocess 모듈은 파이썬에서 외부 프로그램을 실행하고 
+    상호작용하는 데 사용되는 모듈입니다. 이 모듈은 새로운 프로세스를 생성하고, 
+    표준 입력, 표준 출력 및 표준 오류를 처리하며, 
+    시스템 호출을 수행하는 다양한 메서드를 제공합니다.
+     """
+    
+
+    with open(r"C:\Users\jkhong\Desktop\file.txt", 'wb') as txt:
+        out = subprocess.run(['cmd', '/c', 'dir'], capture_output=True)
+        txt.write(out.stdout)
+
+
+    """ subprocess 모듈은 시스템 호출을 수행하고 
+    외부 프로그램과 상호작용하는 데 유용한 도구입니다. 
+    그러나 보안상의 이유로 사용자 입력을 처리하는 경우 주의해야 합니다. 
+    사용자 입력을 외부 프로그램의 인자로 사용하는 경우, 
+    보안상의 이유로 인해 subprocess 모듈을 사용하는 것을 피하는 것이 좋습니다. 
+    이 경우 shlex 모듈을 사용하여 사용자 입력을 처리하는 것이 더 안전합니다.
+     """
+
+
+class sched_sample:
+    """ sched는 지정된 시간에 원하는 이벤트를 실행하게 해주는 이벤트 스케줄러이다.
+    이 모듈은 일정한 시간 간격으로 함수를 실행하거나, 
+    일정한 시간 후에 함수를 실행하도록 예약하는 등의 작업을 수행할 수 있습니다.
+    sched 모듈에서 사용되는 핵심 객체는 scheduler입니다. 
+    scheduler 객체는 이벤트를 예약하고 실행하는데 사용됩니다. 
+    scheduler 객체를 만든 후, enter() 메서드를 사용하여 이벤트를 예약합니다. 
+    enter() 메서드에는 이벤트를 실행할 시간과 실행할 함수를 인자로 전달합니다. 
+    scheduler 객체는 run() 메서드를 사용하여 예약된 이벤트를 실행합니다.
+    다음은 sched 모듈을 사용하여 3초 후에 "Hello, world!"를 출력하는 예제 코드입니다.
+     """
+
+
+    def say_hello():
+        print("Hello, world!")
+
+
+    scheduler = sched.scheduler(time.time, time.sleep)
+    scheduler.enter(3, 1, say_hello, ())
+    scheduler.run()
+
+
+    """ 위 코드에서 sched.scheduler() 함수를 사용하여 scheduler 객체를 생성합니다. 
+    이 객체를 사용하여 enter() 메서드를 사용하여 3초 후에 
+    say_hello() 함수를 실행하도록 예약합니다. 
+    scheduler.run() 메서드를 사용하여 예약된 이벤트를 실행합니다.
+    sched 모듈은 스레드를 사용하여 여러 이벤트를 병렬로 예약하고 실행할 수도 있습니다. 
+    예를 들어, threading.Timer와 함께 사용하여 반복적인 작업을 수행할 수 있습니다. 
+    그러나, 고정된 타임스케줄링에서는 sched 모듈이 더 적합합니다.
+     """
+
+
+class asyncio_sample:
+    """ asyncio는 Python에서 비동기 I/O 작업을 처리하기 위한 라이브러리입니다. 
+    이를 사용하면 동시에 여러 작업을 처리할 수 있으며, 
+    이러한 작업은 비동기 함수와 coroutine으로 구현됩니다. 
+    asyncio는 기본적으로 이벤트 루프를 사용하여 작동합니다. 
+    이벤트 루프는 비동기 I/O 작업을 처리하고 작업이 완료되면 
+    해당 이벤트에 대한 콜백 함수를 실행합니다. 
+    이러한 콜백 함수는 일반적으로 coroutine으로 작성되어 비동기적으로 실행됩니다.
+    asyncio는 다양한 네트워크 및 웹 프레임워크와 호환되며, 
+    Python 3.4 이상에서 사용할 수 있습니다. asyncio를 사용하면 
+    네트워크 연결, 파일 I/O 및 다른 비동기 작업을 처리하는 것이 더 쉬워집니다.
+    예를 들어, asyncio를 사용하여 비동기 HTTP 클라이언트를 작성할 수 있으며, 
+    이를 통해 여러 웹 사이트로 동시에 요청을 보낼 수 있습니다. 
+    또한 asyncio를 사용하여 비동기 파일 I/O를 처리하고, 
+    이를 통해 여러 파일에 동시에 작성할 수 있습니다.
+    마지막으로, asyncio는 매우 빠르고 확장성이 높은 라이브러리이며, 
+    대규모 애플리케이션에서도 잘 작동합니다. 
+    하지만, asyncio는 비동기 프로그래밍 개념을 이해해야하며, 
+    초보자에게는 어려울 수도 있습니다.
+     """
+
+
+    async def fetch(self, session, url):
+        async with session.get(url) as response:
+            return await response.text()
+
+
+    async def main(self):
+        async with aiohttp.ClientSession() as session:
+            html = await self.fetch(session, 'https://www.example.com')
+            print(html)
+
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+
+
+    """ 이 예제에서는 aiohttp 라이브러리를 사용하여 
+    비동기 HTTP 클라이언트를 작성하고 있습니다. 
+    fetch 함수는 비동기 함수이며, session.get() 메서드를 사용하여 
+    HTTP GET 요청을 보내고 응답을 받아들입니다. 
+    그런 다음 응답을 텍스트로 변환하여 반환합니다.
+    main 함수는 coroutine으로 작성되어 있으며, 
+    ClientSession 클래스를 사용하여 비동기 HTTP 클라이언트 세션을 만듭니다. 
+    fetch 함수를 사용하여 웹 페이지의 HTML을 가져온 다음 출력합니다.
+    마지막으로, 이 예제에서는 
+    asyncio 라이브러리의 get_event_loop() 함수를 사용하여 
+    이벤트 루프를 가져온 다음 run_until_complete() 메서드를 사용하여 
+    main 함수를 실행합니다. 이러한 방식으로 
+    asyncio를 사용하여 비동기 프로그래밍을 수행할 수 있습니다.
+     """
+
+
+""" socket은 TCP 서버/클라이언트 프로그램을 작성할 때 사용.
+파이썬에서는 socket 모듈을 제공하여 소켓 프로그래밍을 수행할 수 있습니다. 
+이 모듈은 TCP 및 UDP 소켓 프로그래밍을 지원합니다.
+socket 모듈에서 가장 중요한 클래스는 socket 클래스입니다. 
+이 클래스는 TCP 소켓과 UDP 소켓 모두를 만들 수 있으며, 
+ - bind(), 
+ - listen(), 
+ - accept(), 
+ - connect(), 
+ - send(), 
+ - recv(), 
+등의 메서드를 지원합니다.
+다음은 간단한 TCP 서버와 클라이언트 예제입니다.
  """
 
 
-# base64: 바이너리 데이터를 문자열로 인코딩할 때 사용. 
-""" 이때 인코딩한 문자열은 64개의 아스키 문자로 구성된다.(64진법) """
+# server.py
+# import socket
+HOST = ''   # 모든 인터페이스에서 연결을 수신합니다.
+PORT = 8888 # 사용할 포트 번호입니다.
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.bind((HOST, PORT))
+    s.listen(1)
+    conn, addr = s.accept()
+    with conn:
+        print('Connected by', addr)
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                break
+            conn.sendall(data)
 
 
-# binascii: 문자열을 16진수로, 변환할 16진수를 다시 문자열로 변환한다.
+# client.py
+# import socket
+HOST = 'localhost'  # 서버 호스트 이름입니다.
+PORT = 8888        # 서버 포트 번호입니다.
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    s.sendall(b'Hello, world')
+    data = s.recv(1024)
+print('Received', repr(data))
 
 
-# quopri: quoted-printable 인코딩/디코딩을 할 때 사용하는 모듈.
-# 영문과 숫자 등의 ASCII 7bit 문자는 그대로 두고 한글 등 8bit 문자만 인코딩.
-""" quopri.decodestring('Python =EA=B3=B5=EB=B6=80').decode('utf-8') """
-
-
-# uu: 바이너리를 텍스트로 변환하기 위한 인코딩 방법. 
-# 1980년 메리 앤호튼이 개발. uu는 Unix-to-Unix를 뜻함. 
-# 지금은 대부분 uuencode의 단점을 보완한 Base64와 같은 MIME 방식의 인코딩을 사용. 
-# uu는 이러한 uuencode 인코딩을 위한 파이썬 모듈이다.(begin ~ end로 구성됨)
-""" uu.encode('test.jpg', 'result.txt')
-uu.decode('result.txt', 'test.jpg')
+""" 서버는 클라이언트의 연결을 수신하고, 
+데이터를 수신하면 다시 클라이언트에게 보냅니다. 
+클라이언트는 서버에 연결하고, 데이터를 보내고, 서버로부터 데이터를 수신합니다.
+이것은 매우 간단한 예제이지만, socket 모듈을 사용하여 
+TCP 및 UDP 프로토콜을 사용하는 다양한 네트워크 프로그램을 작성할 수 있습니다.
  """
 
 
-# html: HTML문자를 이스케이프 처리할 때 사용.
-""" "&lt;script&gt;Hello&lt;/script&gt;"
-<script>Hello</script>
+""" ssl은 socket 모듈로 작성한 서버/클라이언트에 공개키 암호화 방식을 적용.
+파이썬에서는 ssl 모듈을 사용하여 SSL/TLS 프로토콜을 사용하는 
+보안 연결을 만들 수 있습니다. ssl 모듈은 내장 socket 모듈과 함께 사용할 수 있으며, 
+wrap_socket() 함수를 사용하여 일반 소켓을 SSL/TLS 소켓으로 래핑할 수 있습니다.
+다음은 간단한 SSL/TLS 서버와 클라이언트 예제입니다.
  """
 
 
-# html.parser: HTML 문서를 파싱할 때 사용. 
-""" 예를 들어 <strong></strong>태그의 문자열을 찾아서 출력. """
+# server.py
+# import ssl
+# import socket
+HOST = ''   # 모든 인터페이스에서 연결을 수신합니다.
+PORT = 8443 # 사용할 포트 번호입니다.
+context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+context.load_cert_chain(certfile='server.crt', keyfile='server.key')
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
+    sock.bind((HOST, PORT))
+    sock.listen(5)
+    with context.wrap_socket(sock, server_side=True) as ssock:
+        while True:
+            conn, addr = ssock.accept()
+            with conn:
+                print('Connected by', addr)
+                data = conn.recv(1024)
+                if not data:
+                    break
+                conn.sendall(data)
 
 
-# xml.etree.ElementTree: XML 문서를 만들 때 사용.
-# parse: XML 문서를 파싱하고 검색할 때도 사용.
+# client.py
+# import ssl
+# import socket
+HOST = 'localhost'  # 서버 호스트 이름입니다.
+PORT = 8443        # 서버 포트 번호입니다.
+context = ssl.create_default_context()
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0) as sock:
+    with context.wrap_socket(sock, server_hostname=HOST) as ssock:
+        ssock.connect((HOST, PORT))
+        ssock.sendall(b'Hello, world')
+        data = ssock.recv(1024)
+print('Received', repr(data))
 
 
-# webbrowser: 파이썬 프로그램에서 시스템 브라우저를 호출할 때 사용.
+""" 서버는 클라이언트의 연결을 수신하고, 
+데이터를 수신하면 다시 클라이언트에게 보냅니다. 
+클라이언트는 서버에 연결하고, 데이터를 보내고, 서버로부터 데이터를 수신합니다. 
+이 예제에서는 서버에서 SSL/TLS 인증서를 사용하여 클라이언트와의 보안 연결을 설정합니다.
+ssl 모듈을 사용하여 다양한 SSL/TLS 프로토콜을 사용하는 
+다른 네트워크 프로그램을 작성할 수 있습니다.
+ """
 
 
-# cgi: CGI 프로그램을 만드는 데 필요한 도구를 제공.
+# import select
+# import socket
+class select_sample:
+    """ select는 socket 프로그래밍에서 "I/O멀티플랙싱"을 가능하게 하는 모듈이다.
+    select는 Unix 계열 운영체제에서 사용하는 다중 I/O 모델 중 하나로, 
+    네트워크 프로그래밍에서 I/O 다중화를 구현하는 기술입니다. 
+    파이썬에서는 select 모듈을 사용하여 다중 I/O를 구현할 수 있습니다.
+    select 모듈은 다음과 같은 함수를 제공합니다.
+    select.select(rlist, wlist, xlist[, timeout]): 
+    지정된 소켓 리스트에서 읽기, 쓰기, 예외 처리 가능한 소켓을 선택합니다.
+    select.poll(): poll() 객체를 만듭니다. 
+    이 객체를 사용하여 다중 I/O를 구현할 수 있습니다.
+    select.epoll(): epoll() 객체를 만듭니다. 
+    이 객체는 poll() 객체보다 더 높은 성능을 제공합니다.
+    select 모듈을 사용하여 간단한 에코 서버를 만들어 보겠습니다.
+    """
+
+    HOST = '' # 모든 인터페이스에서 연결을 수신합니다.
+    PORT = 5000 # 사용할 포트 번호입니다.
 
 
-# cgitb: cgitb는 CGI 프로그램의 오류를 쉽게 파악하는 데 사용.
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server_socket.bind((HOST, PORT))
+    server_socket.listen()
 
 
-# wsgiref: wsgiref는 WSGI 프로그램을 만들 때 사용하는 모듈.
-# 한마디로 웹 서버 응용 프로그램이다.
-""" WSGI(Web Sever Gateway Interface)는 웹 서버 소프트웨어와 파이썬으로 
-만든 웹 응용 프로그램 간의 표준 인터페이스이다. 쉽게 말해 
-웹 서버가 클라이언트로부터 받은 요청을 파이썬 애플리케이션에 전달하여 실행하고, 
-그 실행 결과를 돌려 받기 위한 약속이다. """
+    sockets = [server_socket]
+    readable = []
+    writable = []
+    for i in range(1000):
+        readable, writable, exceptional = select.select(sockets, [], [])
+        for s in readable:
+            if s is server_socket:
+                # 새로운 클라이언트 연결 요청을 수신합니다.
+                client_socket, addr = server_socket.accept()
+                sockets.append(client_socket)
+            else:
+                # 클라이언트로부터 데이터를 수신합니다.
+                data = s.recv(1024)
+                if not data:
+                    # 클라이언트가 연결을 끊었습니다.
+                    sockets.remove(s)
+                    s.close()
+                else:
+                    # 클라이언트로부터 수신한 데이터를 다시 클라이언트에게 보냅니다.
+                    writable.append(s)
+        for s in writable:
+            s.sendall(data)
+            writable.remove(s)
 
 
-# urllib
-# urllib은 URL을 읽고 분석할 때 사용하는 모듈.
-# 웹 페이지를 저장할 수 있다.
+    """ 이 예제에서는 select.select() 함수를 사용하여 읽기 가능한 소켓을 선택하고, 
+    선택된 소켓에서 데이터를 수신합니다. 
+    수신한 데이터를 다시 클라이언트에게 보내기 위해 쓰기 가능한 소켓을 선택하고, 
+    sendall() 함수를 사용하여 데이터를 보냅니다.
+    """
 
 
-# http.client
-# http.client는 HTTP 프로토콜의 클라이언트 역할을 하는 모듈이다.
-""" 웹 페이지를 저장하는 또 다른 방법이다. 하지만, 
-http.client보다는 requests 모듈을 사용 하는 것이 좋다. """
+""" selectors 모듈은 파이썬 3.4부터 추가된 모듈로, 
+select 모듈과 비슷한 기능을 제공하지만 
+select를 확장하여 "고수준I/O멀티플랙싱"을 가능하도록 하고, 
+더 직관적이고 간단하게 다중 I/O를 구현할 수 있도록 도와줍니다. 
+selectors 모듈은 select 모듈과 달리 객체 지향적인 API를 제공합니다.
+selectors 모듈은 다음과 같은 클래스를 제공합니다.
 
 
-# ftplib
-# ftplib는 FTP 서버에 접속하여 파일을 내려받거나 올릴 때 사용하는 모듈.
+1. selectors.DefaultSelector: 
+ - 시스템 기본 I/O 모델을 사용하는 Selector 객체를 생성합니다.
+2. selectors.SelectSelector: 
+ - select() 시스템 호출을 사용하는 Selector 객체를 생성합니다.
+3. selectors.PollSelector: 
+ - poll() 시스템 호출을 사용하는 Selector 객체를 생성합니다.
+4. selectors.EpollSelector: 
+ - epoll() 시스템 호출을 사용하는 Selector 객체를 생성합니다. 
+ - 이 객체는 poll() 객체보다 더 높은 성능을 제공합니다.
+5. selectors.DevpollSelector: 
+ - /dev/poll 인터페이스를 사용하는 Selector 객체를 생성합니다. 
+ - 이 객체는 Solaris에서 사용됩니다.
+6. selectors.KqueueSelector: 
+ - kqueue() 시스템 호출을 사용하는 Selector 객체를 생성합니다. 
+ - 이 객체는 FreeBSD와 macOS에서 사용됩니다.
+ """
 
 
-# poplib
-# poplib는 POP3 서버에 연결하여 받은 메일을 확인하는 데 사용하는 모듈.
-""" POP3는 널리 사용하긴 했지만, 오래된 방식이다. 
-메일 서버가 IMAP을 지원한다면 POP3 대신 IMAP을 사용하는 것이 좋다. """
+# import signal
+# import time
+class signal_sapmle:
+    """ signal 라이브러리는 파이썬에서 시그널(signal) 처리를 위해 제공되는 모듈입니다. 
+    시그널은 프로그램 내부 또는 외부에서 발생한 이벤트를 의미하며, 
+    예를 들어 Ctrl+C 키를 눌러서 프로그램을 강제 종료하는 것도 시그널 중 하나입니다.
+    signal 라이브러리는 시그널 처리를 위한 다양한 함수와 상수를 제공합니다. 
+    이를 통해 파이썬 프로그램에서 시그널을 처리하거나, 
+    시그널을 보내는 등의 작업을 수행할 수 있습니다. 
+    주요 함수로는 signal.signal(), signal.SIGINT 등이 있습니다.
+    signal 라이브러리는 다양한 운영 체제에서 사용할 수 있으며, 
+    특히 UNIX 계열 운영 체제에서 많이 사용됩니다. 
+    이 라이브러리를 사용하면 프로그램이 예기치 않게 종료되는 상황을 예방하고, 
+    프로그램이 안전하게 종료될 수 있도록 처리할 수 있습니다.
+    """
+
+
+    # 시그널 핸들러 함수 정의
+    def signal_handler(signal, frame):
+        print('You pressed Ctrl+C!')
+        exit(0)
+
+
+    # SIGINT 시그널에 대한 핸들러 등록
+    signal.signal(signal.SIGINT, signal_handler)
+
+
+    # 무한루프 실행
+    for i in range(1000):
+        print('Press Ctrl+C to exit...')
+        time.sleep(1)
+
+
+    """ 위 코드는 Ctrl+C를 눌러 프로그램을 종료하는 동작을 구현한 예제입니다. 
+    signal_handler 함수는 Ctrl+C를 누르면 실행되는 함수로, 
+    이 함수에서는 메시지를 출력하고 exit(0) 함수를 호출하여 프로그램을 종료합니다. 
+    signal.signal 함수를 사용하여 SIGINT 시그널에 대한 핸들러 함수를 등록하고, 
+    while 문 안에서 프로그램을 계속 실행합니다.
+    프로그램을 실행하고 Ctrl+C를 누르면 "You pressed Ctrl+C!" 메시지가 출력되며 프로그램이 종료됩니다.
+     """
+
+
+class json_sample:
+    """ json 라이브러리는 
+    파이썬에서 JSON(JavaScript Object Notation) 데이터를 다룰 때 
+    사용하는 라이브러리입니다. JSON은 데이터를 저장하거나 교환할 때 
+    자주 사용되는 형식 중 하나로, 경량화되어 있어서 가벼우면서도 
+    구조화된 데이터를 표현하기에 적합합니다.
+    json 라이브러리는 다양한 함수와 클래스를 제공하며, 
+    이를 사용하여 JSON 데이터를 파이썬 객체로 변환하거나, 
+    파이썬 객체를 JSON 데이터로 변환하는 등의 작업을 수행할 수 있습니다. 
+    주요 함수와 클래스로는 
+    json.dumps(), 
+    json.loads(), 
+    json.dump(), 
+    json.load() 등이 있습니다.
+    간단한 예제를 통해 json 라이브러리의 사용법을 살펴보겠습니다.
+    """
+
+
+    # JSON 데이터
+    json_data = '{"name": "John", "age": 30, "city": "New York"}'
+
+
+    # JSON 데이터를 파이썬 객체로 변환
+    python_obj = json.loads(json_data)
+
+
+    # 파이썬 객체를 JSON 데이터로 변환
+    json_str = json.dumps(python_obj)
+
+
+    # 출력
+    print(python_obj['name'])  # 'John'
+    print(json_str)  # '{"name": "John", "age": 30, "city": "New York"}'
+
+
+    """ 위 코드에서는 json_data 변수에 JSON 형식의 문자열을 저장하고, 
+    json.loads 함수를 사용하여 파이썬 객체로 변환합니다. 
+    이렇게 변환된 파이썬 객체는 딕셔너리 타입으로 저장되어 있으며, 
+    키를 이용하여 값을 출력할 수 있습니다.
+    그 다음에는 json.dumps 함수를 사용하여 파이썬 객체를 다시 
+    JSON 형식의 문자열로 변환합니다. 이렇게 변환된 문자열은 json_str 변수에 저장되며, 
+    이 문자열은 다시 파일에 저장하거나, 네트워크로 전송하는 등의 용도로 
+    사용될 수 있습니다. 기본적으로 아스키 형태로 저장됩니다.
+    json은 pickle, shelve 등과 비슷한 일을 하지만,
+    딕셔너리, 리스트나 튜플 같은 자료형도 처리 가능합니다.
+    """
+
+
+class base64_sample:
+    """ base64 라이브러리는 
+    바이너리 데이터를 문자열 형태로 인코딩하거나, 
+    (이때 인코딩한 문자열은 64개의 아스키 문자로 구성된다.(64진법))
+    인코딩된 문자열을 다시 디코딩하는 기능을 제공하는 파이썬 내장 라이브러리입니다.
+    base64 인코딩은 8비트 이상의 바이너리 데이터를 7비트 이하의 
+    ASCII 문자로 변환하는 것을 의미합니다. 이를 통해 바이너리 데이터를 
+    전자메일이나 HTTP 요청 등에서 전송하기 용이한 문자열 형태로 변환할 수 있습니다.
+    base64 라이브러리는 다양한 함수를 제공합니다. 
+    가장 많이 사용되는 함수는 
+    base64.b64encode()와 base64.b64decode()입니다. 
+    base64.b64encode() 함수는 바이너리 데이터를 base64 인코딩된 문자열로 변환하며, 
+    base64.b64decode() 함수는 base64 인코딩된 문자열을 디코딩하여 
+    원래의 바이너리 데이터로 변환합니다.
+    간단한 예제를 통해 base64 라이브러리의 사용법을 살펴보겠습니다.
+    """
+
+
+    # 바이너리 데이터
+    binary_data = b'Hello, World!'
+
+
+    # base64 인코딩
+    encoded_data = base64.b64encode(binary_data)
+
+
+    # base64 디코딩
+    decoded_data = base64.b64decode(encoded_data)
+
+
+    # 출력
+    print(encoded_data)  # b'SGVsbG8sIFdvcmxkIQ=='
+    print(decoded_data)  # b'Hello, World!'
+
+
+    """ 위 코드에서는 base64.b64encode() 함수를 사용하여 
+    바이너리 데이터를 base64 인코딩된 문자열로 변환하고, 
+    base64.b64decode() 함수를 사용하여 다시 디코딩하여 
+    원래의 바이너리 데이터로 변환합니다. base64 인코딩된 문자열은 
+    바이너리 데이터를 문자열 형태로 변환한 결과이므로, 
+    이를 다른 곳에서 사용할 때는 다시 바이너리 데이터로 디코딩해야 합니다.
+     """
+
+
+class binascii_sample:
+    """ binascii 라이브러리는 
+    바이너리 데이터를 다양한 인코딩 형식으로 변환하는 기능을 제공하는 
+    파이썬 내장 라이브러리입니다. 주요 기능으로는 
+    16진수(hex), Base64, Uuencode, Binhex 등의 인코딩과 디코딩 함수가 있습니다.
+    binascii 라이브러리는 다양한 함수를 제공합니다. 
+    가장 많이 사용되는 함수로는 
+    binascii.hexlify()와 binascii.unhexlify()가 있습니다. 
+    binascii.hexlify() 함수는 바이너리 데이터를 16진수(hex) 문자열로 변환하며, 
+    binascii.unhexlify() 함수는 16진수(hex) 문자열을 바이너리 데이터로 변환합니다.
+    간단한 예제를 통해 binascii 라이브러리의 사용법을 살펴보겠습니다.
+    """
+
+
+    # 바이너리 데이터
+    binary_data = b'Hello, World!'
+
+
+    # 16진수(hex) 인코딩
+    encoded_data = binascii.hexlify(binary_data)
+
+
+    # 16진수(hex) 디코딩
+    decoded_data = binascii.unhexlify(encoded_data)
+
+
+    # 출력
+    print(encoded_data)  # b'48656c6c6f2c20576f726c6421'
+    print(decoded_data)  # b'Hello, World!'
+
+
+    """ 위 코드에서는 binascii.hexlify() 함수를 사용하여 
+    바이너리 데이터를 16진수(hex) 문자열로 변환하고, 
+    binascii.unhexlify() 함수를 사용하여 다시 디코딩하여 
+    원래의 바이너리 데이터로 변환합니다.
+    16진수(hex) 문자열은 바이너리 데이터를 16진수 형태의 문자열로 변환한 결과이므로, 
+    이를 다른 곳에서 사용할 때는 다시 바이너리 데이터로 디코딩해야 합니다.
+    """
+
+
+class quopri_sample:
+    """ quopri 라이브러리는 
+    인코딩된 문자열을 디코딩하거나, 문자열을 
+    quoted-printable 형식으로 인코딩하는 기능을 제공하는 파이썬 내장 라이브러리입니다.
+    Quoted-printable은 바이너리 데이터를 ASCII 문자로 변환하여 
+    전송하기 위한 방법 중 하나입니다. 이 방법은 7비트 ASCII 문자만 사용 가능한 
+    이메일 등에서 바이너리 데이터를 전송하기 위해 주로 사용됩니다. 
+    이 방법은 ASCII 범위 내에 있는 문자는 그대로 사용하고, 
+    범위를 벗어나는 문자는 '=' 기호와 16진수(hex) 형태로 변환하여 사용합니다.
+    영문과 숫자 등의 ASCII 7bit 문자는 그대로 두고 한글 등 8bit 문자만 인코딩 합니다.
+    quopri 라이브러리는 다양한 함수를 제공합니다. 
+    가장 많이 사용되는 함수로는 
+    quopri.encode()와 quopri.decode()가 있습니다. 
+    quopri.encode() 함수는 문자열을 quoted-printable 형식으로 인코딩하며, 
+    quopri.decode() 함수는 quoted-printable 형식의 문자열을 디코딩하여 
+    원래의 문자열로 변환합니다.
+    간단한 예제를 통해 quopri 라이브러리의 사용법을 살펴보겠습니다.
+    """
+
+
+    # 인코딩할 문자열
+    string = '안녕하세요, 파이썬!'
+
+
+    # quoted-printable 인코딩
+    encoded_string = quopri.encodestring(string.encode()).decode()
+
+
+    # quoted-printable 디코딩
+    decoded_string = quopri.decodestring(encoded_string.encode()).decode()
+
+
+    # 출력
+    print(encoded_string)
+    print(decoded_string)
+
+
+    """ 위 코드에서는 quopri.encodestring() 함수를 사용하여 
+    문자열을 quoted-printable 형식으로 인코딩하고, 
+    quopri.decodestring() 함수를 사용하여 다시 디코딩하여 원래의 문자열로 변환합니다.
+    quoted-printable 인코딩된 문자열은 문자열을 quoted-printable 형식으로 
+    인코딩한 결과이므로, 이를 다른 곳에서 사용할 때는 다시 디코딩해야 합니다.
+    """
+
+
+class uu_sample:
+    """ uu 라이브러리는 Unix to Unix 인코딩이라는 
+    바이너리 데이터 인코딩 방식을 구현하는 파이썬 내장 라이브러리입니다. 
+    이 방식은 이메일 등에서 바이너리 데이터를 전송하기 위해 주로 사용되었습니다. 
+    uu 인코딩 방식은 바이너리 데이터를 ASCII 문자로 변환하고 이를 인코딩합니다. 
+    uu 인코딩 방식은 Base64 인코딩 방식과 마찬가지로 바이너리 데이터를 
+    ASCII 문자로 변환하는 방식입니다.
+    1980년 메리 앤호튼이 개발. 지금은 대부분 uuencode의 단점을 보완한 
+    Base64와 같은 MIME 방식의 인코딩을 사용합니다. 
+    uu는 이러한 uuencode 인코딩을 위한 파이썬 모듈입니다.(begin ~ end로 구성됨)
+    uu 라이브러리는 다양한 함수를 제공합니다. 
+    가장 많이 사용되는 함수로는 uu.encode()와 uu.decode()가 있습니다. 
+    uu.encode() 함수는 바이너리 데이터를 uu 인코딩 방식으로 인코딩하며, 
+    uu.decode() 함수는 uu 인코딩 방식의 문자열을 디코딩하여 
+    원래의 바이너리 데이터로 변환합니다.
+    간단한 예제를 통해 uu 라이브러리의 사용법을 살펴보겠습니다.
+    """
+
+
+    # 인코딩할 파일
+    filename = 'example.txt'
+
+
+    # uu 인코딩
+    with open(filename, 'rb') as f:
+        encoded_data = uu.encode(f, filename)
+
+
+    # uu 디코딩
+    decoded_data = uu.decode(encoded_data)
+
+
+    # 디코딩한 데이터를 파일로 저장
+    with open('decoded_' + filename, 'wb') as f:
+        f.write(decoded_data)
+
+
+    # 출력
+    print(encoded_data)
+
+
+    """ 위 코드에서는 uu.encode() 함수를 사용하여 파일을 
+    uu 인코딩 방식으로 인코딩하고, uu.decode() 함수를 사용하여 
+    다시 디코딩하여 원래의 바이너리 데이터로 변환합니다. 
+    마지막으로, 디코딩한 데이터를 파일로 저장합니다.
+    uu 인코딩된 문자열은 바이너리 데이터를 uu 인코딩 방식으로 인코딩한 결과이므로, 
+    이를 다른 곳에서 사용할 때는 다시 디코딩해야 합니다.
+     """
+
+
+""" html 라이브러리는 
+HTML 문서를 파싱하고 생성하기 위한 파이썬 내장 라이브러리입니다. 
+이 라이브러리를 사용하여 HTML 문서를 파싱하면 HTML 태그들을 객체로 표현하고, 
+이를 이용하여 HTML 문서를 수정하거나 새로운 HTML 문서를 생성할 수 있습니다.
+html 라이브러리는 다양한 함수와 클래스를 제공합니다. 
+이 중에서도 가장 많이 사용되는 클래스는 HTMLParser 클래스입니다. 
+이 클래스는 HTML 문서를 파싱하여 태그들을 객체로 생성합니다. 
+이 클래스는 다음과 같은 메서드를 제공합니다.
+handle_starttag(tag, attrs): 시작 태그를 처리하는 메서드
+handle_endtag(tag): 끝 태그를 처리하는 메서드
+handle_data(data): 데이터를 처리하는 메서드
+간단한 예제를 통해 html 라이브러리의 사용법을 살펴보겠습니다.
+"""
+
+
+# HTML 문서
+html_doc = """
+<html>
+    <head>
+        <title>Test HTML</title>
+    </head>
+    <body>
+        <h1>Test Heading</h1>
+        <p>Test Paragraph.</p>
+    </body>
+</html>
+"""
+
+
+# HTML 파서 클래스
+class MyHTMLParser(HTMLParser):
+    def handle_starttag(self, tag, attrs):
+        print("Start tag:", tag)
+        for attr in attrs:
+            print("    attr:", attr)
+    def handle_endtag(self, tag):
+        print("End tag :", tag)
+    def handle_data(self, data):
+        print("Data    :", data)
+
+
+# 파서 생성
+parser = MyHTMLParser()
+
+
+# HTML 문서 파싱
+parser.feed(html_doc)
+
+
+""" 위 코드에서는 HTML 문서를 파싱하는 MyHTMLParser 클래스를 만들고, 
+이를 이용하여 HTML 문서를 파싱합니다. MyHTMLParser 클래스는 
+HTMLParser 클래스를 상속받아 시작 태그, 끝 태그, 데이터를 처리하는 
+메서드를 재정의합니다. 파서 생성 후, feed() 메서드를 호출하여 HTML 문서를 파싱합니다.
+이 코드를 실행하면 HTML 문서에서 태그들을 파싱한 결과가 출력됩니다. 
+이처럼 html 라이브러리를 사용하여 HTML 문서를 파싱하면 
+HTML 태그들을 객체로 표현하고, 이를 이용하여 HTML 문서를 수정하거나 
+새로운 HTML 문서를 생성할 수 있습니다.
+"""
+
+
+class xml_sample:
+    """ xml.etree.ElementTree 라이브러리는 
+    XML 문서를 파싱하고 생성하기 위한 파이썬 내장 라이브러리입니다. 
+    이 라이브러리를 사용하여 XML 문서를 파싱하면 XML 요소들을 객체로 표현하고, 
+    이를 이용하여 XML 문서를 수정하거나 새로운 XML 문서를 생성할 수 있습니다.
+    xml.etree.ElementTree 라이브러리는 ElementTree 모듈과 
+    Element 모듈로 구성되어 있습니다. ElementTree 모듈은 
+    XML 문서를 읽고 쓰는데 사용되는 함수와 클래스를 제공하며, 
+    Element 모듈은 XML 요소를 나타내는 클래스입니다.
+    간단한 예제를 통해 xml.etree.ElementTree 라이브러리의 사용법을 살펴보겠습니다.
+    """
+
+
+    def __init__(self):
+        # XML 문서
+        self.xml_doc = """
+        <catalog>
+        <book id="bk001">
+            <author>Writer</author>
+            <title>The First Book</title>
+            <genre>Fiction</genre>
+            <price>44.95</price>
+            <publish_date>2000-10-01</publish_date>
+            <description>The first book in the catalog</description>
+        </book>
+        <book id="bk002">
+            <author>Writer</author>
+            <title>The Second Book</title>
+            <genre>Non-Fiction</genre>
+            <price>55.95</price>
+            <publish_date>2001-09-15</publish_date>
+            <description>The second book in the catalog</description>
+        </book>
+        </catalog>
+        """
+
+
+    def main(self):
+        # XML 문서 파싱
+        root = ET.fromstring(self.xml_doc)
+        # XML 요소 탐색
+        for book in root.findall('book'):
+            book_id = book.get('id')
+            author = book.find('author').text
+            title = book.find('title').text
+            genre = book.find('genre').text
+            price = book.find('price').text
+            publish_date = book.find('publish_date').text
+            description = book.find('description').text
+            # XML 요소 출력
+            print(f"Book ID: {book_id}")
+            print(f"Author: {author}")
+            print(f"Title: {title}")
+            print(f"Genre: {genre}")
+            print(f"Price: {price}")
+            print(f"Publish Date: {publish_date}")
+            print(f"Description: {description}")
+
+
+    """ 위 코드에서는 XML 문서를 파싱하여 ElementTree 객체를 생성합니다. 
+    그리고, root.findall() 메서드를 이용하여 XML 문서에서 'book' 요소들을 찾아내고, 
+    각 'book' 요소의 속성과 하위 요소들을 찾아내어 출력합니다.
+    이처럼 xml.etree.ElementTree 라이브러리를 사용하여 XML 문서를 파싱하면 
+    XML 요소들을 객체로 표현하고, 이를 이용하여 XML 문서를 수정하거나 
+    새로운 XML 문서를 생성할 수 있습니다.
+    """
+
+
+def parse_sample():
+    """ parse 라이브러리는 
+    파이썬에서 문자열을 다룰 때 유용한 라이브러리 중 하나입니다. 
+    parse 라이브러리를 사용하면 문자열에서 원하는 데이터를 추출하는 작업을 
+    간단하게 수행할 수 있습니다. parse 라이브러리는 
+    C언어의 scanf 함수와 유사한 방법으로 문자열을 해석하며, 
+    중괄호({})를 사용하여 값을 추출합니다.
+    간단한 예제를 통해 parse 라이브러리의 사용법을 살펴보겠습니다.
+     """
+
+
+    # 문자열
+    string = 'Hello, World!'
+
+
+    # 문자열 해석
+    result = parse('{greeting}, {name}!', string)
+
+
+    # 결과 출력
+    print(result['greeting'])  # 'Hello'
+    print(result['name'])  # 'World'
+
+
+    """ 위 코드에서는 parse 함수를 사용하여 문자열에서 
+    greeting과 name 값을 추출하였습니다. parse 함수의 
+    첫 번째 인자는 추출하려는 값을 중괄호({})로 표시한 문자열, 
+    두 번째 인자는 추출 대상이 되는 문자열입니다. 
+    parse 함수는 문자열을 해석하여 추출한 값을 딕셔너리로 반환합니다.
+    parse 라이브러리는 문자열의 패턴을 미리 정의해 놓은 템플릿을 사용하여 
+    문자열을 해석할 수도 있습니다. 예를 들어, 날짜 형식의 문자열에서 
+    연도, 월, 일을 추출하는 경우에는 다음과 같이 템플릿을 사용할 수 있습니다. """
+
+
+    # 문자열
+    string = '2023-04-11'
+
+
+    # 템플릿
+    template = '{year:d}-{month:d}-{day:d}'
+
+
+    # 문자열 해석
+    result = parse(template, string)
+
+
+    # 결과 출력
+    print(result['year'])  # 2023
+    print(result['month'])  # 4
+    print(result['day'])  # 11
+
+
+    """ 위 코드에서는 parse 함수에 템플릿과 문자열을 전달하여 
+    연도, 월, 일을 추출하였습니다. :d는 숫자를 의미하는 포맷 코드입니다. 
+    parse 함수는 추출한 값을 딕셔너리로 반환합니다.
+    parse 라이브러리를 사용하면 문자열에서 원하는 데이터를 쉽게 추출할 수 있으며, 
+    템플릿을 사용하면 추출 대상의 패턴을 미리 정의하여 더욱 정확하게 추출할 수 있습니다.
+     """
+
+
+
+def webbrowser_sample():
+    """ webbrowser 라이브러리는 
+    파이썬에서 웹 브라우저를 제어하는 기능을 제공합니다. 
+    이 라이브러리를 사용하면 파이썬 코드에서 웹 페이지를 열거나, 
+    웹 페이지 검색 결과를 열거나, 웹 페이지를 새 창이나 새 탭으로 열거나, 
+    현재 웹 브라우저를 제어하는 등의 작업을 수행할 수 있습니다.
+    다음은 webbrowser 라이브러리의 간단한 예제입니다. 
+    이 예제는 파이썬으로 구글 검색 결과를 새 창으로 열어주는 코드입니다.
+    """
+
+
+    search_query = 'python webbrowser'
+    url = f'https://www.google.com/search?q={search_query}'
+    webbrowser.open_new_tab(url)
+
+
+    """ 이 예제에서 webbrowser.open_new_tab() 메서드를 사용하여 
+    검색 결과를 새 창으로 엽니다. 이 메서드는 새 창 대신 새 탭을 열고 싶다면 
+    webbrowser.open_new() 메서드를 사용할 수도 있습니다. 
+    또한, 이 예제에서는 f-string을 사용하여 문자열을 조합하였습니다. 
+    이를 사용하려면 파이썬 3.6 이상의 버전이 필요합니다.
+     """
+
+
+def cgi_sample():
+    """ cgi 라이브러리는 
+    파이썬에서 CGI(Common Gateway Interface) 프로그래밍을 할 때 사용되는 기능을 
+    제공하는 라이브러리입니다. CGI는 웹 서버와 웹 애플리케이션 사이에서 
+    정보를 주고받기 위한 표준 인터페이스입니다. 이를 이용해 파이썬으로 작성된 
+    웹 애플리케이션을 웹 서버와 연동하여 동적인 웹 페이지를 생성할 수 있습니다.
+    cgi 라이브러리를 사용하면 웹 서버에서 전달된 HTTP 요청을 파싱하고, 
+    파라미터를 추출하며, HTML 문서를 생성하는 등의 작업을 수행할 수 있습니다.
+    다음은 cgi 라이브러리를 사용한 간단한 예제입니다. 
+    이 예제는 웹 페이지에 "Hello, World!"를 출력하는 간단한 CGI 스크립트입니다.
+    """
+
+
+    #!/usr/bin/env python
+    print("Content-type: text/html")
+    print("<html>")
+    print("<head>")
+    print("<title>Hello, World!</title>")
+    print("</head>")
+    print("<body>")
+    print("<h1>Hello, World!</h1>")
+    print("</body>")
+    print("</html>")
+
+
+    """ 위 코드에서 print("Content-type: text/html")는 
+    HTTP 응답 헤더를 출력하고, print()는 HTTP 응답 헤더와 
+    본문을 구분하는 빈 줄을 출력합니다. 이후에는 HTML 코드를 출력하여 
+    "Hello, World!"를 출력하는 간단한 웹 페이지를 생성합니다.
+    이 스크립트를 웹 서버에서 실행하면, 웹 서버가 클라이언트로부터 
+    HTTP 요청을 받으면 이 스크립트를 실행하고, 출력한 결과를 
+    HTTP 응답으로 전송합니다. 이를 통해 동적인 웹 페이지를 생성할 수 있습니다.
+    """
+
+
+def cgitb_sample():
+    """ cgitb 라이브러리는 
+    CGI 프로그램의 오류를 쉽게 파악하는 데 사용 합니다.
+    파이썬에서 CGI(Common Gateway Interface) 프로그래밍을 할 때 발생하는 
+    예외(Exception) 정보를 웹 브라우저에 표시하는 기능을 제공하는 라이브러리입니다. 
+    예외가 발생하면 이를 처리하고, 웹 페이지에 디버그 정보를 
+    표시하는 등의 작업을 수행할 수 있습니다.
+    cgitb 라이브러리를 사용하면 웹 서버에서 발생한 예외 정보를 
+    웹 페이지에 표시할 수 있습니다. 이를 통해 디버그 과정에서 예외 정보를 
+    더 쉽게 확인하고, 문제를 해결할 수 있습니다.
+    다음은 cgitb 라이브러리를 사용한 간단한 예제입니다. 
+    이 예제는 cgitb 라이브러리를 사용하여 예외 정보를 웹 페이지에 
+    출력하는 CGI 스크립트입니다.
+    """
+
+
+    #!/usr/bin/env python
+    cgitb.enable()
+    print("Content-type: text/html")
+    print("<html>")
+    print("<head>")
+    print("<title>CGI Debugging Example</title>")
+    print("</head>")
+    print("<body>")
+    try:
+        raise Exception("Example exception")
+    except Exception as e:
+        cgitb.handler()
+    print("</body>")
+    print("</html>")
+
+
+    """ 위 코드에서 cgitb.enable() 함수를 호출하여 cgitb 라이브러리를 활성화합니다. 
+    그리고 try/except 구문을 사용하여 예외를 발생시키고, 
+    cgitb.handler() 함수를 호출하여 예외 정보를 웹 페이지에 출력합니다. 
+    이후에는 HTML 코드를 출력하여 웹 페이지를 생성합니다.
+    이 스크립트를 웹 서버에서 실행하면, 예외가 발생하면 
+    cgitb.handler() 함수가 호출되어 예외 정보를 웹 페이지에 출력합니다. 
+    이를 통해 디버그 과정에서 예외 정보를 더 쉽게 확인할 수 있습니다.
+     """
+
+
+""" WSGI(Web Sever Gateway Interface)는 
+웹 서버 소프트웨어와 파이썬으로 만든 웹 응용 프로그램 간의 
+표준 인터페이스이다. 쉽게 말해 웹 서버가 클라이언트로부터 받은 요청을 
+파이썬 애플리케이션에 전달하여 실행하고, 그 실행 결과를 돌려 받기 위한 약속이다.
+ """
+
+
+#!/usr/bin/env python
+def app(environ, start_response):
+    status = '200 OK'
+    headers = [('Content-type', 'text/html')]
+    start_response(status, headers)
+    result = [
+        b"""<html><head><title>Hello, World!</title></head>
+        <body><h1>Hello, World!</h1></body></html>"""
+        ]
+    return result
+httpd = make_server('', 8000, app)
+print("Serving on port 8000...")
+httpd.serve_forever()
+
+
+""" 위 코드에서 make_server 함수를 사용하여 웹 서버를 생성합니다. 
+그리고 app 함수를 작성하여 WSGI 애플리케이션을 정의합니다. app 함수는 
+environ과 start_response 매개변수를 받아 HTTP 요청 정보를 처리하고, 
+HTTP 응답 정보를 생성합니다. 이후에는 make_server 함수를 사용하여 
+웹 서버를 시작합니다. 이 스크립트를 실행하면, 웹 서버가 8000번 포트에서 실행되고, 
+클라이언트가 HTTP 요청을 보내면 app 함수가 이를 처리하고, 
+HTTP 응답을 생성하여 클라이언트에게 전송합니다. 
+이를 통해 동적인 웹 페이지를 생성할 수 있습니다.
+ """
+
+
+def urllib_sample():
+    """ urllib 라이브러리는 
+    Python에서 URL을 다루기 위한 라이브러리입니다. 이 라이브러리를 사용하면 
+    HTTP, FTP 등의 프로토콜을 사용하여 데이터를 가져올 수 있습니다. 
+    urllib 라이브러리에는 다음과 같은 모듈이 있습니다.
+
+
+    urllib.request : URL을 열고 데이터를 가져올 수 있습니다.
+    urllib.parse : URL 문자열을 분석하고 조작할 수 있습니다.
+    urllib.error : urllib.request 모듈에서 발생한 예외를 처리합니다.
+    urllib.robotparser : robots.txt 파일을 파싱하여 웹사이트 접근 규칙을 확인.
+    urllib.request 모듈을 사용하면 다음과 같은 작업을 할 수 있습니다.
+
+
+    URL 열기 : urlopen() 함수를 사용하여 URL을 열고 데이터를 가져올 수 있습니다.
+    URL 다운로드 : urlretrieve() 함수를 사용하여 URL에서 파일을 다운로드할 수 있습니다.
+    HTTP 요청 메서드 지정 : 
+    - Request 클래스를 사용하여 HTTP 요청 메서드
+    - (GET, POST, PUT, DELETE 등)를 지정할 수 있습니다.
+    HTTP 요청 헤더 추가 : Request 클래스를 사용하여 HTTP 요청 헤더를 추가할 수 있습니다.
+    POST 요청 보내기 : 
+    - urlencode() 함수를 사용하여 POST 요청 본문 데이터를 인코딩하고, 
+    - Request 클래스에서 data 매개변수로 전달하여 POST 요청을 보낼 수 있습니다.
+    """
+
+
+    url = 'https://www.example.com'
+    response = urllib.request.urlopen(url)
+    data = response.read()
+    print(data)
+
+
+    """ 위 예제에서는 urllib.request.urlopen() 함수를 사용하여 
+    url에 해당하는 웹 페이지를 열고, response 객체를 반환합니다. 
+    이후에 response.read() 함수를 사용하여 웹 페이지에서 읽어온 데이터를 
+    data 변수에 저장하고 출력합니다.
+    다음은 urllib.request 모듈을 사용하여 POST 요청을 보내는 예제입니다.
+    """
+
+
+    url = 'https://www.example.com'
+    data = {'username': 'myusername', 'password': 'mypassword'}
+    data = urllib.parse.urlencode(data).encode('utf-8')
+    req = urllib.request.Request(url, data)
+    response = urllib.request.urlopen(req)
+    result = response.read()
+    print(result)
+
+
+    """ 위 예제에서는 urllib.parse.urlencode() 함수를 사용하여 
+    data 변수에 저장된 POST 요청 본문 데이터를 인코딩합니다. 
+    이후에 urllib.request.Request() 함수를 사용하여 
+    url에 POST 요청을 보내는 req 객체를 생성하고, 
+    urllib.request.urlopen() 함수를 사용하여 req 객체에 
+    해당하는 POST 요청을 보냅니다. 마지막으로 response.read() 함수를 사용하여 
+    POST 요청에 대한 응답 데이터를 읽어옵니다.
+     """
+
+
+class http_client_sample:
+    """ http.client는 웹 페이지를 저장하는 또 다른 방법이다. 
+    하지만, http.client보다는 requests 모듈을 사용 하는 것이 좋다.
+    이 라이브러리를 사용하면 HTTP 요청을 생성하고, 서버에 전송하고, 
+    서버로부터 응답을 받을 수 있습니다.
+    http.client 라이브러리에는 다음과 같은 클래스와 함수가 있습니다.
+
+    
+    1. http.client.HTTPConnection : HTTP 연결을 생성합니다.
+    2. http.client.HTTPSConnection : HTTPS 연결을 생성합니다.
+    3. http.client.HTTPResponse : HTTP 응답을 다룹니다.
+    4. http.client.HTTPException : HTTP 예외를 처리합니다.
+    5. http.client.HTTPMessage : HTTP 메시지를 다룹니다.
+    6. http.client.parse_headers : HTTP 헤더를 파싱합니다.
+    7. http.client.parse_keqv_list : 키-값 쌍으로 이루어진 리스트를 파싱합니다.
+    8. http.client.responses : HTTP 상태 코드와 메시지를 매핑한 딕셔너리입니다.
+
+
+    다음은 HTTP GET 요청을 보내고 응답을 받는 예제입니다.
+     """
+    
+
+    def http_client_get_sample(self):
+        conn = http.client.HTTPSConnection("www.example.com")
+        conn.request("GET", "/")
+        response = conn.getresponse()
+        data = response.read()
+        print(data.decode())
+        conn.close()
+
+
+    """ 위 예제에서는 http.client.HTTPSConnection() 함수를 사용하여 
+    www.example.com에 HTTPS 연결을 생성합니다. 
+    이후에 conn.request() 함수를 사용하여 GET 요청을 생성하고, 
+    conn.getresponse() 함수를 사용하여 서버로부터의 응답을 받습니다. 
+    응답 데이터는 response.read() 함수를 사용하여 읽어옵니다. 
+    마지막으로 conn.close() 함수를 사용하여 연결을 닫습니다.
+
+
+    다음은 HTTP POST 요청을 보내는 예제입니다.
+    """
+
+
+    def http_client_post_sample(self):
+        data = {'username': 'myusername', 'password': 'mypassword'}
+        data = json.dumps(data)
+
+        headers = {'Content-type': 'application/json'}
+
+        conn = http.client.HTTPSConnection("www.example.com")
+        conn.request("POST", "/", data, headers)
+        response = conn.getresponse()
+        data = response.read()
+        print(data.decode())
+        conn.close()
+
+
+    """ 위 예제에서는 json.dumps() 함수를 사용하여 
+    POST 요청 본문 데이터를 JSON 형식으로 인코딩합니다. 
+    이후에 headers 변수를 사용하여 Content-type을 application/json으로 설정하고, 
+    conn.request() 함수를 사용하여 POST 요청을 생성합니다. 
+    마지막으로 response.read() 함수를 사용하여 서버로부터의 응답을 읽어옵니다.
+    """
+
+
+
+def ftplib_sample():
+    """ ftplib는 
+    Python에서 FTP(파일 전송 프로토콜) 클라이언트를 구현하는 데 사용되는 
+    표준 라이브러리입니다. 이 라이브러리는 FTP 서버와 상호 작용하여 
+    파일을 전송하고 관리하는 기능을 제공합니다.
+    ftplib는 FTP 서버와 통신하는 데 사용되는 기본적인 명령어를 지원하며, 
+    이를 통해 파일을 업로드하거나 다운로드할 수 있습니다. 
+    또한 디렉토리를 생성하고 삭제하거나 파일의 퍼미션(permission)을 변경하는 등의 
+    작업도 수행할 수 있습니다.
+    ftplib는 Python의 내장 라이브러리로 제공되므로 별도의 설치가 필요하지 않습니다. 
+    FTP 클라이언트를 작성할 때 매우 유용한 도구입니다. 
+    사용 방법에 대해서는 Python 공식 문서를 참고하시면 됩니다.
+    """
+
+
+    # FTP 서버에 로그인
+    ftp = ftplib.FTP('ftp.example.com')
+    ftp.login('username', 'password')
+
+
+    # 업로드할 파일 경로
+    local_path = '/path/to/local/file.txt'
+    remote_path = '/path/to/remote/file.txt'
+
+
+    # 파일 업로드
+    with open(local_path, 'rb') as f:
+        ftp.storbinary(f'STOR {remote_path}', f)
+
+
+    # FTP 서버와 연결 종료
+    ftp.quit()
+
+
+    """ 위의 예제에서는 ftplib.FTP 클래스를 사용하여 FTP 서버에 로그인하고, 
+    storbinary 메서드를 사용하여 지정한 로컬 파일을 원격지의 경로로 업로드합니다.
+    with open 구문은 로컬 파일을 바이너리 모드로 열어 
+    storbinary 메서드로 전달하는데 사용됩니다. 업로드 작업이 완료되면 
+    ftp.quit() 메서드를 사용하여 FTP 서버와의 연결을 종료합니다.
+    이 예제는 파일 업로드에 대한 기본적인 개념을 보여주는 것이며, 
+    더 복잡한 작업을 수행하려면 더 많은 코드와 로직이 필요할 수 있습니다.
+    """
+
+
+def poplib_sample():
+    """ poplib는 POP3 서버에 연결하여 받은 메일을 확인하는 데 사용하는 모듈.
+    POP3는 널리 사용하긴 했지만, 오래된 방식이다. 
+    메일 서버가 IMAP을 지원한다면 POP3 대신 IMAP을 사용하는 것이 좋다.
+    poplib는 Python에서 POP3(프로토콜3) 이메일 서버에 접속하여 
+    이메일을 가져오는 데 사용되는 표준 라이브러리입니다. 
+    poplib를 사용하면 이메일 서버와 통신하고 이메일을 검색하고 다운로드할 수 있습니다.
+    poplib를 사용하면 이메일을 다음과 같은 방식으로 다운로드할 수 있습니다.
+
+
+    1. POP3 서버에 연결합니다.
+    2. 사용자 이름과 비밀번호를 제공하여 로그인합니다.
+    3. 이메일함을 선택합니다.
+    4. 메일 개수를 가져옵니다.
+    5. 개별 메일을 다운로드하고, 이를 원하는 형식으로 파싱합니다.
+    6. POP3 서버와의 연결을 종료합니다.
+
+
+    poplib는 Python의 내장 라이브러리로 제공되므로 별도의 설치가 필요하지 않습니다. 
+    poplib를 사용하여 이메일을 가져오는 방법에 대해서는 Python 공식 문서를 참고.
+    """
+
+
+    # POP3 서버에 연결
+    pop_conn = poplib.POP3_SSL('pop.example.com')
+    pop_conn.user('username')
+    pop_conn.pass_('password')
+
+
+    # 이메일함 선택
+    pop_conn.list()
+    # 최신 이메일 가져오기
+    mail = pop_conn.retr(1)
+
+
+    # 이메일 파싱
+    body = b'\n'.join(mail[1]).decode('utf-8')
+    print(body)
+
+
+    # POP3 서버와 연결 종료
+    pop_conn.quit()
+
+
+    """ 위의 예제에서는 poplib.POP3_SSL 클래스를 사용하여 
+    POP3 서버에 SSL을 사용하여 연결하고, 
+    user와 pass_ 메서드를 사용하여 사용자 이름과 비밀번호를 인증합니다.
+    이어서 list 메서드를 사용하여 사용 가능한 이메일 리스트를 가져옵니다. 
+    그 다음 retr 메서드를 사용하여 첫 번째 이메일을 다운로드하고, 
+    가져온 이메일을 원하는 형식으로 파싱합니다.
+    위 예제는 이메일을 가져오는 과정을 보여주는 간단한 예제이며, 
+    이메일 헤더, 본문, 첨부 파일 등을 처리하려면 더 많은 코드와 로직이 필요할 수 있습니다.
+    """
+
 
 
 # imaplib: 수신한 이메일을 IMAP4로 확인한다.
