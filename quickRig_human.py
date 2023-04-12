@@ -1,8 +1,10 @@
 import pymel.core as pm
 import hjk
 
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
+
 
 class QuickRig_Human:
     def __init__(self):

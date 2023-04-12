@@ -81,26 +81,34 @@ import poplib
 import imaplib
 import nntplib
 import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import telnetlib
 import uuid
 import socketserver
 import http.server
-import xmlrpc
+from xmlrpc.server import SimpleXMLRPCServer
+from xmlrpc.server import SimpleXMLRPCRequestHandler
+import xmlrpc.client
 import imghdr
 import turtle
 import cmd
 import shlex
-import tkinter
+import tkinter as tk
 import unittest
 import doctest
 import timeit
 import pdb
-import dataclasses
-import abc
+from dataclasses import dataclass
+from abc import ABC, abstractmethod
 import atexit
 import traceback
-import typing
+from typing import List, Tuple
 
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def textwrap_sample():
     """ textwrap.shorten: 문자열을 원하는 길이에 맞게 줄여 표시(...)
@@ -111,7 +119,8 @@ def textwrap_sample():
     Moved earth and heaven; that which we are, we are; 
     One equal temper of heroic hearts, 
     Made weak by time and fate, but strong in will 
-    To strive, to seek, to find, and not to yield. - Alfred Lord Tennyson
+    To strive, to seek, to find, and not to yield.
+     - Alfred Lord Tennyson
     '''
     result1 = textwrap.shorten(longStr, width=15, placeholder='...')
     result2 = textwrap.wrap(longStr, width=30)
@@ -120,6 +129,9 @@ def textwrap_sample():
     print(f"result2 -> {result2}")
     print(f"result3 -> {result3}")
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def re_sample():
     """ re: 정규표현식. 다양한 표현 방법이 있음 """
@@ -139,6 +151,9 @@ def re_sample():
     print(f"tmp -> {mod}")
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def struct_sample():
     """ struct: C언어로 만든 구조체 이진 데이터를 처리할 때 활요하는 모듈. """
     originalDoc = struct.__doc__
@@ -148,6 +163,9 @@ def struct_sample():
     print(originalDoc)
     print(result)
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def datetime_sample():
     """ datetime.date: 년, 월, 일로 날짜를 표현.
@@ -173,6 +191,9 @@ def datetime_sample():
     print(f"THOUSAND_DAY -> {THOUSAND_DAY}")
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def calendar_sample():
     """ calendar.isleap: 인수로 입력한 연도가 윤년인지를 확인할 때 사용. """
     curr = datetime.date.today()
@@ -182,6 +203,9 @@ def calendar_sample():
     else:
         print('It\'s not a leap year.')
    
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def deque_sample():
     """ collections.deque: 양방향 자료형. "데크"라 읽는다.
@@ -195,6 +219,9 @@ def deque_sample():
     print(f"sampleList -> {sampleList}")
     print(f"dequedList -> {result}")
    
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def nametuple_sample():
     """ collections.nametuple: 튜플은 인덱스를 통해서만 데이터에 접근할 수 있지만, 
@@ -215,6 +242,9 @@ def nametuple_sample():
     print(p[1])  # 2
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def counter_sample():
     """ collections.Counter: 리스트나 문자열등을 비교.
     리스트가 갖고 있는 요소들을 카운트해주는 함수인데, 
@@ -229,6 +259,9 @@ def counter_sample():
     if collections.Counter(arr1) != collections.Counter(arr3):
         print("arr1 != arr3")
    
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def defaultdict_sample():
     """ collections.defaultdict는 값에 초깃값을 지정하여 딕셔너리를 생성한다.
@@ -248,10 +281,14 @@ def defaultdict_sample():
     d['banana'] += 2
     d['cherry'] += 3
     # 딕셔너리 출력
-    print(d)  # defaultdict(<class 'int'>, {'apple': 1, 'banana': 2, 'cherry': 3})
+    print(d)
+    # defaultdict(<class 'int'>, {'apple': 1, 'banana': 2, 'cherry': 3})
     # 존재하지 않는 키 참조
     print(d['durian'])  # 0 (int 타입의 디폴트 값이 할당됨)
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def heapq_saple():
     """ heapq: 순위가 가장 높은 자료를 가장 먼저 꺼내는 "우선순위 큐" 모듈이다. 
@@ -278,6 +315,9 @@ def heapq_saple():
     print(min_value)  # 2
     print(lst)  # [3, 4, 5, 7, 6]
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def pprint_sample():
     """ pprint: 데이터를 보기 좋게 출력하는 Pretty Printer(PPrint)를 제공합니다.
@@ -308,6 +348,9 @@ def pprint_sample():
      """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def bisect_sample():
     """ bisect는 이진 탐색 알고리즘을 구현한 모듈로, 
     bisect.bisect() 함수는 정렬된 리스트에 값을 삽입할 때 정렬을 유지할 수 있는 
@@ -333,6 +376,9 @@ def bisect_sample():
     print(result)
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 class Week(enum.IntEnum):
     """ enum: 서로 관련이 있는 여러 개의 상수 집합을 정의할 때 사용. """
     MONDAY = 1
@@ -343,6 +389,9 @@ class Week(enum.IntEnum):
     SATURDAY = 6
     SUNDAY = 7
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def graphlib_sample():
     """ graphlib는 파이썬 3.9에서 추가된 그래프 처리를 위한 표준 라이브러리입니다. 
@@ -363,6 +412,9 @@ def graphlib_sample():
     g.add_edge('A', 'B')
     
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def gcdLcm_sample():
     """ math.gcd: 최대공약수
     math.lcm: 최소공배수
@@ -374,6 +426,9 @@ def gcdLcm_sample():
     math.isclose(0.1 * 3, 0.3)
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def decimal_sample():
     """ decimal: 정확한 소숫점 자리를 표현할 때 사용.
     파이썬은 float 연산이 가끔씩 미세한 오차가 발생한다.
@@ -382,6 +437,9 @@ def decimal_sample():
     decimal.Decimal('0.1') * 3
     decimal.Decimal('1.2') + decimal.Decimal('0.1')
     
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def fraction_sample():
     """ fractions: 유리수를 계산할 때 사용하는 모듈. """
@@ -396,6 +454,9 @@ def fraction_sample():
     print(float(A + B))
    
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def random_sample():
     """ random: 난수 생성. """
     numList = [1, 2, 3, 4, 5]
@@ -407,6 +468,9 @@ def random_sample():
     print(c)
    
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def statistics_sample():
     """ statistics: 평균값과 중앙값을 구할 때 사용. """
     scoreList = [78, 93, 99, 95, 51, 71, 52, 43, 81, 78]
@@ -414,6 +478,9 @@ def statistics_sample():
     B = statistics.median(scoreList)
     print(A, B)
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def cycle_sample():
     """ itertools.cycle(반복 객체): 반복 가능한 객체를 무한히 반복하도록 함.
@@ -423,6 +490,9 @@ def cycle_sample():
     cyl = itertools.cycle(nameList)
     print(next(cyl), next(cyl), next(cyl), next(cyl))
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def accumulate_sample():
     """ itertools.accumulate: 리스트 안에 요소들의 합계를 구한다. """
@@ -435,6 +505,9 @@ def accumulate_sample():
     result = itertools.accumulate(saleList, max)
     result = list(result)
    
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def groupby_sample():
     """ itertools.groupby: 키 값으로 분류하고 그 결과를 반환.
@@ -461,6 +534,9 @@ def groupby_sample():
      """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def zip_longest_sapmple():
     """ itertools.zip_longest(*iterables, fillvalue=None)는
     같은 개수의 자료형을 묶는 파이썬 내장 함수인 zip()과 똑같이 동작한다. 
@@ -476,6 +552,9 @@ def zip_longest_sapmple():
     print(result)
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def permutatins_sample():
     """ itertools.permutatins(iterable, r=None): 객체 중에서 r개를 선택하는 순열.
      """
@@ -488,6 +567,9 @@ def permutatins_sample():
      """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def combinations_sample():
     """ itertools.combinations(iterable, r): 객체 중에서 r개를 선택하는 조합.
     로또 = len(list(itertools.combinations(range(1, 46), 6))) """
@@ -499,6 +581,9 @@ def combinations_sample():
     >>> [('1', '2'), ('1', '3'), ('2', '3')]
      """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class cmp_to_key_sample:
     """ functools.cmp_to_key: sorted()와 같은 정렬 함수의 key 매개변수에 
@@ -532,6 +617,9 @@ class cmp_to_key_sample:
     >>> ['apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 'grape']
      """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class lru_cache_sample:
     """ lru_cache는 파이썬 3에서 제공하는 데코레이터(decorator) 함수 중 하나로, 
@@ -568,6 +656,9 @@ class lru_cache_sample:
      """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 class partial_sample():
     """ functools.partial: 인수가 이미 채워진, 새 버전의 함수를 만들 때 사용.
     cal('add', 1, 2, 3) -> Use it like below.
@@ -596,6 +687,9 @@ class partial_sample():
         print(mul.func, mul.args)
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def reduce_sample():
     """ functools.reduce(function, iterable)은 
     function을 반복 가능한 객체에 차례대로(왼쪽에서 오른쪽으로) 
@@ -607,6 +701,9 @@ def reduce_sample():
     print(result)
     """ >>> 15 """
    
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class wraps_sample:
     """ functools.wraps는 
@@ -649,6 +746,9 @@ class wraps_sample:
      """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def itemgetter_sample():
     """ operator.itemgetter는 주로 sorted와 같은 함수의 
     key 매개변수에 적용하여 다양한 기준으로 정렬할 수 있도록 하는 모듈.
@@ -678,6 +778,9 @@ def itemgetter_sample():
     result = sorted(students, key=operator.attrgetter('age'))
      """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def pathlib_sample():
     """ pathlib: 파일 시스템 경로를 문자열이 아닌 객체로 취급한다. """
@@ -713,6 +816,9 @@ def pathlib_sample():
      """
    
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def fileinput_sample():
     """ fileinput: 여러 개의 파일을 한꺼번에 처리.
     한글이 포함된 txt인 경우 cp949에러가 발생할 수 있다. 
@@ -724,6 +830,9 @@ def fileinput_sample():
             print(line)
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def filecmp_sample():
     """ filecmp: 파일이나 디렉터리 두 곳을 비교 """
     A = r"C:\Users\jkhong\Desktop\git\maya"
@@ -734,6 +843,9 @@ def filecmp_sample():
     print(result.diff_files) # A와 B에 모두 있으나, 파일이 서로 다름.
     result.report() # 위의 내용을 한꺼번에 볼 수 있다.
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def tempfile_sample():
     """ tempfile: 임시 파일을 만드는 모듈 """
@@ -747,11 +859,17 @@ def tempfile_sample():
     close()가 실행되거나, 프로세스가 종료되면 임시 파일은 삭제된다. """
    
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def glob_sample():
     """ glob: 패턴(유닉스 셸이 사용하는 규칙)으로 파일을 검색하는 모듈 """
     for fileName in glob.glob("**/*.txt", recursive=True):
         print(fileName)
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def fnmatch_sample():
     """ fnmatch는 특정 패턴과 일치하는 파일을 검색하는 모듈이다.
@@ -766,6 +884,9 @@ def fnmatch_sample():
             print(i)
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def linecache_sample():
     """ linecache는 파일에서 원하는 줄의 값을 읽을 때, 
     캐시를 사용하여 내부적으로 최적화.
@@ -775,6 +896,9 @@ def linecache_sample():
     tmp = linecache.getline(r"C:\Users\jkhong\Desktop\test.txt", num)
     print(tmp)
    
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def pickle_sample():
     """ pickle은 자료형을 변환 없이 그대로 파일로 저장 """
@@ -787,6 +911,9 @@ def pickle_sample():
         print(temp)
 
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 """ copyreg는 Python의 내장 모듈 중 하나로, 
 객체 직렬화와 역직렬화를 지원하는 pickle 모듈의 기능을 확장하기 위한 도구입니다. 
@@ -826,6 +953,9 @@ person_data 변수에 저장할 수 있습니다.
  """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 class shelve_sample():
     """ shelve는 딕셔너리를 파일로 저장할 때 사용하는 모듈
     shelve는 딕셔너리만을 처리하지만, pickle은 모든 객체를 다룬다.
@@ -850,6 +980,9 @@ class shelve_sample():
         with shelve.open(r"C:\Users\hjk03\Desktop\data.dat") as shlv:
             return shlv[key]
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 """ sqlite3: SQLite 데이터베이스를 사용하는 데 필요한 인터페이스 모듈.
 https://sqlitebrowser.org/dl/ """
@@ -955,6 +1088,9 @@ def with_cursor(original_func):
     return wrapper
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def zlib_sample():
     """ zlib는 문자열을 압축하고 해제할 수 있다. """
     data = "Life is too short, You need python." * 10000
@@ -968,6 +1104,9 @@ def zlib_sample():
     """ >>> 350000 """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def gzip_sample():
     """ gzip는 파일을 압축할 수 있다. 내부적으로 zlib를 사용. """
     data = "Life is too short, You need python.\n" * 10000
@@ -978,6 +1117,9 @@ def gzip_sample():
     print(len(read_data))
     """ >>> 360000 """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def bz2_sample():
     # bz2: 문자열을 압축할 수 있다. 스레드 환경에서 안전함.
@@ -1000,6 +1142,9 @@ def bz2_sample():
     """ >>> 360000 """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def lzma_sample():
     # lzma는 문자열을 압축할 수 있다. 스레드 환경에서 안전하지 않음.
     data = "Life is too short, You need python." * 10000
@@ -1020,6 +1165,9 @@ def lzma_sample():
     print(len(read_data))
     """ >>> 360000 """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def zipfile_sample():
     # zipfile: 여러개의 파일을 zip형식으로 합치거나 해제할 수 있다.
@@ -1042,6 +1190,9 @@ def zipfile_sample():
     with zipfile.ZipFile(f'{dir}/myText.zip') as myzip:
         myzip.extract(f'{dir}/a.txt')
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def tarfile_sample():
     # tarfile: 여러개의 파일을 tar형식으로 합치거나 해제할 수 있다.
@@ -1077,6 +1228,9 @@ def tarfile_sample():
         mytar.extractall()
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def csv_sample():
     """ csv는 csv 파일을 읽고 쓸 때 사용.
     엑셀 파일 안에 쉼표가 있을 경우 split(',') 이것 사용은 위험하다.
@@ -1103,6 +1257,9 @@ def csv_sample():
         # writerows() 리스트를 한번에 처리해줌.
         writer.writerows(result)
    
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def configparser_sample():
     """ configparser: ini 파일은 프로그램 정보를 저장하는 텍스트 문서로
@@ -1133,6 +1290,9 @@ def configparser_sample():
     """ >>> 22221 """
    
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def hashlib_sample():
     """ hashlib: MD5, SHA256 등의 알고리즘으로 문자열을 해싱한다.
     해싱은 단방향 암호화 알고리즘이므로 원래의 문자열을 복구할 수는 없다.
@@ -1151,6 +1311,9 @@ def hashlib_sample():
     print(byteStr)
     print(hexaStr)
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def hmac_sample():
     """ hmac: 메시지 변조를 확인할 수 있다. 단, 비밀키가 있어야 한다. """
@@ -1187,6 +1350,9 @@ def hmac_sample():
             print('The message has not been tampered with.')
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def secrets_sample():
     """ secrets: 안전한 난수 발생
     1바이트는 2개의 16진수 문자열로 반환되므로 (16)은 32자리 난수가 된다.
@@ -1195,6 +1361,9 @@ def secrets_sample():
     print(key)
     """ >>> 9ebc02692b6fdd124a5af3e7ffd97781 """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class io_StringIO_sample():
     """ io.StringIO: 문자열을 파일 객체처럼 다룰 수 있도록 하는 클래스이다. """
@@ -1226,6 +1395,9 @@ class io_StringIO_sample():
             result = self.execute(txt)
             print(result)
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class argparse_sample():
     """ argparse는 파이썬 표준 라이브러리의 모듈 중 하나로, 
@@ -1270,6 +1442,9 @@ class argparse_sample():
     """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 class logging_sample:
     """ logging은 파이썬에서 제공하는 모듈로, 
     애플리케이션의 로그 메시지를 기록하는 기능을 제공합니다. 
@@ -1311,6 +1486,9 @@ class logging_sample:
     logging.critical('Critical message')
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 class getpass_sample():
     """ getpass 모듈은 사용자로부터 비밀번호나 기타 민감한 정보를 입력받을 때, 
     터미널에서 입력한 내용이 화면에 표시되지 않도록 하는 기능을 제공합니다. 
@@ -1333,6 +1511,9 @@ class getpass_sample():
     민감한 정보를 입력받을 때, 사용될 수 있습니다.
      """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class curses_sample:
     """ curses는 UNIX 및 UNIX-like 시스템의 터미널 환경에서 
@@ -1390,6 +1571,8 @@ class curses_sample:
      """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class platform_sample:
     """ platform 모듈은 
@@ -1446,6 +1629,9 @@ class platform_sample:
     print(f"Platform Name: {platform.platform()}")
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 class ctypes:
     """ ctypes는 C 언어의 라이브러리 함수를 파이썬에서 사용할 수 있도록 
     해주는 모듈입니다. ctypes 모듈을 사용하면 파이썬 코드에서 C 함수를 직접 
@@ -1483,15 +1669,18 @@ class ctypes:
 
 """ 위 코드에서 my_library.so는 C 언어로 작성된 라이브러리 파일입니다. 
 my_function은 해당 라이브러리에 정의된 C 함수입니다. 
-ctypes 모듈을 사용하여 이 함수를 불러와 파이썬에서 호출한 후, 결과를 출력합니다.
-ctypes 모듈을 사용하여 C 구조체를 파이썬에서 사용하는 예제 코드는 다음과 같습니다.
- """
+ctypes 모듈을 사용하여 이 함수를 불러와 파이썬에서 호출한 후, 결과를 출력. 
+ctypes 모듈을 사용하여 C 구조체를 파이썬에서 사용하는 
+예제 코드는 다음과 같습니다.
+"""
 
 
 # C 구조체를 정의합니다.
 class MyStruct(ctypes.Structure):
-    _fields_ = [("x", ctypes.c_int),
-                ("y", ctypes.c_int)]
+    _fields_ = [
+        ("x", ctypes.c_int),
+        ("y", ctypes.c_int)
+        ]
 
 
 # 구조체를 생성합니다.
@@ -1507,6 +1696,9 @@ my_struct.y = 2
 print(my_struct.x)
 print(my_struct.y)
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class threading_sample:
     """ threading은 
@@ -1535,6 +1727,9 @@ class threading_sample:
     # 스레드를 실행합니다.
     my_thread.start()
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class multiprocessing_sample:
     """ multiprocessing은 
@@ -1599,6 +1794,9 @@ class multiprocessing_sample:
      """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 class concurrent_futures_sample:
     """ concurrent.futures는 
     threading과 multiprocessing을 더 쉽게 사용할 때 쓰인다.
@@ -1661,6 +1859,9 @@ class concurrent_futures_sample:
     """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 class subprocess_sample:
     """ subprocess 모듈은 파이썬에서 외부 프로그램을 실행하고 
     상호작용하는 데 사용되는 모듈입니다. 이 모듈은 새로운 프로세스를 생성하고, 
@@ -1682,6 +1883,9 @@ class subprocess_sample:
     이 경우 shlex 모듈을 사용하여 사용자 입력을 처리하는 것이 더 안전합니다.
      """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class sched_sample:
     """ sched는 지정된 시간에 원하는 이벤트를 실행하게 해주는 이벤트 스케줄러이다.
@@ -1714,6 +1918,9 @@ class sched_sample:
     그러나, 고정된 타임스케줄링에서는 sched 모듈이 더 적합합니다.
      """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class asyncio_sample:
     """ asyncio는 Python에서 비동기 I/O 작업을 처리하기 위한 라이브러리입니다. 
@@ -1768,6 +1975,9 @@ class asyncio_sample:
      """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 """ socket은 TCP 서버/클라이언트 프로그램을 작성할 때 사용.
 파이썬에서는 socket 모듈을 제공하여 소켓 프로그래밍을 수행할 수 있습니다. 
 이 모듈은 TCP 및 UDP 소켓 프로그래밍을 지원합니다.
@@ -1820,6 +2030,9 @@ TCP 및 UDP 프로토콜을 사용하는 다양한 네트워크 프로그램을 
  """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 """ ssl은 socket 모듈로 작성한 서버/클라이언트에 공개키 암호화 방식을 적용.
 파이썬에서는 ssl 모듈을 사용하여 SSL/TLS 프로토콜을 사용하는 
 보안 연결을 만들 수 있습니다. ssl 모듈은 내장 socket 모듈과 함께 사용할 수 있으며, 
@@ -1866,11 +2079,14 @@ print('Received', repr(data))
 """ 서버는 클라이언트의 연결을 수신하고, 
 데이터를 수신하면 다시 클라이언트에게 보냅니다. 
 클라이언트는 서버에 연결하고, 데이터를 보내고, 서버로부터 데이터를 수신합니다. 
-이 예제에서는 서버에서 SSL/TLS 인증서를 사용하여 클라이언트와의 보안 연결을 설정합니다.
+이 예제에서는 서버에서 SSL/TLS 인증서를 사용하여 클라이언트와의 보안 연결을 설정.
 ssl 모듈을 사용하여 다양한 SSL/TLS 프로토콜을 사용하는 
 다른 네트워크 프로그램을 작성할 수 있습니다.
  """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 # import select
 # import socket
@@ -1931,6 +2147,9 @@ class select_sample:
     """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 """ selectors 모듈은 파이썬 3.4부터 추가된 모듈로, 
 select 모듈과 비슷한 기능을 제공하지만 
 select를 확장하여 "고수준I/O멀티플랙싱"을 가능하도록 하고, 
@@ -1957,10 +2176,14 @@ selectors 모듈은 다음과 같은 클래스를 제공합니다.
  """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 # import signal
 # import time
 class signal_sapmle:
-    """ signal 라이브러리는 파이썬에서 시그널(signal) 처리를 위해 제공되는 모듈입니다. 
+    """ signal 라이브러리는 
+    파이썬에서 시그널(signal) 처리를 위해 제공되는 모듈입니다. 
     시그널은 프로그램 내부 또는 외부에서 발생한 이벤트를 의미하며, 
     예를 들어 Ctrl+C 키를 눌러서 프로그램을 강제 종료하는 것도 시그널 중 하나입니다.
     signal 라이브러리는 시그널 처리를 위한 다양한 함수와 상수를 제공합니다. 
@@ -1995,9 +2218,13 @@ class signal_sapmle:
     이 함수에서는 메시지를 출력하고 exit(0) 함수를 호출하여 프로그램을 종료합니다. 
     signal.signal 함수를 사용하여 SIGINT 시그널에 대한 핸들러 함수를 등록하고, 
     while 문 안에서 프로그램을 계속 실행합니다.
-    프로그램을 실행하고 Ctrl+C를 누르면 "You pressed Ctrl+C!" 메시지가 출력되며 프로그램이 종료됩니다.
+    프로그램을 실행하고 Ctrl+C를 누르면 "You pressed Ctrl+C!" 메시지가 출력되며 
+    프로그램이 종료됩니다.
      """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class json_sample:
     """ json 라이브러리는 
@@ -2047,6 +2274,9 @@ class json_sample:
     """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 class base64_sample:
     """ base64 라이브러리는 
     바이너리 데이터를 문자열 형태로 인코딩하거나, 
@@ -2091,6 +2321,9 @@ class base64_sample:
      """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 class binascii_sample:
     """ binascii 라이브러리는 
     바이너리 데이터를 다양한 인코딩 형식으로 변환하는 기능을 제공하는 
@@ -2130,6 +2363,9 @@ class binascii_sample:
     이를 다른 곳에서 사용할 때는 다시 바이너리 데이터로 디코딩해야 합니다.
     """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class quopri_sample:
     """ quopri 라이브러리는 
@@ -2175,6 +2411,9 @@ class quopri_sample:
     인코딩한 결과이므로, 이를 다른 곳에서 사용할 때는 다시 디코딩해야 합니다.
     """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class uu_sample:
     """ uu 라이브러리는 Unix to Unix 인코딩이라는 
@@ -2225,6 +2464,9 @@ class uu_sample:
     이를 다른 곳에서 사용할 때는 다시 디코딩해야 합니다.
      """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 """ html 라이브러리는 
 HTML 문서를 파싱하고 생성하기 위한 파이썬 내장 라이브러리입니다. 
@@ -2285,6 +2527,9 @@ HTML 태그들을 객체로 표현하고, 이를 이용하여 HTML 문서를 수
 새로운 HTML 문서를 생성할 수 있습니다.
 """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class xml_sample:
     """ xml.etree.ElementTree 라이브러리는 
@@ -2354,6 +2599,9 @@ class xml_sample:
     """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 def parse_sample():
     """ parse 라이브러리는 
     파이썬에서 문자열을 다룰 때 유용한 라이브러리 중 하나입니다. 
@@ -2414,6 +2662,8 @@ def parse_sample():
      """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def webbrowser_sample():
     """ webbrowser 라이브러리는 
@@ -2438,6 +2688,9 @@ def webbrowser_sample():
     이를 사용하려면 파이썬 3.6 이상의 버전이 필요합니다.
      """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def cgi_sample():
     """ cgi 라이브러리는 
@@ -2473,6 +2726,9 @@ def cgi_sample():
     HTTP 응답으로 전송합니다. 이를 통해 동적인 웹 페이지를 생성할 수 있습니다.
     """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def cgitb_sample():
     """ cgitb 라이브러리는 
@@ -2516,6 +2772,9 @@ def cgitb_sample():
      """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
 """ WSGI(Web Sever Gateway Interface)는 
 웹 서버 소프트웨어와 파이썬으로 만든 웹 응용 프로그램 간의 
 표준 인터페이스이다. 쉽게 말해 웹 서버가 클라이언트로부터 받은 요청을 
@@ -2548,6 +2807,9 @@ HTTP 응답을 생성하여 클라이언트에게 전송합니다.
 이를 통해 동적인 웹 페이지를 생성할 수 있습니다.
  """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def urllib_sample():
     """ urllib 라이브러리는 
@@ -2607,6 +2869,9 @@ def urllib_sample():
     POST 요청에 대한 응답 데이터를 읽어옵니다.
      """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 class http_client_sample:
     """ http.client는 웹 페이지를 저장하는 또 다른 방법이다. 
@@ -2673,6 +2938,8 @@ class http_client_sample:
     """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def ftplib_sample():
     """ ftplib는 
@@ -2717,6 +2984,9 @@ def ftplib_sample():
     더 복잡한 작업을 수행하려면 더 많은 코드와 로직이 필요할 수 있습니다.
     """
 
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
 def poplib_sample():
     """ poplib는 POP3 서버에 연결하여 받은 메일을 확인하는 데 사용하는 모듈.
@@ -2773,118 +3043,1164 @@ def poplib_sample():
     """
 
 
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
 
-# imaplib: 수신한 이메일을 IMAP4로 확인한다.
-# imaplib은 IMAP4 서버에 연결하여 메일을 확인할 때 사용하는 모듈.
-
-
-# nntplib: 최신 뉴스를 확인할 수 있다.
-# nntplib는 뉴스 서버에 접속하여 뉴스 그룹의 글을 조회하거나 작성할 때 사용.
-
-
-# smtplib: 이메일을 보낼 때 사용하는 모듈.
-# 파일 첨부도 가능하다.
-
-
-# telnetlib: 텔넷에 접속하여 작업 가능하다.
-# 텔넷 서버에 접속하여 클라이언트 역할로 사용하는 모듈.
+def imaplib_sample():
+    """ imaplib을 사용하면 Python에서 IMAP 프로토콜을 사용하여 
+    이메일 서버에 연결하고, 이메일 메시지를 검색, 다운로드, 삭제, 이동 등의 작업을 
+    수행할 수 있습니다. imaplib는 Python 표준 라이브러리에 포함되어 있으므로 
+    별도의 설치 없이 사용할 수 있습니다. imaplib 모듈을 사용하여 
+    IMAP 서버에 연결하고, IMAP 명령을 사용하여 이메일 메시지를 처리하는 방법은 
+    다소 복잡할 수 있습니다. 하지만 이메일 프로토콜을 다루는 상위 수준의 라이브러리인 
+    imapclient, pyzmail 등도 제공되므로, 필요에 따라 이러한 라이브러리를 
+    사용할 수도 있습니다.
+    """
 
 
-# uuid: 고유한 식별자
-# 네트워크상에서 중복되지 않는 고유한 식별자인 UUID를 생성할 때 사용.
-""" UUID(Universally Unique IDentifier)는 
-네트워크상에서 고유성을 보장하는 ID를 만들기 위한 표준 규약이다. 
-UUID는 다음과 같이 32개의 16진수로 구성되며 5개의 그룹으로 표시 되고 
-각 그룹은 붙임표(-)로 구분한다. """
-# 280a8a4d-a27f-4d01-b031-2a003cc4c039
-""" 적어도 서기 3400년까지는 같은 UUID가 생성될 수 없다고 한다. 
-이러한 이유로 UUID를 데이터베이스의 프라이버리 키로 종종 사용한다. """
+    # IMAP 서버 정보 입력
+    IMAP_SERVER = 'imap.example.com'
+    IMAP_PORT = 993
+    EMAIL_ACCOUNT = 'user@example.com'
+    EMAIL_PASSWORD = 'password'
 
 
-# socketserver: 서버와 통신하는 게임을 만들 수 있다.
-# 다양한 형태의 소켓 서버를 쉽게 구현하고자 할 때 사용하는 모듈.
+    # IMAP 서버에 연결
+    imap_server = imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT)
+    imap_server.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
 
 
-# http.server: 테스트용 HTTP 서버를 만들 수 있다.
-# 테스트 등의 용도로 사용할 간단한 HTTP 서버를 구현하고자 사용.
+    # INBOX에서 최신 10개의 이메일 메시지 검색
+    imap_server.select('INBOX')
+    response, message_nums = imap_server.search(None, 'ALL')
+    message_nums = message_nums[0].split()[-10:]
 
 
-# xmlrpc
-# xmlrpc는 HTTP를 통한 간단하고 이식성 높은 원격 프로시저 호출 방법이다.
-""" 2대의 컴퓨터 A, B가 있다. A 컴퓨터는 인터넷에 연결되었지만, 
-B 컴퓨터는 인터넷에 연결 되지 않았다고 한다. 하지만, 
-2대의 컴퓨터는 내부 네트워크로 연결되어 있어서 
-A 컴퓨터와 B 컴퓨터 간의 통신은 가능하다고 한다. 이때 A 컴퓨터를 이용하여 
-B 컴퓨터의 위키독스 특정 페이지 내용을 얻어 올 수 있다. """
+    # 각 이메일 메시지 내용 출력
+    for num in message_nums:
+        response, msg = imap_server.fetch(num, '(RFC822)')
+        print(msg[0][1])
 
 
-# imghdr: 어떤 유형의 이미지 파일인지를 판단할 수 있다.
-""" >>> imghdr.what('C:/folder/file.png')
-'png'
+    # IMAP 서버와의 연결 종료
+    imap_server.close()
+    imap_server.logout()
+
+
+    """ 이 예제에서는 IMAP 서버의 주소와 포트, 사용자 계정 정보를 입력하고, 
+    IMAP4_SSL 메서드를 사용하여 IMAP 서버에 SSL 연결을 설정합니다. 
+    그리고 login 메서드를 사용하여 IMAP 서버에 로그인합니다.
+    이어서 select 메서드를 사용하여 INBOX 폴더를 선택하고, 
+    search 메서드를 사용하여 최신 10개의 이메일 메시지를 검색합니다. 
+    이메일 메시지의 번호는 message_nums에 저장됩니다.
+    마지막으로 fetch 메서드를 사용하여 각 이메일 메시지의 내용을 가져오고, 
+    print 함수를 사용하여 출력합니다. 
+    마지막으로 close 메서드와 logout 메서드를 사용하여 IMAP 서버와의 연결을 종료합니다.
+    """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+def nntplib_sample():
+    """ nntplib 라이브러리는 
+    Python에서 NNTP(Usenet 뉴스 그룹) 프로토콜을 다루기 위한 라이브러리입니다.
+    nntplib를 사용하면 Python에서 NNTP 서버와 연결하여 Usenet 뉴스 그룹에 대한 정보를 
+    가져오거나 게시물을 작성, 수정, 삭제하는 등의 작업을 수행할 수 있습니다.
+    nntplib 모듈은 Python 표준 라이브러리에 포함되어 있으므로 
+    별도의 설치 없이 사용할 수 있습니다. 아래는 nntplib를 사용하여 
+    NNTP 서버에 연결하고, Usenet 뉴스 그룹에서 최신 게시물을 가져오는 간단한 예제입니다.
+    """
+
+
+    # NNTP 서버 정보 입력
+    NNTP_SERVER = 'news.example.com'
+    NNTP_PORT = 119
+    NNTP_GROUP = 'comp.lang.python'
+
+
+    # NNTP 서버에 연결
+    nntp_server = nntplib.NNTP(NNTP_SERVER, NNTP_PORT)
+
+
+    # Usenet 뉴스 그룹 선택
+    (narticles, first, last, name) = nntp_server.group(NNTP_GROUP)
+
+
+    # 최신 게시물 가져오기
+    resp, items = nntp_server.xover(last-10, last)
+    for id, subject, author, date, message_id, references, size, lines in items:
+        print(f'Subject: {subject}')
+        print(f'Author: {author}')
+        print(f'Date: {date}')
+
+
+    # NNTP 서버와의 연결 종료
+    nntp_server.quit()
+
+
+    """ 이 예제에서는 NNTP 서버의 주소와 포트, Usenet 뉴스 그룹의 이름을 입력하고, 
+    NNTP 클래스를 사용하여 NNTP 서버에 연결합니다. group 메서드를 사용하여 
+    Usenet 뉴스 그룹을 선택하고, xover 메서드를 사용하여 최신 게시물을 가져옵니다. 
+    각 게시물의 제목, 작성자, 작성일 등의 정보를 출력합니다.
+    마지막으로 quit 메서드를 사용하여 NNTP 서버와의 연결을 종료합니다.
+     """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+def smtplib_sample():
+    """ smtplib 라이브러리는 
+    Python에서 SMTP(Simple Mail Transfer Protocol) 프로토콜을 
+    다루기 위한 라이브러리입니다. smtplib를 사용하면 
+    Python에서 SMTP 서버와 연결하여 이메일을 보내는 등의 작업을 수행할 수 있습니다.
+    참고로 파일 첨부 기능도 있습니다.
+    smtplib 모듈은 Python 표준 라이브러리에 포함되어 있으므로 
+    별도의 설치 없이 사용할 수 있습니다. 아래는 smtplib를 사용하여 
+    Gmail SMTP 서버를 통해 이메일을 보내는 간단한 예제입니다.
+    """
+
+
+    # Gmail SMTP 서버 정보 입력
+    SMTP_SERVER = 'smtp.gmail.com'
+    SMTP_PORT = 587
+    EMAIL_ACCOUNT = 'user@gmail.com'
+    EMAIL_PASSWORD = 'password'
+
+
+    # 이메일 정보 입력
+    FROM_EMAIL_ADDRESS = 'user@gmail.com'
+    TO_EMAIL_ADDRESS = 'recipient@example.com'
+    EMAIL_SUBJECT = 'Test Email'
+    EMAIL_CONTENT = 'This is a test email sent using Python!'
+
+
+    # 이메일 메시지 생성
+    message = MIMEMultipart()
+    message['From'] = FROM_EMAIL_ADDRESS
+    message['To'] = TO_EMAIL_ADDRESS
+    message['Subject'] = EMAIL_SUBJECT
+    message.attach(MIMEText(EMAIL_CONTENT, 'plain'))
+
+
+    # SMTP 서버에 연결
+    smtp_server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
+    smtp_server.starttls()
+    smtp_server.login(EMAIL_ACCOUNT, EMAIL_PASSWORD)
+
+
+    # 이메일 보내기
+    smtp_server.sendmail(FROM_EMAIL_ADDRESS, TO_EMAIL_ADDRESS, message.as_string())
+
+
+    # SMTP 서버와의 연결 종료
+    smtp_server.quit()
+
+
+    """ 이 예제에서는 Gmail SMTP 서버의 주소와 포트, 사용자 계정 정보를 입력하고, 
+    SMTP 클래스를 사용하여 SMTP 서버에 연결합니다. 이메일의 송신자, 수신자, 제목, 
+    내용을 입력하고, MIMEText 클래스와 MIMEMultipart 클래스를 사용하여 
+    이메일 메시지를 생성합니다. starttls 메서드를 사용하여 
+    TLS 암호화를 활성화하고, login 메서드를 사용하여 SMTP 서버에 로그인합니다.
+    이메일을 보내기 위해 sendmail 메서드를 사용하여 
+    이메일 메시지를 SMTP 서버에 보냅니다. 마지막으로 quit 메서드를 사용하여 
+    SMTP 서버와의 연결을 종료합니다.
+    """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+def telnetlib_sample():
+    """ telnetlib 라이브러리는 
+    Python에서 Telnet 프로토콜을 다루기 위한 라이브러리입니다.
+    Telnet 프로토콜은 네트워크 상의 원격 호스트에 접속하여 명령어를 입력하고, 
+    출력 결과를 받아오는 프로토콜입니다. telnetlib 라이브러리는 
+    Telnet 프로토콜을 사용하여 원격 호스트에 접속하고, 
+    명령어를 전송하고, 결과를 수신하는 작업을 수행할 수 있습니다.
+    아래는 telnetlib를 사용하여 Telnet 서버에 접속하고, 
+    명령어를 전송하여 결과를 출력하는 예제입니다.
+    """
+
+
+    # Telnet 서버 정보 입력
+    HOST = 'localhost'
+    PORT = 23
+    USER = 'username'
+    PASSWORD = 'password'
+
+
+    # Telnet 서버에 접속
+    tn = telnetlib.Telnet(HOST, PORT)
+
+
+    # 사용자 이름과 비밀번호 입력
+    tn.read_until(b'login: ')
+    tn.write(USER.encode('ascii') + b'\n')
+    tn.read_until(b'Password: ')
+    tn.write(PASSWORD.encode('ascii') + b'\n')
+
+
+    # 명령어 전송 및 결과 출력
+    tn.write(b'ls -al\n')
+    print(tn.read_all().decode('ascii'))
+
+
+    # Telnet 서버와의 연결 종료
+    tn.close()
+
+
+    """ 이 예제에서는 telnetlib 모듈을 사용하여 Telnet 클래스를 생성하고, 
+    Telnet 클래스의 open 메서드를 사용하여 Telnet 서버에 연결합니다. 
+    read_until 메서드를 사용하여 Telnet 서버로부터 메시지를 수신하고, 
+    write 메서드를 사용하여 명령어를 전송합니다. 마지막으로 read_all 메서드를 사용하여 
+    Telnet 서버에서 출력한 결과를 수신하고, close 메서드를 사용하여 
+    Telnet 서버와의 연결을 종료합니다.
+    Telnet 서버에 접속하여 명령어를 전송하는 예제 외에도, 
+    telnetlib를 사용하여 Telnet 서버에서 출력한 결과를 분석하고, 
+    원하는 정보를 추출하는 작업 등을 수행할 수 있습니다.
+    """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+def uuid_sample():
+    """ uuid 라이브러리는 
+    UUID(Universally Unique Identifier)를 생성하기 위한 Python 표준 라이브러리입니다. 
+    네트워크상에서 고유성을 보장하는 ID를 만들기 위한 표준 규약이기도 합니다.
+    UUID는 범용 고유 식별자로, 중복될 가능성이 매우 적은 128비트 숫자입니다.
+    UUID는 다음과 같이 32개의 16진수로 구성되며 5개의 그룹으로 표시 되고 
+    각 그룹은 붙임표(-)로 구분한다.
+    >>> 280a8a4d-a27f-4d01-b031-2a003cc4c039
+
+
+    UUID는 일반적으로 컴퓨터 시스템에서 객체를 고유하게 식별하기 위해 사용됩니다. 
+    적어도 서기 3400년까지는 같은 UUID가 생성될 수 없다고 합니다.
+    이러한 이유로 UUID를 데이터베이스의 프라이버리 키로 종종 사용 합니다.
+    예를 들어, 데이터베이스 레코드를 고유하게 식별하기 위해 사용될 수 있습니다.
+    uuid 라이브러리에서 제공하는 주요 함수는 다음과 같습니다.
+
+
+    1. uuid.uuid1(): 
+    - 랜덤하지 않은 UUID를 생성합니다. 
+    - 현재 시간, 컴퓨터 MAC 주소 등을 이용하여 생성합니다.
+    2. uuid.uuid3(namespace, name): 
+    - 네임스페이스와 이름을 이용하여 UUID를 생성합니다. 
+    - 이름을 해시하여 UUID를 생성합니다.
+    3. uuid.uuid4(): 
+    - 랜덤한 UUID를 생성합니다.
+    4. uuid.uuid5(namespace, name): 
+    - 네임스페이스와 이름을 이용하여 UUID를 생성합니다. 
+    - 이름을 해시하여 UUID를 생성합니다.
+
+
+    아래는 uuid 라이브러리를 사용하여 UUID를 생성하는 예제입니다.
+    """
+
+
+    # 랜덤한 UUID 생성
+    uuid1 = uuid.uuid4()
+    print(uuid1)
+
+
+    # 이름과 네임스페이스를 이용한 UUID 생성
+    uuid2 = uuid.uuid3(uuid.NAMESPACE_DNS, 'example.com')
+    print(uuid2)
+
+
+    # 이름과 네임스페이스를 이용한 UUID 생성
+    uuid3 = uuid.uuid5(uuid.NAMESPACE_DNS, 'example.com')
+    print(uuid3)
+
+
+    """ 이 예제에서는 uuid 모듈을 사용하여 
+    uuid1, uuid2, uuid3 변수에 UUID를 생성하고, 출력합니다. 
+    uuid4 함수는 랜덤한 UUID를 생성하고, uuid3 함수와 uuid5 함수는 
+    네임스페이스와 이름을 이용하여 UUID를 생성합니다.
+    """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+""" socketserver 라이브러리는 
+소켓 서버를 구현하기 위한 Python 표준 라이브러리입니다. 
+socketserver는 네트워크 서버를 만들 때 반복적인 부분을 자동으로 처리해주므로, 
+개발자가 쉽고 빠르게 소켓 서버를 구현할 수 있습니다.
+socketserver 라이브러리에서 제공하는 주요 클래스는 다음과 같습니다.
+
+
+1. socketserver.TCPServer: 
+ - TCP 프로토콜을 사용하는 소켓 서버를 구현하는데 사용됩니다.
+2. socketserver.UDPServer: 
+ - UDP 프로토콜을 사용하는 소켓 서버를 구현하는데 사용됩니다.
+3. socketserver.ThreadingMixIn: 
+ - 멀티스레딩 서버를 구현하는데 사용됩니다. TCPServer나 UDPServer와 함께 사용됩니다.
+4. socketserver.BaseRequestHandler: 
+ - 요청을 처리하는 핸들러 클래스를 구현하는데 사용됩니다. 
+ - 요청이 들어오면, handle() 메서드가 자동으로 호출됩니다.
+
+
+아래는 socketserver 라이브러리를 사용하여 간단한 에코 서버를 구현하는 예제입니다.
  """
 
 
-# turtle: 터틀 그래픽으로 그림을 그린다.
-""" turtle은 아이들에게 프로그래밍을 소개할 때 자주 사용하는 도구로, 
-1967년 월리 푸르지그, 시모어 페이퍼트, 신시아 솔로몬이 개발한 
-로고 프로그래밍 언어의 일부이다. """
+class EchoHandler(socketserver.BaseRequestHandler):
+    """ 이 예제에서는 socketserver 모듈을 사용하여 
+    EchoHandler 클래스를 정의하고, TCPServer 클래스를 사용하여 서버를 만듭니다. 
+    EchoHandler 클래스는 요청을 처리하는 handle() 메서드를 구현하고, 
+    수신한 데이터를 그대로 클라이언트에게 전송합니다. TCPServer 클래스는 
+    8000번 포트에서 요청을 받고, EchoHandler 클래스를 사용하여 요청을 처리합니다. 
+    serve_forever() 메서드를 호출하여 서버를 실행합니다.
+    """
 
 
-# cmd: cmd는 사용자에게 익숙한 명령행 프로그램 작성을 돕는다.
+    def handle(self):
+        # 클라이언트로부터 데이터를 수신합니다.
+        data = self.request.recv(1024).strip()
+        # 수신한 데이터를 그대로 클라이언트에게 전송합니다.
+        self.request.sendall(data)
 
 
-# shlex: 문장 분석
-# 인용이나 강조를 포함한 문장을 분석할 때 사용.
-""" >>> shlex.split('this is "a test"', posix=False)
-['this', 'is', '"a test"']
+if __name__ == '__main__':
+    # 에코 서버를 8000번 포트에서 실행합니다.
+    with socketserver.TCPServer(('localhost', 8000), EchoHandler) as server:
+        server.serve_forever()
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+def http_sever_sample():
+    """ http.server 라이브러리는 
+    Python 표준 라이브러리 중 하나로, 간단한 HTTP 웹 서버를 만들 수 있도록 도와줍니다. 
+    이 라이브러리는 HTTP 요청을 처리하고, 정적 파일을 제공하며, 
+    CGI 프로그램을 실행하는 기능을 제공합니다.
+    보통, 테스트 등의 용도로 사용할 간단한 HTTP 서버를 구현하고자 사용 합니다.
+    http.server 라이브러리에서 제공하는 클래스는 다음과 같습니다.
+
+
+    1. http.server.HTTPServer: 
+    - HTTP 프로토콜을 사용하는 웹 서버를 만드는데 사용됩니다.
+    2. http.server.BaseHTTPRequestHandler: 
+    - HTTP 요청을 처리하는 핸들러 클래스를 구현하는데 사용됩니다. 
+    - 요청이 들어오면, do_GET() 메서드나 do_POST() 메서드 등이 자동으로 호출됩니다.
+    3. http.server.SimpleHTTPRequestHandler: 
+    - 정적 파일을 서비스하는 핸들러 클래스를 구현하는데 사용됩니다. 
+    - BaseHTTPRequestHandler를 상속받습니다.
+
+
+    아래는 http.server 라이브러리를 사용하여 간단한 정적 파일 서버를 구현하는 예제입니다.
+    """
+
+
+    PORT = 8000
+    Handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("", PORT), Handler) as httpd:
+        print(f"Serving at port {PORT}")
+        httpd.serve_forever()
+
+
+    """ 이 예제에서는 http.server 모듈을 사용하여 
+    SimpleHTTPRequestHandler 클래스를 정의하고, 
+    TCPServer 클래스를 사용하여 서버를 만듭니다. 
+    SimpleHTTPRequestHandler 클래스는 정적 파일을 제공하는데 사용됩니다. 
+    TCPServer 클래스는 8000번 포트에서 요청을 받고, 
+    SimpleHTTPRequestHandler 클래스를 사용하여 요청을 처리합니다. 
+    serve_forever() 메서드를 호출하여 서버를 실행합니다.
+    이 예제를 실행하면, 현재 디렉토리의 파일들을 웹 서버로 제공하는 간단한 
+    정적 파일 서버가 실행됩니다. 웹 브라우저에서 http://localhost:8000에 접속하여 
+    서버가 정상적으로 동작하는지 확인할 수 있습니다.
+    """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+class xmlrpc_server_sample:
+    """ xmlrpc는 
+    HTTP를 통한 간단하고 이식성 높은 원격 프로시저 호출 방법입니다.
+
+
+    2대의 컴퓨터 A, B가 있다. A 컴퓨터는 인터넷에 연결되었지만, 
+    B 컴퓨터는 인터넷에 연결 되지 않았다고 한다. 하지만, 
+    2대의 컴퓨터는 내부 네트워크로 연결되어 있어서 
+    A 컴퓨터와 B 컴퓨터 간의 통신은 가능하다고 한다. 이때 A 컴퓨터를 이용하여 
+    B 컴퓨터의 위키독스 특정 페이지 내용을 얻어 올 수 있다.
+
+
+    xmlrpc 라이브러리는 XML-RPC 프로토콜을 구현하는 파이썬 표준 라이브러리입니다. 
+    XML-RPC는 HTTP와 XML을 이용하여 원격 프로시저 호출(RPC)을 지원하는 프로토콜로, 
+    서버와 클라이언트 간의 상호작용을 가능하게 해줍니다.
+    xmlrpc 라이브러리에서 제공하는 주요 클래스는 다음과 같습니다.
+
+
+    1. xmlrpc.client.ServerProxy: 
+    - XML-RPC 서버에 접속하는데 사용됩니다. 
+    - 서버의 주소(URL)를 지정하여 객체를 생성하고, 서버의 메서드를 호출할 수 있습니다.
+    2. xmlrpc.server.SimpleXMLRPCServer: 
+    - XML-RPC 서버를 구현하는데 사용됩니다. 
+    - BaseHTTPServer 모듈을 기반으로 하며, 
+    - XML-RPC 메서드를 등록하고 서버를 시작할 수 있습니다.
+    3. xmlrpc.server.SimpleXMLRPCRequestHandler: 
+    - XML-RPC 서버의 요청을 처리하는데 사용됩니다. 
+    - BaseHTTPRequestHandler 클래스를 상속받으며, 
+    - 요청이 들어오면 자동으로 do_POST() 메서드가 호출됩니다.
+
+
+    아래는 xmlrpc 라이브러리를 사용하여 간단한 XML-RPC 서버를 구현하는 예제입니다.
+    """
+
+
+    # 서버 객체 생성
+    server = SimpleXMLRPCServer(
+        ('localhost', 8000), 
+        requestHandler=SimpleXMLRPCRequestHandler
+        )
+
+
+    # 함수 등록
+    def add(x, y):
+        return x + y
+
+
+    server.register_function(add, 'add')
+
+
+    # 서버 시작
+    print('Starting XML-RPC server...')
+    server.serve_forever()
+
+
+    """ 이 예제에서는 SimpleXMLRPCServer 클래스를 사용하여 
+    localhost:8000에 서비스를 등록합니다. register_function() 메서드를 사용하여 
+    add() 함수를 등록합니다. 클라이언트에서 add() 메서드를 호출하면, 
+    서버에서 등록된 add() 함수가 호출되어 결과를 반환합니다.
+    XML-RPC 서버를 실행한 후, 클라이언트에서 다음과 같은 코드를 실행하여 
+    서버의 add() 함수를 호출할 수 있습니다.
+    """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+def xmlrpc_client_sample():
+    """ 이 예제에서는 ServerProxy 클래스를 사용하여 서버에 접속합니다. 
+    add() 메서드를 호출하고 결과를 출력합니다. 클라이언트는 서버의 
+    add() 함수를 호출하여 결과를 받아옵니다.
+    """
+
+    # 서버 객체 생성
+    proxy = xmlrpc.client.ServerProxy('http://localhost:8000')
+
+
+    # 함수 호출
+    result = proxy.add(4, 5)
+    print(f'Result: {result}')
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+def imghdr_sample():
+    """ imghdr 라이브러리는 
+    이미지 파일의 형식을 검사하는 파이썬 표준 라이브러리입니다. 
+    이 라이브러리를 사용하면 이미지 파일의 확장자가 없는 경우에도 
+    파일 내용으로부터 이미지 파일의 형식을 식별할 수 있습니다.
+    imghdr 라이브러리에서 제공하는 함수는 다음과 같습니다.
+
+
+    imghdr.what(filename[, h]): 
+    지정된 파일이 어떤 이미지 형식인지를 검사하여, 해당 형식의 확장자를 반환합니다. 
+    만약 파일의 확장자가 없는 경우에는, 파일 내용으로부터 이미지 파일의 형식을 식별합니다. 
+    h 매개변수는 파일의 첫 번째 바이트를 전달합니다. 이 값을 지정하지 않은 경우에는, 
+    what() 함수가 파일의 내용의 일부를 읽어 이 값을 추정합니다. 
+    만약 파일이 이미지 파일이 아닌 경우에는 None을 반환합니다.
+    아래는 imghdr 라이브러리를 사용하여 이미지 파일의 형식을 검사하는 예제입니다.
+    """
+
+
+    # 이미지 파일 경로
+    filename = 'example.jpg'
+
+
+    # 이미지 파일 형식 검사
+    format = imghdr.what(filename)
+
+
+    if format:
+        print(f'The image file format is {format}.')
+    else:
+        print('The file is not an image file.')
+
+
+    """ 이 예제에서는 imghdr.what() 함수를 사용하여 이미지 파일의 형식을 검사합니다. 
+    filename 변수에 검사할 이미지 파일의 경로를 지정합니다. 
+    what() 함수가 반환한 값이 None이 아닌 경우에는, 
+    해당 이미지 파일의 형식을 출력합니다. 그렇지 않은 경우에는, 
+    해당 파일이 이미지 파일이 아니라는 메시지를 출력합니다.
+    """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+def turtle_sample():
+    """ turtle은 
+
+    turtle 라이브러리는 그래픽을 그리기 위한 파이썬 표준 라이브러리입니다. 
+    turtle 모듈은 거북이 그래픽을 그리는 함수와 메소드를 제공하여, 
+    아이들에게 프로그래밍을 소개할 때 자주 사용하는 도구로, 
+    1967년 월리 푸르지그, 시모어 페이퍼트, 신시아 솔로몬이 개발한 
+    로고 프로그래밍 언어의 일부입니다.
+    turtle 라이브러리에서 제공하는 함수와 메소드는 다음과 같습니다.
+
+
+    turtle.forward(distance): 거북이를 현재 방향으로 distance 만큼 전진시킵니다.
+    turtle.backward(distance): 거북이를 현재 방향으로 distance 만큼 후진시킵니다.
+    turtle.right(angle): 거북이를 현재 위치에서 오른쪽으로 angle 만큼 회전시킵니다.
+    turtle.left(angle): 거북이를 현재 위치에서 왼쪽으로 angle 만큼 회전시킵니다.
+    turtle.penup(): 거북이의 펜을 올려서 이동할 때 선을 그리지 않도록 합니다.
+    turtle.pendown(): 거북이의 펜을 내려서 이동할 때 선을 그리도록 합니다.
+    turtle.pencolor(color): 거북이의 펜 색상을 color로 설정합니다.
+    turtle.fillcolor(color): 다각형을 그릴 때 채움 색상을 color로 설정합니다.
+    turtle.begin_fill(): 다각형을 그릴 때 채움 모드를 시작합니다.
+    turtle.end_fill(): 다각형을 그릴 때 채움 모드를 종료합니다.
+
+
+    아래는 turtle 라이브러리를 사용하여 거북이 그래픽을 그리는 예제입니다.
+    """
+
+
+    # 거북이 그래픽 생성
+    t = turtle.Turtle()
+
+
+    # 거북이 이동과 그래픽 그리기
+    t.forward(100)
+    t.right(90)
+    t.forward(100)
+    t.right(90)
+    t.forward(100)
+    t.right(90)
+    t.forward(100)
+
+
+    # 그래픽 채우기
+    t.fillcolor('yellow')
+    t.begin_fill()
+    t.right(90)
+    t.forward(100)
+    t.right(90)
+    t.forward(100)
+    t.right(90)
+    t.forward(100)
+    t.right(90)
+    t.forward(100)
+    t.end_fill()
+
+
+    # 윈도우 유지
+    turtle.done()
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+class MyCmd(cmd.Cmd):
+    """ cmd 모듈은 
+    콘솔에서 명령어 인터페이스를 구현하는 데 사용할 수 있는 파이썬 표준 라이브러리입니다. 
+    이 모듈을 사용하면 명령 프롬프트와 유사한 인터페이스를 생성하여 
+    사용자가 쉽게 명령어를 입력하고 실행할 수 있습니다.
+    cmd 모듈에서 제공하는 클래스와 메서드는 다음과 같습니다.
+
+
+    1. cmd.Cmd: 
+    - 이 클래스는 콘솔 명령어 인터페이스를 구현하는 데 사용됩니다. 
+    - 이 클래스를 상속하여 명령어 인터페이스를 만들 수 있습니다.
+    2. cmd.Cmd.cmdloop(intro=None): 
+    - 이 메서드는 명령어 루프를 시작합니다. 
+    - 사용자가 명령을 입력할 때마다 이 메서드는 명령어를 읽고 실행합니다.
+    3. cmd.Cmd.do_quit(arg): 
+    - 이 메서드는 quit 명령을 처리합니다. 
+    - 이 메서드를 오버라이드하여 quit 명령을 처리할 수 있습니다.
+    4. cmd.Cmd.default(line): 
+    - 이 메서드는 사용자가 입력한 명령을 처리하지 못할 때 호출됩니다. 
+    - 이 메서드를 오버라이드하여 사용자 정의 동작을 구현할 수 있습니다.
+
+
+    아래는 cmd 모듈을 사용하여 간단한 명령어 인터페이스를 만드는 예제입니다.
+    """
+
+
+    prompt = '>>> '
+
+
+    def do_hello(self, arg):
+        """인사를 합니다"""
+        print('Hello, %s!' % arg)
+
+
+    def do_quit(self, arg):
+        """종료합니다"""
+        return True
+
+
+if __name__ == '__main__':
+    MyCmd().cmdloop()
+
+
+""" 이 예제에서는 cmd.Cmd 클래스를 상속하여 MyCmd 클래스를 정의합니다. 
+prompt 속성을 설정하여 명령어 입력 대기 상태에서 표시될 문자열을 지정합니다. 
+do_hello 메서드를 정의하여 hello 명령을 처리하도록 합니다. 
+do_quit 메서드를 정의하여 quit 명령을 처리하고, 
+이 메서드에서 True를 반환하여 명령어 루프를 종료합니다.
+MyCmd().cmdloop() 코드는 MyCmd 클래스의 인스턴스를 만들고, 
+cmdloop 메서드를 호출하여 명령어 루프를 시작합니다. 
+사용자가 hello 명령을 입력하면 do_hello 메서드가 호출되어 
+사용자 입력에 따른 동작을 실행합니다. 사용자가 quit 명령을 입력하면 
+do_quit 메서드가 호출되어 명령어 루프를 종료합니다.
  """
 
 
-# tkinter
-# 파이썬에서 Tcl/Tk 툴킷을 사용하는 데 필요한 인터페이스 모듈.
-# Tcl은 파이썬과 같은 스크립트 언어이고, Tk는 Tcl을 위한 GUI 툴킷이다.
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+def shlex_sample():
+    """ shlex 라이브러리는 
+    인용이나 강조를 포함한 문장을 분석할 때 사용 합니다. 또, 
+    쉘 명령어 구문을 분석하기 위한 파이썬 표준 라이브러리입니다. 
+    >>> shlex.split('this is "a test"', posix=False)
+    >>> ['this', 'is', '"a test"']
 
 
-# unittest: 작성한 코드를 단위 테스트할 때 사용.
+    이 모듈을 사용하여 문자열에서 쉘 명령어를 파싱하고, 명령어와 인수를 분리할 수 있습니다.
+    shlex 모듈에서 제공하는 클래스와 함수는 다음과 같습니다.
 
 
-# doctest
-# 독스트링을(docstring)을 활용하여 예제를 간단하게 테스트하고자 사용.
+    1. shlex.shlex([stream[, comment_char]]): 
+    - 이 클래스는 입력 스트림에서 단어를 읽어 적절하게 분리합니다. 
+    - 입력 스트림은 문자열, 파일 객체 또는 이터러블 객체일 수 있습니다. 
+    - comment_char는 주석 문자를 지정하는데 사용됩니다.
+    2. shlex.split(s, comments=False, posix=True): 
+    - 이 함수는 문자열 s를 분리하여 단어 목록을 반환합니다. 
+    - comments 매개변수를 True로 설정하면 주석을 유효한 단어로 처리합니다. 
+    - posix 매개변수를 False로 설정하면 cmd.exe와 같은 비 POSIX 쉘에서 사용되는 
+    - Windows 스타일 명령어를 파싱할 수 있습니다.
+    3. shlex.quote(s): 
+    - 이 함수는 문자열 s를 쉘에서 인용할 수 있는 형태로 변환합니다.
 
 
-# timeit
-""" 함수의 실행 시간을 측정할 때 유용한 모듈.
+    아래는 shlex 모듈을 사용하여 문자열에서 쉘 명령어를 파싱하는 예제입니다.
+    """
+
+
+    cmd_str = 'echo "Hello, world!"'
+    lexer = shlex.shlex(cmd_str)
+    lexer.whitespace_split = True
+    tokens = list(lexer)
+    print(tokens)
+
+
+    """ 이 예제에서는 shlex 모듈을 사용하여 cmd_str 문자열을 분리합니다. 
+    shlex.shlex() 함수를 사용하여 입력 스트림을 생성하고, 
+    whitespace_split 속성을 True로 설정하여 입력 스트림에서 
+    공백으로 구분된 단어를 사용합니다. shlex.shlex() 함수를 호출한 결과는 
+    이터러블 객체이므로, list() 함수를 사용하여 단어 목록을 생성합니다. 
+    이렇게 생성된 tokens 목록은 echo와 "Hello, world!" 두 개의 단어를 포함합니다.
+    """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+def tkinter_sample():
+    """ tkinter는 
+    파이썬에서 GUI(Graphical User Interface)를 개발하기 위한 표준 라이브러리입니다. 
+    Tkinter는 Tcl/Tk GUI 프레임워크를 기반으로 하며, 
+    Tcl은 파이썬과 같은 스크립트 언어이고, Tk는 Tcl을 위한 GUI 툴킷 입니다.
+    사용하기 쉽고 크로스 플랫폼 (GUI 어플리케이션을 윈도우, 맥, 리눅스 등 
+    다양한 운영체제에서 동작 가능)을 지원합니다.
+    Tkinter를 사용하여 윈도우 창, 레이블, 버튼, 텍스트 박스, 체크박스, 라디오 버튼 등 
+    다양한 위젯(widget)을 생성할 수 있습니다. 또한, 
+    다양한 이벤트에 대해 이벤트 핸들러를 등록하여 GUI 어플리케이션을 작성할 수 있습니다.
+    아래는 Tkinter를 사용하여 간단한 윈도우 창을 생성하는 예제 코드입니다.
+    """
+
+
+    window = tk.Tk()  # 윈도우 창 생성
+    window.title("My First GUI Program")  # 윈도우 창 제목 설정
+    window.geometry("300x200")  # 윈도우 창 크기 설정
+    label = tk.Label(window, text="Hello, Tkinter!")  # 레이블 위젯 생성
+    label.pack(pady=20)  # 레이블 위젯 배치
+    button = tk.Button(window, text="Click me!")  # 버튼 위젯 생성
+    button.pack()  # 버튼 위젯 배치
+    window.mainloop()  # 윈도우 창 루프 실행
+
+
+    """ 이 예제에서는 tkinter 모듈을 tk 별칭으로 임포트합니다. 
+    tk.Tk() 함수를 사용하여 윈도우 창 객체를 생성하고, 
+    window.title() 메서드를 사용하여 윈도우 창 제목을 설정합니다. 
+    window.geometry() 메서드를 사용하여 윈도우 창의 크기를 설정합니다.
+    tk.Label() 함수를 사용하여 레이블 위젯 객체를 생성하고, 
+    label.pack() 메서드를 사용하여 레이블 위젯을 윈도우 창에 배치합니다.
+    tk.Button() 함수를 사용하여 버튼 위젯 객체를 생성하고, 
+    button.pack() 메서드를 사용하여 버튼 위젯을 윈도우 창에 배치합니다.
+    마지막으로, window.mainloop() 메서드를 사용하여 윈도우 창 루프를 실행합니다. 
+    윈도우 창 루프를 실행해야만 윈도우 창이 화면에 나타나고, 
+    사용자 입력을 받을 수 있습니다.
+    """
+
+
+""" unittest 라이브러리는 
+파이썬에서 단위 테스트(unit test)를 작성하고 실행하기 위한 표준 라이브러리입니다. 
+단위 테스트란 소스 코드의 각 함수, 메소드, 클래스 등의 개별적인 단위가 
+예상대로 동작하는지 검증하는 것을 말합니다.
+unittest 라이브러리는 unittest.TestCase 클래스를 상속받아 
+테스트 케이스 클래스를 작성하고, 테스트 메소드를 작성하여 테스트를 수행합니다. 
+각 테스트 메소드는 테스트할 코드를 호출하고, assert 문을 사용하여 
+예상 결과값과 실제 결과값이 일치하는지 검증합니다.
+아래는 unittest 라이브러리를 사용하여 테스트 케이스 클래스를 작성하는 예제입니다.
+ """
+
+
+def add(a, b):
+    return a + b
+
+class TestAdd(unittest.TestCase):
+    def test_add(self):
+        self.assertEqual(add(2, 3), 5)
+        self.assertEqual(add(-1, 1), 0)
+
+
+""" 이 예제에서는 unittest 모듈을 임포트하고, add() 함수를 정의합니다. 
+그리고 unittest.TestCase 클래스를 상속받아 TestAdd 클래스를 정의합니다.
+TestAdd 클래스에는 test_add() 메소드가 있으며, 
+이 메소드는 add() 함수를 호출하고 assertEqual() 메소드를 사용하여 
+예상 결과값과 실제 결과값이 일치하는지 검증합니다. 
+위 예제에서는 test_add() 메소드에서 두 개의 테스트를 수행하고 있습니다.
+테스트 케이스 클래스를 작성한 후에는 
+unittest.main() 함수를 호출하여 테스트를 실행합니다. 
+이 함수는 테스트 케이스 클래스에 정의된 모든 테스트 메소드를 실행하고, 
+테스트 결과를 콘솔에 출력합니다.
+
+
+아래는 unittest.main() 함수를 호출하여 
+위에서 작성한 테스트 케이스 클래스를 실행하는 예제 코드입니다.
+ """
+
+
+if __name__ == '__main__':
+    unittest.main()
+
+
+""" 실행 결과는 아래와 같습니다.
+>>> ..
+>>> ----------------------------------------------------------------------
+>>> Ran 2 tests in 0.000s
+>>> OK
+
+
+위 결과에서 .는 각 테스트가 성공한 것을 의미합니다. 
+Ran 2 tests in 0.000s는 총 2개의 테스트를 실행하고, 
+실행 시간이 0초라는 것을 의미합니다. 
+OK는 모든 테스트가 성공한 것을 의미합니다.
+ """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+""" doctest 라이브러리는 
+파이썬에서 모듈의 예제 코드를 실행하고 결과를 검증하여 문서화하는 기능을 제공합니다. 
+이를 통해 문서화와 단위 테스트를 한 번에 수행할 수 있으며, 
+문서화된 예제 코드가 실제로 동작하는지 확인할 수 있습니다.
+doctest 모듈은 모듈 내의 문자열에서 예제 코드를 추출하고, 
+파이썬 인터프리터를 사용하여 실행합니다. 실행 결과와 예상 결과를 비교하여 
+일치하지 않는 경우 오류 메시지를 출력합니다.
+아래는 doctest 모듈을 사용하여 간단한 함수의 예제 코드를 테스트하는 예제입니다.
+ """
+
+
+def add(a, b):
+    """
+    두 수를 더하는 함수입니다.
+    >>> add(2, 3)
+    5
+    >>> add(-1, 1)
+    0
+    """
+    return a + b
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
+
+
+""" 이 예제에서는 add() 함수를 정의하고, 
+함수 설명문 아래에 두 개의 예제 코드를 작성하였습니다. 
+각 예제 코드는 >>> 프롬프트로 시작하는 입력값과 예상 결과값을 포함하고 있습니다.
+마지막 부분에서는 doctest.testmod() 함수를 호출하여 
+모듈의 예제 코드를 실행하고 결과를 검증합니다. 
+이 함수는 테스트 결과를 콘솔에 출력합니다. 실행 결과는 아래와 같습니다.
+ """
+
+
+""" 콘솔 출력 시작
+
+**********************************************************************
+File "doctest_example.py", line 6, in __main__.add
+Failed example:
+    add(2, 3)
+Expected:
+    6
+Got:
+    5
+**********************************************************************
+File "doctest_example.py", line 8, in __main__.add
+Failed example:
+    add(-1, 1)
+Expected:
+    0
+Got:
+    1
+**********************************************************************
+1 items had failures:
+   2 of   2 in __main__.add
+***Test Failed*** 2 failures.
+
+콘솔 출력 끝 """
+
+
+""" 위 결과에서는 두 개의 테스트 중 하나가 실패한 것을 알 수 있습니다. 
+Expected와 Got의 차이점을 통해 실패한 이유를 파악할 수 있습니다. 
+이를 수정하고 다시 실행하면 모든 테스트가 성공하는 것을 확인할 수 있습니다.
+doctest 모듈은 함수, 클래스, 모듈 등의 다양한 객체를 테스트할 수 있습니다. 
+또한, 복잡한 예제 코드의 경우 파일에서 직접 예제를 추출할 수 있습니다. 
+자세한 내용은 파이썬 공식 문서를 참조하시기 바랍니다.
+ """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+""" timeit 라이브러리는 
+파이썬에서 코드의 실행 시간을 측정하는 데 사용되는 내장 라이브러리입니다. 
+이 라이브러리는 파이썬 코드의 실행 시간을 정확하게 측정할 수 있으며, 
+코드의 성능을 비교하거나 최적화하는 데 도움이 됩니다.
+timeit 라이브러리는 Timer 클래스를 사용하여 실행 시간을 측정합니다. 
 >>> timeit.timeit("aFunction()", number=100, globals=globals())
 >>> timeit.timeit("bFunction()", number=100, globals=globals())
+
+
+이 클래스는 두 개의 매개 변수를 받습니다. 첫 번째 매개 변수는 실행할 코드를 
+포함하는 문자열이며, 두 번째 매개 변수는 실행 횟수를 나타내는 정수입니다. 
+Timer 클래스는 실행 시간과 실행 횟수를 측정하여 평균 실행 시간을 계산합니다.
+timeit 라이브러리는 명령행에서도 사용할 수 있습니다. 예를 들어, 
+>>> "python -m timeit -s 'import random' 'random.randint(0, 9)'" 
+
+
+위 명령을 사용하면 random.randint(0, 9) 코드를 1000000번 실행한 결과를 보여줍니다.
  """
 
 
-# pdb: 파이썬 코드를 디버깅할 때 사용하는 모듈.
+# 리스트에 랜덤한 정수 10000개를 생성하는 코드
+def create_random_list():
+    random_list = []
+    for i in range(10000):
+        random_list.append(random.randint(0, 100))
+    return random_list
 
 
-""" import sys.argv
-매개변수를 전달하여 실행.
-파이썬 스크립트로 전달한 명령행 매개변수를 처리할 때 사용.
+# create_random_list 함수의 실행 시간 측정
+t = timeit.Timer(
+    "create_random_list()", 
+    "from __main__ import create_random_list"
+    )
+print(t.timeit(number=100))
+
+
+""" 위 코드에서는 create_random_list() 함수의 실행 시간을 100번 측정합니다. 
+number 매개 변수에 지정된 값이 실행 횟수입니다. 
+timeit.Timer() 함수에서 "from main import create_random_list" 코드를 사용하여 
+create_random_list() 함수를 가져오고 실행합니다.
+실행 결과는 일반적으로 소수점 이하의 시간 단위인 초 단위로 표시됩니다. 
+실행 시간은 컴퓨터 성능, 코드의 복잡도 등 여러 가지 요인에 따라 달라질 수 있습니다.
  """
 
 
-# dataclasses: 객체를 출력하거나 비교.
-# 데이터를 저장하는 용도의 데이터 클래스를 만들 때 사용하는 모듈.
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+""" pdb는 파이썬의 내장 디버깅 도구입니다. 
+pdb는 코드의 실행 중단점을 설정하고 코드를 단계별로 실행하면서 변수의 값, 
+함수의 호출 스택 등을 살펴볼 수 있도록 도와줍니다.
+pdb는 기본적으로 콘솔 환경에서 사용됩니다. 
+디버깅을 시작하려면 디버깅 대상 코드에 다음과 같은 코드를 추가합니다.
 
 
-# abc: 반드시 메서드를 구현하도록 함.
-# abc는 추상 클래스를 정의할 때 사용.
+>>> import pdb
+>>> pdb.set_trace()
 
 
-# atexit: 프로그램 종료 시 특정 작업을 실행.
-# atexit는 파이썬 프로그램을 종료할 때 특정 코드를 마지막으로 실행하고자 사용.
+위 코드는 디버깅을 시작할 지점에 삽입됩니다. 
+디버깅이 시작되면 콘솔에서 현재 위치, 변수 값, 함수 호출 스택 등을 확인할 수 있습니다.
+pdb 명령어는 콘솔에서 입력하여 사용할 수 있습니다. 
+명령어는 한 줄씩 실행되며, 현재 위치에서 다음 줄을 실행하거나 스택을 탐색하고 
+변수 값을 출력할 수 있습니다. 명령어의 종류와 사용법은 다양합니다.
+pdb 라이브러리를 사용하면 코드에서 발생하는 문제를 신속하게 해결할 수 있습니다. 
+디버깅 도구를 사용하면 코드를 분석하고 개선할 수 있으므로, 
+디버깅은 파이썬 개발에서 매우 중요합니다.
+ """
 
 
-# traceback: 오류 위치와 그 원인을 알려준다.
-# 발생한 오류를 추적하고자 할 때 사용.
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+""" sys.argv는 
+파이썬에서 명령행 인자(command line arguments)를 다루는 데 사용되는 리스트입니다. 
+명령행 인자란, 파이썬 스크립트를 실행할 때 파라미터를 전달하는 것을 말합니다.
+예를 들어, 다음과 같이 파이썬 스크립트 파일(script.py)을 실행할 때 
+--name과 --age 두 가지 명령행 인자를 함께 전달할 수 있습니다.
 
 
-# typing: 데이터 타입을 확인
-# 다양한 타입 어노테이션을 위해 사용하는 모듈이다. 이 모듈은 3.5부터 사용 가능.
+>>> script.py 실행
+>>> python script.py --name Alice --age 25
 
 
+이 경우 sys.argv 리스트에는 다음과 같은 값이 저장됩니다.
+
+
+>>> import sys
+>>> print(sys.argv)
+>>> ['script.py', '--name', 'Alice', '--age', '25']
+
+
+리스트의 첫 번째 항목(sys.argv[0])은 스크립트 파일의 이름이 되며, 
+이후에는 전달된 명령행 인자들이 차례대로 저장됩니다. 
+sys.argv의 길이(len(sys.argv))는 전달된 명령행 인자들의 개수에 해당합니다.
+sys.argv를 사용하여 명령행 인자를 파싱하고, 
+이를 기반으로 파이썬 스크립트의 동작을 변경할 수 있습니다. 
+명령행 인자를 다룰 때에는 유효성 검사, 타입 캐스팅, 도움말 출력 등의 
+작업을 수행하는 것이 일반적입니다.
+ """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+""" dataclasses는 
+파이썬 3.7 이상에서 제공되는 데코레이터입니다. 
+이 데코레이터는 클래스 정의를 단순화하여 불변성(immutability)을 유지하며 
+데이터를 저장하는 데 사용됩니다. 일반적으로 데이터 클래스는 
+많은 데이터 필드를 가지는 클래스를 작성할 때 특히 유용합니다. 
+이 라이브러리는 코드의 가독성을 높이고, 중복 코드를 줄이며, 
+불변성과 일관성을 보장하는 클래스를 쉽게 정의할 수 있도록 해줍니다.
+ """
+
+
+@dataclass
+class Person:
+    name: str
+    age: int
+
+
+""" 위 코드에서 @dataclass 데코레이터는 
+Person 클래스를 데이터 클래스로 정의합니다. 
+Person 클래스는 두 개의 필드 name과 age를 가지며, dataclass 데코레이터는 
+자동으로 필드의 생성자, 비교 메서드, __repr__ 메서드 등을 생성합니다.
+이제 Person 클래스의 인스턴스를 생성해 보겠습니다.
+ """
+
+
+person = Person("Alice", 25)
+print(person)
+# >>> Person(name='Alice', age=25)
+
+
+""" Person 클래스의 인스턴스는 생성자에서 전달된 필드 값을 가지며, 
+생성자에서 필드 값의 유효성을 검사하지 않는 등의 단순한 클래스를 정의할 수 있습니다. 
+이 외에도, dataclass는 다양한 옵션을 제공하여 클래스를 세부적으로 
+커스터마이징 할 수 있습니다.
+ """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+""" abc는 파이썬에서 제공하는 내장 라이브러리 중 하나로, 
+Abstract Base Class를 구현하는 데 사용됩니다. 
+추상 기본 클래스(Abstract Base Class)란, 상속을 통해 자식 클래스에서 
+반드시 구현되어야 하는 메서드와 속성을 정의하는 클래스입니다.
+abc 모듈은 ABC 클래스를 포함하고 있으며, 이를 상속하여 
+추상 클래스를 정의할 수 있습니다. 추상 클래스를 정의할 때는 
+추상 메서드(Abstract Method)를 선언하고, @abstractmethod 데코레이터를 사용하여 
+추상 메서드임을 표시합니다.
+간단한 예제로, Animal 추상 클래스를 구현해 보겠습니다.
+ """
+
+
+class Animal(ABC):
+    @abstractmethod
+    def move(self):
+        pass
+    
+
+    @abstractmethod
+    def speak(self):
+        pass
+
+
+""" 위 코드에서 Animal 추상 클래스는 
+move와 speak 메서드를 추상 메서드로 선언합니다. 
+@abstractmethod 데코레이터는 메서드가 추상 메서드임을 표시하며, 
+실제 구현 내용은 제공하지 않습니다.
+이제 Animal 추상 클래스를 상속받는 구체적인 동물 클래스를 구현해보겠습니다.
+ """
+
+
+class Dog(Animal):
+    def move(self):
+        print("I run on four legs")
+    
+
+    def speak(self):
+        print("Woof!")
+
+
+class Cat(Animal):
+    def move(self):
+        print("I jump and climb")
+    
+
+    def speak(self):
+        print("Meow!")
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+""" 위 코드에서 Dog와 Cat 클래스는 Animal 추상 클래스를 상속받습니다. 
+상속받은 추상 메서드를 반드시 구현하여야 하므로, 
+Dog 클래스에서는 move와 speak 메서드를 구현하고, 
+Cat 클래스에서도 마찬가지로 구현합니다.
+추상 클래스를 사용하면, 클래스를 구현할 때 규칙성을 유지할 수 있으며, 
+코드의 일관성과 유지보수성을 높일 수 있습니다. 
+또한 추상 클래스를 사용하면, 인터페이스를 정의할 수 있어서 
+다른 클래스와의 상호작용에서 더욱 유연한 코드를 작성할 수 있습니다.
+ """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+""" atexit 라이브러리는 
+파이썬에서 제공하는 내장 라이브러리 중 하나로, 
+프로그램 종료 시 실행될 함수를 등록하는 데 사용됩니다.
+즉, 프로그램이 정상적으로 종료될 때, 
+예기치 않은 예외가 발생했을 때, 
+exit() 함수로 프로그램이 강제로 종료될 때 등 
+모든 경우에 해당하는 프로그램 종료 시점에서 (지정한 함수)를 실행할 수 있습니다.
+간단한 예제를 통해 atexit 라이브러리를 사용하는 방법을 살펴보겠습니다. 
+아래 코드는 프로그램 종료 시점에 실행되는 함수를 등록하는 방법을 보여줍니다.
+ """
+
+
+def goodbye():
+    print("Goodbye, world.")
+
+
+atexit.register(goodbye)
+
+
+""" 위 코드에서 goodbye 함수를 정의하고, 
+atexit.register 함수를 사용하여 이 함수를 프로그램 종료 시점에서 
+실행될 함수로 등록합니다. atexit 라이브러리를 사용하면, 
+프로그램 종료 시점에서 필요한 모든 작업을 처리할 수 있습니다. 
+예를 들어, 프로그램이 실행하는 동안 생성된 파일을 모두 닫거나, 
+데이터베이스 연결을 종료하거나, 임시 파일을 삭제하는 등의 작업을 처리할 수 있습니다. 
+이러한 작업들을 atexit 라이브러리를 사용하여 구현하면, 
+프로그램이 예기치 않게 종료되더라도 안전하게 종료 작업을 수행할 수 있습니다.
+ """
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+
+""" traceback 라이브러리는 파이썬에서 제공하는 내장 라이브러리 중 하나로, 
+예외가 발생한 코드의 호출 스택(call stack) 정보를 제공하는 데 사용됩니다. 
+즉, 예외가 발생한 코드의 호출 경로와 예외 정보를 출력할 수 있습니다.
+간단한 예제를 통해 traceback 라이브러리를 사용하는 방법을 살펴보겠습니다. 
+아래 코드는 ZeroDivisionError 예외가 발생할 때 traceback 라이브러리를 사용하여 
+호출 스택 정보와 예외 정보를 출력하는 예제입니다.
+ """
+
+
+def divide(x, y):
+    return x / y
+
+
+try:
+    result = divide(10, 0)
+except ZeroDivisionError:
+    traceback.print_exc()
+
+
+""" 위 코드에서 divide 함수는 두 개의 인수를 받아서 나눗셈을 수행합니다. 
+그리고 try-except 구문을 사용하여 ZeroDivisionError 예외를 처리합니다. 
+예외가 발생하면 traceback.print_exc() 함수를 사용하여 
+호출 스택 정보와 예외 정보를 출력합니다.
+실행 결과는 다음과 같습니다. """
+
+
+# Traceback (most recent call last):
+#   File "<stdin>", line 4, in <module>
+#   File "<stdin>", line 2, in divide
+# ZeroDivisionError: division by zero
+
+
+""" 위 예제에서 traceback.print_exc() 함수는 
+ZeroDivisionError 예외가 발생한 코드의 호출 스택 정보와 예외 정보를 출력합니다. 
+print_exc() 함수는 print_tb() 함수와 달리, 호출 스택 정보와 함께 
+예외 정보도 출력합니다. traceback 라이브러리는 
+예외 처리와 디버깅에 유용하게 사용될 수 있습니다. 예외가 발생했을 때 
+어디서 문제가 발생했는지 호출 스택 정보를 통해 쉽게 파악할 수 있습니다. 
+또한, 디버깅 시 호출 스택 정보를 통해 코드 실행 경로를 추적할 수 있습니다.
+ """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+
+""" typing 라이브러리는 파이썬 3.5 이상부터 새롭게 추가된 라이브러리로, 
+타입 힌트를 지원하기 위한 여러 가지 타입들을 제공하는 라이브러리입니다.
+간단한 예제를 통해 typing 라이브러리를 사용하는 방법을 살펴보겠습니다. 
+아래 코드는 typing 라이브러리를 사용하여 
+함수의 인자와 반환값의 타입을 지정하는 예제입니다.
+ """
+
+
+def add_numbers(a: int, b: int) -> int:
+    return a + b
+
+
+def process_items(items: List[str]) -> Tuple[str, int]:
+    result = (items[0], len(items))
+    return result
+
+
+""" 위 코드에서 typing 라이브러리에서 제공하는 
+List와 Tuple 타입을 사용하여 함수의 인자와 반환값의 타입을 지정합니다.
+List는 리스트 타입을 지정하고, Tuple은 튜플 타입을 지정합니다. 
+각각의 인자와 반환값에는 int, str과 같은 기본 타입을 사용하여 타입을 지정합니다.
+이러한 타입 힌트는 코드의 가독성을 높이고, 코드의 유지보수를 쉽게 만들어줍니다. 
+또한, IDE나 코드 리뷰 툴에서 타입 에러를 더 쉽게 찾을 수 있게 해줍니다. 
+typing 라이브러리를 사용하면 코드의 안정성과 신뢰성을 높일 수 있습니다.
+ """
+
+
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
