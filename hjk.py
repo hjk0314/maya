@@ -1822,6 +1822,17 @@ def makeFolder():
         return folderPath
 
 
+def removeDeformed():
+    """ Remove Deformed from all objects including the text Deformed.
+     """
+    OLD = "Deformed"
+    NEW = ""
+    nodes = pm.ls("*{}*".format(OLD), r=True)
+    for node in nodes:
+        new_name = node.name().replace(OLD, NEW)
+        node.rename(new_name)
+
+
 def copyHJK():
     """ Copy hjk.py 
     from <in git folder> to <maya folder in MyDocuments> """
