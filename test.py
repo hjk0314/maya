@@ -5,11 +5,10 @@ import re
 import os
 import hjk
 
-
-class PubRigFiles:
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
+class PubRigFile:
     def __init__(self):
-        # fullPath = pm.Env().sceneName()
-        self.fullPath = "T:/SOB/assets/vhcl/micaA/rig/dev/scenes/vhcl_micaA_rig_v0043.ma"
         # "T:/SOB/assets/vhcl/micaA/rig/pub/scenes/v0043/vhcl_micaA_rig_v0043.ma"
         self.data = [] # The function of main() is to create this data.
         if not self.fullPath:
@@ -19,7 +18,9 @@ class PubRigFiles:
 
 
     def main(self):
-        self.data = self.parsing(self.fullPath)
+        # fullPath = pm.Env().sceneName()
+        fullPath = "T:/SOB/assets/vhcl/micaA/rig/dev/scenes/vhcl_micaA_rig_v0043.ma"
+        self.data = self.parsing(fullPath)
         self.makeSceneName()
     
 
@@ -97,4 +98,4 @@ class PubRigFiles:
             return result
 
 
-PubRigFiles()
+PubRigFile()
