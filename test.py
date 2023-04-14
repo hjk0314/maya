@@ -46,8 +46,16 @@ class PubRigFile:
         curr.replace(f"{DP}/scenes", f"{revDP}/scenes/{numUp}")
 
 
-    def getMaxVersion(self, directory):
-        pass
+    def getFiles(self, directory):
+        folder = pathlib.Path(directory)
+        result = [i for i in folder.iterdir() if i.is_file()]
+        return result
+            
+
+    def getFolders(self, directory):
+        folder = pathlib.Path(directory)
+        result = [i for i in folder.iterdir() if i.is_dir()]
+        return result
 
 
     def makeFolder(self):
@@ -98,4 +106,6 @@ class PubRigFile:
             return result
 
 
-PubRigFile()
+
+tmp = PubRigFile()
+print(tmp)

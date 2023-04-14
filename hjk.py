@@ -1847,4 +1847,4 @@ def copyHJK():
 # 72 docstring or comments line ========================================
 
 
-   
+removeDeformed()
