@@ -4,10 +4,10 @@ import pymel.core as pm
 
 
 def getMaxVersion(fullPath: list) -> int:
-    tmp = re.compile(".*v(\d{4})") # v0001 ~ v9999
+    pattern1 = re.compile(".*v(\d{4})") # v0001 ~ v9999
     numList = []
     for i in fullPath:
-        ver = tmp.match(i.name)
+        ver = pattern1.match(i.name)
         if not ver:
             continue
         num = ver.group(1)

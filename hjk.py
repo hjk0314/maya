@@ -1740,7 +1740,7 @@ def attr_geoHide():
      """
     sel = pm.ls(sl=True)
     ctrl = sel.pop()
-    attr = "Geo_Hide"
+    attr = "Geo"
     vis = "visibility"
     pm.addAttr(ctrl, ln=attr, at='bool')
     pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
@@ -1840,6 +1840,7 @@ def copyHJK():
     tmp = scriptsFolder.rsplit("/", 5)[0]
     gitFolder = tmp + "/Desktop/git/maya/hjk.py"
     docFolder = scriptsFolder + "hjk.py"
+    print(f"{gitFolder} -> {docFolder}")
     shutil.copy(gitFolder, docFolder)
 
 

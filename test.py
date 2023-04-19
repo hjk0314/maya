@@ -5,8 +5,6 @@ import re
 import os
 import hjk
 
-# 79 char line ================================================================
-# 72 docstring or comments line ========================================
 class PubRigFile:
     def __init__(self):
         # "T:/SOB/assets/vhcl/micaA/rig/pub/scenes/v0043/vhcl_micaA_rig_v0043.ma"
@@ -109,3 +107,5 @@ class PubRigFile:
 
 tmp = PubRigFile()
 print(tmp)
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================
