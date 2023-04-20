@@ -8,6 +8,7 @@ import functools
 import maya.OpenMaya as om
 import pymel.core as pm
 import maya.mel as mel
+import pathlib
 
 
 class SoftSel:
@@ -1831,6 +1832,33 @@ def removeDeformed():
     for node in nodes:
         new_name = node.name().replace(OLD, NEW)
         node.rename(new_name)
+
+
+def getMaxVersion(fullPath: str) -> int:
+    """ Given an address, it lists the Maya files in that folder. 
+    And check if there is a version in the file name, 
+    returns the largest number. 
+        """
+    folder = pathlib.Path(fullPath)
+    if folder.is_file():
+        folder = folder.parent
+    pattern1 = re.compile(".*v(\d{4})") # v0001 ~ v9999
+    number = []
+    for i in folder.glob("*.ma"):
+        ver = pattern1.match(i.name)
+        if not ver:
+            continue
+        num = ver.group(1)
+        num = int(num)
+        if num == 9999:
+            continue
+        else:
+            number.append(num)
+    try:
+        result = max(number)
+    except:
+        result = 0
+    return result
 
 
 def copyHJK():
