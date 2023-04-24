@@ -758,8 +758,7 @@ class Colors:
 
 
     # This is Main function.
-
-    def colors(arg=None):
+    def colors(self, arg=None):
         tmp = {}
         if arg == None:
             print("arg is None.")
@@ -767,6 +766,7 @@ class Colors:
         elif isinstance(arg, str):
             sel = pm.ls(sl=True)
             tmp[arg] = sel
+            print(tmp)
         elif isinstance(arg, dict):
             tmp = arg
         else:
