@@ -40,7 +40,6 @@ else:
     pm.button(l='selectVerts_influenced', c=lambda x: hjk.selectVerts_influenced())
     pm.button(l='check_sameName', c=lambda x: hjk.check_sameName())
     pm.button(l='zeroPivot', c=lambda x: hjk.zeroPivot())
-    pm.button(l='rename', c=lambda x: hjk.rename())
     pm.button(l='poleVector', c=lambda x: hjk.poleVector())
     pm.button(l='openFolder', c=lambda x: hjk.openFolder())
     pm.button(l='lineStraight', c=lambda x: hjk.lineStraight())

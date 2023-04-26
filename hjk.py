@@ -1527,14 +1527,12 @@ def zeroPivot():
 
 def rename(*arg: str) -> None:
     """ Rename by incrementing the last digit in the string. """
-    if not arg:
-        tmp = input()
-        arg = [i.strip() for i in tmp.split(",")]
-        arg = tuple(arg)
     lenArg = len(arg)
     sel = pm.ls(sl=True)
     # Given a single argument, create a new name.
-    if lenArg == 1:
+    if not sel or lenArg == 0:
+        return
+    elif lenArg == 1:
         txt = arg[0]
         # txtList -> ['testName', '23', '_', '17', '_grp']
         txtList = re.split(r'([^0-9]+)([0-9]*)', txt)
@@ -1573,7 +1571,7 @@ def rename(*arg: str) -> None:
             new = obj.replace(before, after)
             pm.rename(obj, new)
     else:
-        print("<New name> or <Old name, New name>")
+        return
 
 
 def poleVector():
