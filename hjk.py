@@ -1476,6 +1476,24 @@ def selectGrp():
     pm.select(grp)
 
 
+def selectConst():
+    """ If there is no shape and the object type is not 
+    'joint', 'ikEffector', 'ikHandle', and not 'Constraint', 
+    then it is most likely a Constraints. """
+    sel = pm.ls(sl=True, dag=True, type=['transform'])
+    grp = []
+    for i in sel:
+        typ = pm.objectType(i)
+        A = pm.listRelatives(i, s=True)
+        B = typ in ['joint', 'ikEffector', 'ikHandle',]
+        C = 'Constraint' in typ
+        if not (A or B or not C):
+            grp.append(i)
+        else:
+            continue
+    pm.select(grp)
+
+
 def selectJnt():
     """ Select only joints. """
     sel = pm.ls(sl=True, dag=True, type=['transform'])

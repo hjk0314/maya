@@ -36,6 +36,7 @@ else:
     pm.button(l='deletePlugins', c=lambda x: hjk.deletePlugins())
     pm.button(l='selectObj', c=lambda x: hjk.selectObj())
     pm.button(l='selectGrp', c=lambda x: hjk.selectGrp())
+    pm.button(l='selectConst', c=lambda x: hjk.selectConst())
     pm.button(l='selectJnt', c=lambda x: hjk.selectJnt())
     pm.button(l='selectVerts_influenced', c=lambda x: hjk.selectVerts_influenced())
     pm.button(l='check_sameName', c=lambda x: hjk.check_sameName())

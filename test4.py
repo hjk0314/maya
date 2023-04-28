@@ -52,3 +52,15 @@ def temp5():
         pm.setAttr(f"clt_{i}_grp.visibility", 0)
 
 
+jntList = [f"jnt_{i}" for i in range(3, 298, 2)]
+numList = [i for i in range(1, 149)]
+numList = sorted(numList, reverse=True)
+obj = "prop_bandolier_mdl_v9999:bandolier_magazine"
+objList = [f"{obj}_{i}_grp" for i in numList]
+print(jntList)
+print(numList)
+print(len(jntList), len(numList))
+for i in range(len(jntList)):
+    pm.parentConstraint(jntList[i], objList[i], w=1, mo=True)
+    pm.scaleConstraint(jntList[i], objList[i], w=1, mo=True)
+
