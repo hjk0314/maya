@@ -1,4 +1,5 @@
 import pymel.core as pm
+import hjk
 
 
 def createLoc():
@@ -93,8 +94,18 @@ def createExpression2(num):
     pm.expression(s=expr, o='', ae=1, uc='all')
 
 
+def createExpression3(num):
+    expr = f"float $loc1 = locator{num}.translateX;\n"
+    expr += f"float $loc2 = locator{num+1}.translateX;\n"
+    expr += "if ($loc1 >= 0 && $loc2 < 0) {\n"
+    expr += f"    cuv_num_{num}_grp.visibility = 1;" + "}\n"
+    expr += "else {\n"
+    expr += f"    cuv_num_{num}_grp.visibility = 0;" + "}\n"
+    pm.expression(s=expr, o='', ae=1, uc='all')
+
+
 for i in range(1, 149):
-    createExpression2(i)
+    createExpression3(i)
 
 
 def temp7():
@@ -106,6 +117,18 @@ def temp7():
         pm.pointConstraint(i, loc, mo=False, w=1.0)
         # pm.orientConstraint(i, loc, mo=True, w=1.0)
 
+
+def temp8():
+    sel = pm.selected()
+    for j, k in enumerate(sel):
+        grp = k.getChildren()
+        pm.rename(k, f"cuv_num_{j+1}_grp")
+        for l, m in enumerate(grp):
+            cuv = m.getChildren()
+            pm.rename(m, f"cuv_num_{j+1}_{l+1}_grp")
+            for x, y in enumerate(cuv):
+                pm.rename(y, f"cuv_num_{j+1}_{l+1}_{x+1}")
+    
 
 
 
