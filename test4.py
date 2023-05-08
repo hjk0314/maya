@@ -104,9 +104,6 @@ def createExpression3(num):
     pm.expression(s=expr, o='', ae=1, uc='all')
 
 
-for i in range(1, 149):
-    createExpression3(i)
-
 
 def temp7():
     jntList = [i for i in range(3, 298, 2)]
@@ -128,7 +125,19 @@ def temp8():
             pm.rename(m, f"cuv_num_{j+1}_{l+1}_grp")
             for x, y in enumerate(cuv):
                 pm.rename(y, f"cuv_num_{j+1}_{l+1}_{x+1}")
-    
+
+
+def temp9():
+    jntList = [i for i in range(3, 298, 2)]
+    jntList.sort(reverse=True)
+    jntList = [f"jnt_{i}" for i in jntList]
+    for j, k in enumerate(jntList):
+        grp = f"prop_bandolier_mdl_v9999:bandolier_magazine_{j+1}_grp"
+        pm.parentConstraint(k, grp, sr="x", mo=True, w=1.0)
+        pm.scaleConstraint(k, grp, mo=True, w=1.0)
+        # loc = pm.spaceLocator()
+        # pm.pointConstraint(i, loc, mo=False, w=1.0)
+        # pm.orientConstraint(i, loc, mo=True, w=1.0)
 
 
 
