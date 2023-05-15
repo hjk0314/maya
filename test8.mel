@@ -1,0 +1,318 @@
+
+global proc dr_MatID(int $MatIDValue, int $unique, int $allSel)
+{
+ $selected = `ls -sl -l`;
+    if ($allSel == 1)
+    {
+        $selected = `ls -sl -l`;
+    }
+    else
+    {
+        select -all;
+        $selected = stringArrayRemoveDuplicates(ls("-mat",listConnections(listConnections("-type","shadingEngine",`ls -sl -o -dag -s`))));
+    }
+
+$StartID = $MatIDValue;    
+  
+for ($i=0;$i < size($selected);$i++)
+
+    {
+    
+        vray addAttributesFromGroup  $selected[$i] vray_material_id 1;
+        setAttr ($selected[$i] +".vrayMaterialId") $MatIDValue;
+        if ($unique != 0)
+        {
+            $MatIDValue++;
+        }
+    
+    }
+    $MatIDValue--;  
+    string $Textcombined= "Letzte MaterialID = " + $MatIDValue;
+    
+    string $IDFull =  $StartID + " bis " + $MatIDValue;
+   string $Textcombined;
+    
+        
+    if ($unique != 0)
+    {
+           $MatIDValue--;
+           $Textcombined = "First ID : " + $StartID + " -- Last ID: " + $MatIDValue;
+           print $Textcombined;
+    }
+    else
+    {
+         $Textcombined= "ObjectID = " + $StartID;
+         print $Textcombined;   
+    }
+    
+    
+    
+         
+}
+
+global proc dr_ObjID(int $ObjIDValue, int $unique, int $allSel)
+{
+    $selected = `ls -sl -l`;
+    if ($allSel == 1)
+    {
+        $selected = `ls -sl -l`;
+    }
+    else
+    {
+        string $transforms[] = `ls -tr`; //lists all the transform nodes in the scene
+        string $polyMeshes[] = `filterExpand -sm 12 $transforms`; //filters out all the non-polymesh nodes
+        select -r $polyMeshes; //selects all the polymeshes
+        $selected = `ls -sl -l`;
+    }
+
+$ObjectID = $ObjIDValue;    
+  
+for ($i=0;$i < size($selected);$i++)
+
+    {
+        $selShape = `listRelatives -shapes $selected[$i]`;
+        $selFullPath = ($selected[$i]+"|"+$selShape[0]);
+        vray addAttributesFromGroup  $selShape[0] vray_objectID 1;
+        setAttr ($selShape[0] +".vrayObjectID") $ObjectID;
+        if ($unique != 0)
+        {
+            $ObjectID++;
+        }
+    
+    }
+    string $Textcombined;
+    
+        
+    if ($unique != 0)
+    {
+           $ObjectID--;
+           $Textcombined = "First ID : " + $ObjIDValue + " -- Last ID: " + $ObjectID;
+           print $Textcombined;
+    }
+    else
+    {
+         $Textcombined= "ObjectID = " + $ObjectID;
+         print $Textcombined;   
+    }
+    
+    
+    
+      
+}
+
+
+global proc dr_MMObj()
+{
+    
+int $idArray[];
+clear $idArray;
+$idCount = 0;
+    
+string $transforms[] = `ls -tr`; //lists all the transform nodes in the scene
+string $polyMeshes[] = `filterExpand -sm 12 $transforms`; //filters out all the non-polymesh nodes
+select -r $polyMeshes; //selects all the polymeshes
+$selected = `ls -sl -l`;
+   
+
+
+//check if ObjectID is set  
+for ($i=0;$i < size($selected);$i++)
+
+    {
+         
+         //add Ids to Array 
+        $myattribute = $selected[$i] +".vrayObjectID";
+        if(`objExists $myattribute`)
+        {
+        $entry = true; 
+        for ($k = 0; $k < size($idArray); $k++)
+            {
+                if (`getAttr $myattribute` == $idArray[$k])
+                {
+                $entry = false;
+                } 
+            }
+          if( $entry == true )
+            {
+            $idArray[$idCount] = `getAttr $myattribute`;
+            $idCount++;
+            }        
+        }
+   }
+     
+$idArraySize= `size $idArray`;
+
+
+//delete old generated ids
+if(`objExists "MM_Obj*"`)
+delete "MM_Obj*";
+
+//Generate Render Elements
+$i = 0;
+$objId = 1;
+//immer auf rund
+$mmCount = ceil($idArraySize /3 );
+$mmCount++;
+$Arraypos = 0;
+while ($i < $mmCount)
+    {
+        vrayAddRenderElement MultiMatteElement;
+        $currentMatte = `ls -sl -fl`;
+        $IdSum = 0;
+        setAttr ($currentMatte[0] +".vray_redid_multimatte") $idArray[$Arraypos];
+        $IdSum= $IdSum + $idArray[$Arraypos];
+        $Arraypos++;
+        setAttr ($currentMatte[0] +".vray_greenid_multimatte") $idArray[$Arraypos] ;
+        $IdSum= $IdSum + $idArray[$Arraypos];
+        $Arraypos++;
+        setAttr ($currentMatte[0] +".vray_blueid_multimatte") $idArray[$Arraypos] ;
+        $IdSum= $IdSum + $idArray[$Arraypos];
+        $Arraypos++;
+        setAttr ($currentMatte[0] +".vray_usematid_multimatte") 0;
+        if ($IdSum == 0)
+        { 
+            delete $currentMatte;
+        }
+        else
+        {
+        
+        $newName= "MM_ObjId" + $i;
+        $Filenamesuffix = $currentMatte[0] + ".vray_name_multimatte";
+        setAttr -type "string" $Filenamesuffix $newName;
+        rename $currentMatte $newName;
+        }
+        $i++;
+        
+    }
+}
+
+
+global proc dr_MMMat()
+{
+    
+int $idArray[];
+clear $idArray;
+$idCount = 0;
+    
+$selected = `ls -type shadingEngine`;
+   
+
+
+for ($shader in $selected)
+
+    {
+         string $currentShader[];
+         //add Ids to Array
+         $currentShader = `listConnections ($shader+".surfaceShader")`;
+         
+        $myattribute =$currentShader[0] +".vrayMaterialId";
+        if(`objExists $myattribute`)
+        {
+        $entry = true; 
+        for ($k = 0; $k < size($idArray); $k++)
+            {
+                if (`getAttr $myattribute` == $idArray[$k])
+                {
+                $entry = false;
+                } 
+            }
+          if( $entry == true )
+            {
+            $idArray[$idCount] = `getAttr $myattribute`;
+            $idCount++;
+            }        
+        }
+   }
+     
+$idArraySize= `size $idArray`;
+
+
+//delete old generated ids
+if(`objExists "MM_Mat*"`)
+delete "MM_Mat*";
+
+//Generate Render Elements
+$i = 0;
+$objId = 1;
+//immer auf rund
+$mmCount = ceil($idArraySize /3 );
+$mmCount++;
+$Arraypos = 0;
+while ($i < $mmCount)
+    {
+        int $IdSum = 0;
+        vrayAddRenderElement MultiMatteElement;
+        $currentMatte = `ls -sl -fl`;
+        setAttr ($currentMatte[0] +".vray_redid_multimatte") $idArray[$Arraypos];
+        $IdSum= $IdSum + $idArray[$Arraypos];
+        $Arraypos++;
+        setAttr ($currentMatte[0] +".vray_greenid_multimatte") $idArray[$Arraypos] ;
+        $IdSum= $IdSum + $idArray[$Arraypos];
+        $Arraypos++;
+        setAttr ($currentMatte[0] +".vray_blueid_multimatte") $idArray[$Arraypos] ;
+        $IdSum= $IdSum + $idArray[$Arraypos];
+        $Arraypos++;
+        setAttr ($currentMatte[0] +".vray_usematid_multimatte") 1;
+         if ($IdSum == 0)
+        { 
+            delete $currentMatte;
+        }
+        else
+        {
+            $newName= "MM_MatId" + $i;
+            $Filenamesuffix = $currentMatte[0] + ".vray_name_multimatte";
+            setAttr -type "string" $Filenamesuffix $newName;
+            rename $currentMatte $newName;
+        }
+        $i++;
+        
+    }
+}
+ 
+global proc dr_createMMElements()
+{  
+	dr_MMMat();   
+	dr_MMObj();
+}
+
+global proc dr_MM()
+{
+if ( `window -exists MMWindow` ) 
+    {
+     deleteUI MMWindow;
+    }
+window -title "dr_MultiMatte Tools" -widthHeight 185 200 MMWindow;
+     columnLayout;
+     rowLayout -numberOfColumns 2  -columnAlign 1 "center" mainPart;
+     
+            columnLayout -width 90 objectRow;
+                text -label "Object ID"; 
+                intField  -ann "StartObjID" -value 1 startObjID;
+                separator -height 5 -style "doubleDash";
+                radioCollection ObjRadio;
+                radioButtonGrp -numberOfRadioButtons 2 -vr
+                -labelArray2 "selected" "all" -select 0 ObjRadio;
+                separator -height 5 -style "doubleDash";
+                checkBox -label "Unique" ObjectUnique;
+                button -label "apply ObjID" -command "dr_ObjID(`intField -query -value startObjID`, `checkBox -query -value ObjectUnique`, `radioButtonGrp -q -select ObjRadio`)" -width 90;
+              setParent mainPart;         
+            columnLayout  -width 90 materialRow ;
+                text -label "Material ID";
+                intField  -ann "StartMatID" -value 1 startMatID;
+                separator -height 5 -style "doubleDash";
+                radioButtonGrp -numberOfRadioButtons 2 -vr
+                -labelArray2 "selected" "all" -select 0 MatRadio;
+                separator -height 5 -style "doubleDash";
+                checkBox -label "Unique" MatUnique;
+                button -label "apply MatID" -command "dr_MatID(`intField -query -value startMatID`, `checkBox -query -value MatUnique`, `radioButtonGrp -q -select MatRadio`)"-width 90;
+                
+        setParent..;
+        setParent..;
+        separator -height 10 -style "doubleDash";
+        button -label "Create Multi Matte Elements" -command "dr_createMMElements" -width 185;
+        separator -height 20 -style "doubleDash";
+///        text -label "  http://www.crustedink.com" -align center;
+     
+showWindow MMWindow;
+}   
+dr_MM;
