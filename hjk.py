@@ -1895,6 +1895,25 @@ def copyHJK():
     shutil.copy(gitFolder, docFolder)
 
 
+def parentParty(n: int):
+    """ It is used when you want to make the selected joints 
+    into n hierarchical structures. n is the bundle unit.
+    Example: When n is 4, 
+    joints can be created in the following hierarchical structure.
+    joint0
+        joint1
+            joint2
+                joint3
+     """
+    sel = pm.ls(sl=True)
+    for j, k in enumerate(sel):
+        mod = j % n
+        if mod == 0:
+            continue
+        else:
+            pm.parent(k, sel[j-1])
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 
