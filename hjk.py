@@ -488,43 +488,43 @@ class VertexSeletor:
             result = f"{dir}/vertexSeletor.json"
             return result
 
+
     # UI
     def setupUI(self):
         winName = 'vertexButton'
         if pm.window(winName, exists=True):
             pm.deleteUI(winName)
+        win = pm.window(winName, t='Vertex Selector', s=True, rtf=True)
+        pm.columnLayout(cat=('both', 4), rs=2, cw=178)
+        pm.separator(h=10)
+        pm.rowColumnLayout(nc=3, cw=[(1, 80), (2, 5), (3, 80)])
+        self.field = pm.textField(ed=True)
+        pm.text('')
+        pm.button(l="Create", c=lambda x: self.writeJson())
+        pm.setParent("..", u=True)
+        pm.separator(h=10)
+        pm.rowColumnLayout(nc=3, cw=[(1, 80), (2, 5), (3, 80)])
+        pm.radioCollection()
+        self.radioAdd = pm.radioButton(l='add', sl=True)
+        pm.text('')
+        self.radioTgl = pm.radioButton(l='tgl')
+        pm.setParent("..", u=True)
+        spacing = [(1, 80), (2, 3), (3, 80), (4, 3)]
+        pm.rowColumnLayout(nc=4, rs=(1, 3), cw=spacing)
+        chk = os.path.isfile(self.jsonPath)
+        if chk:
+            data = self.loadJson()
+            for key in data:
+                self.button(key)
         else:
-            win = pm.window(winName, t='Vertex Selector', s=True, rtf=True)
-            pm.columnLayout(cat=('both', 4), rs=2, cw=178)
-            pm.separator(h=10)
-            pm.rowColumnLayout(nc=3, cw=[(1, 80), (2, 5), (3, 80)])
-            self.field = pm.textField(ed=True)
-            pm.text('')
-            pm.button(l="Create", c=lambda x: self.writeJson())
-            pm.setParent("..", u=True)
-            pm.separator(h=10)
-            pm.rowColumnLayout(nc=3, cw=[(1, 80), (2, 5), (3, 80)])
-            pm.radioCollection()
-            self.radioAdd = pm.radioButton(l='add', sl=True)
-            pm.text('')
-            self.radioTgl = pm.radioButton(l='tgl')
-            pm.setParent("..", u=True)
-            spacing = [(1, 80), (2, 3), (3, 80), (4, 3)]
-            pm.rowColumnLayout(nc=4, rs=(1, 3), cw=spacing)
-            chk = os.path.isfile(self.jsonPath)
-            if chk:
-                data = self.loadJson()
-                for key in data:
-                    self.button(key)
-            else:
-                pass
-            pm.setParent("..", u=True)
-            pm.separator(h=10)
-            pm.button(l="Clear", c=lambda x: pm.select(cl=True))
-            pm.button(l="Delete Data", c=lambda x: self.deleteJson())
-            pm.button(l="Close", c=lambda x: pm.deleteUI(winName))
-            pm.separator(h=10)
-            pm.showWindow(win)
+            pass
+        pm.setParent("..", u=True)
+        pm.separator(h=10)
+        pm.button(l="Clear", c=lambda x: pm.select(cl=True))
+        pm.button(l="Delete Data", c=lambda x: self.deleteJson())
+        pm.button(l="Close", c=lambda x: pm.deleteUI(winName))
+        pm.separator(h=10)
+        pm.showWindow(win)
 
 
     def button(self, *args):
@@ -548,6 +548,7 @@ class VertexSeletor:
         data[name] = info
         with open(self.jsonPath, 'w') as JSON:
             json.dump(data, JSON, indent=4)
+        VertexSeletor()
 
 
     def loadJson(self) -> dict:
