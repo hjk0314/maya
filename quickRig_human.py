@@ -117,8 +117,8 @@ class CreateMixamoBones:
             "R_pinkyGroup": ['RightHandPinky%d'%i for i in range(1, 5)], 
         }
         self.hierarchy2 = {
-            'Spine2': ['LeftShoulder', 'RightShoulder'], 
             'Hips': ['LeftUpLeg', 'RightUpLeg'], 
+            'Spine2': ['LeftShoulder', 'RightShoulder'], 
             'LeftHand': [
                 'LeftHandThumb1', 
                 'LeftHandIndex1', 
@@ -134,23 +134,25 @@ class CreateMixamoBones:
                 'RightHandPinky1'
                 ], 
         }
-        if self.checkDupName():
-            return
-        else:
-            self.main()
+        self.main()
 
 
     def main(self):
-        for j, k in self.position.items():
-            pm.select(cl=True)
-            pm.joint(p=k, n=j)
-        for i in self.hierarchy1.values():
-            self.setHierarchy(i)
-            self.orientJoints(i)
-        for j, k in self.hierarchy2.items():
-            for i in k:
-                pm.parent(i, j)
-        self.finish()
+        if self.checkDupName():
+            print("The Sample curve aleady exists.")
+            return
+        else:
+            for j, k in self.position.items():
+                pm.select(cl=True)
+                pm.joint(p=k, n=j)
+            for i in self.hierarchy1.values():
+                self.setHierarchy(i)
+                self.orientJoints(i)
+            for j, k in self.hierarchy2.items():
+                for i in k:
+                    pm.parent(i, j)
+            result = self.finish()
+            return result
 
 
     def checkDupName(self):
@@ -188,13 +190,63 @@ class CreateMixamoBones:
 
 
     def finish(self):
-        cuv = pm.circle(nr=(0, 1, 0), n=self.sizeCuv, ch=False, r=50)
-        pm.parent(self.rootJnt, cuv)
-        pm.select(cl=True)
+        try:
+            cuv = pm.circle(nr=(0, 1, 0), n=self.sizeCuv, ch=False, r=50)
+            pm.parent(self.rootJnt, cuv)
+            pm.select(cl=True)
+            return cuv
+        except:
+            return
+
+
+    # unParent ============================================================
+    def unParent(self):
+        pm.makeIdentity(self.sizeCuv, a=1, t=0, r=0, s=1, n=0, pn=1)
+        pm.parent(self.rootJnt, w=True)
+        for i in self.hierarchy2.values():
+            for j in i:
+                pm.parent(j, w=True)
+
+
+class SymmetryJnt:
+    def __init__(self, LR: str):
+        cmb = CreateMixamoBones()
+        self.hira1 = cmb.hierarchy1
+        self.LR = LR
+        if LR == "L":
+            self.side = "Left"
+            self.otherSide = "Right"
+        elif LR == "R":
+            self.side = "Right" 
+            self.otherSide = "Left"
+        else:
+            print("L or R only.")
+            return
+        self.main()
+
+
+    def main(self):
+        grp = ["arm", "leg", "thumb", "index", "middle", "ring", "pinky"]
+        for i in grp:
+            temp = self.hira1[f"{self.LR}_{i}Group"]
+            self.matchOtherSide(temp)
+        
+    
+    def matchOtherSide(self, lst: list):
+        for i in lst:
+            sidePos = pm.xform(i, q=True, ws=True, rp=True)
+            x, y, z = sidePos
+            _x = x * -1
+            otherSidePos = [_x, y, z]
+            otherSideJnt = i.replace(self.side, self.otherSide)
+            pm.move(otherSideJnt, otherSidePos)
 
 
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 
 
-CreateMixamoBones()
+
+cmb = CreateMixamoBones()
+hira1 = cmb.hierarchy1
+print(cmb)
