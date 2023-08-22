@@ -1,7 +1,7 @@
 import pymel.core as pm
 
 
-class CreateMixamoBones:
+class BoneNames:
     def __init__(self):
         self.rootJnt = 'Hips'
         self.sizeCuv = 'mixamo_boneSample'
@@ -134,73 +134,127 @@ class CreateMixamoBones:
                 'RightHandPinky1'
                 ], 
         }
-        self.main()
+
+
+class CreateMixamoBones(BoneNames):
+    def __init__(self):
+        super().__init__()
 
 
     def main(self):
-        if self.checkDupName():
-            print("The Sample curve aleady exists.")
+        if self.checkSameNameCurve():
             return
         else:
-            for j, k in self.position.items():
-                pm.select(cl=True)
-                pm.joint(p=k, n=j)
-            for i in self.hierarchy1.values():
-                self.setHierarchy(i)
-                self.orientJoints(i)
-            for j, k in self.hierarchy2.items():
-                for i in k:
-                    pm.parent(i, j)
-            result = self.finish()
-            return result
+            self.createJoints()
+            self.makeHierarchy()
+            self.orientJoints()
+            self.parentParts()
+            self.finish()
 
 
-    def checkDupName(self):
+    def createJoints(self):
+        for j, k in self.position.items():
+            pm.select(cl=True)
+            pm.joint(p=k, n=j)
+
+
+    def parentParts(self):
+        """ Combine the torso, arms, legs, and finger groups 
+        to make them one body. 
+         """
+        for j, k in self.hierarchy2.items():
+            for i in k:
+                pm.parent(i, j)
+
+
+    def checkSameNameCurve(self):
         obj = pm.ls()
-        if self.rootJnt in obj or self.sizeCuv in obj:
+        if self.sizeCuv in obj:
             return True
         else:
             return False
 
 
-    def setHierarchy(self, lst: list):
-        num = len(lst) - 1
-        for i in range(num):
-            pm.parent(lst[i+1], lst[i])
+    def makeHierarchy(self):
+        for lst in self.hierarchy1.values():
+            num = len(lst) - 1
+            for i in range(num):
+                pm.parent(lst[i+1], lst[i])
 
 
-    def orientJoints(self, lst: list):
-        jntList = pm.ls(lst)
-        initJnt = jntList[0]
-        jntName = initJnt.name()
-        if "LeftShoulder" in jntName or "LeftHand" in jntName:
-            pri = 'yxz'
-            sec = 'zdown'
-        elif "RightShoulder" in jntName or "RightHand" in jntName:
-            pri = 'yxz'
-            sec = 'zup'
-        else:
-            pri = 'yzx'
-            sec = 'zup'
-        pm.makeIdentity(jntList, a=True, jo=True, n=0)
-        pm.joint(initJnt, e=True, oj=pri, sao=sec, ch=True, zso=True)
-        endJoint = [i for i in jntList if not i.getChildren()]
-        for i in endJoint:
-            pm.joint(i, e=True, oj='none', ch=True, zso=True)
+    def orientJoints(self):
+        for lst in self.hierarchy1.values():
+            jntList = pm.ls(lst)
+            initJnt = jntList[0]
+            jntName = initJnt.name()
+            if "LeftShoulder" in jntName or "LeftHand" in jntName:
+                pri = 'yxz'
+                sec = 'zdown'
+            elif "RightShoulder" in jntName or "RightHand" in jntName:
+                pri = 'yxz'
+                sec = 'zup'
+            else:
+                pri = 'yzx'
+                sec = 'zup'
+            pm.makeIdentity(jntList, a=True, jo=True, n=0)
+            pm.joint(initJnt, e=True, oj=pri, sao=sec, ch=True, zso=True)
+            endJoint = [i for i in jntList if not i.getChildren()]
+            for i in endJoint:
+                pm.joint(i, e=True, oj='none', ch=True, zso=True)
 
 
     def finish(self):
-        try:
-            cuv = pm.circle(nr=(0, 1, 0), n=self.sizeCuv, ch=False, r=50)
-            pm.parent(self.rootJnt, cuv)
-            pm.select(cl=True)
-            return cuv
-        except:
-            return
+        if self.checkSameNameCurve():
+            cuv = self.sizeCuv
+        else:
+            cuv = pm.circle(nr=(0, 1, 0), n=self.sizeCuv, ch=0, r=50)
+        pm.parent(self.rootJnt, cuv)
+        pm.select(cl=True)
 
 
-    # unParent ============================================================
-    def unParent(self):
+class SymmetryBothSide(CreateMixamoBones):
+    def __init__(self, LR=None):
+        """ L or R as a parameter """
+        super().__init__()
+        self.LR = LR
+        if not self.LR:
+            pass
+        elif self.LR == "L":
+            self.side = "Left"
+            self.otherSide = "Right"
+        elif self.LR == "R":
+            self.side = "Right" 
+            self.otherSide = "Left"
+        else:
+            pass
+
+
+    def main(self):
+        self.seperateParts()
+        if self.LR:
+            self.mirrorPosition()
+        self.orientJoints()
+        self.parentParts()
+        self.finish()
+        
+    
+    def mirrorPosition(self):
+        grp = ["arm", "leg", "thumb", "index", "middle", "ring", "pinky"]
+        for i in grp:
+            sideList = self.hierarchy1[f"{self.LR}_{i}Group"]
+            for j in sideList:
+                sidePos = pm.xform(j, q=True, ws=True, rp=True)
+                x, y, z = sidePos
+                _x = x * -1
+                otherSidePos = [_x, y, z]
+                otherSideJnt = j.replace(self.side, self.otherSide)
+                pm.move(otherSideJnt, otherSidePos)
+
+
+    def seperateParts(self):
+        """ Separate the torso, arms, legs, and finger groups 
+        to make them unparent. 
+         """
         pm.makeIdentity(self.sizeCuv, a=1, t=0, r=0, s=1, n=0, pn=1)
         pm.parent(self.rootJnt, w=True)
         for i in self.hierarchy2.values():
@@ -208,45 +262,26 @@ class CreateMixamoBones:
                 pm.parent(j, w=True)
 
 
-class SymmetryJnt:
-    def __init__(self, LR: str):
-        cmb = CreateMixamoBones()
-        self.hira1 = cmb.hierarchy1
-        self.LR = LR
-        if LR == "L":
-            self.side = "Left"
-            self.otherSide = "Right"
-        elif LR == "R":
-            self.side = "Right" 
-            self.otherSide = "Left"
-        else:
-            print("L or R only.")
-            return
-        self.main()
-
-
-    def main(self):
-        grp = ["arm", "leg", "thumb", "index", "middle", "ring", "pinky"]
-        for i in grp:
-            temp = self.hira1[f"{self.LR}_{i}Group"]
-            self.matchOtherSide(temp)
-        
-    
-    def matchOtherSide(self, lst: list):
-        for i in lst:
-            sidePos = pm.xform(i, q=True, ws=True, rp=True)
-            x, y, z = sidePos
-            _x = x * -1
-            otherSidePos = [_x, y, z]
-            otherSideJnt = i.replace(self.side, self.otherSide)
-            pm.move(otherSideJnt, otherSidePos)
-
-
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 
 
+# cmb = CreateMixamoBones()
+# cmb.main()
 
-cmb = CreateMixamoBones()
-hira1 = cmb.hierarchy1
-print(cmb)
+
+# sbs = SymmetryBothSide("L")
+# sbs.main()
+
+
+class ArrangeCenter(SymmetryBothSide):
+    def __init__(self):
+        super().__init__()
+    
+
+    def main(self):
+        a = self.hierarchy1["spineGroup"]
+        
+
+
+
