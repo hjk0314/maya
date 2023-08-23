@@ -274,14 +274,39 @@ class SymmetryBothSide(CreateMixamoBones):
 # sbs.main()
 
 
-class ArrangeCenter(SymmetryBothSide):
+class ArrangeCenter(BoneNames):
     def __init__(self):
         super().__init__()
+        self.spineGrp = self.hierarchy1["spineGroup"]
+        self.spineGrp.append(self.sizeCuv)
     
 
     def main(self):
-        a = self.hierarchy1["spineGroup"]
+        centerLine = []
+        x = loc.getTranslation()[0]
+        if not x:
+            pass
+        else:
+            centerLine.append(i)
+        if centerLine:
+            print(centerLine)
+        else:
+            print("all center line.")
+            pm.matchTransform(loc, i, pos=True)
+
+
+    def makeLocator(self):
+        objs = pm.ls()
+        for i in self.spineGrp:
+            if f"loc_{i}" in objs:
+                loc = pm.PyNode(f"loc_{i}")
+            else:
+                loc = pm.spaceLocator(n=f"loc_{i}")
+
+
+    def checkCenter(self):
+        pass
         
 
-
-
+ac = ArrangeCenter()
+ac.main()
