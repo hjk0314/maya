@@ -262,6 +262,52 @@ class SymmetryBothSide(CreateMixamoBones):
                 pm.parent(j, w=True)
 
 
+class ArrangeCenter(BoneNames):
+    def __init__(self):
+        super().__init__()
+        self.centeredBones = self.hierarchy1["spineGroup"]
+        self.centeredBones.append(self.sizeCuv)
+    
+
+    def main(self):
+        locators = self.attachLocator()
+        notCenteredLoc = self.notCenteredLocator(locators)
+        self.checkCenter(notCenteredLoc)
+        pm.delete(locators)
+
+
+    def notCenteredLocator(self, locators: list):
+        result = []
+        for loc in locators:
+            x = loc.getTranslation()[0]
+            if x:
+                result.append(loc)
+            else:
+                continue
+        return result
+
+
+    def attachLocator(self) -> list:
+        allObjects = pm.ls()
+        result = []
+        for boneName in self.centeredBones:
+            bn = f"loc_{boneName}"
+            if bn in allObjects:
+                loc = pm.PyNode(bn)
+            else:
+                loc = pm.spaceLocator(n=bn)
+            pm.matchTransform(loc, boneName, pos=True)
+            result.append(loc)
+        return result
+
+
+    def checkCenter(self, lst: list):
+        if not lst:
+            return
+        else:
+            print(lst)
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 
@@ -274,39 +320,7 @@ class SymmetryBothSide(CreateMixamoBones):
 # sbs.main()
 
 
-class ArrangeCenter(BoneNames):
-    def __init__(self):
-        super().__init__()
-        self.spineGrp = self.hierarchy1["spineGroup"]
-        self.spineGrp.append(self.sizeCuv)
-    
-
-    def main(self):
-        centerLine = []
-        x = loc.getTranslation()[0]
-        if not x:
-            pass
-        else:
-            centerLine.append(i)
-        if centerLine:
-            print(centerLine)
-        else:
-            print("all center line.")
-            pm.matchTransform(loc, i, pos=True)
+# ac = ArrangeCenter()
+# ac.main()
 
 
-    def makeLocator(self):
-        objs = pm.ls()
-        for i in self.spineGrp:
-            if f"loc_{i}" in objs:
-                loc = pm.PyNode(f"loc_{i}")
-            else:
-                loc = pm.spaceLocator(n=f"loc_{i}")
-
-
-    def checkCenter(self):
-        pass
-        
-
-ac = ArrangeCenter()
-ac.main()
