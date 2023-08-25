@@ -255,14 +255,14 @@ class SymmetryBothSide(CreateMixamoBones):
         """ Separate the torso, arms, legs, and finger groups 
         to make them unparent. 
          """
-        pm.makeIdentity(self.sizeCuv, a=1, t=0, r=0, s=1, n=0, pn=1)
+        pm.makeIdentity(self.sizeCuv, a=1, t=1, r=1, s=1, n=0, pn=1)
         pm.parent(self.rootJnt, w=True)
         for i in self.hierarchy2.values():
             for j in i:
                 pm.parent(j, w=True)
 
 
-class ArrangeCenter(BoneNames):
+class AlignBonesCenter(SymmetryBothSide):
     def __init__(self):
         super().__init__()
         self.centeredBones = self.hierarchy1["spineGroup"]
@@ -270,21 +270,15 @@ class ArrangeCenter(BoneNames):
     
 
     def main(self):
+        self.seperateParts()
         locators = self.attachLocator()
         notCenteredLoc = self.notCenteredLocator(locators)
-        self.checkCenter(notCenteredLoc)
+        self.arrangeCenter(notCenteredLoc)
+        self.orientJoints()
+        self.parentParts()
+        pm.makeIdentity(self.sizeCuv, a=1, t=1, r=1, s=1, n=0, pn=1)
         pm.delete(locators)
-
-
-    def notCenteredLocator(self, locators: list):
-        result = []
-        for loc in locators:
-            x = loc.getTranslation()[0]
-            if x:
-                result.append(loc)
-            else:
-                continue
-        return result
+        pm.parent(self.rootJnt, self.sizeCuv)
 
 
     def attachLocator(self) -> list:
@@ -301,11 +295,29 @@ class ArrangeCenter(BoneNames):
         return result
 
 
-    def checkCenter(self, lst: list):
+    def notCenteredLocator(self, locators: list):
+        result = []
+        for loc in locators:
+            x = loc.getTranslation()[0]
+            x = round(x, 3)
+            if x:
+                result.append(loc)
+            else:
+                continue
+        return result
+
+
+    def arrangeCenter(self, lst: list):
         if not lst:
             return
         else:
-            print(lst)
+            for loc in lst:
+                x, y, z = loc.getTranslation()
+                pm.move(loc, (0, y, z))
+            for i in self.centeredBones:
+                pm.matchTransform(i, f"loc_{i}", pos=True)
+        
+
 
 
 # 79 char line ================================================================
@@ -316,11 +328,11 @@ class ArrangeCenter(BoneNames):
 # cmb.main()
 
 
-# sbs = SymmetryBothSide("L")
-# sbs.main()
+sbs = SymmetryBothSide("R")
+sbs.main()
 
 
-# ac = ArrangeCenter()
-# ac.main()
+ac = AlignBonesCenter()
+ac.main()
 
 
