@@ -152,27 +152,18 @@ class CreateMixamoBones(BoneNames):
             self.finish()
 
 
-    def createJoints(self):
-        for j, k in self.position.items():
-            pm.select(cl=True)
-            pm.joint(p=k, n=j)
-
-
-    def parentParts(self):
-        """ Combine the torso, arms, legs, and finger groups 
-        to make them one body. 
-         """
-        for j, k in self.hierarchy2.items():
-            for i in k:
-                pm.parent(i, j)
-
-
     def checkSameNameCurve(self):
         obj = pm.ls()
         if self.sizeCuv in obj:
             return True
         else:
             return False
+
+
+    def createJoints(self):
+        for j, k in self.position.items():
+            pm.select(cl=True)
+            pm.joint(p=k, n=j)
 
 
     def makeHierarchy(self):
@@ -201,6 +192,15 @@ class CreateMixamoBones(BoneNames):
             endJoint = [i for i in jntList if not i.getChildren()]
             for i in endJoint:
                 pm.joint(i, e=True, oj='none', ch=True, zso=True)
+
+
+    def parentParts(self):
+        """ Combine the torso, arms, legs, and finger groups 
+        to make them one body. 
+         """
+        for j, k in self.hierarchy2.items():
+            for i in k:
+                pm.parent(i, j)
 
 
     def finish(self):
@@ -318,8 +318,6 @@ class AlignBonesCenter(SymmetryBothSide):
                 pm.matchTransform(i, f"loc_{i}", pos=True)
         
 
-
-
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 
@@ -328,11 +326,11 @@ class AlignBonesCenter(SymmetryBothSide):
 # cmb.main()
 
 
-sbs = SymmetryBothSide("R")
-sbs.main()
+# sbs = SymmetryBothSide("L")
+# sbs.main()
 
 
-ac = AlignBonesCenter()
-ac.main()
+# ac = AlignBonesCenter()
+# ac.main()
 
 
