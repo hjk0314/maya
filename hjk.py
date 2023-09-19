@@ -1282,7 +1282,7 @@ def createCuv_thruLoc(**kwargs) -> str:
         for j, k in enumerate(pos):
             pm.move(k[0], k[1], k[2], f'{cuv}.cv[{j}]', ws=True)
     else:
-        cuv = pm.curve(p=pos)
+        cuv = pm.curve(d=3, ep=pos)
     return cuv
 
 
