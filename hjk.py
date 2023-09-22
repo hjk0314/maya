@@ -1595,7 +1595,7 @@ def ctrl(*args: dict, **kwargs):
     # scapula
     scapula = [(2, 10, -11), (0, 0, -11), (-2, 10, -11), ]
     scapula += [(-3, 18, 0), (-2, 10, 11), (0, 0, 11), ]
-    scapula += [(2, 10, 11), (3, 18, 0), ]
+    scapula += [(2, 10, 11), (3, 18, 0), (2, 10, -11), ]
     # Dictionary
     ctrl = {
         "cub": cub, 
