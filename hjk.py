@@ -1090,7 +1090,7 @@ class SolariBoard:
         The number of cards must be 5 or more. 
         Use setRange node, plusMinusEverage node and expression. 
         Cards turned upside down can be problematic.
-          """
+         """
         self.main()
 
 
@@ -1196,7 +1196,7 @@ class SolariBoard:
         animCurve -> setRange 
         setRange -> plusMinusEverage 
         plusMinusEverage -> object's rotate
-          """
+         """
         for i, obj in enumerate(objs):
             seR = seRnodes[i]
             plM = plMnodes[i]
