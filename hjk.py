@@ -2030,7 +2030,7 @@ def orientJnt(arg=None):
         endJnt = [i for i in allJnt if not i.getChildren()]
         pm.select(cl=True)
         pm.makeIdentity(allJnt, a=True, jo=True, n=0)
-        pm.joint(jnt, e=True, oj='xyz', sao='yup', ch=True, zso=True)
+        pm.joint(jnt, e=True, oj='yzx', sao='zup', ch=True, zso=True)
         for i in endJnt:
             pm.joint(i, e=True, oj='none', ch=True, zso=True)
     return sel

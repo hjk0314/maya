@@ -593,5 +593,7 @@ class CreateControllers:
 # ac.main()
 
 
-a = CreateControllers()
-a.ctrl(scapula=True, cub=True, foot=True, sph=True)
+# a = CreateControllers()
+# a.ctrl(scapula=True, cub=True, foot=True, sph=True)
+
+
