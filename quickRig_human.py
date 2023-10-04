@@ -323,8 +323,9 @@ class CreateControllers:
         pass
 
 
-    def ctrl(self, *args: dict, **kwargs):
+    def ctrl(self, **kwargs):
         """ Create a controller,
+        "cir": cir, 
         "cub": cub, 
         "sph": sph, 
         "cyl": cyl, 
@@ -350,6 +351,10 @@ class CreateControllers:
         "head": head, 
         "scapula": scapula, 
         """
+        # Circle
+        cir = [(0, 0, -3), (-2, 0, -2), (-3, 0, 0), ]
+        cir += [(-2, 0, 2), (0, 0, 3), (2, 0, 2), ]
+        cir += [(3, 0, 0), (2, 0, -2), (0, 0, -3), ]
         # Cube
         cub = [(-1, 1, -1), (-1, 1, 1), (1, 1, 1), ]
         cub += [(1, 1, -1), (-1, 1, -1), (-1, -1, -1), ]
@@ -523,6 +528,7 @@ class CreateControllers:
         scapula += [(2, 10, 11), (3, 18, 0), (2, 10, -11), ]
         # Dictionary
         ctrl = {
+            "cir": cir, 
             "cub": cub, 
             "sph": sph, 
             "cyl": cyl, 
@@ -549,32 +555,9 @@ class CreateControllers:
             "head": head, 
             "scapula": scapula, 
         }
-        inputs = {}
-        for tmp in args:
-            for key, val in tmp.items():
-                if isinstance(val, dict):
-                    print("Dict in dict.")
-                else:
-                    inputs[key] = val
-        for key, val in kwargs.items():
-            inputs[key] = val
-        # If there is no inputs...
-        if not inputs:
-            tmp = input()
-            coordinate = []
-            try:
-                for i in tmp.split(","):
-                    key, val = i.strip().split("=")
-                    if val == "True":
-                        coordinate.append(ctrl[key])
-                    else:
-                        continue
-            except:
-                print("Syntax is incorrect.")
-        else:
-            coordinate = [ctrl[i] for i in inputs if inputs[i]]
-        result = [pm.curve(d=1, p=i) for i in coordinate]
-        return result
+        coordinate = [ctrl[i] for i in kwargs if kwargs[i]]
+        for i in coordinate:
+            pm.curve(d=1, p=i)
 
 
 # 79 char line ================================================================
@@ -593,7 +576,7 @@ class CreateControllers:
 # ac.main()
 
 
-# a = CreateControllers()
-# a.ctrl(scapula=True, cub=True, foot=True, sph=True)
+a = CreateControllers()
+a.ctrl(scapula=True, cub=True, foot=True, sph=True, cir=True)
 
 
