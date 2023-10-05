@@ -136,6 +136,77 @@ class QHGeneral:
                 'RightHandPinky1'
                 ], 
         }
+        self.curveControllers = {
+            "cc_Main": ["cir", (19, 19, 19)], 
+            "cc_Sub": ["cir", (15, 15, 15)], 
+            "cc_Hips": ["cub", (25, 2, 25)], 
+            "cc_HipsSub": ["cir", (8.3, 8.3, 8.3)], 
+            "cc_Spline_IK": ["cir", (5, 5, 5)], 
+            "cc_Spline1_IK": ["cir", (6, 6, 6)], 
+            "cc_Spine_FK": ["cir", (6, 6, 6)], 
+            "cc_Spine1_FK": ["cir", (5, 5, 5)], 
+            "cc_Spine2_FK": ["cir", (7, 7, 7)], 
+            "cc_Neck": ["cir", (4, 4, 4)], 
+            "cc_Head": ["head", (1, 1, 1)], 
+            "cc_LeftShoulder": ["scapula", (1, 1, 1)], 
+            "cc_LeftArm_FK": ["cir", (4, 4, 4)], 
+            "cc_LeftForeArm_FK": ["cir", (2.5, 2.5, 2.5)], 
+            "cc_LeftHand_FK": ["cir", (2, 2, 2)], 
+            "cc_LeftHandThumb1": ["cir", (0.71, 0.71, 0.71)], 
+            "cc_LeftHandThumb2": ["cir", (0.68, 0.68, 0.68)], 
+            "cc_LeftHandThumb3": ["cir", (0.65, 0.65, 0.65)], 
+            "cc_LeftHandIndex1": ["cir", (0.71, 0.71, 0.71)], 
+            "cc_LeftHandIndex2": ["cir", (0.68, 0.68, 0.68)], 
+            "cc_LeftHandIndex3": ["cir", (0.65, 0.65, 0.65)], 
+            "cc_LeftHandMiddle1": ["cir", (0.71, 0.71, 0.71)], 
+            "cc_LeftHandMiddle2": ["cir", (0.68, 0.68, 0.68)], 
+            "cc_LeftHandMiddle3": ["cir", (0.65, 0.65, 0.65)], 
+            "cc_LeftHandRing1": ["cir", (0.71, 0.71, 0.71)], 
+            "cc_LeftHandRing2": ["cir", (0.68, 0.68, 0.68)], 
+            "cc_LeftHandRing3": ["cir", (0.65, 0.65, 0.65)], 
+            "cc_LeftHandPinky1": ["cir", (0.71, 0.71, 0.71)], 
+            "cc_LeftHandPinky2": ["cir", (0.68, 0.68, 0.68)], 
+            "cc_LeftHandPinky3": ["cir", (0.65, 0.65, 0.65)], 
+            "cc_RightShoulder": ["scapula", (1, 1, 1)], 
+            "cc_RightArm_FK": ["cir", (4, 4, 4)], 
+            "cc_RightForeArm_FK": ["cir", (2.5, 2.5, 2.5)], 
+            "cc_RightHand_FK": ["cir", (2, 2, 2)], 
+            "cc_RightToeBase_FK": ["cir", (2.5, 2.5, 2.5)], 
+            "cc_RightHandThumb1": ["cir", (0.71, 0.71, 0.71)], 
+            "cc_RightHandThumb2": ["cir", (0.68, 0.68, 0.68)], 
+            "cc_RightHandThumb3": ["cir", (0.65, 0.65, 0.65)], 
+            "cc_RightHandIndex1": ["cir", (0.71, 0.71, 0.71)], 
+            "cc_RightHandIndex2": ["cir", (0.68, 0.68, 0.68)], 
+            "cc_RightHandIndex3": ["cir", (0.65, 0.65, 0.65)], 
+            "cc_RightHandMiddle1": ["cir", (0.71, 0.71, 0.71)], 
+            "cc_RightHandMiddle2": ["cir", (0.68, 0.68, 0.68)], 
+            "cc_RightHandMiddle3": ["cir", (0.65, 0.65, 0.65)], 
+            "cc_RightHandRing1": ["cir", (0.71, 0.71, 0.71)], 
+            "cc_RightHandRing2": ["cir", (0.68, 0.68, 0.68)], 
+            "cc_RightHandRing3": ["cir", (0.65, 0.65, 0.65)], 
+            "cc_RightHandPinky1": ["cir", (0.71, 0.71, 0.71)], 
+            "cc_RightHandPinky2": ["cir", (0.68, 0.68, 0.68)], 
+            "cc_RightHandPinky3": ["cir", (0.65, 0.65, 0.65)], 
+            "cc_LeftUpLeg_FK": ["cir", (5, 5, 5)], 
+            "cc_LeftLeg_FK": ["cir", (3.5, 3.5, 3.5)], 
+            "cc_LeftFoot_FK": ["cir", (3, 3, 3)], 
+            "cc_LeftToeBase_FK": ["cir", (2.5, 2.5, 2.5)], 
+            "cc_RightUpLeg_FK": ["cir", (5, 5, 5)], 
+            "cc_RightLeg_FK": ["cir", (3.5, 3.5, 3.5)], 
+            "cc_RightFoot_FK": ["cir", (3, 3, 3)], 
+            "cc_LeftArm_IK": ["sqr", (8, 8, 8)], 
+            "cc_LeftForeArm_IK": ["sph", (4, 4, 4)], 
+            "cc_LeftHand_IK": ["cub", (4, 4, 4)], 
+            "cc_RightArm_IK": ["sqr", (8, 8, 8)], 
+            "cc_RightForeArm_IK": ["sph", (4, 4, 4)], 
+            "cc_RightHand_IK": ["cub", (4, 4, 4)], 
+            "cc_LeftUpLeg_IK": ["sqr", (10, 10, 10)], 
+            "cc_LeftLeg_IK": ["sph", (4, 4, 4)], 
+            "cc_LeftFoot_IK": ["foot", (1.4, 1.4, 1.4)], 
+            "cc_RightUpLeg_IK": ["sqr", (10, 10, 10)], 
+            "cc_RightLeg_IK": ["sph", (4, 4, 4)], 
+            "cc_RightFoot_IK": ["foot", (1.4, 1.4, 1.4)], 
+        }
 
 
     def checkSameNameCurve(self):
@@ -211,11 +282,12 @@ class QHGeneral:
         """ Create a controller,
         "cir": cir, 
         "cub": cub, 
-        "sph": sph, 
         "foot": foot, 
         "hat": hat, 
         "head": head, 
         "scapula": scapula, 
+        "sph": sph, 
+        "sqr": sqr, 
         """
         # Circle
         cir = [(0, 0, -3), (-2, 0, -2), (-3, 0, 0), ]
@@ -228,16 +300,6 @@ class QHGeneral:
         cub += [(-1, -1, -1), (-1, -1, 1), (-1, 1, 1), ]
         cub += [(1, 1, 1), (1, -1, 1), (1, -1, -1), ]
         cub += [(1, 1, -1), ]
-        # Sphere
-        sph = [(0, 1, 0), (0, 0.7, 0.7), (0, 0, 1), ]
-        sph += [(0, -0.7, 0.7), (0, -1, 0), (0, -0.7, -0.7), ]
-        sph += [(0, 0, -1), (0, 0.7, -0.7), (0, 1, 0), ]
-        sph += [(-0.7, 0.7, 0), (-1, 0, 0), (-0.7, 0, 0.7), ]
-        sph += [(0, 0, 1), (0.7, 0, 0.7), (1, 0, 0), ]
-        sph += [(0.7, 0, -0.7), (0, 0, -1), (-0.7, 0, -0.7), ]
-        sph += [(-1, 0, 0), (-0.7, -0.7, 0), (0, -1, 0), ]
-        sph += [(0.7, -0.7, 0), (1, 0, 0), (0.7, 0.7, 0), ]
-        sph += [(0, 1, 0), ]
         # Foot
         foot = [(-4, 0, -4), (-4, 0, -7), (-3, 0, -11), ]
         foot += [(-1, 0, -12), (0, 0, -12), (1, 0, -12), ]
@@ -259,6 +321,19 @@ class QHGeneral:
         scapula = [(2, 10, -11), (0, 0, -11), (-2, 10, -11), ]
         scapula += [(-3, 18, 0), (-2, 10, 11), (0, 0, 11), ]
         scapula += [(2, 10, 11), (3, 18, 0), (2, 10, -11), ]
+        # Sphere
+        sph = [(0, 1, 0), (0, 0.7, 0.7), (0, 0, 1), ]
+        sph += [(0, -0.7, 0.7), (0, -1, 0), (0, -0.7, -0.7), ]
+        sph += [(0, 0, -1), (0, 0.7, -0.7), (0, 1, 0), ]
+        sph += [(-0.7, 0.7, 0), (-1, 0, 0), (-0.7, 0, 0.7), ]
+        sph += [(0, 0, 1), (0.7, 0, 0.7), (1, 0, 0), ]
+        sph += [(0.7, 0, -0.7), (0, 0, -1), (-0.7, 0, -0.7), ]
+        sph += [(-1, 0, 0), (-0.7, -0.7, 0), (0, -1, 0), ]
+        sph += [(0.7, -0.7, 0), (1, 0, 0), (0.7, 0.7, 0), ]
+        sph += [(0, 1, 0), ]
+        # Square
+        sqr = [(1, 0, 1), (1, 0, -1), (-1, 0, -1), ]
+        sqr += [(-1, 0, 1), (1, 0, 1)]
         # Dictionary
         ctrl = {
             "cir": cir, 
@@ -268,6 +343,7 @@ class QHGeneral:
             "hat": hat, 
             "head": head, 
             "scapula": scapula, 
+            "sqr": sqr, 
         }
         coordinate = []
         if not ccType in ctrl.keys():
@@ -415,9 +491,18 @@ class AlignBonesCenter(QHGeneral):
 class CreateControllers(QHGeneral):
     def __init__(self):
         super().__init__()
+        self.main()
+
+
+    def main(self):
+        self.createCC(self.curveControllers)
+        self.matchPosition(self.curveControllers)
 
 
     def createCC(self, ccDict):
+        """ Create a curve control, 
+        name it, set its type, and group it.
+         """
         for ccName, info in ccDict.items():
             if pm.objExists(ccName):
                 continue
@@ -429,7 +514,52 @@ class CreateControllers(QHGeneral):
             grp = self.groupingEmpty(cc)
             pm.scale(grp, ccSize)
             pm.makeIdentity(grp, a=1, s=1, n=0, pn=1)
-            
+
+
+    def rigHips(self):
+        """ 1. Create a rig joint by copying the Hips joint.
+        2. Place the controller at the joint's position.
+        3. Match sub-controllers to Hips main controller and include.
+        4. Set parent and scale between controllers and joints.
+         """
+        pass
+
+
+    def rigSpine(self):
+        pass
+
+
+    def rigHead(self):
+        pass
+
+
+    def rigNeck(self):
+        pass
+
+
+    def rigScapula(self):
+        pass
+
+
+    def rigFingers(self):
+        pass
+
+
+    def rigArms(self):
+        pass
+
+
+    def rigLegs(self):
+        pass
+
+
+    def matchPosition(self, ccDict):
+        for ccName in ccDict.keys():
+            boneName = ccName.split("_")[1]
+            if not boneName in self.position:
+                continue
+            grpName = ccName + "_grp"
+            pm.matchTransform(grpName, boneName, pos=True, rot=True)
 
 
 
@@ -449,60 +579,6 @@ class CreateControllers(QHGeneral):
 # sbs.main()
 
 
-CCs = {
-    "cc_root": ["cub", (25, 2, 25)], 
-    "cc_spineFK": ["cir", (6, 6, 6)], 
-    "cc_spineFK_1": ["cir", (5, 5, 5)], 
-    "cc_spineFK_2": ["cir", (7, 7, 7)], 
-    "cc_neck": ["cir", (4, 4, 4)], 
-    "cc_head": ["head", (1, 1, 1)], 
-    "cc_shoulder_L": ["scapula", (1.1, 1.1, 1.1)], 
-    "cc_armFK_L": ["cir", (4, 4, 4)], 
-    "cc_foreArmFK_L": ["cir", (2.5, 2.5, 2.5)], 
-    "cc_handFK_L": ["cir", (2, 2, 2)], 
-    "cc_shoulder_R": ["scapula", (1.1, 1.1, 1.1)], 
-    "cc_armFK_R": ["cir", (4, 4, 4)], 
-    "cc_foreArmFK_R": ["cir", (2.5, 2.5, 2.5)], 
-    "cc_handFK_R": ["cir", (2, 2, 2)], 
-    "cc_upLegFK_L": ["cir", (5, 5, 5)], 
-    "cc_legFK_L": ["cir", (3.5, 3.5, 3.5)], 
-    "cc_footFK_L": ["cir", (3, 3, 3)], 
-    "cc_toeBaseFK_L": ["cir", (2.5, 2.5, 2.5)], 
-    "cc_upLegFK_R": ["cir", (5, 5, 5)], 
-    "cc_legFK_R": ["cir", (3.5, 3.5, 3.5)], 
-    "cc_footFK_R": ["cir", (3, 3, 3)], 
-    "cc_toeBaseFK_R": ["cir", (2.5, 2.5, 2.5)], 
-    "cc_thumb_L_1": ["cir", (0.71, 0.71, 0.71)], 
-    "cc_thumb_L_2": ["cir", (0.68, 0.68, 0.68)], 
-    "cc_thumb_L_3": ["cir", (0.65, 0.65, 0.65)], 
-    "cc_index_L_1": ["cir", (0.71, 0.71, 0.71)], 
-    "cc_index_L_2": ["cir", (0.68, 0.68, 0.68)], 
-    "cc_index_L_3": ["cir", (0.65, 0.65, 0.65)], 
-    "cc_middle_L_1": ["cir", (0.71, 0.71, 0.71)], 
-    "cc_middle_L_2": ["cir", (0.68, 0.68, 0.68)], 
-    "cc_middle_L_3": ["cir", (0.65, 0.65, 0.65)], 
-    "cc_ring_L_1": ["cir", (0.71, 0.71, 0.71)], 
-    "cc_ring_L_2": ["cir", (0.68, 0.68, 0.68)], 
-    "cc_ring_L_3": ["cir", (0.65, 0.65, 0.65)], 
-    "cc_pinky_L_1": ["cir", (0.71, 0.71, 0.71)], 
-    "cc_pinky_L_2": ["cir", (0.68, 0.68, 0.68)], 
-    "cc_pinky_L_3": ["cir", (0.65, 0.65, 0.65)], 
-    "cc_thumb_R_1": ["cir", (0.71, 0.71, 0.71)], 
-    "cc_thumb_R_2": ["cir", (0.68, 0.68, 0.68)], 
-    "cc_thumb_R_3": ["cir", (0.65, 0.65, 0.65)], 
-    "cc_index_R_1": ["cir", (0.71, 0.71, 0.71)], 
-    "cc_index_R_2": ["cir", (0.68, 0.68, 0.68)], 
-    "cc_index_R_3": ["cir", (0.65, 0.65, 0.65)], 
-    "cc_middle_R_1": ["cir", (0.71, 0.71, 0.71)], 
-    "cc_middle_R_2": ["cir", (0.68, 0.68, 0.68)], 
-    "cc_middle_R_3": ["cir", (0.65, 0.65, 0.65)], 
-    "cc_ring_R_1": ["cir", (0.71, 0.71, 0.71)], 
-    "cc_ring_R_2": ["cir", (0.68, 0.68, 0.68)], 
-    "cc_ring_R_3": ["cir", (0.65, 0.65, 0.65)], 
-    "cc_pinky_R_1": ["cir", (0.71, 0.71, 0.71)], 
-    "cc_pinky_R_2": ["cir", (0.68, 0.68, 0.68)], 
-    "cc_pinky_R_3": ["cir", (0.65, 0.65, 0.65)], 
-}
-ccl = CreateControllers()
-ccl.createCC(CCs)
+# cc = CreateControllers()
+
 
