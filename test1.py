@@ -160,4 +160,4 @@ class AutoRig_Wheel:
         pm.expression(s=expr, o='', ae=1, uc='all')
 
 
-AutoRig_Wheel()
+pm.symmetricModelling()
