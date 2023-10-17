@@ -1263,7 +1263,7 @@ def createCuv_thruPoint(startFrame: int, endFrame: int) -> list:
                 pos.append(pm.pointPosition(j)) # vertex
             except:
                 pos.append(pm.xform(j, q=1, ws=1, rp=1)) # object
-        cuv = pm.curve(p=pos)
+        cuv = pm.curve(p=pos, d=3)
         result.append(cuv)
     return result
 
