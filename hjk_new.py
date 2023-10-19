@@ -316,13 +316,11 @@ class CreateCurves:
 
 class CreateCurvePassingThrough:
     def __init__(self, startFrame, endFrame):
-        self.selections = pm.ls(sl=True, fl=True)
         self.startFrame = startFrame
         self.endFrame = endFrame
-        self.main()
 
 
-    def main(self):
+    def createCurvePassingThrough(self):
         """ The selection should be PyNode. """
         # startFrame, endFrame = duration
         positions = []
@@ -338,18 +336,32 @@ class CreateCurvePassingThrough:
         #     result.append(curveName)
         # return result
 
-    def doSomethingPerFrame(self, startFrame, endFrame):
+    def getPositionsPerFrame(self, selection, duration) -> list:
+        startFrame, endFrame = duration
+        positions = []
         for frame in range(startFrame, endFrame + 1):
             pm.currentTime(frame)
-            pass
+            position = self.getPositions(selection)
+            
+            try:
+                positions.append(pm.pointPosition(selection))
+            except:
+                positions.append(pm.xform(selection, q=1, ws=1, rp=1))
+        return positions
+            
 
-    def getPositions(self, selection: str) -> list:
+    def getPositions(self, originalFunction):
+        def wrapper(*args, **kwargs):
+            selections = pm.ls(sl=True, fl=True)
+            for i in selections:
+                originalFunction(i, *args, **kwargs)
         positions = []
-        try:
-            xyz = pm.pointPosition(selection, w=True)
-        except:
-            xyz = pm.xform(selection, q=1, ws=1, rp=1)
-        positions.append(xyz)
+        for i in selections:
+            try:
+                xyz = pm.pointPosition(i, w=True)
+            except:
+                xyz = pm.xform(i, q=1, ws=1, rp=1)
+            positions.append(xyz)
         return positions
 
 
