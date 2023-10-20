@@ -1781,7 +1781,7 @@ def selectGrp():
             continue
     pm.select(grp)
 
-
+selectGrp()
 def selectConst():
     """ If there is no shape and the object type is not 
     'joint', 'ikEffector', 'ikHandle', and not 'Constraint', 
@@ -1798,7 +1798,7 @@ def selectConst():
         else:
             continue
     pm.select(grp)
-
+# selectConst()
 
 def selectJnt():
     """ Select only joints. """

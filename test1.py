@@ -160,3 +160,25 @@ class AutoRig_Wheel:
         pm.expression(s=expr, o='', ae=1, uc='all')
 
 
+def isVertex(selection: str) -> bool:
+    if isinstance(selection, pm.MeshVertex):
+        return True
+    else:
+        return False
+
+
+def isObject(selection: str) -> bool:
+    if isinstance(selection, pm.nodetypes.Transform):
+        return True
+    else:
+        return False
+
+
+def getPositionVertex(vertex) -> list:
+    position = pm.pointPosition(vertex)
+    return position
+
+
+def getPositionObject(object) -> list:
+    position = pm.xform(object, q=1, ws=1, rp=1)
+    return position
