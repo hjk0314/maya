@@ -56,7 +56,12 @@ class CreateCurves:
 
 
     def createCurveControllers(self, **kwargs):
-        """ "arrow", "arrow2", "arrow3", "arrow4", "arrow5", "arrow6", 
+        """ 
+        createCurveControllers(cube=3, sphere=2 ...)
+        >>> Create 3 cubes and 2 spheres to Maya.
+
+        >>> Below are the keywords for ControllerShape.
+        "arrow", "arrow2", "arrow3", "arrow4", "arrow5", "arrow6", 
         "car", "car2", "car3", 
         "circle", 
         "cone", "cone2", 
@@ -72,8 +77,8 @@ class CreateCurves:
         "scapula", 
         "sphere", 
         "square", 
-        """
-        controllers = {
+         """
+        controllerShapes = {
             "arrow": [
                 (0, 0, 2), (2, 0, 1), (1, 0, 1), (1, 0, -2), (-1, 0, -2), 
                 (-1, 0, 1), (-2, 0, 1), (0, 0, 2)
@@ -112,19 +117,19 @@ class CreateCurves:
                 (6.3, 6, 0)
                 ], 
             "car": [
-                (81, 70, 119), (89, 56, 251), (89, -12, 251), (89, -12, 117), 
-                (89, -12, -117), (89, -12, -229), (81, 70, -229), 
-                (81, 70, -159), (69, 111, -105), (69, 111, 63), 
-                (81, 70, 119), (-81, 70, 119), (-89, 56, 251), 
-                (-89, -12, 251), (-89, -12, 117), (-89, -12, -117), 
-                (-89, -12, -229), (-81, 70, -229), (-81, 70, -159), 
-                (-69, 111, -105), (69, 111, -105), (81, 70, -159), 
-                (-81, 70, -159), (-81, 70, -229), (81, 70, -229), 
-                (89, -12, -229), (-89, -12, -229), (-89, -12, -117), 
-                (-89, -12, 117), (-89, -12, 251), (89, -12, 251), 
-                (89, 56, 251), (-89, 56, 251), (-81, 70, 119), 
-                (-69, 111, 63), (-69, 111, -105), (69, 111, -105), 
-                (69, 111, 63), (-69, 111, 63)
+                (81, 70, 119), (89, 56, 251), (89, -12, 251), 
+                (89, -12, 117), (89, -12, -117), (89, -12, -229), 
+                (81, 70, -229), (81, 70, -159), (69, 111, -105), 
+                (69, 111, 63), (81, 70, 119), (-81, 70, 119), 
+                (-89, 56, 251), (-89, -12, 251), (-89, -12, 117), 
+                (-89, -12, -117), (-89, -12, -229), (-81, 70, -229), 
+                (-81, 70, -159), (-69, 111, -105), (69, 111, -105), 
+                (81, 70, -159), (-81, 70, -159), (-81, 70, -229), 
+                (81, 70, -229), (89, -12, -229), (-89, -12, -229), 
+                (-89, -12, -117), (-89, -12, 117), (-89, -12, 251), 
+                (89, -12, 251), (89, 56, 251), (-89, 56, 251), 
+                (-81, 70, 119), (-69, 111, 63), (-69, 111, -105), 
+                (69, 111, -105), (69, 111, 63), (-69, 111, 63)
                 ], 
             "car2": [
                 (165, 0, -195), (0, 0, -276), (-165, 0, -195), (-97, 0, -0), 
@@ -241,13 +246,13 @@ class CreateCurves:
                 (1, 0, 1), (1, 0, -1), (-1, 0, -1), (-1, 0, 1), (1, 0, 1)
                 ]
             }
-        curvesWeHave = controllers.keys()
+        curvesWeHave = controllerShapes.keys()
         curvesToMake = kwargs.keys()
         commonElements = set(curvesWeHave) & set(curvesToMake)
         for i in commonElements:
-            positions = controllers[i]
+            positions = controllerShapes[i]
             number = kwargs[i]
-            curves = [pm.curve(p=positions, d=1) for i in range(number)]
+            result = [pm.curve(p=positions, d=1) for i in range(number)]
 
 
     def getPositionPerFrame(self, selection, duration) -> list:
@@ -276,5 +281,5 @@ cc = CreateCurves()
 # cc.createCurvePassingThrough(1, 24)
 # cc.createCurvePassingLocators()
 # cc.createCurveConnectingPoints()
-# cc.createCurveControllers(square=2)
+# cc.createCurveControllers(square=2, sphere=3)
 
