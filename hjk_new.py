@@ -3,82 +3,7 @@ import pymel.core as pm
 
 class CreateCurves:
     def __init__(self):
-        pass
-
-
-    def createCurvePassingThrough(self, startFrame, endFrame):
-        """ Creates curves passing through points or objects. """
-        duration = (startFrame, endFrame)
-        selections = pm.ls(sl=True)
-        curveNames = []
-        for i in selections:
-            positions = self.getPositionPerFrame(i, duration)
-            curve = pm.curve(p=positions, d=3)
-            curveNames.append(curve)
-        return curveNames
-
-
-    def createCurvePassingLocators(self, curveClosed=False):
-        """ The closedCurve means that 
-        the start and end points of a curve are connected. """
-        locators = pm.ls(sl=True, fl=True)
-        positions = [self.getPosition(i) for i in locators]
-        if not curveClosed:
-            pm.curve(ep=positions, d=3)
-        else:
-            circle = pm.circle(nr=(0, 1, 0), ch=False, s=len(locators))
-            circle = circle[0]
-            for i, xyz in enumerate(positions):
-                pm.move(f"{circle}.cv[{i}]", xyz, ws=True)
-
-
-    def createCurveConnectingPoints(self):
-        """ If you put line under Locator and freeze it, 
-        the pivot will match. """
-        selections = pm.ls(sl=True)
-        startPoint = selections[0]
-        lastPoint = selections[-1]
-        positions = [self.getPosition(i) for i in [startPoint, lastPoint]]
-        startPosition = positions[0]
-        lastPosition = positions[-1]
-        line = pm.curve(p=positions, d=1)
-        startLocator = pm.spaceLocator()
-        lastLocator = pm.spaceLocator()
-        pm.move(startLocator, startPosition, r=True)
-        pm.move(lastLocator, lastPosition, r=True)
-        pm.xform(line, sp=startPosition, rp=startPosition)
-        pm.aimConstraint(lastLocator, startLocator)
-        pm.delete(startLocator, cn=True)
-        pm.parent(line, startLocator)
-        pm.makeIdentity(line, a=1, t=1, r=1, s=1, n=0, pn=1)
-        pm.parent(line, w=True)
-        pm.rebuildCurve(line, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
-
-
-    def createCurveControllers(self, **kwargs):
-        """ 
-        createCurveControllers(cube=3, sphere=2 ...)
-        >>> Create 3 cubes and 2 spheres to Maya.
-
-        >>> Below are the keywords for ControllerShape.
-        "arrow", "arrow2", "arrow3", "arrow4", "arrow5", "arrow6", 
-        "car", "car2", "car3", 
-        "circle", 
-        "cone", "cone2", 
-        "cross", 
-        "cube", 
-        "cylinder", 
-        "foot", "foot2", 
-        "hat", 
-        "head", 
-        "hoof", "hoof2", 
-        "pipe", 
-        "pointer", 
-        "scapula", 
-        "sphere", 
-        "square", 
-         """
-        controllerShapes = {
+        self.controllerShapes = {
             "arrow": [
                 (0, 0, 2), (2, 0, 1), (1, 0, 1), (1, 0, -2), (-1, 0, -2), 
                 (-1, 0, 1), (-2, 0, 1), (0, 0, 2)
@@ -246,11 +171,85 @@ class CreateCurves:
                 (1, 0, 1), (1, 0, -1), (-1, 0, -1), (-1, 0, 1), (1, 0, 1)
                 ]
             }
-        curvesWeHave = controllerShapes.keys()
+
+
+    def createCurvePassingThrough(self, startFrame, endFrame):
+        """ Creates curves passing through points or objects. """
+        duration = (startFrame, endFrame)
+        selections = pm.ls(sl=True)
+        curveNames = []
+        for i in selections:
+            positions = self.getPositionPerFrame(i, duration)
+            curve = pm.curve(p=positions, d=3)
+            curveNames.append(curve)
+        return curveNames
+
+
+    def createCurvePassingLocators(self, curveClosed=False):
+        """ The closedCurve means that 
+        the start and end points of a curve are connected. """
+        locators = pm.ls(sl=True, fl=True)
+        positions = [self.getPosition(i) for i in locators]
+        if not curveClosed:
+            pm.curve(ep=positions, d=3)
+        else:
+            circle = pm.circle(nr=(0, 1, 0), ch=False, s=len(locators))
+            circle = circle[0]
+            for i, xyz in enumerate(positions):
+                pm.move(f"{circle}.cv[{i}]", xyz, ws=True)
+
+
+    def createCurveConnectingPoints(self):
+        """ If you put line under Locator and freeze it, 
+        the pivot will match. """
+        selections = pm.ls(sl=True)
+        startPoint = selections[0]
+        lastPoint = selections[-1]
+        positions = [self.getPosition(i) for i in [startPoint, lastPoint]]
+        startPosition = positions[0]
+        lastPosition = positions[-1]
+        line = pm.curve(p=positions, d=1)
+        startLocator = pm.spaceLocator()
+        lastLocator = pm.spaceLocator()
+        pm.move(startLocator, startPosition, r=True)
+        pm.move(lastLocator, lastPosition, r=True)
+        pm.xform(line, sp=startPosition, rp=startPosition)
+        pm.aimConstraint(lastLocator, startLocator)
+        pm.delete(startLocator, cn=True)
+        pm.parent(line, startLocator)
+        pm.makeIdentity(line, a=1, t=1, r=1, s=1, n=0, pn=1)
+        pm.parent(line, w=True)
+        pm.rebuildCurve(line, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
+
+
+    def createCurveControllers(self, **kwargs):
+        """ 
+        createCurveControllers(cube=3, sphere=2 ...)
+        >>> Create 3 cubes and 2 spheres to Maya.
+
+        - Below are the keywords for ControllerShape.
+        "arrow", "arrow2", "arrow3", "arrow4", "arrow5", "arrow6", 
+        "car", "car2", "car3", 
+        "circle", 
+        "cone", "cone2", 
+        "cross", 
+        "cube", 
+        "cylinder", 
+        "foot", "foot2", 
+        "hat", 
+        "head", 
+        "hoof", "hoof2", 
+        "pipe", 
+        "pointer", 
+        "scapula", 
+        "sphere", 
+        "square", 
+         """
+        curvesWeHave = self.controllerShapes.keys()
         curvesToMake = kwargs.keys()
         commonElements = set(curvesWeHave) & set(curvesToMake)
         for i in commonElements:
-            positions = controllerShapes[i]
+            positions = self.controllerShapes[i]
             number = kwargs[i]
             result = [pm.curve(p=positions, d=1) for i in range(number)]
 
@@ -273,13 +272,71 @@ class CreateCurves:
         return position
 
 
+class Select:
+    def __init__(self):
+        pass
+
+
+    def selectObjectOnly(self):
+        shapeNodes = pm.ls(sl=True, dag=True, type=['mesh', 'nurbsSurface'])
+        objectNodes = {i.getParent() for i in shapeNodes}
+        result = list(objectNodes)
+        pm.select(result)
+
+
+    def selectGroupOnly(self):
+        """ If there is no shape and the type is not 
+        'joint', 'ikEffector', 'ikHandle' and 'Constraint', 
+        it is most likely a group. 
+         """
+        transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
+        result = []
+        for i in transformNodes:
+            iType = pm.objectType(i)
+            isShape = pm.listRelatives(i, s=True)
+            isAnotherType = iType in ['joint', 'ikEffector', 'ikHandle',]
+            isConstraint = 'Constraint' in iType
+            if not (isShape or isAnotherType or isConstraint):
+                result.append(i)
+            else:
+                continue
+        pm.select(result)
+
+
+    def selectConstraintOnly(self):
+        """ If there is no shape and the type is not 
+        'joint', 'ikEffector', 'ikHandle', and <not> 'Constraint', 
+        it is most likely a Constraints.
+         """
+        transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
+        result = []
+        for i in transformNodes:
+            iType = pm.objectType(i)
+            isShape = pm.listRelatives(i, s=True)
+            isAnotherType = iType in ['joint', 'ikEffector', 'ikHandle',]
+            isConstraint = 'Constraint' in iType
+            if not (isShape or isAnotherType or not isConstraint):
+                result.append(i)
+            else:
+                continue
+        pm.select(result)
+
+
+    def selectJointOnly(self):
+        transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
+        result = []
+        for i in transformNodes:
+            iType = pm.objectType(i)
+            if iType == 'joint':
+                result.append(i)
+            else:
+                continue
+        pm.select(result)
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================   
 
 
 cc = CreateCurves()
-# cc.createCurvePassingThrough(1, 24)
-# cc.createCurvePassingLocators()
-# cc.createCurveConnectingPoints()
-# cc.createCurveControllers(square=2, sphere=3)
-
+cc.createCurveControllers(circle=22)

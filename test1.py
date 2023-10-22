@@ -182,3 +182,20 @@ def getPositionVertex(vertex) -> list:
 def getPositionObject(object) -> list:
     position = pm.xform(object, q=1, ws=1, rp=1)
     return position
+
+
+class Select:
+    def __init__(self):
+        pass
+
+
+    def group(self):
+        sel = pm.ls(sl=True, dag=True, type=['transform'])
+        grp = []
+        for i in sel:
+            grp.append(i)
+        pm.select(grp)
+
+
+selection = Select()
+selection.group()
