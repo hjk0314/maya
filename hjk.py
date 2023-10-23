@@ -2217,3 +2217,12 @@ def parentParty(n: int):
 # 72 docstring or comments line ========================================
 
 
+# createLoc()
+# AutoRig_Wheel()
+# AutoWheel_Rig2()
+# groupingEmpty()
+# rename("_i_", "_h_")
+# ctrl(ar5=True)
+# Colors()
+# check_sameName()
+# attr_geoHide()
