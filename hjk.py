@@ -2227,3 +2227,7 @@ def parentParty(n: int):
 # check_sameName()
 # attr_geoHide()
 # poleVector()
+# orientJnt()
+# parentParty(4)
+# removeDeformed()
+# SoftSel()

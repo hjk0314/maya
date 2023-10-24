@@ -338,3 +338,5 @@ class Select:
 # 72 docstring or comments line ========================================   
 
 
+# cc = CreateCurves()
+# cc.createCurveControllers(sphere=2)
