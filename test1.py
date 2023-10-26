@@ -184,18 +184,34 @@ def getPositionObject(object) -> list:
     return position
 
 
-class Select:
+class A:
     def __init__(self):
-        pass
+        self.integerList = [1, 2, 3]
 
 
-    def group(self):
-        sel = pm.ls(sl=True, dag=True, type=['transform'])
-        grp = []
-        for i in sel:
-            grp.append(i)
-        pm.select(grp)
+    def sum(self, a: int, b: int) -> int:
+        result = a + b
+        return result
+    
+
+    class B:
+        def __init__(self):
+            self.stringList = ['a', 'b', 'c']
 
 
-selection = Select()
-selection.group()
+        def sum(self, a: str, b: str) -> str:
+            result = a + b
+            return result
+
+
+        def report(self):
+            a = A()
+            print(a.integerList)
+            print(a.sum(1, 2))
+            print(self.sum('a', 'b'))
+            print(self.stringList)
+
+
+
+ab = A().B()
+ab.report()

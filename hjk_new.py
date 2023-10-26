@@ -336,13 +336,15 @@ class Select:
 
 class Grouping:
     def __init__(self):
+        # selections = [pm.PyNode(i) for i in args] if args else pm.ls(sl=True)
         pass
 
 
-    def groupingWithOwnPivot(self, *args: str):
-        selections = [pm.PyNode(i) for i in args] if args else pm.ls(sl=True)
+    def groupingWithOwnPivot(self, tailName: str=None) -> None:
+        selections = pm.ls(sl=True)
         for i in selections:
-            emptyGroup = pm.group(em=True, n=f"{i}_grp")
+            groupName = f"{i}_{tailName}_grp" if tailName else f"{i}_grp"
+            emptyGroup = pm.group(em=True, n=groupName)
             pm.matchTransform(emptyGroup, i, pos=True, rot=True)
             try:
                 pm.parent(emptyGroup, i.getParent())
@@ -356,5 +358,7 @@ class Grouping:
 # 72 docstring or comments line ========================================   
 
 
-# cc = CreateCurves()
-# cc.createCurveControllers(circle=1)
+cc = CreateCurves()
+# cc.createCurveControllers(circle=4)
+grp = Grouping()
+grp.groupingWithOwnPivot("null")
