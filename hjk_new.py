@@ -202,6 +202,7 @@ class CreateCurves:
     def createCurveConnectingPoints(self):
         """ If you put line under Locator and freeze it, 
         the pivot will match. """
+        # createSimpleCurveConnectingTwoPoints
         selections = pm.ls(sl=True)
         startPoint = selections[0]
         lastPoint = selections[-1]
@@ -209,17 +210,31 @@ class CreateCurves:
         startPosition = positions[0]
         lastPosition = positions[-1]
         line = pm.curve(p=positions, d=1)
+        # createLocatorsSetAim
         startLocator = pm.spaceLocator()
         lastLocator = pm.spaceLocator()
         pm.move(startLocator, startPosition, r=True)
         pm.move(lastLocator, lastPosition, r=True)
-        pm.xform(line, sp=startPosition, rp=startPosition)
         pm.aimConstraint(lastLocator, startLocator)
         pm.delete(startLocator, cn=True)
+        # matchPivotOfLine
+        pm.xform(line, sp=startPosition, rp=startPosition)
         pm.parent(line, startLocator)
         pm.makeIdentity(line, a=1, t=1, r=1, s=1, n=0, pn=1)
         pm.parent(line, w=True)
         pm.rebuildCurve(line, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
+
+
+    def createSimpleCurveConnectingTwoPoints(self):
+        pass
+
+
+    def createLocatorsSetAim(self):
+        pass
+
+
+    def matchPivotOfLine(self):
+        pass
 
 
     def createCurveControllers(self, **kwargs):
