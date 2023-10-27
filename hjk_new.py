@@ -1,7 +1,103 @@
 import pymel.core as pm
 
 
-class CreateCurves:
+class HJK:
+    def __init__(self):
+        pass
+
+
+    def getPosition(self, selection) -> list:
+        try:
+            position = pm.pointPosition(selection)
+        except:
+            position = pm.xform(selection, q=1, ws=1, rp=1)
+        return position
+
+
+    def getBoundingBoxPosition(self, vertexOrObject) -> list:
+        boundingBox = pm.xform(vertexOrObject, q=True, bb=True, ws=True)
+        xMin, yMin, zMin, xMax, yMax, zMax = boundingBox
+        x = (xMin + xMax) / 2
+        y = (yMin + yMax) / 2
+        z = (zMin + zMax) / 2
+        return [x, y, z]
+
+
+    def makeSameAsParentPivot(self, object, parents) -> None:
+        """ If you put object under parents and freeze it, 
+        the pivots match together. """
+        parentsPivot = self.getPosition(parents)
+        pm.xform(object, sp=parentsPivot, rp=parentsPivot)
+        pm.parent(object, parents)
+        pm.makeIdentity(object, a=1, t=1, r=1, s=1, n=0, pn=1)
+        pm.parent(object, w=True)
+
+
+    def createLocator(self, position=0) -> str:
+        locator = pm.spaceLocator()
+        pm.move(locator, position)
+        return locator
+
+
+class Curves(HJK):
+    def __init__(self):
+        super().__init__()
+
+
+    def createCurvePassingThrough(self, startFrame, endFrame):
+        selections = pm.ls(sl=True)
+        for i in selections:
+            positions = []
+            for frame in range(startFrame, endFrame + 1):
+                pm.currentTime(frame)
+                xyz = self.getPosition(i)
+                positions.append(xyz)
+            pm.curve(p=positions, d=3)
+
+
+    def createCurvePassingLocators(self, curveClosed=False):
+        """ The closedCurve means that 
+        the start and end points of a curve are connected. """
+        locators = pm.ls(sl=True, fl=True)
+        positions = [self.getPosition(i) for i in locators]
+        if not curveClosed:
+            pm.curve(ep=positions, d=3)
+        else:
+            circle = pm.circle(nr=(0, 1, 0), ch=False, s=len(locators))
+            circle = circle[0]
+            for i, xyz in enumerate(positions):
+                pm.move(f"{circle}.cv[{i}]", xyz, ws=True)
+
+
+    def createCurveAimingPoint(self):
+        selections = pm.ls(sl=True)
+        init = selections[0]
+        last = selections[-1]
+        positions = [self.getPosition(i) for i in [init, last]]
+        simpleCurve = self.createCurveOnlyTwoPoints(positions)
+        startLocator, endLocator = [self.createLocator(i) for i in positions]
+        pm.aimConstraint(endLocator, startLocator)
+        pm.delete(startLocator, cn=True)
+        self.makeSameAsParentPivot(simpleCurve, startLocator)
+        pm.rebuildCurve(simpleCurve, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
+
+
+    def createCurveOnlyTwoPoints(self, positions: list=[]):
+        """ The parameter positions are tuples in a list, 
+        like this -> [(0,0,0), (1,1,1), (1,2,3), ...]
+        """
+        if not positions:
+            positions = [self.getPosition(i) for i in pm.ls(sl=True, fl=True)]
+        try:
+            startPoint = positions[0]
+            endPoint = positions[-1]
+            simpleLine = pm.curve(p=[startPoint, endPoint], d=1)
+            return simpleLine
+        except:
+            return
+
+
+class Controllers:
     def __init__(self):
         self.controllerShapes = {
             "arrow": [
@@ -173,71 +269,7 @@ class CreateCurves:
             }
 
 
-    def createCurvePassingThrough(self, startFrame, endFrame):
-        """ Creates curves passing through points or objects. """
-        duration = (startFrame, endFrame)
-        selections = pm.ls(sl=True)
-        curveNames = []
-        for i in selections:
-            positions = self.getPositionPerFrame(i, duration)
-            curve = pm.curve(p=positions, d=3)
-            curveNames.append(curve)
-        return curveNames
-
-
-    def createCurvePassingLocators(self, curveClosed=False):
-        """ The closedCurve means that 
-        the start and end points of a curve are connected. """
-        locators = pm.ls(sl=True, fl=True)
-        positions = [self.getPosition(i) for i in locators]
-        if not curveClosed:
-            pm.curve(ep=positions, d=3)
-        else:
-            circle = pm.circle(nr=(0, 1, 0), ch=False, s=len(locators))
-            circle = circle[0]
-            for i, xyz in enumerate(positions):
-                pm.move(f"{circle}.cv[{i}]", xyz, ws=True)
-
-
-    def createCurveConnectingPoints(self):
-        """ If you put line under Locator and freeze it, 
-        the pivot will match. """
-        # createSimpleCurveConnectingTwoPoints
-        selections = pm.ls(sl=True)
-        startPoint = selections[0]
-        lastPoint = selections[-1]
-        positions = [self.getPosition(i) for i in [startPoint, lastPoint]]
-        startPosition = positions[0]
-        lastPosition = positions[-1]
-        line = pm.curve(p=positions, d=1)
-        # createLocatorsSetAim
-        startLocator = pm.spaceLocator()
-        lastLocator = pm.spaceLocator()
-        pm.move(startLocator, startPosition, r=True)
-        pm.move(lastLocator, lastPosition, r=True)
-        pm.aimConstraint(lastLocator, startLocator)
-        pm.delete(startLocator, cn=True)
-        # matchPivotOfLine
-        pm.xform(line, sp=startPosition, rp=startPosition)
-        pm.parent(line, startLocator)
-        pm.makeIdentity(line, a=1, t=1, r=1, s=1, n=0, pn=1)
-        pm.parent(line, w=True)
-        pm.rebuildCurve(line, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
-
-
-    def createSimpleCurveConnectingTwoPoints(self):
-        pass
-
-
-    def createLocatorsSetAim(self):
-        pass
-
-
-    def matchPivotOfLine(self):
-        pass
-
-
-    def createCurveControllers(self, **kwargs):
+    def createControllers(self, **kwargs):
         """ 
         createCurveControllers(cube=3, sphere=2 ...)
         >>> Create 3 cubes and 2 spheres to Maya.
@@ -259,7 +291,7 @@ class CreateCurves:
         "scapula", 
         "sphere", 
         "square", 
-         """
+        """
         curvesWeHave = self.controllerShapes.keys()
         curvesToMake = kwargs.keys()
         commonElements = set(curvesWeHave) & set(curvesToMake)
@@ -269,25 +301,7 @@ class CreateCurves:
             result = [pm.curve(p=positions, d=1) for i in range(number)]
 
 
-    def getPositionPerFrame(self, selection, duration) -> list:
-        startFrame, endFrame = duration
-        positions = []
-        for frame in range(startFrame, endFrame + 1):
-            pm.currentTime(frame)
-            xyz = self.getPosition(selection)
-            positions.append(xyz)
-        return positions
-
-
-    def getPosition(self, selection) -> list:
-        try:
-            position = pm.pointPosition(selection)
-        except:
-            position = pm.xform(selection, q=1, ws=1, rp=1)
-        return position
-
-
-class Select:
+class Selections:
     def __init__(self):
         pass
 
@@ -303,7 +317,7 @@ class Select:
         """ If there is no shape and the type is not 
         'joint', 'ikEffector', 'ikHandle' and 'Constraint', 
         it is most likely a group. 
-         """
+        """
         transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
         result = []
         for i in transformNodes:
@@ -322,7 +336,7 @@ class Select:
         """ If there is no shape and the type is not 
         'joint', 'ikEffector', 'ikHandle', and <not> 'Constraint', 
         it is most likely a Constraints.
-         """
+        """
         transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
         result = []
         for i in transformNodes:
@@ -351,7 +365,6 @@ class Select:
 
 class Grouping:
     def __init__(self):
-        # selections = [pm.PyNode(i) for i in args] if args else pm.ls(sl=True)
         pass
 
 
@@ -368,12 +381,10 @@ class Grouping:
             pm.parent(i, emptyGroup)
 
 
-
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================   
 
 
-cc = CreateCurves()
-# cc.createCurveControllers(circle=4)
-grp = Grouping()
-grp.groupingWithOwnPivot("null")
+cc = Curves()
+# cc.createCurveAimingPoint()
+cc.createCurveOnlyTwoPoints()
