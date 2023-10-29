@@ -381,10 +381,87 @@ class Grouping:
             pm.parent(i, emptyGroup)
 
 
+class Joints:
+    def __init__(self):
+        pass
+
+
+    def orientJoints(self):
+        """ Mixamo's spine is like this. """
+        # select All Joints
+        selectJoint = pm.ls(sl=True)
+        allChildren = pm.listRelatives(selectJoint, ad=True, )
+        allHierarchy = selectJoint + allChildren
+        firstJoint = selectJoint[0]
+        endJoints = [i for i in allHierarchy if not i.getChildren()]
+        # orient Joints
+        primaryAxis = 'yzx'
+        secondaryAxisOrient = 'zup'
+        pm.makeIdentity(allHierarchy, a=True, jo=True, n=0)
+        pm.joint(firstJoint, e=True, oj=primaryAxis, 
+            sao=secondaryAxisOrient, ch=True, zso=True, 
+            )
+        for i in endJoints:
+            pm.joint(i, e=True, oj='none', ch=True, zso=True)
+
+
+
+    def createPolevectorJoint(self):
+        """ Select three joints.
+        Put the pole vector at 90 degrees to the direction 
+        of the first and last joints.
+         """
+        # is Select Three Joints
+        selectJoints = pm.ls(sl=True)
+        if len(selectJoints) != 3:
+            print("Select three joints.")
+            return
+        # get Positions Of Joints 
+        firstJoint, middleJoint, endJoint = selectJoints
+        jointPositions = []
+        for i in selectJoints:
+            point = pm.xform(i, q=True, ws=True, rp=True)
+            jointPositions.append(point)
+        firstJointPoint, middleJointPoint, endJointPoint = jointPositions
+        # create Temporary Joints
+        pm.select(cl=True)
+        newJoint = pm.joint(p=firstJointPoint)
+        newJointEnd = pm.joint(p=endJointPoint)
+        # set Direction Of Temporary Joint
+        pm.joint(newJoint, e=True, oj='xyz', sao='yup', ch=True, zso=True)
+        pm.joint(newJointEnd, e=True, oj='none', ch=True, zso=True)
+        pm.aimConstraint(
+            endJoint, newJoint, o=(0,0,90), wut='object', wuo=middleJoint
+            )
+        pm.delete(newJoint, cn=True)
+        # put Temporary Joint In The Middle.
+        pm.matchTransform(newJoint, middleJoint, pos=True)
+
+
+    def jntNone(*arg: int) -> None:
+        '''Change the drawing style of a joint.
+        0: Bone
+        1: Multi Child as Box
+        2: None
+        '''
+        num = 2 if not arg else arg[0]
+        sel = pm.ls(sl=True)
+        if num < 0 or num > 2:
+            msg = "Allowed numbers are "
+            msg += "[0: Bone, 1: Multi Child as Box, 2: None]"
+            print(msg)
+        elif not sel:
+            print("Nothing selected.")
+        else:
+            jnt = [i for i in sel if pm.objectType(i)=='joint']
+            for i in jnt:
+                pm.setAttr(f"{i}.drawStyle", num)
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================   
 
 
-cc = Curves()
-# cc.createCurveAimingPoint()
-cc.createCurveOnlyTwoPoints()
+jnt = Joints()
+# jnt.orientJoints()
+jnt.createPolevectorJoint()
