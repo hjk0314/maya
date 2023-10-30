@@ -405,7 +405,6 @@ class Joints:
             pm.joint(i, e=True, oj='none', ch=True, zso=True)
 
 
-
     def createPolevectorJoint(self):
         """ Select three joints.
         Put the pole vector at 90 degrees to the direction 
@@ -462,6 +461,12 @@ class Joints:
 # 72 docstring or comments line ========================================   
 
 
-jnt = Joints()
+# jnt = Joints()
 # jnt.orientJoints()
-jnt.createPolevectorJoint()
+# jnt.createPolevectorJoint()
+# cc = Curves()
+# cc.createCurveAimingPoint()
+grp = Grouping()
+grp.groupingWithOwnPivot()
+# ctrl = Controllers()
+# ctrl.createControllers(cone=1, cone2=1)
