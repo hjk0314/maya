@@ -1,7 +1,8 @@
 import pymel.core as pm
+import re
 
 
-class HJK:
+class Common:
     def __init__(self):
         pass
 
@@ -37,9 +38,57 @@ class HJK:
         locator = pm.spaceLocator()
         pm.move(locator, position)
         return locator
+    
+
+    def reName(self, *arg: str) -> None:
+        lenArg = len(arg)
+        sel = pm.ls(sl=True)
+        # Given a single argument, create a new name.
+        if not sel or lenArg == 0:
+            return
+        elif lenArg == 1:
+            txt = arg[0]
+            # txtList -> ['testName', '23', '_', '17', '_grp']
+            txtList = re.split(r'([^0-9]+)([0-9]*)', txt)
+            txtList = [i for i in txtList if i]
+            # txtDict -> {1: (23, 2), 3: (17, 2)}
+            txtDict = {}
+            for i, n in enumerate(txtList):
+                if n.isdigit():
+                    txtDict[i] = (int(n), len(n))
+                else:
+                    continue
+            if len(txtDict):
+                idx = max(txtDict) # idx -> 3
+                numTuple = txtDict[idx] # numTuple -> (17, 2)
+                num = numTuple[0] # num -> 17
+                numDigit = numTuple[1] # numDigit -> 2
+                for j, k in enumerate(sel):
+                    numStr = str(num + j) # increase by j
+                    numLen = len(numStr) # digit of numStr
+                    # Match <numStr> with the input <numDigit>
+                    if numLen < numDigit:
+                        sub = numDigit - numLen
+                        numStr = '0'*sub + numStr
+                    txtList[idx] = numStr
+                    new = ''.join(txtList) # new -> 'testName23_17_grp'
+                    pm.rename(k, new)
+            else:
+                for j, k in enumerate(sel):
+                    new = ''.join(txtList) + str(j)
+                    pm.rename(k, new)
+        # Two arguments replace words.
+        elif lenArg == 2:
+            before = arg[0]
+            after = arg[1]
+            for obj in sel:
+                new = obj.replace(before, after)
+                pm.rename(obj, new)
+        else:
+            return
 
 
-class Curves(HJK):
+class Curves(Common):
     def __init__(self):
         super().__init__()
 
@@ -351,7 +400,7 @@ class Selections:
         pm.select(result)
 
 
-    def selectJointOnly(self):
+    def selectJointOnly(self) -> list:
         transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
         result = []
         for i in transformNodes:
@@ -361,6 +410,7 @@ class Selections:
             else:
                 continue
         pm.select(result)
+        return result
 
 
 class Grouping:
@@ -381,25 +431,24 @@ class Grouping:
             pm.parent(i, emptyGroup)
 
 
-class Joints:
+class Joints(Selections):
     def __init__(self):
-        pass
+        super().__init__()
 
 
-    def orientJoints(self):
-        """ Mixamo's spine is like this. """
-        # select All Joints
-        selectJoint = pm.ls(sl=True)
-        allChildren = pm.listRelatives(selectJoint, ad=True, )
-        allHierarchy = selectJoint + allChildren
-        firstJoint = selectJoint[0]
-        endJoints = [i for i in allHierarchy if not i.getChildren()]
-        # orient Joints
-        primaryAxis = 'yzx'
-        secondaryAxisOrient = 'zup'
-        pm.makeIdentity(allHierarchy, a=True, jo=True, n=0)
-        pm.joint(firstJoint, e=True, oj=primaryAxis, 
-            sao=secondaryAxisOrient, ch=True, zso=True, 
+    def orientJoints(self, primaryAxis='yzx', secondaryAxis='zup'):
+        """ The default value of primaryAxis and secondaryAxis are 
+        the same as Mixamo spine. """
+        allJoints = self.selectJointOnly()
+        endJoints = [i for i in allJoints if not i.getChildren()]
+        initJoint = allJoints[0]
+        pm.makeIdentity(allJoints, a=True, jo=True, n=0)
+        pm.joint(initJoint, 
+                e=True, # edit
+                oj=primaryAxis, # orientJoint
+                sao=secondaryAxis, # secondaryAxisOrient
+                ch=True, # children
+                zso=True, # zeroScaleOrient
             )
         for i in endJoints:
             pm.joint(i, e=True, oj='none', ch=True, zso=True)
@@ -410,51 +459,49 @@ class Joints:
         Put the pole vector at 90 degrees to the direction 
         of the first and last joints.
          """
-        # is Select Three Joints
-        selectJoints = pm.ls(sl=True)
-        if len(selectJoints) != 3:
-            print("Select three joints.")
+        selections = pm.ls(sl=True)
+        if len(selections) != 3:
             return
-        # get Positions Of Joints 
-        firstJoint, middleJoint, endJoint = selectJoints
-        jointPositions = []
-        for i in selectJoints:
-            point = pm.xform(i, q=True, ws=True, rp=True)
-            jointPositions.append(point)
-        firstJointPoint, middleJointPoint, endJointPoint = jointPositions
-        # create Temporary Joints
+        jointsNameAndPosition = self.getPositionsOfJoints(selections)
+        jointNames = jointsNameAndPosition.keys()
+        jointPoint = jointsNameAndPosition.values()
+        firstJoint, middleJoint, endJoint = jointNames
+        firstPoint, middlePoint, endPoint = jointPoint
+        newJoint, newEndJoint = self.createTwoJoints(firstPoint, endPoint)
         pm.select(cl=True)
-        newJoint = pm.joint(p=firstJointPoint)
-        newJointEnd = pm.joint(p=endJointPoint)
-        # set Direction Of Temporary Joint
-        pm.joint(newJoint, e=True, oj='xyz', sao='yup', ch=True, zso=True)
-        pm.joint(newJointEnd, e=True, oj='none', ch=True, zso=True)
-        pm.aimConstraint(
-            endJoint, newJoint, o=(0,0,90), wut='object', wuo=middleJoint
-            )
-        pm.delete(newJoint, cn=True)
-        # put Temporary Joint In The Middle.
+        pm.select(newJoint)
+        self.orientJoints('xyz', 'yup')
+        self.setPoleDirection(newJoint, endJoint, middleJoint)
         pm.matchTransform(newJoint, middleJoint, pos=True)
 
 
-    def jntNone(*arg: int) -> None:
-        '''Change the drawing style of a joint.
-        0: Bone
-        1: Multi Child as Box
-        2: None
-        '''
-        num = 2 if not arg else arg[0]
-        sel = pm.ls(sl=True)
-        if num < 0 or num > 2:
-            msg = "Allowed numbers are "
-            msg += "[0: Bone, 1: Multi Child as Box, 2: None]"
-            print(msg)
-        elif not sel:
-            print("Nothing selected.")
-        else:
-            jnt = [i for i in sel if pm.objectType(i)=='joint']
-            for i in jnt:
-                pm.setAttr(f"{i}.drawStyle", num)
+    def getPositionsOfJoints(self, selectedJoints: list) -> dict:
+        jointNameAndPosition = {}
+        for i in selectedJoints:
+            point = pm.xform(i, q=True, ws=True, rp=True)
+            jointNameAndPosition[i] = point
+        return jointNameAndPosition
+
+
+    def createTwoJoints(self, startPosition, endPosition) -> list:
+        pm.select(cl=True)
+        jointNames = [pm.joint(p=i) for i in [startPosition, endPosition]]
+        return jointNames
+
+
+    def setPoleDirection(self, startJoint, endJoint, middleJoint):
+        pm.aimConstraint(
+            endJoint, startJoint, o=(0,0,90), wut='object', wuo=middleJoint
+            )
+        pm.delete(startJoint, cn=True)
+
+
+    def setJointsStyleNone(self):
+        """ Change the drawing style of a joint to None. """
+        selections = pm.ls(sl=True)
+        joints = [i for i in selections if pm.objectType(i)=='joint']
+        for i in joints:
+            pm.setAttr(f"{i}.drawStyle", 2)
 
 
 # 79 char line ================================================================
@@ -464,9 +511,13 @@ class Joints:
 # jnt = Joints()
 # jnt.orientJoints()
 # jnt.createPolevectorJoint()
+# jnt.setJointsStyleNone()
 # cc = Curves()
 # cc.createCurveAimingPoint()
-grp = Grouping()
-grp.groupingWithOwnPivot()
+# grp = Grouping()
+# grp.groupingWithOwnPivot()
 # ctrl = Controllers()
-# ctrl.createControllers(cone=1, cone2=1)
+# ctrl.createControllers(pointer=True)
+# sel = Selections()
+# sel.selectGroupOnly()
+# sel.selectJointOnly()
