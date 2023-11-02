@@ -38,62 +38,35 @@ class Common:
         locator = pm.spaceLocator()
         pm.move(locator, position)
         return locator
-    
-
-    def reName(self, *arg: str) -> None:
-        lenArg = len(arg)
-        sel = pm.ls(sl=True)
-        # Given a single argument, create a new name.
-        if not sel or lenArg == 0:
-            return
-        elif lenArg == 1:
-            txt = arg[0]
-            # txtList -> ['testName', '23', '_', '17', '_grp']
-            txtList = re.split(r'([^0-9]+)([0-9]*)', txt)
-            txtList = [i for i in txtList if i]
-            # txtDict -> {1: (23, 2), 3: (17, 2)}
-            txtDict = {}
-            for i, n in enumerate(txtList):
-                if n.isdigit():
-                    txtDict[i] = (int(n), len(n))
-                else:
-                    continue
-            if len(txtDict):
-                idx = max(txtDict) # idx -> 3
-                numTuple = txtDict[idx] # numTuple -> (17, 2)
-                num = numTuple[0] # num -> 17
-                numDigit = numTuple[1] # numDigit -> 2
-                for j, k in enumerate(sel):
-                    numStr = str(num + j) # increase by j
-                    numLen = len(numStr) # digit of numStr
-                    # Match <numStr> with the input <numDigit>
-                    if numLen < numDigit:
-                        sub = numDigit - numLen
-                        numStr = '0'*sub + numStr
-                    txtList[idx] = numStr
-                    new = ''.join(txtList) # new -> 'testName23_17_grp'
-                    pm.rename(k, new)
-            else:
-                for j, k in enumerate(sel):
-                    new = ''.join(txtList) + str(j)
-                    pm.rename(k, new)
-        # Two arguments replace words.
-        elif lenArg == 2:
-            before = arg[0]
-            after = arg[1]
-            for obj in sel:
-                new = obj.replace(before, after)
-                pm.rename(obj, new)
-        else:
-            return
 
 
-class Curves(Common):
+    def getNameAndPosition(self, selections: list) -> dict:
+        nameAndPosition = {}
+        for i in selections:
+            point = pm.xform(i, q=True, ws=True, rp=True)
+            nameAndPosition[i] = point
+        return nameAndPosition
+
+
+    def createJoints(self, positions: list) -> list:
+        pm.select(cl=True)
+        jointNames = [pm.joint(p=i) for i in positions]
+        return jointNames
+
+
+    def setPoleDirection(self, object, aimJoint, upVectorJoint):
+        pm.aimConstraint(
+            aimJoint, object, o=(0,0,90), wut='object', wuo=upVectorJoint
+            )
+        pm.delete(object, cn=True)
+
+
+class Curves:
     def __init__(self):
         super().__init__()
 
 
-    def createCurvePassingThrough(self, startFrame, endFrame):
+    def createCurvePassingKeyedUp(self, startFrame, endFrame):
         selections = pm.ls(sl=True)
         for i in selections:
             positions = []
@@ -102,6 +75,12 @@ class Curves(Common):
                 xyz = self.getPosition(i)
                 positions.append(xyz)
             pm.curve(p=positions, d=3)
+
+
+    def createCurvePassingPoints(self):
+        selections = pm.ls(sl=True)
+        positions = [self.getPosition(i) for i in selections]
+        result = pm.curve(ep=positions, d=3)
 
 
     def createCurvePassingLocators(self, curveClosed=False):
@@ -131,7 +110,7 @@ class Curves(Common):
         pm.rebuildCurve(simpleCurve, d=1, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
 
 
-    def createCurveOnlyTwoPoints(self, positions: list=[]):
+    def createCurveOnlyTwoPoints(self, positions: list=[]) -> str:
         """ The parameter positions are tuples in a list, 
         like this -> [(0,0,0), (1,1,1), (1,2,3), ...]
         """
@@ -144,6 +123,30 @@ class Curves(Common):
             return simpleLine
         except:
             return
+
+
+    def getPosition(self, selection) -> list:
+        try:
+            position = pm.pointPosition(selection)
+        except:
+            position = pm.xform(selection, q=1, ws=1, rp=1)
+        return position
+
+
+    def makeSameAsParentPivot(self, object, parents) -> None:
+        """ If you put object under parents and freeze it, 
+        the pivots match together. """
+        parentsPivot = self.getPosition(parents)
+        pm.xform(object, sp=parentsPivot, rp=parentsPivot)
+        pm.parent(object, parents)
+        pm.makeIdentity(object, a=1, t=1, r=1, s=1, n=0, pn=1)
+        pm.parent(object, w=True)
+
+
+    def createLocator(self, position=0) -> str:
+        locator = pm.spaceLocator()
+        pm.move(locator, position)
+        return locator
 
 
 class Controllers:
@@ -431,7 +434,7 @@ class Grouping:
             pm.parent(i, emptyGroup)
 
 
-class Joints(Selections):
+class Joints:
     def __init__(self):
         super().__init__()
 
@@ -462,38 +465,17 @@ class Joints(Selections):
         selections = pm.ls(sl=True)
         if len(selections) != 3:
             return
-        jointsNameAndPosition = self.getPositionsOfJoints(selections)
+        jointsNameAndPosition = self.getNameAndPosition(selections)
         jointNames = jointsNameAndPosition.keys()
         jointPoint = jointsNameAndPosition.values()
         firstJoint, middleJoint, endJoint = jointNames
         firstPoint, middlePoint, endPoint = jointPoint
-        newJoint, newEndJoint = self.createTwoJoints(firstPoint, endPoint)
+        newJoint, newEndJoint = self.createJoints([firstPoint, endPoint])
         pm.select(cl=True)
         pm.select(newJoint)
         self.orientJoints('xyz', 'yup')
         self.setPoleDirection(newJoint, endJoint, middleJoint)
         pm.matchTransform(newJoint, middleJoint, pos=True)
-
-
-    def getPositionsOfJoints(self, selectedJoints: list) -> dict:
-        jointNameAndPosition = {}
-        for i in selectedJoints:
-            point = pm.xform(i, q=True, ws=True, rp=True)
-            jointNameAndPosition[i] = point
-        return jointNameAndPosition
-
-
-    def createTwoJoints(self, startPosition, endPosition) -> list:
-        pm.select(cl=True)
-        jointNames = [pm.joint(p=i) for i in [startPosition, endPosition]]
-        return jointNames
-
-
-    def setPoleDirection(self, startJoint, endJoint, middleJoint):
-        pm.aimConstraint(
-            endJoint, startJoint, o=(0,0,90), wut='object', wuo=middleJoint
-            )
-        pm.delete(startJoint, cn=True)
 
 
     def setJointsStyleNone(self):
@@ -502,6 +484,40 @@ class Joints(Selections):
         joints = [i for i in selections if pm.objectType(i)=='joint']
         for i in joints:
             pm.setAttr(f"{i}.drawStyle", 2)
+
+
+    def getNameAndPosition(self, selections: list) -> dict:
+        nameAndPosition = {}
+        for i in selections:
+            point = pm.xform(i, q=True, ws=True, rp=True)
+            nameAndPosition[i] = point
+        return nameAndPosition
+
+
+    def createJoints(self, positions: list) -> list:
+        pm.select(cl=True)
+        jointNames = [pm.joint(p=i) for i in positions]
+        return jointNames
+
+
+    def setPoleDirection(self, object, aimJoint, upVectorJoint):
+        pm.aimConstraint(
+            aimJoint, object, o=(0,0,90), wut='object', wuo=upVectorJoint
+            )
+        pm.delete(object, cn=True)
+
+
+    def selectJointOnly(self) -> list:
+        transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
+        result = []
+        for i in transformNodes:
+            iType = pm.objectType(i)
+            if iType == 'joint':
+                result.append(i)
+            else:
+                continue
+        pm.select(result)
+        return result
 
 
 # 79 char line ================================================================
@@ -514,10 +530,13 @@ class Joints(Selections):
 # jnt.setJointsStyleNone()
 # cc = Curves()
 # cc.createCurveAimingPoint()
+# cc.createCurvePassingPoints()
 # grp = Grouping()
 # grp.groupingWithOwnPivot()
 # ctrl = Controllers()
-# ctrl.createControllers(pointer=True)
+# ctrl.createControllers(sphere=1)
 # sel = Selections()
 # sel.selectGroupOnly()
 # sel.selectJointOnly()
+
+

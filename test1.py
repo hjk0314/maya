@@ -1,5 +1,6 @@
 
 import pymel.core as pm
+import re
 
 
 class AutoRig_Wheel:
@@ -213,5 +214,49 @@ class A:
 
 
 
-ab = A().B()
-ab.report()
+
+def reName(*arg):
+    numberOfArguments = len(arg)
+    if numberOfArguments == 1:
+        newName()
+    elif numberOfArguments == 2:
+        replaceName()
+    else:
+        return
+
+
+def newName(nameToChange):
+    selections = pm.ls(sl=True)
+    nameSlices = re.split(r'([^0-9]+)([0-9]*)', nameToChange)
+    nameSlices = [i for i in nameSlices if i]
+    indexAndNumber = {}
+    for i, slice in enumerate(nameSlices):
+        if slice.isdigit():
+            indexAndNumber[i] = int(slice)
+        else:
+            continue
+    if len(indexAndNumber):
+        idx = max(indexAndNumber)
+        number = indexAndNumber[idx]
+        numberDigit = int(str(number))
+        for j, k in enumerate(selections):
+            numStr = str(number + j)
+            numLen = len(numStr)
+            if numLen < numberDigit:
+                sub = numberDigit - numLen
+                numStr = '0'*sub + numStr
+            nameSlices[idx] = numStr
+            new = ''.join(nameSlices)
+            pm.rename(k, new)
+    else:
+        for j, k in enumerate(selections):
+            new = ''.join(nameSlices) + str(j)
+            pm.rename(k, new)
+
+
+def replaceName(originalName, nameToChange):
+    if pm.objExists(nameToChange):
+        result = ""
+    else:
+        result = pm.rename(originalName, nameToChange)
+    return result
