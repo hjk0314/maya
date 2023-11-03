@@ -1,6 +1,7 @@
 
-import pymel.core as pm
 import re
+import pymel.core as pm
+import maya.OpenMaya as om
 
 
 class AutoRig_Wheel:
@@ -215,48 +216,117 @@ class A:
 
 
 
+
+
 def reName(*arg):
+    """ If there is one argument, create a new name, 
+    if there are two arguments, replace a specific word.
+    >>> reName("nameToCreate")
+    >>> reName("Apple", "Banana")
+     """
     numberOfArguments = len(arg)
     if numberOfArguments == 1:
-        newName()
+        nameToChange = arg[0]
+        newName(nameToChange)
     elif numberOfArguments == 2:
-        replaceName()
+        existingWord = arg[0]
+        wordToChange = arg[1]
+        changeWords(existingWord, wordToChange)
     else:
-        return
+        pass
 
 
 def newName(nameToChange):
-    selections = pm.ls(sl=True)
-    nameSlices = re.split(r'([^0-9]+)([0-9]*)', nameToChange)
-    nameSlices = [i for i in nameSlices if i]
-    indexAndNumber = {}
+    numbersInfo = isNumberInString(nameToChange)
+    if numbersInfo:
+        result = nameDigitFormat(nameToChange, numbersInfo)
+    else:
+        result = nameSimply(nameToChange)
+    showResult(result)
+
+
+def changeWords(originalWord, wordToChange) -> dict:
+    selections = pm.ls(sl=True, fl=True)
+    failureDict = {}
+    for i in selections:
+        selected = i.name()
+        nameToChange = selected.replace(originalWord, wordToChange)
+        if pm.objExists(nameToChange):
+            failureDict[selected] = nameToChange
+            continue
+        else:
+            pm.rename(selected, nameToChange)
+    return failureDict
+
+
+def isNumberInString(nameToChange):
+    nameSlices = seperateNumbersAndLetters(nameToChange)
+    numbersInfo = {}
     for i, slice in enumerate(nameSlices):
         if slice.isdigit():
-            indexAndNumber[i] = int(slice)
+            # 'slice' must be a string to know the number of digits.
+            numbersInfo[i] = slice
         else:
             continue
-    if len(indexAndNumber):
-        idx = max(indexAndNumber)
-        number = indexAndNumber[idx]
-        numberDigit = int(str(number))
-        for j, k in enumerate(selections):
-            numStr = str(number + j)
-            numLen = len(numStr)
-            if numLen < numberDigit:
-                sub = numberDigit - numLen
-                numStr = '0'*sub + numStr
-            nameSlices[idx] = numStr
-            new = ''.join(nameSlices)
-            pm.rename(k, new)
-    else:
-        for j, k in enumerate(selections):
-            new = ''.join(nameSlices) + str(j)
-            pm.rename(k, new)
+    return numbersInfo
 
 
-def replaceName(originalName, nameToChange):
-    if pm.objExists(nameToChange):
-        result = ""
+def nameDigitFormat(nameToChange, numbersInfo):
+    """ Input nameToChange as "vhcl_car123_rig_v0123" and select 3 objects. 
+    Name them like this.
+    >>> "vhcl_car123_rig_v0123"
+    >>> "vhcl_car123_rig_v0124"
+    >>> "vhcl_car123_rig_v0125"
+     """
+    selections = pm.ls(sl=True, fl=True)
+    nameSlices = seperateNumbersAndLetters(nameToChange)
+    idx = max(numbersInfo)
+    nDigit = len(numbersInfo[idx])
+    number = int(numbersInfo[idx])
+    failureDict = {}
+    for i, obj in enumerate(selections):
+        increasedNumber = f"%0{nDigit}d" % (number + i)
+        nameSlices[idx] = increasedNumber
+        result = ''.join(nameSlices)
+        if pm.objExists(result):
+            failureDict[obj] = result
+            continue
+        else:
+            pm.rename(obj, result)
+    return failureDict
+
+
+def nameSimply(nameToChange):
+    nameSlices = seperateNumbersAndLetters(nameToChange)
+    selections = pm.ls(sl=True, fl=True)
+    failureDict = {}
+    for i, obj in enumerate(selections):
+        result = ''.join(nameSlices) + str(i)
+        if pm.objExists(result):
+            failureDict[obj] = result
+            continue
+        else:
+            pm.rename(obj, result)
+    return failureDict
+
+
+def showResult(reNameFailed: dict):
+    if reNameFailed:
+        warningMessages = "\n"
+        for objName, nameToChange in reNameFailed.items():
+            warningMessages += f"{objName} -> {nameToChange} failed. \n"
+        om.MGlobal.displayWarning(warningMessages)
     else:
-        result = pm.rename(originalName, nameToChange)
-    return result
+        warningMessages = "ReName all success."
+        om.MGlobal.displayInfo(warningMessages)
+
+
+def seperateNumbersAndLetters(nameToChange) -> list:
+    """ inputName = "vhcl_car123_rig_v0123"
+    >>> ['vhcl_car', '123', '_rig_v', '0123']
+     """
+    nameSlices = re.split(r'([^0-9]+)([0-9]*)', nameToChange)
+    removeSpaces = [i for i in nameSlices if i]
+    return removeSpaces
+
+
