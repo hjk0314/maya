@@ -214,119 +214,147 @@ class A:
             print(self.stringList)
 
 
+class Rename:
+    def __init__(self):
+        """ 
+        reName("nameToCreate_001")
+        >>> "nameToCreate_001"
+        >>> "nameToCreate_002"
+        >>> "nameToCreate_003"
 
-
-
-
-def reName(*arg):
-    """ If there is one argument, create a new name, 
-    if there are two arguments, replace a specific word.
-    >>> reName("nameToCreate")
-    >>> reName("Apple", "Banana")
-     """
-    numberOfArguments = len(arg)
-    if numberOfArguments == 1:
-        nameToChange = arg[0]
-        newName(nameToChange)
-    elif numberOfArguments == 2:
-        existingWord = arg[0]
-        wordToChange = arg[1]
-        changeWords(existingWord, wordToChange)
-    else:
+        reName("Apple", "Banana")
+        >>> "Apple_01" -> "Banana_01"
+         """
         pass
 
 
-def newName(nameToChange):
-    numbersInfo = isNumberInString(nameToChange)
-    if numbersInfo:
-        result = nameDigitFormat(nameToChange, numbersInfo)
-    else:
-        result = nameSimply(nameToChange)
-    showResult(result)
+    def reName(self, *arg: str):
+        """ If there
+        - is one argument, create a new name, 
+        - are two arguments, replace a specific word.
 
+        reName("nameToCreate_001")
+        >>> "nameToCreate_001"
+        >>> "nameToCreate_002"
+        >>> "nameToCreate_003"
 
-def changeWords(originalWord, wordToChange) -> dict:
-    selections = pm.ls(sl=True, fl=True)
-    failureDict = {}
-    for i in selections:
-        selected = i.name()
-        nameToChange = selected.replace(originalWord, wordToChange)
-        if pm.objExists(nameToChange):
-            failureDict[selected] = nameToChange
-            continue
+        reName("Apple", "Banana")
+        >>> "Apple_01" -> "Banana_01"
+         """
+        numberOfArguments = len(arg)
+        if numberOfArguments == 1:
+            nameToCreate = arg[0]
+            self.createNewName(nameToCreate)
+        elif numberOfArguments == 2:
+            originalWord = arg[0]
+            wordToChange = arg[1]
+            self.changeWords(originalWord, wordToChange)
         else:
-            pm.rename(selected, nameToChange)
-    return failureDict
+            pass
 
 
-def isNumberInString(nameToChange):
-    nameSlices = seperateNumbersAndLetters(nameToChange)
-    numbersInfo = {}
-    for i, slice in enumerate(nameSlices):
-        if slice.isdigit():
-            # 'slice' must be a string to know the number of digits.
-            numbersInfo[i] = slice
+    def createNewName(self, nameToCreate):
+        nameSlices = self.seperateNumbersInName(nameToCreate)
+        numberDict = self.numbersInfo(nameSlices)
+        if numberDict:
+            result = self.nameDigitly(nameSlices, numberDict)
         else:
-            continue
-    return numbersInfo
+            result = self.nameSimply(nameToCreate)
+        self.failureReport(result)
 
 
-def nameDigitFormat(nameToChange, numbersInfo):
-    """ Input nameToChange as "vhcl_car123_rig_v0123" and select 3 objects. 
-    Name them like this.
-    >>> "vhcl_car123_rig_v0123"
-    >>> "vhcl_car123_rig_v0124"
-    >>> "vhcl_car123_rig_v0125"
-     """
-    selections = pm.ls(sl=True, fl=True)
-    nameSlices = seperateNumbersAndLetters(nameToChange)
-    idx = max(numbersInfo)
-    nDigit = len(numbersInfo[idx])
-    number = int(numbersInfo[idx])
-    failureDict = {}
-    for i, obj in enumerate(selections):
-        increasedNumber = f"%0{nDigit}d" % (number + i)
-        nameSlices[idx] = increasedNumber
-        result = ''.join(nameSlices)
-        if pm.objExists(result):
-            failureDict[obj] = result
-            continue
+    def changeWords(self, originalWord, wordToChange) -> dict:
+        selections = pm.ls(sl=True, fl=True)
+        failureDict = {}
+        for i in selections:
+            selected = i.name()
+            nameToChange = selected.replace(originalWord, wordToChange)
+            if pm.objExists(nameToChange):
+                failureDict[selected] = nameToChange
+                continue
+            else:
+                pm.rename(selected, nameToChange)
+        return failureDict
+
+
+    def seperateNumbersInName(self, fullName: str) -> list:
+        """ inputName -> "vhcl_car123_rig_v0123"
+        >>> ['vhcl_car', '123', '_rig_v', '0123']
+        """
+        nameSlices = re.split(r'([^0-9]+)([0-9]*)', fullName)
+        result = [i for i in nameSlices if i]
+        return result
+
+
+    def numbersInfo(self, nameSlices: list) -> dict:
+        """ Create and return the numbers in a name as a dict.
+        - inputName -> "vhcl_car123_rig_v0123"
+        - nameSlices -> ['vhcl_car', '123', '_rig_v', '0123']
+        - result -> {1: '123', 3: '0123'}
+         """
+        result = {}
+        for i, slice in enumerate(nameSlices):
+            if slice.isdigit():
+                # 'slice' must be a string to know the number of digits.
+                result[i] = slice
+            else:
+                continue
+        return result
+
+
+    def nameDigitly(self, nameSlices: list, numbersInfo: dict):
+        """ Name by increasing number.
+        - originalName -> "vhcl_car123_rig_v0123".
+        - nameSlices -> ['vhcl_car', '123', '_rig_v', '0123']
+        - numbersInfo -> {1: '123', 3: '0123'}
+
+        Select 3 objects and name them. Return below.
+        >>> "vhcl_car123_rig_v0123"
+        >>> "vhcl_car123_rig_v0124"
+        >>> "vhcl_car123_rig_v0125"
+        """
+        selections = pm.ls(sl=True, fl=True)
+        idx = max(numbersInfo)
+        nDigit = len(numbersInfo[idx])
+        number = int(numbersInfo[idx])
+        failureDict = {}
+        for i, obj in enumerate(selections):
+            increasedNumber = f"%0{nDigit}d" % (number + i)
+            nameSlices[idx] = increasedNumber
+            result = ''.join(nameSlices)
+            if pm.objExists(result):
+                failureDict[obj] = result
+                continue
+            else:
+                pm.rename(obj, result)
+        return failureDict
+
+
+    def nameSimply(self, nameSlices: list):
+        """ Name Simply. And returns a Dict of failures.
+        - originalName -> "vhcl_car123_rig_v0123"
+        - nameSlices -> ['vhcl_car', '123', '_rig_v', '0123']
+         """
+        selections = pm.ls(sl=True, fl=True)
+        failureDict = {}
+        for i, obj in enumerate(selections):
+            result = ''.join(nameSlices) + str(i)
+            if pm.objExists(result):
+                failureDict[obj] = result
+                continue
+            else:
+                pm.rename(obj, result)
+        return failureDict
+
+
+    def failureReport(self, failureDict: dict):
+        if failureDict:
+            warningMessages = "\n"
+            for objName, nameToChange in failureDict.items():
+                warningMessages += f"{objName} -> {nameToChange} failed. \n"
+            om.MGlobal.displayWarning(warningMessages)
         else:
-            pm.rename(obj, result)
-    return failureDict
-
-
-def nameSimply(nameToChange):
-    nameSlices = seperateNumbersAndLetters(nameToChange)
-    selections = pm.ls(sl=True, fl=True)
-    failureDict = {}
-    for i, obj in enumerate(selections):
-        result = ''.join(nameSlices) + str(i)
-        if pm.objExists(result):
-            failureDict[obj] = result
-            continue
-        else:
-            pm.rename(obj, result)
-    return failureDict
-
-
-def showResult(reNameFailed: dict):
-    if reNameFailed:
-        warningMessages = "\n"
-        for objName, nameToChange in reNameFailed.items():
-            warningMessages += f"{objName} -> {nameToChange} failed. \n"
-        om.MGlobal.displayWarning(warningMessages)
-    else:
-        warningMessages = "ReName all success."
-        om.MGlobal.displayInfo(warningMessages)
-
-
-def seperateNumbersAndLetters(nameToChange) -> list:
-    """ inputName = "vhcl_car123_rig_v0123"
-    >>> ['vhcl_car', '123', '_rig_v', '0123']
-     """
-    nameSlices = re.split(r'([^0-9]+)([0-9]*)', nameToChange)
-    removeSpaces = [i for i in nameSlices if i]
-    return removeSpaces
+            warningMessages = "Rename all success."
+            om.MGlobal.displayInfo(warningMessages)
 
 
