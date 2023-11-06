@@ -561,7 +561,7 @@ class Rename:
 
 
     def createNewName(self, nameToCreate):
-        nameSlices = self.seperateNumbersInName(nameToCreate)
+        nameSlices = self.splitNumbers(nameToCreate)
         numberDict = self.numbersInfo(nameSlices)
         if numberDict:
             result = self.nameDigitly(nameSlices, numberDict)
@@ -584,12 +584,13 @@ class Rename:
         return failureDict
 
 
-    def seperateNumbersInName(self, fullName: str) -> list:
+    def splitNumbers(self, fullName: str) -> list:
         """ inputName -> "vhcl_car123_rig_v0123"
         >>> ['vhcl_car', '123', '_rig_v', '0123']
         """
-        nameSlices = re.split(r'([^0-9]+)([0-9]*)', fullName)
+        nameSlices = re.split(r'(\d+)', fullName)
         result = [i for i in nameSlices if i]
+        print(result)
         return result
 
 
@@ -679,7 +680,7 @@ class Rename:
 # grp = Grouping()
 # grp.groupingWithOwnPivot("null")
 # ctrl = Controllers()
-# ctrl.createControllers(sphere=1)
+# ctrl.createControllers(circle=2)
 # sel = Selections()
 # sel.selectGroupOnly()
 # sel.selectJointOnly()
