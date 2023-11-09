@@ -79,7 +79,7 @@ class Curves:
 
 
     def createCurvePassingPoints(self):
-        selections = pm.ls(sl=True)
+        selections = pm.ls(sl=True, fl=True)
         positions = [self.getPosition(i) for i in selections]
         result = pm.curve(ep=positions, d=3)
 
@@ -671,18 +671,8 @@ class Rename:
 
 
 # jnt = Joints()
-# jnt.orientJoints()
-# jnt.createPolevectorJoint()
-# jnt.setJointsStyleNone()
 # cc = Curves()
-# cc.createCurveAimingPoint()
-# cc.createCurvePassingPoints()
-# grp = Grouping()
-# grp.groupingWithOwnPivot()
 # ctrl = Controllers()
-# ctrl.createControllers(arrow3=1, arrow4=1, arrow5=1, arrow6=1)
+# grp = Grouping()
 # sel = Selections()
-# sel.selectGroupOnly()
-# sel.selectJointOnly()
-
 
