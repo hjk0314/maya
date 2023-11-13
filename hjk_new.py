@@ -1,6 +1,5 @@
 import re
 import pymel.core as pm
-import maya.OpenMaya as om
 
 
 class Common:
@@ -610,7 +609,7 @@ class Rename:
         return result
 
 
-    def nameDigitly(self, nameSlices: list, numbersInfo: dict):
+    def nameDigitly(self, nameSlices: list, numbersInfo: dict) -> dict:
         """ Name by increasing number.
         - originalName -> "vhcl_car123_rig_v0123".
         - nameSlices -> ['vhcl_car', '123', '_rig_v', '0123']
@@ -638,7 +637,7 @@ class Rename:
         return failureDict
 
 
-    def nameSimply(self, nameSlices: list):
+    def nameSimply(self, nameSlices: list) -> dict:
         """ Name Simply. And returns a Dict of failures.
         - originalName -> "vhcl_car123_rig_v0123"
         - nameSlices -> ['vhcl_car', '123', '_rig_v', '0123']
@@ -660,10 +659,27 @@ class Rename:
             warningMessages = "\n"
             for objName, nameToChange in failureDict.items():
                 warningMessages += f"{objName} -> {nameToChange} failed. \n"
-            om.MGlobal.displayWarning(warningMessages)
+            pm.warning(warningMessages)
         else:
             warningMessages = "Rename all success."
-            om.MGlobal.displayInfo(warningMessages)
+            print(warningMessages)
+
+
+class QuickRig:
+    def __init__(self):
+        pass
+
+
+    def car(self):
+        pass
+
+
+    def human(self):
+        # self.isExistMainCurve()
+        # self.createJoints()
+        # self.orientJoints()
+        # self.parentHierarchically()
+        pass
 
 
 # 79 char line ================================================================
