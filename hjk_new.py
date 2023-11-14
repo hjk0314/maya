@@ -502,6 +502,9 @@ class Joints:
 
 
     def createJoints(self, positions: list) -> list:
+        """ Tuples in the list.
+        >>> [(1,0,1), (-1,0,1), (1,0,-1), (-1,0,-1)]
+         """
         pm.select(cl=True)
         jointNames = [pm.joint(p=i) for i in positions]
         return jointNames
@@ -751,13 +754,35 @@ class QuickRig:
 
 
     def human(self):
-        isAlreadyExists = pm.objExists(self.mainCurve)
-        if isAlreadyExists:
+        isMainCurveExists = pm.objExists(self.mainCurve)
+        if isMainCurveExists:
             return
         # self.createJoints()
         # self.orientJoints()
         # self.parentHierarchically()
         pass
+
+
+    def parentHierarchically(selections: list=[]):
+        if not selections:
+            selections = pm.selected()
+        for idx, upper in enumerate(selections):
+            try:
+                lower = selections[idx + 1]
+                pm.parent(lower, upper)
+            except:
+                continue
+
+
+    def createJointWithName(self, nameAndPosition: dict):
+        """ Tuples in the list.
+        >>> [(1,0,1), (-1,0,1), (1,0,-1), (-1,0,-1)]
+         """
+        pm.select(cl=True)
+        for jointName, position in nameAndPosition.items():
+            pm.joint(p=position, n=jointName)
+
+
 
 
 
@@ -769,7 +794,7 @@ cc = Curves()
 
 
 grp = Grouping()
-grp.groupingWithOwnPivot("aim")
+# grp.groupingWithOwnPivot("aim")
 
 
 ctrl = Controllers()
@@ -778,23 +803,7 @@ ctrl = Controllers()
 
 jnt = Joints()
 # jnt.orientJoints()
-
-
-
-# com = Common()
-def parentHierarchically(selections: list=[]):
-    if not selections:
-        selections = pm.selected()
-    for idx, upper in enumerate(selections):
-        try:
-            lower = selections[idx + 1]
-            pm.parent(lower, upper)
-        except:
-            continue
-# pos = [com.getPosition(i) for i in sel]
-# jnt.createJoints(posselections
-
-# parentHierarchically()
+# jnt.createJoints([(0,0,0)])
 
 
 
