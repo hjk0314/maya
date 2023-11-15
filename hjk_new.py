@@ -677,10 +677,13 @@ class Rename:
 
 class QuickRig:
     def __init__(self):
-        pass
-        self.rootJoint = "Hips"
-        self.mainCurve = "temporaryMainCurve"
-        self.jointNameAndPosition = {
+        self.humanMainCurve = "humanMainCurve"
+        self.humanSpines = ['Hips', 'Spine', 'Spine1', 'Spine2']
+        self.humanHead = ['Neck', 'Head', 'HeadTop_End']
+        self.humanArms = ['Shoulder', 'Arm', 'ForeArm', 'Hand']
+        self.humanLegs = ['UpLeg', 'Leg', 'Foot', 'ToeBase', 'Toe_End']
+        self.humanFingers = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
+        self.humanJointPosition = {
             'Hips': (0.0, 98.223, 1.464), 
             'Spine': (0.0, 107.814, 1.588), 
             'Spine1': (0.0, 117.134, 0.203), 
@@ -747,12 +750,12 @@ class QuickRig:
             'RightToeBase': (-10.797, 0.001, 5.7), 
             'RightToe_End': (-10.797, 0.0, 14.439), 
             }
-        self.jointStructureAll = {
-            "Hips": ['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'HeadTop_End'], 
-            "LeftShoulder": ['LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand'], 
-            "RightShoulder": ['RightShoulder', 'RightArm', 'RightForeArm', 'RightHand'], 
-            "LeftUpLeg": ['LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToeBase', 'LeftToe_End'], 
-            "RightUpLeg": [f'Right{i}' for i in ['UpLeg', 'Leg', 'Foot', 'ToeBase', 'Toe_End']], 
+        self.humanJointStructure1 = {
+            "Hips": self.humanSpines + self.humanHead, 
+            "LeftShoulder": [f'Left{i}' for i in self.humanArms], 
+            "RightShoulder": [f'Right{i}' for i in self.humanArms], 
+            "LeftUpLeg": [f'Left{i}' for i in self.humanLegs], 
+            "RightUpLeg": [f'Right{i}' for i in self.humanLegs], 
             "LeftHandThumb1": [f'LeftHandThumb{i}' for i in range(1, 5)], 
             "LeftHandIndex1": [f'LeftHandIndex{i}' for i in range(1, 5)], 
             "LeftHandMiddle1": [f'LeftHandMiddle{i}' for i in range(1, 5)], 
@@ -764,23 +767,11 @@ class QuickRig:
             "RightHandRing1": [f'RightHandRing{i}' for i in range(1, 5)], 
             "RightHandPinky1": [f'RightHandPinky{i}' for i in range(1, 5)], 
         }
-        self.jointStructureParts = {
+        self.humanJointStructure2 = {
             'Hips': ['LeftUpLeg', 'RightUpLeg'], 
             'Spine2': ['LeftShoulder', 'RightShoulder'], 
-            'LeftHand': [
-                'LeftHandThumb1', 
-                'LeftHandIndex1', 
-                'LeftHandMiddle1', 
-                'LeftHandRing1', 
-                'LeftHandPinky1'
-                ], 
-            'RightHand': [
-                'RightHandThumb1', 
-                'RightHandIndex1', 
-                'RightHandMiddle1', 
-                'RightHandRing1', 
-                'RightHandPinky1'
-                ], 
+            'LeftHand': [f'LeftHand{i}1' for i in self.humanFingers], 
+            'RightHand': [f'RightHand{i}1' for i in self.humanFingers], 
         }
 
 
@@ -789,27 +780,28 @@ class QuickRig:
 
 
     def firstCreateMixamoBones(self):
-        isMainCurveExists = pm.objExists(self.mainCurve)
+        rootJoint = self.humanSpines[0]
+        isMainCurveExists = pm.objExists(self.humanMainCurve)
         if isMainCurveExists:
             self.cleanCurves()
             self.cleanJoints()
-        self.createJointWithName(self.jointNameAndPosition)
-        for jointList in self.jointStructureAll.values():
+        self.createJointWithName(self.humanJointPosition)
+        for jointList in self.humanJointStructure1.values():
             self.parentHierarchically(jointList)
             self.orientJointsMixamoType(jointList)
-        for parents, childList in self.jointStructureParts.items():
+        for parents, childList in self.humanJointStructure2.items():
             for child in childList:
                 self.parentHierarchically([parents, child])
-        pm.circle(nr=(0, 1, 0), n=self.mainCurve, ch=0, r=50)
-        pm.parent(self.rootJoint, self.mainCurve)
+        pm.circle(nr=(0, 1, 0), n=self.humanMainCurve, ch=0, r=50)
+        pm.parent(rootJoint, self.humanMainCurve)
 
 
     def cleanCurves(self):
-        pm.delete(self.mainCurve)
+        pm.delete(self.humanMainCurve)
 
 
     def cleanJoints(self):
-        for jointName in self.jointNameAndPosition.keys():
+        for jointName in self.humanJointPosition.keys():
             try:
                 pm.delete(jointName)
             except:
@@ -878,7 +870,8 @@ class QuickRig:
         return result
 
 
-
+# 79 char line ================================================================
+# 72 docstring or comments line ========================================   
 
 
 # com = Common()
@@ -926,7 +919,5 @@ qc.firstCreateMixamoBones()
 
 
 
-# 79 char line ================================================================
-# 72 docstring or comments line ========================================   
 
 
