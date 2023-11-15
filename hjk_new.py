@@ -446,10 +446,10 @@ class Joints:
         super().__init__()
 
 
-    def orientJoints(self, primaryAxis='yzx', secondaryAxis='zup'):
+    def orientJoints(self, primaryAxis='yzx', secondaryAxis='zup', selections=[]):
         """ The default value of primaryAxis and secondaryAxis are 
         the same as Mixamo spine. """
-        allJoints = self.selectJointOnly()
+        allJoints = selections if selections else self.selectJointOnly()
         endJoints = [i for i in allJoints if not i.getChildren()]
         initJoint = allJoints[0]
         pm.makeIdentity(allJoints, a=True, jo=True, n=0)
@@ -747,23 +747,76 @@ class QuickRig:
             'RightToeBase': (-10.797, 0.001, 5.7), 
             'RightToe_End': (-10.797, 0.0, 14.439), 
             }
+        self.jointStructureAll = {
+            "Hips": ['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'HeadTop_End'], 
+            "LeftShoulder": ['LeftShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand'], 
+            "RightShoulder": ['RightShoulder', 'RightArm', 'RightForeArm', 'RightHand'], 
+            "LeftUpLeg": ['LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToeBase', 'LeftToe_End'], 
+            "RightUpLeg": [f'Right{i}' for i in ['UpLeg', 'Leg', 'Foot', 'ToeBase', 'Toe_End']], 
+            "LeftHandThumb1": [f'LeftHandThumb{i}' for i in range(1, 5)], 
+            "LeftHandIndex1": [f'LeftHandIndex{i}' for i in range(1, 5)], 
+            "LeftHandMiddle1": [f'LeftHandMiddle{i}' for i in range(1, 5)], 
+            "LeftHandRing1": [f'LeftHandRing{i}' for i in range(1, 5)], 
+            "LeftHandPinky1": [f'LeftHandPinky{i}' for i in range(1, 5)], 
+            "RightHandThumb1": [f'RightHandThumb{i}' for i in range(1, 5)], 
+            "RightHandIndex1": [f'RightHandIndex{i}' for i in range(1, 5)], 
+            "RightHandMiddle1": [f'RightHandMiddle{i}' for i in range(1, 5)], 
+            "RightHandRing1": [f'RightHandRing{i}' for i in range(1, 5)], 
+            "RightHandPinky1": [f'RightHandPinky{i}' for i in range(1, 5)], 
+        }
+        self.jointStructureParts = {
+            'Hips': ['LeftUpLeg', 'RightUpLeg'], 
+            'Spine2': ['LeftShoulder', 'RightShoulder'], 
+            'LeftHand': [
+                'LeftHandThumb1', 
+                'LeftHandIndex1', 
+                'LeftHandMiddle1', 
+                'LeftHandRing1', 
+                'LeftHandPinky1'
+                ], 
+            'RightHand': [
+                'RightHandThumb1', 
+                'RightHandIndex1', 
+                'RightHandMiddle1', 
+                'RightHandRing1', 
+                'RightHandPinky1'
+                ], 
+        }
 
 
     def car(self):
         pass
 
 
-    def human(self):
+    def firstCreateMixamoBones(self):
         isMainCurveExists = pm.objExists(self.mainCurve)
         if isMainCurveExists:
-            return
-        # self.createJoints()
-        # self.orientJoints()
-        # self.parentHierarchically()
-        pass
+            self.cleanCurves()
+            self.cleanJoints()
+        self.createJointWithName(self.jointNameAndPosition)
+        for jointList in self.jointStructureAll.values():
+            self.parentHierarchically(jointList)
+            self.orientJointsMixamoType(jointList)
+        for parents, childList in self.jointStructureParts.items():
+            for child in childList:
+                self.parentHierarchically([parents, child])
+        pm.circle(nr=(0, 1, 0), n=self.mainCurve, ch=0, r=50)
+        pm.parent(self.rootJoint, self.mainCurve)
 
 
-    def parentHierarchically(selections: list=[]):
+    def cleanCurves(self):
+        pm.delete(self.mainCurve)
+
+
+    def cleanJoints(self):
+        for jointName in self.jointNameAndPosition.keys():
+            try:
+                pm.delete(jointName)
+            except:
+                continue
+
+
+    def parentHierarchically(self, selections: list=[]):
         if not selections:
             selections = pm.selected()
         for idx, upper in enumerate(selections):
@@ -775,38 +828,90 @@ class QuickRig:
 
 
     def createJointWithName(self, nameAndPosition: dict):
-        """ Tuples in the list.
-        >>> [(1,0,1), (-1,0,1), (1,0,-1), (-1,0,-1)]
-         """
-        pm.select(cl=True)
         for jointName, position in nameAndPosition.items():
+            pm.select(cl=True)
             pm.joint(p=position, n=jointName)
 
 
+    def orientJointsMixamoType(self, jointList=[]):
+        firstJoint = jointList[0]
+        if "LeftShoulder" in firstJoint or "LeftHand" in firstJoint:
+            primaryAxis = 'yxz'
+            secondaryAxis = 'zdown'
+        elif "RightShoulder" in firstJoint or "RightHand" in firstJoint:
+            primaryAxis = 'yxz'
+            secondaryAxis = 'zup'
+        else:
+            primaryAxis = 'yzx'
+            secondaryAxis = 'zup'
+        self.orientJoints(primaryAxis, secondaryAxis, jointList)
+        
+
+    def orientJoints(self, primaryAxis='yzx', secondaryAxis='zup', selections=[]):
+        """ The default value of primaryAxis and secondaryAxis are 
+        the same as Mixamo spine. """
+        allJoints = selections if selections else self.selectJointOnly()
+        endJoints = [i for i in allJoints if not pm.listRelatives(i, c=True)]
+        initJoint = allJoints[0]
+        pm.makeIdentity(allJoints, a=True, jo=True, n=0)
+        pm.joint(initJoint, 
+                e=True, # edit
+                oj=primaryAxis, # orientJoint
+                sao=secondaryAxis, # secondaryAxisOrient
+                ch=True, # children
+                zso=True, # zeroScaleOrient
+            )
+        for i in endJoints:
+            pm.joint(i, e=True, oj='none', ch=True, zso=True)
+
+
+    def selectJointOnly(self) -> list:
+        transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
+        result = []
+        for i in transformNodes:
+            iType = pm.objectType(i)
+            if iType == 'joint':
+                result.append(i)
+            else:
+                continue
+        pm.select(result)
+        return result
 
 
 
-cc = Curves()
+
+
+# com = Common()
+# sel = pm.ls(sl=True)
+# for i in sel:
+#     pos = com.getPosition(i)
+#     com.createLocator(pos)
+
+
+# cc = Curves()
 # cc.createCurvePassingLocators()
 # cc.createCurveAimingPoint()
 # cc.createCurveOnlyTwoPoints()
 # cc.createCurvePassingKeyedUp(1001, 1384)
+# cc.createCurvePassingPoints()
 
 
-grp = Grouping()
-# grp.groupingWithOwnPivot("aim")
+# grp = Grouping()
+# grp.groupingWithOwnPivot()
 
 
-ctrl = Controllers()
-# ctrl.createControllers(cube=1)
+# ctrl = Controllers()
+# ctrl.createControllers(arrow3=1, arrow4=1, arrow5=1, arrow6=1)
+# ctrl.createControllers(pointer=1)
 
 
-jnt = Joints()
+# jnt = Joints()
 # jnt.orientJoints()
 # jnt.createJoints([(0,0,0)])
 
 
-
+qc = QuickRig()
+qc.firstCreateMixamoBones()
 
 
 
