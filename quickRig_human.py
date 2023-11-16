@@ -247,17 +247,6 @@ class QHGeneral:
                 pm.parent(i, j)
 
 
-    # def getScaleAverage(self, obj=None):
-    #     """ Returns the scale average of the given argument. """
-    #     if not obj:
-    #         return
-    #     else:
-    #         tmp = pm.getAttr(f"{obj}.scale")
-    #         result = statistics.mean(tmp)
-    #         result = round(result, 3)
-    #         return result
-
-
     def finish(self):
         if self.checkSameNameCurve():
             cuv = self.sizeCuv

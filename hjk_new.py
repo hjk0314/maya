@@ -1,3 +1,4 @@
+from collections.abc import Iterable
 import re
 import pymel.core as pm
 
@@ -775,37 +776,95 @@ class QuickRig:
         }
 
 
+# Big size functions ==========================================================
+
+
     def car(self):
         pass
 
 
-    def firstCreateMixamoBones(self):
+    def createMixamoBones(self):
         rootJoint = self.humanSpines[0]
-        isMainCurveExists = pm.objExists(self.humanMainCurve)
-        if isMainCurveExists:
-            self.cleanCurves()
-            self.cleanJoints()
+        mainCurve = self.humanMainCurve
+        self.cleanObjects(self.humanMainCurve)
+        self.cleanObjects(self.humanJointPosition)
         self.createJointWithName(self.humanJointPosition)
+        self.buildStructure1()
+        self.buildStructure2()
+        self.createMainCurve(rootJoint, mainCurve)
+        pm.parent(rootJoint, mainCurve)
+
+
+    def alignSpinesCenter(self):
+        self.updatesAllJointPositionsCurrentState()
+        self.updatesSpineJointToCenterPosition()
+        self.createMixamoBones()
+
+
+    def sameBothSide(self, direction: str="LeftToRight"):
+        pass
+        
+
+# Middle size functions =======================================================
+
+
+    def updatesAllJointPositionsCurrentState(self):
+        allJoints = self.humanJointPosition.keys()
+        for joint in allJoints:
+            position = pm.xform(joint, q=True, t=True, ws=True)
+            self.humanJointPosition[joint] = position
+
+
+    def updatesSpineJointToCenterPosition(self):
+        spineJoints = self.humanSpines + self.humanHead
+        for joint in spineJoints:
+            x, y, z = pm.xform(joint, q=True, t=True, ws=True)
+            self.humanJointPosition[joint] = (0, y, z)
+
+
+    def buildStructure1(self):
         for jointList in self.humanJointStructure1.values():
             self.parentHierarchically(jointList)
             self.orientJointsMixamoType(jointList)
+
+
+    def buildStructure2(self):
         for parents, childList in self.humanJointStructure2.items():
             for child in childList:
                 self.parentHierarchically([parents, child])
-        pm.circle(nr=(0, 1, 0), n=self.humanMainCurve, ch=0, r=50)
-        pm.parent(rootJoint, self.humanMainCurve)
 
 
-    def cleanCurves(self):
-        pm.delete(self.humanMainCurve)
+# Small size functions ========================================================
 
 
-    def cleanJoints(self):
-        for jointName in self.humanJointPosition.keys():
-            try:
-                pm.delete(jointName)
-            except:
-                continue
+    def cleanObjects(self, *args):
+        for element in args:
+            isStr = isinstance(element, str)
+            isIter = isinstance(element, Iterable)
+            if not isStr and isIter:
+                [self.cleanObjects(i) for i in element]
+            else:
+                try:
+                    pm.delete(element)
+                except:
+                    pass
+
+
+    def createJointWithName(self, nameAndPosition: dict):
+        for jointName, position in nameAndPosition.items():
+            pm.select(cl=True)
+            pm.joint(p=position, n=jointName)
+
+
+    def createMainCurve(self, container: str, curveName: str):
+        containerBoundingBox = pm.xform(container, q=True, bb=True, ws=True)
+        x1, y1, z1, x2, y2, z2 = containerBoundingBox
+        x = (x2 - x1) / 2
+        y = (y2 - y1) / 2
+        z = (z2 - z1) / 2
+        containerSize = max(x, z)
+        containerSize = round(containerSize, 3)
+        pm.circle(nr=(0, 1, 0), n=curveName, ch=0, r=containerSize)
 
 
     def parentHierarchically(self, selections: list=[]):
@@ -819,25 +878,15 @@ class QuickRig:
                 continue
 
 
-    def createJointWithName(self, nameAndPosition: dict):
-        for jointName, position in nameAndPosition.items():
-            pm.select(cl=True)
-            pm.joint(p=position, n=jointName)
+    def upParentHierarchically(self, selections: list=[]):
+        if not selections:
+            selections = pm.selected()
+        for object in selections:
+            if not pm.listRelatives(object, p=True):
+                continue
+            else:
+                pm.parent(object, w=True)
 
-
-    def orientJointsMixamoType(self, jointList=[]):
-        firstJoint = jointList[0]
-        if "LeftShoulder" in firstJoint or "LeftHand" in firstJoint:
-            primaryAxis = 'yxz'
-            secondaryAxis = 'zdown'
-        elif "RightShoulder" in firstJoint or "RightHand" in firstJoint:
-            primaryAxis = 'yxz'
-            secondaryAxis = 'zup'
-        else:
-            primaryAxis = 'yzx'
-            secondaryAxis = 'zup'
-        self.orientJoints(primaryAxis, secondaryAxis, jointList)
-        
 
     def orientJoints(self, primaryAxis='yzx', secondaryAxis='zup', selections=[]):
         """ The default value of primaryAxis and secondaryAxis are 
@@ -868,6 +917,95 @@ class QuickRig:
                 continue
         pm.select(result)
         return result
+
+
+    def orientJointsMixamoType(self, jointList=[]):
+        firstJoint = jointList[0]
+        if "LeftShoulder" in firstJoint or "LeftHand" in firstJoint:
+            primaryAxis = 'yxz'
+            secondaryAxis = 'zdown'
+        elif "RightShoulder" in firstJoint or "RightHand" in firstJoint:
+            primaryAxis = 'yxz'
+            secondaryAxis = 'zup'
+        else:
+            primaryAxis = 'yzx'
+            secondaryAxis = 'zup'
+        self.orientJoints(primaryAxis, secondaryAxis, jointList)
+
+
+    def attachLocatorsToHumanSpines(self, spinesGroup: list) -> list:
+        """ Return created locators.
+        >>> spinesGroup = ['Hips', 'Spine', 'Spine1', ]
+        >>> result = ['loc_Hips', 'loc_Spine', 'loc_Spine1', ]
+         """
+        result = []
+        for boneName in spinesGroup:
+            locatorName = f"loc_{boneName}"
+            locator = pm.spaceLocator(n=locatorName)
+            pm.matchTransform(locator, boneName, pos=True)
+            result.append(locator)
+        return result
+
+
+    def attachHumanSpinesToLocators(self, spinesGroup):
+        for boneName in spinesGroup:
+            try:
+                pm.matchTransform(boneName, f"loc_{boneName}", pos=True)
+            except:
+                continue
+
+
+    def isSpinesGroupCentered(self, spinesGroup) -> bool:
+        for bone in spinesGroup:
+            x, y, z = pm.xform(bone, q=True, t=True, ws=True)
+            x = round(x, 3)
+            if x != 0:
+                return False
+            else:
+                continue
+        return True
+
+
+    def seperateRootJointFromMainCurve(self):
+        rootJoint = self.humanSpines[0]
+        pm.makeIdentity(self.humanMainCurve, a=1, t=1, r=1, s=1, n=0, pn=1)
+        pm.parent(rootJoint, w=True)
+
+
+    def combineRootJointToMainCurve(self):
+        rootJoint = self.humanSpines[0]
+        pm.parent(rootJoint, w=True)
+
+
+    def seperateHumanArmsAndLegs(self):
+        arms = self.humanArms[0]
+        legs = self.humanLegs[0]
+        for i in ["Left", "Right"]:
+            pm.parent(i + arms, self.humanMainCurve)
+            pm.parent(i + legs, self.humanMainCurve)
+
+
+    def combineHumanArmsAndLegs(self):
+        for parents, child in self.humanJointStructure2.items():
+            try:
+                pm.parent(child, parents)
+            except:
+                continue
+
+
+    def centerTheLocators(self, locators: list):
+        for i in locators:
+            x, y, z = pm.xform(i, q=True, t=True, ws=True)
+            position = [0-x, y, z]
+            pm.xform(i, t=position, r=True, ws=True)
+
+
+
+
+
+
+
+
 
 
 # 79 char line ================================================================
@@ -904,8 +1042,8 @@ class QuickRig:
 
 
 qc = QuickRig()
-qc.firstCreateMixamoBones()
-
+# qc.createMixamoBones()
+qc.alignSpinesCenter()
 
 
 
