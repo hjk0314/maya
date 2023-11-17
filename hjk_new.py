@@ -325,7 +325,7 @@ class Controllers:
                 ], 
             "square": [
                 (1, 0, 1), (1, 0, -1), (-1, 0, -1), (-1, 0, 1), (1, 0, 1)
-                ]
+                ], 
             }
 
 
@@ -354,11 +354,16 @@ class Controllers:
         """
         curvesWeHave = self.controllerShapes.keys()
         curvesToMake = kwargs.keys()
-        commonElements = set(curvesWeHave) & set(curvesToMake)
-        for i in commonElements:
-            positions = self.controllerShapes[i]
-            number = kwargs[i]
-            result = [pm.curve(p=positions, d=1) for i in range(number)]
+        curvesCommon = set(curvesWeHave) & set(curvesToMake)
+        if "all" in curvesToMake:
+            for curveName in curvesWeHave:
+                positions = self.controllerShapes[curveName]
+                numbers = kwargs["all"]
+                [pm.curve(p=positions, d=1) for i in range(numbers)]
+        for curveName in curvesCommon:
+            positions = self.controllerShapes[curveName]
+            numbers = kwargs[curveName]
+            [pm.curve(p=positions, d=1) for i in range(numbers)]
 
 
 class Selections:
@@ -678,13 +683,14 @@ class Rename:
 
 class QuickRig:
     def __init__(self):
+        humanSide = ['Left', 'Right']
+        humanArms = ['Shoulder', 'Arm', 'ForeArm', 'Hand']
+        humanLegs = ['UpLeg', 'Leg', 'Foot', 'ToeBase', 'Toe_End']
+        humanFingers = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
         self.humanMainCurve = "humanMainCurve"
-        self.humanSpines = ['Hips', 'Spine', 'Spine1', 'Spine2']
-        self.humanHead = ['Neck', 'Head', 'HeadTop_End']
-        self.humanArms = ['Shoulder', 'Arm', 'ForeArm', 'Hand']
-        self.humanLegs = ['UpLeg', 'Leg', 'Foot', 'ToeBase', 'Toe_End']
-        self.humanFingers = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
-        self.humanJointPosition = {
+        self.rootJoint = 'Hips'
+        self.humanSpines = ['Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'HeadTop_End']
+        self.humanJointPositions = {
             'Hips': (0.0, 98.223, 1.464), 
             'Spine': (0.0, 107.814, 1.588), 
             'Spine1': (0.0, 117.134, 0.203), 
@@ -751,28 +757,11 @@ class QuickRig:
             'RightToeBase': (-10.797, 0.001, 5.7), 
             'RightToe_End': (-10.797, 0.0, 14.439), 
             }
-        self.humanJointStructure1 = {
-            "Hips": self.humanSpines + self.humanHead, 
-            "LeftShoulder": [f'Left{i}' for i in self.humanArms], 
-            "RightShoulder": [f'Right{i}' for i in self.humanArms], 
-            "LeftUpLeg": [f'Left{i}' for i in self.humanLegs], 
-            "RightUpLeg": [f'Right{i}' for i in self.humanLegs], 
-            "LeftHandThumb1": [f'LeftHandThumb{i}' for i in range(1, 5)], 
-            "LeftHandIndex1": [f'LeftHandIndex{i}' for i in range(1, 5)], 
-            "LeftHandMiddle1": [f'LeftHandMiddle{i}' for i in range(1, 5)], 
-            "LeftHandRing1": [f'LeftHandRing{i}' for i in range(1, 5)], 
-            "LeftHandPinky1": [f'LeftHandPinky{i}' for i in range(1, 5)], 
-            "RightHandThumb1": [f'RightHandThumb{i}' for i in range(1, 5)], 
-            "RightHandIndex1": [f'RightHandIndex{i}' for i in range(1, 5)], 
-            "RightHandMiddle1": [f'RightHandMiddle{i}' for i in range(1, 5)], 
-            "RightHandRing1": [f'RightHandRing{i}' for i in range(1, 5)], 
-            "RightHandPinky1": [f'RightHandPinky{i}' for i in range(1, 5)], 
-        }
-        self.humanJointStructure2 = {
-            'Hips': ['LeftUpLeg', 'RightUpLeg'], 
-            'Spine2': ['LeftShoulder', 'RightShoulder'], 
-            'LeftHand': [f'LeftHand{i}1' for i in self.humanFingers], 
-            'RightHand': [f'RightHand{i}1' for i in self.humanFingers], 
+        self.humanJointHierarchy = {
+            "Hips": [self.humanSpines] + [[i + j for j in humanLegs] for i in humanSide], 
+            "Spine2": [[i + j for j in humanArms] for i in humanSide],  
+            "LeftHand": [[f'LeftHand{i}{j}' for j in range(1, 5)] for i in humanFingers], 
+            "RightHand": [[f'RightHand{i}{j}' for j in range(1, 5)] for i in humanFingers], 
         }
 
 
@@ -784,57 +773,33 @@ class QuickRig:
 
 
     def createMixamoBones(self):
-        rootJoint = self.humanSpines[0]
+        rootJoint = self.rootJoint
         mainCurve = self.humanMainCurve
-        self.cleanObjects(self.humanMainCurve)
-        self.cleanObjects(self.humanJointPosition)
-        self.createJointWithName(self.humanJointPosition)
-        self.buildStructure1()
-        self.buildStructure2()
-        self.createMainCurve(rootJoint, mainCurve)
+        self.cleanObjects(mainCurve, self.humanJointPositions.keys())
+        self.createJointWithName(self.humanJointPositions)
+        self.buildJointStructure()
+        self.createCurveSameSizeObject(rootJoint, mainCurve)
         pm.parent(rootJoint, mainCurve)
 
 
     def alignSpinesCenter(self):
-        self.updatesAllJointPositionsCurrentState()
-        self.updatesSpineJointToCenterPosition()
+        self.updateAllJointPositionsCurrentState()
+        self.updateSpineJointToCenterPosition()
         self.createMixamoBones()
 
 
     def sameBothSide(self, direction: str="LeftToRight"):
+        self.updateAllJointPositionsCurrentState()
+        sideA, sideB = self.getLeftAndRightJoints(direction)
+        self.updateBothSideToSame(sideA, sideB)
+        self.createMixamoBones()
+
+
+    def createCurveControllers(self):
         pass
-        
+
 
 # Middle size functions =======================================================
-
-
-    def updatesAllJointPositionsCurrentState(self):
-        allJoints = self.humanJointPosition.keys()
-        for joint in allJoints:
-            position = pm.xform(joint, q=True, t=True, ws=True)
-            self.humanJointPosition[joint] = position
-
-
-    def updatesSpineJointToCenterPosition(self):
-        spineJoints = self.humanSpines + self.humanHead
-        for joint in spineJoints:
-            x, y, z = pm.xform(joint, q=True, t=True, ws=True)
-            self.humanJointPosition[joint] = (0, y, z)
-
-
-    def buildStructure1(self):
-        for jointList in self.humanJointStructure1.values():
-            self.parentHierarchically(jointList)
-            self.orientJointsMixamoType(jointList)
-
-
-    def buildStructure2(self):
-        for parents, childList in self.humanJointStructure2.items():
-            for child in childList:
-                self.parentHierarchically([parents, child])
-
-
-# Small size functions ========================================================
 
 
     def cleanObjects(self, *args):
@@ -842,12 +807,20 @@ class QuickRig:
             isStr = isinstance(element, str)
             isIter = isinstance(element, Iterable)
             if not isStr and isIter:
-                [self.cleanObjects(i) for i in element]
+                for i in element:
+                    self.cleanObjects(i)
             else:
                 try:
                     pm.delete(element)
                 except:
                     pass
+
+
+    def updateAllJointPositionsCurrentState(self):
+        allJoints = self.humanJointPositions.keys()
+        for joint in allJoints:
+            position = pm.xform(joint, q=True, t=True, ws=True)
+            self.humanJointPositions[joint] = position
 
 
     def createJointWithName(self, nameAndPosition: dict):
@@ -856,15 +829,55 @@ class QuickRig:
             pm.joint(p=position, n=jointName)
 
 
-    def createMainCurve(self, container: str, curveName: str):
-        containerBoundingBox = pm.xform(container, q=True, bb=True, ws=True)
-        x1, y1, z1, x2, y2, z2 = containerBoundingBox
+    def buildJointStructure(self):
+        for parents, bothSideList in self.humanJointHierarchy.items():
+            for jointList in bothSideList:
+                self.parentHierarchically(jointList)
+                self.orientJointsMixamoType(jointList)
+                self.parentHierarchically([parents, jointList[0]])
+
+
+    def createCurveSameSizeObject(self, object: str, curveName: str):
+        objectBoundingBox = pm.xform(object, q=True, bb=True, ws=True)
+        x1, y1, z1, x2, y2, z2 = objectBoundingBox
         x = (x2 - x1) / 2
         y = (y2 - y1) / 2
         z = (z2 - z1) / 2
-        containerSize = max(x, z)
-        containerSize = round(containerSize, 3)
-        pm.circle(nr=(0, 1, 0), n=curveName, ch=0, r=containerSize)
+        objectSize = max(x, z)
+        objectSize = round(objectSize, 3)
+        pm.circle(nr=(0, 1, 0), n=curveName, ch=0, r=objectSize)
+
+
+    def updateSpineJointToCenterPosition(self):
+        spineJoints = self.humanSpines
+        spineJoints.insert(0, self.rootJoint)
+        for joint in spineJoints:
+            x, y, z = pm.xform(joint, q=True, t=True, ws=True)
+            self.humanJointPositions[joint] = (0, y, z)
+
+
+    def getLeftAndRightJoints(self, direction: str):
+        """ Direction has one of the options: 
+        >>> "LeftToRight" or "RightToLeft" 
+         """
+        allJoints = self.humanJointPositions.keys()
+        A, B = direction.split("To")
+        side = []
+        otherSide = []
+        for jointName in allJoints:
+            if A in jointName:
+                side.append(jointName)
+            elif B in jointName:
+                otherSide.append(jointName)
+            else:
+                continue
+        return side, otherSide
+
+
+    def updateBothSideToSame(self, sideA, sideB):
+        for idx, joint in enumerate(sideA):
+            x, y, z = pm.xform(joint, q=True, t=True, ws=True)
+            self.humanJointPositions[sideB[idx]] = (x*-1, y, z)
 
 
     def parentHierarchically(self, selections: list=[]):
@@ -878,14 +891,18 @@ class QuickRig:
                 continue
 
 
-    def upParentHierarchically(self, selections: list=[]):
-        if not selections:
-            selections = pm.selected()
-        for object in selections:
-            if not pm.listRelatives(object, p=True):
-                continue
-            else:
-                pm.parent(object, w=True)
+    def orientJointsMixamoType(self, jointList=[]):
+        firstJoint = jointList[0]
+        if "LeftShoulder" in firstJoint or "LeftHand" in firstJoint:
+            primaryAxis = 'yxz'
+            secondaryAxis = 'zdown'
+        elif "RightShoulder" in firstJoint or "RightHand" in firstJoint:
+            primaryAxis = 'yxz'
+            secondaryAxis = 'zup'
+        else:
+            primaryAxis = 'yzx'
+            secondaryAxis = 'zup'
+        self.orientJoints(primaryAxis, secondaryAxis, jointList)
 
 
     def orientJoints(self, primaryAxis='yzx', secondaryAxis='zup', selections=[]):
@@ -919,18 +936,17 @@ class QuickRig:
         return result
 
 
-    def orientJointsMixamoType(self, jointList=[]):
-        firstJoint = jointList[0]
-        if "LeftShoulder" in firstJoint or "LeftHand" in firstJoint:
-            primaryAxis = 'yxz'
-            secondaryAxis = 'zdown'
-        elif "RightShoulder" in firstJoint or "RightHand" in firstJoint:
-            primaryAxis = 'yxz'
-            secondaryAxis = 'zup'
-        else:
-            primaryAxis = 'yzx'
-            secondaryAxis = 'zup'
-        self.orientJoints(primaryAxis, secondaryAxis, jointList)
+# Not available yet ===========================================================
+
+
+    def upParentHierarchically(self, selections: list=[]):
+        if not selections:
+            selections = pm.selected()
+        for object in selections:
+            if not pm.listRelatives(object, p=True):
+                continue
+            else:
+                pm.parent(object, w=True)
 
 
     def attachLocatorsToHumanSpines(self, spinesGroup: list) -> list:
@@ -1000,14 +1016,6 @@ class QuickRig:
             pm.xform(i, t=position, r=True, ws=True)
 
 
-
-
-
-
-
-
-
-
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================   
 
@@ -1031,9 +1039,10 @@ class QuickRig:
 # grp.groupingWithOwnPivot()
 
 
-# ctrl = Controllers()
+ctrl = Controllers()
 # ctrl.createControllers(arrow3=1, arrow4=1, arrow5=1, arrow6=1)
 # ctrl.createControllers(pointer=1)
+ctrl.createControllers(all=2)
 
 
 # jnt = Joints()
@@ -1041,9 +1050,10 @@ class QuickRig:
 # jnt.createJoints([(0,0,0)])
 
 
-qc = QuickRig()
+# qc = QuickRig()
 # qc.createMixamoBones()
-qc.alignSpinesCenter()
+# qc.alignSpinesCenter()
+# qc.sameBothSide("RightToLeft")
 
 
 
