@@ -111,7 +111,12 @@ class Curves:
         last = selections[-1]
         positions = [self.getPosition(i) for i in [init, last]]
         simpleCurve = self.createCurveOnlyTwoPoints(positions)
-        startLocator, endLocator = [self.createLocator(i) for i in positions]
+        locators = []
+        for pos in positions:
+            locator = pm.spaceLocator()
+            pm.move(locator, pos)
+            locators.append(locator)
+        startLocator, endLocator = locators
         pm.aimConstraint(endLocator, startLocator)
         pm.delete(startLocator, cn=True)
         self.makeSameAsParentPivot(simpleCurve, startLocator)
@@ -151,10 +156,18 @@ class Curves:
         pm.parent(object, w=True)
 
 
-    def createLocator(self, position=0) -> str:
-        locator = pm.spaceLocator()
-        pm.move(locator, position)
-        return locator
+    def createLocator(self, positions: list=0) -> str:
+        result = []
+        if positions:
+            for i in positions:
+                locator = pm.spaceLocator()
+                result.append(locator)
+                pm.move(locator, i)
+        else:
+            selections = pm.ls(sl=True, fl=True)
+            positions = [self.getPosition(i) for i in selections]
+            self.createLocator(positions)
+        return result
 
 
 class Controllers:
@@ -1027,7 +1040,7 @@ class QuickRig:
 #     com.createLocator(pos)
 
 
-# cc = Curves()
+cc = Curves()
 # cc.createCurvePassingLocators()
 # cc.createCurveAimingPoint()
 # cc.createCurveOnlyTwoPoints()
@@ -1039,10 +1052,12 @@ class QuickRig:
 # grp.groupingWithOwnPivot()
 
 
-ctrl = Controllers()
+# ctrl = Controllers()
 # ctrl.createControllers(arrow3=1, arrow4=1, arrow5=1, arrow6=1)
 # ctrl.createControllers(pointer=1)
-ctrl.createControllers(all=2)
+
+# ctrl.createControllers(sphere=1)
+
 
 
 # jnt = Joints()
@@ -1055,8 +1070,8 @@ ctrl.createControllers(all=2)
 # qc.alignSpinesCenter()
 # qc.sameBothSide("RightToLeft")
 
-
-
+# ren = Rename()
+# ren.reName('curveSubLeft_1')
 
 
 
