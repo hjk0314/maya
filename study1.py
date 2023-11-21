@@ -96,6 +96,17 @@ def parentBone():
             continue
 
 
+def createLocatorsNormalDirection():
+    selections = pm.ls(sl=True, fl=True)
+    for i in selections:
+        vertexPosition = pm.pointPosition(i)
+        normalPosition = pm.polyNormalPerVertex(i, q=True, normalXYZ=True)[0:3]
+        locator = pm.spaceLocator(p=(0,0,0))
+        rotationMatrix = pm.datatypes.Matrix(pm.dt.Vector(normalPosition).normal())
+        pm.xform(locator, matrix=rotationMatrix)
+        pm.move(locator, vertexPosition)
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 

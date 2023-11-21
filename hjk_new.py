@@ -111,16 +111,30 @@ class Curves:
         last = selections[-1]
         positions = [self.getPosition(i) for i in [init, last]]
         simpleCurve = self.createCurveOnlyTwoPoints(positions)
-        locators = []
-        for pos in positions:
-            locator = pm.spaceLocator()
-            pm.move(locator, pos)
-            locators.append(locator)
-        startLocator, endLocator = locators
+        startLocator, endLocator = self.createLocators(positions)
         pm.aimConstraint(endLocator, startLocator)
         pm.delete(startLocator, cn=True)
         self.makeSameAsParentPivot(simpleCurve, startLocator)
         pm.rebuildCurve(simpleCurve, d=3, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
+
+
+    def createCurvesNormalDirection(self) -> list:
+        selections = pm.ls(sl=True, fl=True)
+        result = []
+        for i in selections:
+            vertexPosition = pm.pointPosition(i)
+            normalPosition = pm.polyNormalPerVertex(i, q=True, normalXYZ=True)[0:3]
+            twoPositions = [(0,0,0), normalPosition]
+            curve = self.createCurveOnlyTwoPoints(twoPositions)
+            startLocator, endLocator = self.createLocators(twoPositions)
+            pm.aimConstraint(endLocator, startLocator)
+            pm.delete(startLocator, constraints=True)
+            self.makeSameAsParentPivot(curve, startLocator)
+            pm.rebuildCurve(curve, d=3, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
+            pm.move(curve, vertexPosition)
+            pm.delete([startLocator, endLocator])
+            result.append(curve)
+        return result
 
 
     def createCurveOnlyTwoPoints(self, positions: list=[]) -> str:
@@ -156,17 +170,14 @@ class Curves:
         pm.parent(object, w=True)
 
 
-    def createLocator(self, positions: list=0) -> str:
+    def createLocators(self, positions: list=0) -> list:
         result = []
-        if positions:
-            for i in positions:
-                locator = pm.spaceLocator()
-                result.append(locator)
-                pm.move(locator, i)
-        else:
-            selections = pm.ls(sl=True, fl=True)
-            positions = [self.getPosition(i) for i in selections]
-            self.createLocator(positions)
+        if not positions:
+            positions = [self.getPosition(i) for i in pm.selected(fl=True)]
+        for i in positions:
+            locator = pm.spaceLocator()
+            pm.move(locator, i)
+            result.append(locator)
         return result
 
 
@@ -365,18 +376,27 @@ class Controllers:
         "sphere", 
         "square", 
         """
-        curvesWeHave = self.controllerShapes.keys()
-        curvesToMake = kwargs.keys()
-        curvesCommon = set(curvesWeHave) & set(curvesToMake)
-        if "all" in curvesToMake:
-            for curveName in curvesWeHave:
-                positions = self.controllerShapes[curveName]
-                numbers = kwargs["all"]
-                [pm.curve(p=positions, d=1) for i in range(numbers)]
-        for curveName in curvesCommon:
-            positions = self.controllerShapes[curveName]
-            numbers = kwargs[curveName]
-            [pm.curve(p=positions, d=1) for i in range(numbers)]
+        allShapes = self.controllerShapes.keys()
+        inputs = kwargs.keys()
+        curvesToMake = set(inputs) & set(allShapes) if inputs else allShapes
+        result = {}
+        for curveName in curvesToMake:
+            try:
+                loopingNumbers = kwargs[curveName]
+            except:
+                loopingNumbers = 1
+            curves = self.createCurvesLooping(curveName, loopingNumbers)
+            result[curveName] = curves
+        return result
+
+
+    def createCurvesLooping(self, curveName, loopingNumbers):
+        result = []
+        for i in range(loopingNumbers):
+            position = self.controllerShapes[curveName]
+            curve = pm.curve(p=position, d=1, n=curveName)
+            result.append(curve)
+        return result
 
 
 class Selections:
@@ -1033,50 +1053,10 @@ class QuickRig:
 # 72 docstring or comments line ========================================   
 
 
-# com = Common()
-# sel = pm.ls(sl=True)
-# for i in sel:
-#     pos = com.getPosition(i)
-#     com.createLocator(pos)
-
-
-cc = Curves()
-# cc.createCurvePassingLocators()
-# cc.createCurveAimingPoint()
-# cc.createCurveOnlyTwoPoints()
-# cc.createCurvePassingKeyedUp(1001, 1384)
-# cc.createCurvePassingPoints()
-
-
-# grp = Grouping()
-# grp.groupingWithOwnPivot()
-
-
-# ctrl = Controllers()
-# ctrl.createControllers(arrow3=1, arrow4=1, arrow5=1, arrow6=1)
-# ctrl.createControllers(pointer=1)
-
-# ctrl.createControllers(sphere=1)
-
-
-
-# jnt = Joints()
-# jnt.orientJoints()
-# jnt.createJoints([(0,0,0)])
-
-
-# qc = QuickRig()
-# qc.createMixamoBones()
-# qc.alignSpinesCenter()
-# qc.sameBothSide("RightToLeft")
-
-# ren = Rename()
-# ren.reName('curveSubLeft_1')
-
-
-
-
-
+# cuv = Curves()
+# cuv.createLocators()
+# cuv.createCurveAimingPoint()
+# cuv.createCurvesNormalDirection()
 
 
 
