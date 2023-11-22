@@ -107,6 +107,23 @@ def createLocatorsNormalDirection():
         pm.move(locator, vertexPosition)
 
 
+def getCurvesVertexPosition(toINT=0):
+    sel = pm.selected(sl=True, fl=True)
+    result = []
+    for i in sel:
+        x, y, z = pm.pointPosition(i)
+        if toINT:
+            x = int(x)
+            y = int(y)
+            z = int(z)
+        else:
+            x = round(x, 3)
+            y = round(y, 3)
+            z = round(z, 3)
+        result.append((x, y, z))
+    print(result)
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================
 

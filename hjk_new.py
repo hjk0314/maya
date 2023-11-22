@@ -185,41 +185,47 @@ class Controllers:
     def __init__(self):
         self.controllerShapes = {
             "arrow": [
-                (0, 0, 2), (2, 0, 1), (1, 0, 1), (1, 0, -2), (-1, 0, -2), 
-                (-1, 0, 1), (-2, 0, 1), (0, 0, 2)
+                (0, 0, 8), (8, 0, 4), (4, 0, 4), (4, 0, -8), 
+                (-4, 0, -8), (-4, 0, 4), (-8, 0, 4), (0, 0, 8)
                 ], 
             "arrow2": [
-                (0, 1, 4), (4, 1, 2), (2, 1, 2), (2, 1, -4), (-2, 1, -4), 
-                (-2, 1, 2), (-4, 1, 2), (0, 1, 4), (0, -1, 4), (4, -1, 2), 
-                (2, -1, 2), (2, -1, -4), (-2, -1, -4), (-2, -1, 2), 
-                (-4, -1, 2), (0, -1, 4), (4, -1, 2), (4, 1, 2), (2, 1, 2), 
-                (2, 1, -4), (2, -1, -4), (-2, -1, -4), (-2, 1, -4), 
-                (-2, 1, 2), (-4, 1, 2), (-4, -1, 2)
+                (0, 3, 12), (12, 3, 6), (6, 3, 6), (6, 3, -12), 
+                (-6, 3, -12), (-6, 3, 6), (-12, 3, 6), (0, 3, 12), 
+                (0, -3, 12), (12, -3, 6), (6, -3, 6), (6, -3, -12), 
+                (-6, -3, -12), (-6, -3, 6), (-12, -3, 6), (0, -3, 12), 
+                (12, -3, 6), (12, 3, 6), (6, 3, 6), (6, 3, -12), 
+                (6, -3, -12), (-6, -3, -12), (-6, 3, -12), (-6, 3, 6), 
+                (-12, 3, 6), (-12, -3, 6)
                 ], 
             "arrow3": [
-                (7, 0, 0), (5, 0, -5), (0, 0, -7), (-5, 0, -5), (-7, 0, 0), 
-                (-5, 0, 5), (0, 0, 7), (5, 0, 5), (7, 0, 0), (5, 0, 2), 
-                (7, 0, 3), (7, 0, 0)
+                (14, 0, 0), (10, 0, -10), (0, 0, -14), (-10, 0, -10), 
+                (-14, 0, 0), (-10, 0, 10), (0, 0, 14), (10, 0, 10), 
+                (14, 0, 0), (10, 0, 4), (14, 0, 6), (14, 0, 0)
                 ], 
             "arrow4": [
-                (0, 0, -11), (-3, 0, -8), (-2.0, 0, -8), (-2, 0, -6), 
-                (-5, 0, -5), (-6, 0, -2), (-8, 0, -2), (-8, 0, -3), 
-                (-11, 0, 0), (-8, 0, 3), (-8, 0, 2), (-6, 0, 2), (-5, 0, 5), 
-                (-2, 0, 6), (-2, 0, 8), (-3, 0, 8), (0, 0, 11), (3, 0, 8), 
-                (2, 0, 8), (2, 0, 6), (5, 0, 5), (6, 0, 2), (8, 0, 2), 
-                (8, 0, 3), (11, 0, 0), (8, 0, -3), (8, 0, -2), (6, 0, -2), 
-                (5, 0, -5), (2, 0, -6), (2, 0, -8), (3, 0, -8), (0, 0, -11)
+                (0, 0, -23.1), (-6.3, 0, -16.8), (-4.2, 0, -16.8), 
+                (-4.2, 0, -12.6), (-10.5, 0, -10.5), (-12.6, 0, -4.2), 
+                (-16.8, 0, -4.2), (-16.8, 0, -6.3), (-23.1, 0, 0), 
+                (-16.8, 0, 6.3), (-16.8, 0, 4.2), (-12.6, 0, 4.2), 
+                (-10.5, 0, 10.5), (-4.2, 0, 12.6), (-4.2, 0, 16.8), 
+                (-6.3, 0, 16.8), (0, 0, 23.1), (6.3, 0, 16.8), 
+                (4.2, 0, 16.8), (4.2, 0, 12.6), (10.5, 0, 10.5), 
+                (12.6, 0, 4.2), (16.8, 0, 4.2), (16.8, 0, 6.3), 
+                (23.1, 0, 0), (16.8, 0, -6.3), (16.8, 0, -4.2), 
+                (12.6, 0, -4.2), (10.5, 0, -10.5), (4.2, 0, -12.6), 
+                (4.2, 0, -16.8), (6.3, 0, -16.8), (0, 0, -23.1)
                 ], 
             "arrow5": [
-                (-2, 0, -1), (2, 0, -1), (2, 0, -2), (4, 0, 0), (2, 0, 2), 
-                (2, 0, 1), (-2, 0, 1), (-2, 0, 2), (-4, 0, 0), (-2, 0, -2), 
-                (-2, 0, -1)
+                (-8, 0, -4), (8, 0, -4), (8, 0, -8), (16, 0, 0), 
+                (8, 0, 8), (8, 0, 4), (-8, 0, 4), (-8, 0, 8), 
+                (-16, 0, 0), (-8, 0, -8), (-8, 0, -4)
                 ], 
             "arrow6": [
-                (-6.3, 6, 0), (-6.5, 4, 0), (-5, 5, 0), (-6.3, 6, 0), 
-                (-6, 5, 0), (-5, 3, 0), (-3, 1, 0), (0, 0, 0), (3, 1, 0), 
-                (5, 3, 0), (6, 5, 0), (6.3, 6, 0), (5, 5, 0), (6.5, 4, 0), 
-                (6.3, 6, 0)
+                (-0, 0, -12.6), (-0, 4, -13), (-0, 2, -10), 
+                (-0, 0, -12.6), (-0, 2, -12), (-0, 6, -10), 
+                (-0, 10, -6), (0, 12, 0), (0, 10, 6), (0, 6, 10), 
+                (0, 2, 12), (0, 0, 12.6), (0, 2, 10), (0, 4, 13), 
+                (0, 0, 12.6)
                 ], 
             "car": [
                 (81, 70, 119), (89, 56, 251), (89, -12, 251), 
@@ -247,36 +253,39 @@ class Controllers:
                 (212, 0, -212)
                 ], 
             "circle": [
-                (0, 0, -3), (-2, 0, -2), (-3, 0, 0), (-2, 0, 2), (0, 0, 3), 
-                (2, 0, 2), (3, 0, 0), (2, 0, -2), (0, 0, -3)
+                (0, 0, -15), (-10, 0, -10), (-15, 0, 0), 
+                (-10, 0, 10), (0, 0, 15), (10, 0, 10), 
+                (15, 0, 0), (10, 0, -10), (0, 0, -15)
                 ], 
             "cone": [
-                (0, 2, 0), (-0.87, 0, -0), (0.87, 0, 0), (0, 2, 0), 
-                (0, 0, 1), (-0.87, 0, -0), (0.87, 0, 0), (0, 0, 1)
+                (0, 10, 0), (-4.35, 0, 0), (4.35, 0, 0), (0, 10, 0), 
+                (0, 0, 5), (-4.35, 0, 0), (4.35, 0, 0), (0, 0, 5)
                 ], 
             "cone2": [
-                (-1, 0, -0), (-0, 0, 1), (1, 0, 0), (0, 0, -1), (0, 2, 0), 
-                (-1, 0, -0), (0, 2, 0), (-0, 0, 1), (1, 0, 0), (0, 0, -1), 
-                (0, 0, -1), (-1, 0, -0), (-0, 0, 1), (1, 0, 0), (0, 2, 0)
+                (-5, 0, 0), (0, 0, 5), (5, 0, 0), (0, 0, -5), 
+                (0, 10, 0), (-5, 0, 0), (0, 10, 0), (0, 0, 5), 
+                (5, 0, 0), (0, 0, -5), (0, 0, -5), (-5, 0, 0), 
+                (0, 0, 5), (5, 0, 0), (0, 10, 0)
                 ], 
             "cube": [
-                (-1, 1, -1), (-1, 1, 1), (1, 1, 1), (1, 1, -1), (-1, 1, -1), 
-                (-1, -1, -1), (-1, -1, 1), (1, -1, 1), (1, -1, -1), 
-                (-1, -1, -1), (-1, -1, 1), (-1, 1, 1), (1, 1, 1), 
-                (1, -1, 1), (1, -1, -1), (1, 1, -1)
+                (-5, 5, -5), (-5, 5, 5), (5, 5, 5), (5, 5, -5), 
+                (-5, 5, -5), (-5, -5, -5), (-5, -5, 5), (5, -5, 5), 
+                (5, -5, -5), (-5, -5, -5), (-5, -5, 5), (-5, 5, 5), 
+                (5, 5, 5), (5, -5, 5), (5, -5, -5), (5, 5, -5)
                 ], 
             "cross": [
-                (0, 5, 1), (0, 5, -1), (0, 1, -1), (0, 1, -5), (0, -1, -5), 
-                (0, -1, -1), (0, -5, -1), (0, -5, 1), (0, -1, 1), (0, -1, 5), 
-                (0, 1, 5), (0, 1, 1), (0, 5, 1)
+                (-1, 5, 0), (1, 5, 0), (1, 1, 0), (5, 1, 0), 
+                (5, -1, 0), (1, -1, 0), (1, -5, 0), (-1, -5, 0), 
+                (-1, -1, 0), (-5, -1, 0), (-5, 1, 0), (-1, 1, 0), 
+                (-1, 5, 0)
                 ], 
             "cylinder": [
-                (-1, 1, 0), (-0.7, 1, 0.7), (0, 1, 1), (0.7, 1, 0.7), 
-                (1, 1, 0), (0.7, 1, -0.7), (0, 1, -1), (0, 1, 1), (0, -1, 1), 
-                (-0.7, -1, 0.7), (-1, -1, 0), (-0.7, -1, -0.7), (0, -1, -1), 
-                (0.7, -1, -0.7), (1, -1, 0), (0.7, -1, 0.7), (0, -1, 1), 
-                (0, -1, -1), (0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), 
-                (1, 1, 0), (1, -1, 0), (-1, -1, 0), (-1, 1, 0)
+                (-7, 7, 0), (-5, 7, 5), (0, 7, 7), (5, 7, 5), (7, 7, 0), 
+                (5, 7, -5), (0, 7, -7), (0, 7, 7), (0, -7, 7), (-5, -7, 5), 
+                (-7, -7, 0), (-5, -7, -5), (0, -7, -7), (5, -7, -5), 
+                (7, -7, 0), (5, -7, 5), (0, -7, 7), (0, -7, -7), 
+                (0, 7, -7), (-5, 7, -5), (-7, 7, 0), (7, 7, 0), 
+                (7, -7, 0), (-7, -7, 0), (-7, 7, 0)
                 ], 
             "foot": [
                 (-4, 0, -4), (-4, 0, -7), (-3, 0, -11), (-1, 0, -12), 
@@ -294,7 +303,7 @@ class Controllers:
                 ], 
             "hat": [
                 (14, 9, 0), (0, 15, 0), (-14, 9, 0), (-7, -5, 0), 
-                (-29, -7, 0), (0, -7, 0), (29, -7, 0), (7, -5, 0), 
+                (-16, -7, 0), (0, -7, 0), (16, -7, 0), (7, -5, 0), 
                 (14, 9, 0)
                 ], 
             "head": [
@@ -321,17 +330,17 @@ class Controllers:
                 (8, 3, -13), (6, 6, -12)
                 ], 
             "pipe": [
-                (0, 1, 1), (0, -1, 1), (0.7, -1, 0.7), (1, -1, 0), (1, 1, 0), 
-                (0.7, 1, -0.7), (0, 1, -1), (0, -1, -1), (-0.7, -1, -0.7), 
-                (-1, -1, 0), (-1, 1, 0), (-0.7, 1, 0.7), (0, 1, 1), 
-                (0.7, 1, 0.7), (1, 1, 0), (1, -1, 0), (0.7, -1, -0.7), 
-                (0, -1, -1), (0, 1, -1), (-0.7, 1, -0.7), (-1, 1, 0), 
-                (-1, -1, 0), (-0.7, -1, 0.7), (0, -1, 1)
+                (0, 7, 7), (0, -7, 7), (4.9, -7, 4.9), (7, -7, 0), 
+                (7, 7, 0), (4.9, 7, -4.9), (0, 7, -7), (0, -7, -7), 
+                (-4.9, -7, -4.9), (-7, -7, 0), (-7, 7, 0), (-4.9, 7, 4.9), 
+                (0, 7, 7), (4.9, 7, 4.9), (7, 7, 0), (7, -7, 0), 
+                (4.9, -7, -4.9), (0, -7, -7), (0, 7, -7), (-4.9, 7, -4.9), 
+                (-7, 7, 0), (-7, -7, 0), (-4.9, -7, 4.9), (0, -7, 7)
                 ], 
             "pointer": [
-                (-1, 0, 0), (-0.7, 0, 0.7), (0, 0, 1), (0.7, 0, 0.7), 
-                (1, 0, 0), (0.7, 0, -0.7), (0, 0, -1), (-0.7, 0, -0.7), 
-                (-1, 0, 0), (0, 0, 0), (0, 2, 0)
+                (0, 8, 4), (-2.8, 8, 2.8), (-4, 8, 0), (-2.8, 8, -2.8), 
+                (0, 8, -4), (2.8, 8, -2.8), (4, 8, -0), (2.8, 8, 2.8), 
+                (0, 8, 4), (0, 8, -0), (0, 0, -0)
                 ], 
             "scapula": [
                 (2, 10, -11), (0, 0, -11), (-2, 10, -11), (-3, 18, 0), 
@@ -339,62 +348,51 @@ class Controllers:
                 (2, 10, -11)
                 ], 
             "sphere": [
-                (0, 1, 0), (0, 0.7, 0.7), (0, 0, 1), (0, -0.7, 0.7), 
-                (0, -1, 0), (0, -0.7, -0.7), (0, 0, -1), (0, 0.7, -0.7), 
-                (0, 1, 0), (-0.7, 0.7, 0), (-1, 0, 0), (-0.7, 0, 0.7), 
-                (0, 0, 1), (0.7, 0, 0.7), (1, 0, 0), (0.7, 0, -0.7), 
-                (0, 0, -1), (-0.7, 0, -0.7), (-1, 0, 0), (-0.7, -0.7, 0), 
-                (0, -1, 0), (0.7, -0.7, 0), (1, 0, 0), (0.7, 0.7, 0), 
-                (0, 1, 0)
+                (0, 5, 0), (0, 3.5, 3.5), (0, 0, 5), (0, -3.5, 3.5), 
+                (0, -5, 0), (0, -3.5, -3.5), (0, 0, -5), (0, 3.5, -3.5), 
+                (0, 5, 0), (-3.5, 3.5, 0), (-5, 0, 0), (-3.5, 0, 3.5), 
+                (0, 0, 5), (3.5, 0, 3.5), (5, 0, 0), (3.5, 0, -3.5), 
+                (0, 0, -5), (-3.5, 0, -3.5), (-5, 0, 0), (-3.5, -3.5, 0), 
+                (0, -5, 0), (3.5, -3.5, 0), (5, 0, 0), (3.5, 3.5, 0), (0, 5, 0)
                 ], 
             "square": [
-                (1, 0, 1), (1, 0, -1), (-1, 0, -1), (-1, 0, 1), (1, 0, 1)
+                (25, 0, 25), (25, 0, -25), (-25, 0, -25), (-25, 0, 25), (25, 0, 25)
                 ], 
             }
 
 
     def createControllers(self, **kwargs):
-        """ 
-        createCurveControllers(cube=3, sphere=2 ...)
+        """ If there are no arguments, all controllers will be created.
+        However, it is usually used as follows.
+        >>> createCurveControllers(cube=3, sphere=2 ...)
         >>> Create 3 cubes and 2 spheres to Maya.
 
-        - Below are the keywords for ControllerShape.
-        "arrow", "arrow2", "arrow3", "arrow4", "arrow5", "arrow6", 
-        "car", "car2", "car3", 
-        "circle", 
-        "cone", "cone2", 
-        "cross", 
-        "cube", 
-        "cylinder", 
-        "foot", "foot2", 
-        "hat", 
-        "head", 
-        "hoof", "hoof2", 
-        "pipe", 
-        "pointer", 
-        "scapula", 
-        "sphere", 
-        "square", 
+        - "arrow", "arrow2", "arrow3", "arrow4", "arrow5", "arrow6", 
+        - "car", "car2", "car3", "circle", "cone", "cone2", "cross", "cube", "cylinder", 
+        - "foot", "foot2", 
+        - "hat", "head", "hoof", "hoof2", 
+        - "pipe", "pointer", 
+        - "scapula", "sphere", "square", 
         """
         allShapes = self.controllerShapes.keys()
         inputs = kwargs.keys()
         curvesToMake = set(inputs) & set(allShapes) if inputs else allShapes
         result = {}
-        for curveName in curvesToMake:
+        for shapeName in curvesToMake:
             try:
-                loopingNumbers = kwargs[curveName]
+                loopingNumbers = kwargs[shapeName]
             except:
                 loopingNumbers = 1
-            curves = self.createCurvesLooping(curveName, loopingNumbers)
-            result[curveName] = curves
+            curves = self.createCurveToShape(shapeName, loopingNumbers)
+            result[shapeName] = curves
         return result
 
 
-    def createCurvesLooping(self, curveName, loopingNumbers):
+    def createCurveToShape(self, shapeName, loopingNumbers):
         result = []
         for i in range(loopingNumbers):
-            position = self.controllerShapes[curveName]
-            curve = pm.curve(p=position, d=1, n=curveName)
+            position = self.controllerShapes[shapeName]
+            curve = pm.curve(p=position, d=1, n=shapeName)
             result.append(curve)
         return result
 
@@ -810,26 +808,22 @@ class QuickRig:
         mainCurve = self.humanMainCurve
         self.cleanObjects(mainCurve, self.humanJointPositions.keys())
         self.createJointWithName(self.humanJointPositions)
-        self.buildJointStructure()
-        self.createCurveSameSizeObject(rootJoint, mainCurve)
+        self.buildJointsHumanStructure()
+        self.matchMainCurveToJointSize(rootJoint, mainCurve)
         pm.parent(rootJoint, mainCurve)
 
 
     def alignSpinesCenter(self):
-        self.updateAllJointPositionsCurrentState()
-        self.updateSpineJointToCenterPosition()
+        self.updateAllJointPositions()
+        self.spineJointToCenter()
         self.createMixamoBones()
 
 
     def sameBothSide(self, direction: str="LeftToRight"):
-        self.updateAllJointPositionsCurrentState()
-        sideA, sideB = self.getLeftAndRightJoints(direction)
+        self.updateAllJointPositions()
+        sideA, sideB = self.getJointNameBothSide(direction)
         self.updateBothSideToSame(sideA, sideB)
         self.createMixamoBones()
-
-
-    def createCurveControllers(self):
-        pass
 
 
 # Middle size functions =======================================================
@@ -849,11 +843,17 @@ class QuickRig:
                     pass
 
 
-    def updateAllJointPositionsCurrentState(self):
+    def updateAllJointPositions(self):
         allJoints = self.humanJointPositions.keys()
         for joint in allJoints:
             position = pm.xform(joint, q=True, t=True, ws=True)
             self.humanJointPositions[joint] = position
+
+
+    def updateBothSideToSame(self, sideA, sideB):
+        for idx, joint in enumerate(sideA):
+            x, y, z = pm.xform(joint, q=True, t=True, ws=True)
+            self.humanJointPositions[sideB[idx]] = (x*-1, y, z)
 
 
     def createJointWithName(self, nameAndPosition: dict):
@@ -862,7 +862,7 @@ class QuickRig:
             pm.joint(p=position, n=jointName)
 
 
-    def buildJointStructure(self):
+    def buildJointsHumanStructure(self):
         for parents, bothSideList in self.humanJointHierarchy.items():
             for jointList in bothSideList:
                 self.parentHierarchically(jointList)
@@ -870,7 +870,7 @@ class QuickRig:
                 self.parentHierarchically([parents, jointList[0]])
 
 
-    def createCurveSameSizeObject(self, object: str, curveName: str):
+    def matchMainCurveToJointSize(self, object: str, curveName: str):
         objectBoundingBox = pm.xform(object, q=True, bb=True, ws=True)
         x1, y1, z1, x2, y2, z2 = objectBoundingBox
         x = (x2 - x1) / 2
@@ -881,7 +881,7 @@ class QuickRig:
         pm.circle(nr=(0, 1, 0), n=curveName, ch=0, r=objectSize)
 
 
-    def updateSpineJointToCenterPosition(self):
+    def spineJointToCenter(self):
         spineJoints = self.humanSpines
         spineJoints.insert(0, self.rootJoint)
         for joint in spineJoints:
@@ -889,12 +889,12 @@ class QuickRig:
             self.humanJointPositions[joint] = (0, y, z)
 
 
-    def getLeftAndRightJoints(self, direction: str):
+    def getJointNameBothSide(self, twoOptions: str):
         """ Direction has one of the options: 
         >>> "LeftToRight" or "RightToLeft" 
          """
         allJoints = self.humanJointPositions.keys()
-        A, B = direction.split("To")
+        A, B = twoOptions.split("To")
         side = []
         otherSide = []
         for jointName in allJoints:
@@ -905,12 +905,6 @@ class QuickRig:
             else:
                 continue
         return side, otherSide
-
-
-    def updateBothSideToSame(self, sideA, sideB):
-        for idx, joint in enumerate(sideA):
-            x, y, z = pm.xform(joint, q=True, t=True, ws=True)
-            self.humanJointPositions[sideB[idx]] = (x*-1, y, z)
 
 
     def parentHierarchically(self, selections: list=[]):
