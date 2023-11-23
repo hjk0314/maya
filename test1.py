@@ -214,4 +214,80 @@ class A:
             print(self.stringList)
 
 
+class QuickRig:
+    def upParentHierarchically(self, selections: list=[]):
+        if not selections:
+            selections = pm.selected()
+        for object in selections:
+            if not pm.listRelatives(object, p=True):
+                continue
+            else:
+                pm.parent(object, w=True)
+
+
+    def attachLocatorsToHumanSpines(self, spinesGroup: list) -> list:
+        """ Return created locators.
+        >>> spinesGroup = ['Hips', 'Spine', 'Spine1', ]
+        >>> result = ['loc_Hips', 'loc_Spine', 'loc_Spine1', ]
+         """
+        result = []
+        for boneName in spinesGroup:
+            locatorName = f"loc_{boneName}"
+            locator = pm.spaceLocator(n=locatorName)
+            pm.matchTransform(locator, boneName, pos=True)
+            result.append(locator)
+        return result
+
+
+    def attachHumanSpinesToLocators(self, spinesGroup):
+        for boneName in spinesGroup:
+            try:
+                pm.matchTransform(boneName, f"loc_{boneName}", pos=True)
+            except:
+                continue
+
+
+    def isSpinesGroupCentered(self, spinesGroup) -> bool:
+        for bone in spinesGroup:
+            x, y, z = pm.xform(bone, q=True, t=True, ws=True)
+            x = round(x, 3)
+            if x != 0:
+                return False
+            else:
+                continue
+        return True
+
+
+    def seperateRootJointFromMainCurve(self):
+        rootJoint = self.humanSpines[0]
+        pm.makeIdentity(self.humanMainCurve, a=1, t=1, r=1, s=1, n=0, pn=1)
+        pm.parent(rootJoint, w=True)
+
+
+    def combineRootJointToMainCurve(self):
+        rootJoint = self.humanSpines[0]
+        pm.parent(rootJoint, w=True)
+
+
+    def seperateHumanArmsAndLegs(self):
+        arms = self.humanArms[0]
+        legs = self.humanLegs[0]
+        for i in ["Left", "Right"]:
+            pm.parent(i + arms, self.humanMainCurve)
+            pm.parent(i + legs, self.humanMainCurve)
+
+
+    def combineHumanArmsAndLegs(self):
+        for parents, child in self.humanJointStructure2.items():
+            try:
+                pm.parent(child, parents)
+            except:
+                continue
+
+
+    def centerTheLocators(self, locators: list):
+        for i in locators:
+            x, y, z = pm.xform(i, q=True, t=True, ws=True)
+            position = [0-x, y, z]
+            pm.xform(i, t=position, r=True, ws=True)
 
