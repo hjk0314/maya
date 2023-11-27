@@ -802,7 +802,6 @@ class QuickRig:
         }
 
 
-
     def createMixamoBones(self):
         rootJoint = self.rootJoint
         mainCurve = self.humanMainCurve
@@ -1007,5 +1006,6 @@ class QuickRig:
 #     pm.rename(i.name(), f"rig_{i}")
 
 
-
+grp = Grouping()
+grp.groupingWithOwnPivot()
 
