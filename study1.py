@@ -128,3 +128,73 @@ def getCurvesVertexPosition(toINT=0):
 # 72 docstring or comments line ========================================
 
 
+
+class ChangeRotateOrderPreserveKey:
+    def __init__(self):
+        """ Change rotation order while maintaining key.
+        The string arguments must be as follows
+        - "xyz", "yzx", "zxy", "xzy", "yxz", "zyx" \n
+        >>> cro = ChangeRotateOrderPreserveKey()
+        >>> cro.switchRotateOrder("yzx")
+         """
+        self.rotateOrders = ["xyz", "yzx", "zxy", "xzy", "yxz", "zyx"]
+
+
+    def switchRotateOrder(self, inputOrder: str) -> None:
+        try:
+            rotationOrdersIndex = self.rotateOrders.index(inputOrder)
+        except:
+            return
+        selections = pm.ls(sl=True, typ="transform")
+        for obj in selections:
+            rotationNodes = self.getConnectedRotationNodes(obj)
+            animCurves = filter(self.isAnimCurve, rotationNodes)
+            frames = self.getKeyFramesAnimCurves(animCurves)
+            objectForCopy = obj.duplicate()[0]
+            objectForPaste = obj.duplicate()[0] 
+            objectForCopy.rotateOrder.set(rotationOrdersIndex) 
+            objectForPaste.rotateOrder.set(rotationOrdersIndex)
+            pm.orientConstraint(obj, objectForCopy)
+            self.copyRotationKey(objectForCopy, objectForPaste, frames)
+            pm.delete(objectForCopy)  
+            obj.rotateOrder.set(rotationOrdersIndex)
+            self.copyRotationKey(objectForPaste, obj, frames)
+            pm.delete(objectForPaste)
+
+
+    def getConnectedRotationNodes(self, object: pm.PyNode) -> list:
+        connectedRotateX = object.rx.listConnections(d=False)
+        connectedRotateY = object.ry.listConnections(d=False)
+        connectedRotateZ = object.rz.listConnections(d=False)
+        result = connectedRotateX + connectedRotateY + connectedRotateZ
+        return result
+
+
+    def isAnimCurve(self, selection: pm.PyNode) -> bool:
+        isTA = type(selection) == pm.nt.AnimCurveTA
+        isTL = type(selection) == pm.nt.AnimCurveTL
+        isTU = type(selection) == pm.nt.AnimCurveTU
+        if isTA or isTL or isTU:
+            return True
+        else:
+            return False
+
+
+    def getKeyFramesAnimCurves(self, animCurves: list) -> list:
+            frames = []                            
+            for i in animCurves:
+                for key in range(0, i.numKeys()): 
+                    frame = i.getTime(key)
+                    if frame not in frames:
+                        frames.append(frame)
+            return frames
+
+
+    def copyRotationKey(self, sourceObj, pasteObj, frames) -> None:
+        for frame in frames:
+            pm.currentTime(frame)
+            rotation = sourceObj.r.get()
+            pasteObj.r.set(rotation)
+            pm.setKeyframe(pasteObj.r)
+
+

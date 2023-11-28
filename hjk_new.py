@@ -855,7 +855,7 @@ class QuickRig:
         allJoints = self.humanJointPositions.keys()
         for joint in allJoints:
             position = pm.xform(joint, q=True, t=True, ws=True)
-            self.humanJointPositions[joint] = position
+            self.humanJointPositions[joint] = tuple(position)
 
 
     def updateBothSideToSame(self, sideA, sideB):
@@ -915,24 +915,8 @@ class QuickRig:
         return side, otherSide
 
 
-    def addIKJoints(self):
-        legs = self.humanJointHierarchy["Hips"]
-        legs.remove(self.humanSpines)
-        legsPositions = {}
-        for i in legs:
-            for j in i:
-                legsPositions[f"rig_{j}_IK"] = self.humanJointPositions[j]
-        legsHierarchy = {"rig_Hips": [[f"rig_{j}_IK" for j in i] for i in legs]}
-        self.createJointWithName(legsPositions)
-        self.buildJointsHumanStructure(legsHierarchy)
-        arms = self.humanJointHierarchy["Spine2"]
-        armsPositions = {}
-        for i in arms:
-            for j in i:
-                armsPositions[f"rig_{j}_IK"] = self.humanJointPositions[j]
-        armsHierarchy = {"rig_Spine2": [[f"rig_{j}_IK" for j in i] for i in arms]}
-        self.createJointWithName(armsPositions)
-        self.buildJointsHumanStructure(armsHierarchy)
+    def createArmsRigJoints(self):
+        pass
 
 
     def parentHierarchically(self, selections: list=[]):
@@ -995,17 +979,49 @@ class QuickRig:
 # 72 docstring or comments line ========================================   
 
 
-# qc = QuickRig()
+qc = QuickRig()
 # qc.createMixamoBones()
 # qc.createRigJoints()
-# qc.addIKJoints()
+qc.addRigJoints()
+# qc.sameBothSide()
 
-# sel = pm.selected(sl=True)
-# for i in sel:
-#     print(i.name())
-#     pm.rename(i.name(), f"rig_{i}")
+# jnt = Joints()
+# jnt.createPolevectorJoint()
+
+# ctrl = Controllers()
+# ctrl.createControllers(sphere=1)
 
 
-grp = Grouping()
-grp.groupingWithOwnPivot()
+# grp = Grouping()
+# grp.groupingWithOwnPivot()
 
+    # def addRigJoints(self):
+    #     for parentsJoint in ["Hips", "Spine2"]:
+    #         for solver in ["IK", "FK"]:
+    #             positions, hierarchy = self.makeRigsPositionAndHierarchy(parentsJoint, solver)
+    #             self.createJointWithName(positions)
+    #             self.buildJointsHumanStructure(hierarchy)
+
+
+    # def makeRigsPositionAndHierarchy(self, parents="Hips", IKorFK="IK"):
+    #     originalHierarchy = self.humanJointHierarchy[parents]
+    #     try:
+    #         originalHierarchy.remove(self.humanSpines)
+    #     except:
+    #         pass
+    #     positions = {}
+    #     for i in originalHierarchy:
+    #         for j in i:
+    #             positions[f"rig_{j}_{IKorFK}"] = self.humanJointPositions[j]
+    #     hierarchy = {f"rig_{parents}": [[f"rig_{j}_{IKorFK}" for j in i] for i in originalHierarchy]}
+    #     return positions, hierarchy
+
+    # def addArmsRigJoints(self):
+    #     arms = self.humanJointHierarchy["Spine2"]
+    #     armsPositions = {}
+    #     for i in arms:
+    #         for j in i:
+    #             armsPositions[f"rig_{j}_IK"] = self.humanJointPositions[j]
+    #     armsHierarchy = {"rig_Spine2": [[f"rig_{j}_IK" for j in i] for i in arms]}
+    #     self.createJointWithName(armsPositions)
+    #     self.buildJointsHumanStructure(armsHierarchy)
