@@ -714,10 +714,10 @@ class Rename:
 
 class QuickRig:
     def __init__(self):
-        humanSide = ['Left', 'Right']
-        humanArms = ['Shoulder', 'Arm', 'ForeArm', 'Hand']
-        humanLegs = ['UpLeg', 'Leg', 'Foot', 'ToeBase', 'Toe_End']
-        humanFingers = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
+        self.humanSide = ['Left', 'Right']
+        self.humanArms = ['Shoulder', 'Arm', 'ForeArm', 'Hand']
+        self.humanLegs = ['UpLeg', 'Leg', 'Foot', 'ToeBase', 'Toe_End']
+        self.humanFingers = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
         self.humanMainCurve = "humanMainCurve"
         self.rootJoint = 'Hips'
         self.humanSpines = ['Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'HeadTop_End']
@@ -789,16 +789,18 @@ class QuickRig:
             'RightToe_End': (-10.797, 0.0, 14.439), 
             }
         self.humanJointHierarchy = {
-            "Hips": [self.humanSpines] + [[i + j for j in humanLegs] for i in humanSide], 
-            "Spine2": [[i + j for j in humanArms] for i in humanSide],  
-            "LeftHand": [[f'LeftHand{i}{j}' for j in range(1, 5)] for i in humanFingers], 
-            "RightHand": [[f'RightHand{i}{j}' for j in range(1, 5)] for i in humanFingers], 
+            "Hips": [self.humanSpines] + [[i + j for j in self.humanLegs] for i in self.humanSide], 
+            "Spine2": [[i + j for j in self.humanArms] for i in self.humanSide],  
+            "LeftHand": [[f'LeftHand{i}{j}' for j in range(1, 5)] for i in self.humanFingers], 
+            "RightHand": [[f'RightHand{i}{j}' for j in range(1, 5)] for i in self.humanFingers], 
         }
         self.humanRigJointPositions = {
             f"rig_{j}": k for j, k in self.humanJointPositions.items()
         }
         self.humanRigJointHierarchy = {
-            f"rig_{i}": [[f"rig_{m}" for m in k] for k in j] for i, j in self.humanJointHierarchy.items()
+            "Hips": [[f"rig_{i + k}_{j}" for k in self.humanLegs] for j in ["IK", "FK"] for i in self.humanSide], 
+            "LeftShoulder": [[f"rig_Left{j}_{i}" for j in self.humanArms[1:]] for i in ["IK", "FK"]], 
+            "RightShoulder": [[f"rig_Right{j}_{i}" for j in self.humanArms[1:]] for i in ["IK", "FK"]], 
         }
 
 
@@ -826,10 +828,13 @@ class QuickRig:
 
 
     def createRigJoints(self):
-        self.cleanObjects(self.humanRigJointPositions.keys())
-        self.createJointWithName(self.humanRigJointPositions)
-        self.buildJointsHumanStructure(self.humanRigJointHierarchy)
-        self.addIKJoints()
+        spines = self.createRigSpineJoints()
+        arms = self.createRigArmsJoints()
+        legs = self.createRigLegsJoints()
+        fingers = self.createRigFingersJoints()
+        humanRigJointsPositions = {**spines, **arms, **legs, **fingers}
+        self.createJointWithName(humanRigJointsPositions)
+        # self.addIKJoints()
         # self.addFkJoints()
 
 
@@ -915,8 +920,39 @@ class QuickRig:
         return side, otherSide
 
 
-    def createArmsRigJoints(self):
-        pass
+    def createRigSpineJoints(self) -> dict:
+        spineGroup = [self.rootJoint] + self.humanSpines
+        result = {}
+        for i in spineGroup:
+            result[f"rig_{i}"] = self.humanJointPositions[i]
+        return result
+
+
+    def createRigArmsJoints(self) -> dict:
+        result = {}
+        for i in self.humanSide:
+            for j in ["IK", "FK"]:
+                for k in self.humanArms[1:]:
+                    result[f"rig_{i + k}_{j}"] = self.humanJointPositions[f"{i}{k}"]
+        return result
+
+
+    def createRigLegsJoints(self) -> dict:
+        result = {}
+        for i in self.humanSide:
+            for j in ["IK", "FK"]:
+                for k in self.humanLegs:
+                    result[f"rig_{i + k}_{j}"] = self.humanJointPositions[f"{i}{k}"]
+        return result
+
+
+    def createRigFingersJoints(self) -> dict:
+        result = {}
+        for i in self.humanFingers:
+            for j in self.humanSide:
+                for k in range(1, 5):
+                    result[f"rig_{j}Hand{i}{k}"] = self.humanJointPositions[f"{j}Hand{i}{k}"] 
+        return result
 
 
     def parentHierarchically(self, selections: list=[]):
@@ -982,8 +1018,9 @@ class QuickRig:
 qc = QuickRig()
 # qc.createMixamoBones()
 # qc.createRigJoints()
-qc.addRigJoints()
+# qc.addRigJoints()
 # qc.sameBothSide()
+# qc.createRigJoints()
 
 # jnt = Joints()
 # jnt.createPolevectorJoint()
