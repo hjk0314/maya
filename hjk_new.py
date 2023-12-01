@@ -712,111 +712,152 @@ class Rename:
             print(warningMessages)
 
 
-class QuickRig:
+class QuickRig_Mixamo:
     def __init__(self):
-        self.humanSide = ['Left', 'Right']
-        self.humanArms = ['Shoulder', 'Arm', 'ForeArm', 'Hand']
-        self.humanLegs = ['UpLeg', 'Leg', 'Foot', 'ToeBase', 'Toe_End']
-        self.humanFingers = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
-        self.humanMainCurve = "humanMainCurve"
-        self.rootJoint = 'Hips'
-        self.humanSpines = ['Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'HeadTop_End']
-        self.humanJointPositions = {
-            'Hips': (0.0, 98.223, 1.464), 
-            'Spine': (0.0, 107.814, 1.588), 
-            'Spine1': (0.0, 117.134, 0.203), 
-            'Spine2': (0.0, 125.82, -1.089), 
-            'Neck': (0.0, 141.589, -3.019), 
-            'Head': (0.0, 150.649, -1.431), 
-            'HeadTop_End': (0.0, 171.409, 5.635), 
-            'LeftShoulder': (4.305, 136.196, -3.124), 
-            'LeftArm': (19.934, 135.702, -5.494), 
-            'LeftForeArm': (42.774, 135.702, -6.376), 
-            'LeftHand': (63.913, 135.702, -6.131), 
-            'LeftHandThumb1': (65.761, 135.008, -2.444), 
-            'LeftHandThumb2': (68.495, 133.652, -0.242), 
-            'LeftHandThumb3': (70.727, 132.545, 1.556), 
-            'LeftHandThumb4': (72.412, 131.709, 2.913), 
-            'LeftHandIndex1': (71.683, 134.879, -2.495), 
-            'LeftHandIndex2': (74.972, 134.879, -2.495), 
-            'LeftHandIndex3': (77.576, 134.879, -2.495), 
-            'LeftHandIndex4': (80.181, 134.879, -2.495), 
-            'LeftHandMiddle1': (71.566, 134.682, -4.906), 
-            'LeftHandMiddle2': (75.085, 134.762, -4.906), 
-            'LeftHandMiddle3': (78.171, 134.832, -4.906), 
-            'LeftHandMiddle4': (81.57, 134.908, -4.906), 
-            'LeftHandRing1': (71.293, 134.575, -6.84), 
-            'LeftHandRing2': (74.241, 134.742, -6.84), 
-            'LeftHandRing3': (77.231, 134.912, -6.84), 
-            'LeftHandRing4': (80.134, 135.078, -6.84), 
-            'LeftHandPinky1': (70.702, 134.116, -8.847), 
-            'LeftHandPinky2': (73.811, 134.283, -8.847), 
-            'LeftHandPinky3': (75.625, 134.38, -8.847), 
-            'LeftHandPinky4': (77.461, 134.478, -8.847), 
-            'RightShoulder': (-4.305, 136.196, -3.124), 
-            'RightArm': (-21.859, 135.702, -5.585), 
-            'RightForeArm': (-42.316, 135.702, -6.381), 
-            'RightHand': (-63.913, 135.702, -6.131), 
-            'RightHandThumb1': (-65.761, 135.008, -2.444), 
-            'RightHandThumb2': (-68.495, 133.652, -0.242), 
-            'RightHandThumb3': (-70.727, 132.545, 1.556), 
-            'RightHandThumb4': (-72.412, 131.709, 2.913), 
-            'RightHandIndex1': (-71.683, 134.879, -2.495), 
-            'RightHandIndex2': (-74.972, 134.879, -2.495), 
-            'RightHandIndex3': (-77.576, 134.879, -2.495), 
-            'RightHandIndex4': (-80.181, 134.879, -2.495), 
-            'RightHandMiddle1': (-71.565, 134.682, -4.906), 
-            'RightHandMiddle2': (-75.085, 134.762, -4.906), 
-            'RightHandMiddle3': (-78.171, 134.832, -4.906), 
-            'RightHandMiddle4': (-81.569, 134.908, -4.906), 
-            'RightHandRing1': (-71.293, 134.575, -6.84), 
-            'RightHandRing2': (-74.24, 134.742, -6.84), 
-            'RightHandRing3': (-77.231, 134.912, -6.84), 
-            'RightHandRing4': (-80.134, 135.078, -6.84), 
-            'RightHandPinky1': (-70.702, 134.116, -8.847), 
-            'RightHandPinky2': (-73.811, 134.283, -8.847), 
-            'RightHandPinky3': (-75.625, 134.38, -8.847), 
-            'RightHandPinky4': (-77.461, 134.478, -8.847), 
-            'LeftUpLeg': (10.797, 91.863, -1.849), 
-            'LeftLeg': (10.797, 50.067, -0.255), 
-            'LeftFoot': (10.797, 8.223, -4.39), 
-            'LeftToeBase': (10.797, 0.001, 5.7), 
-            'LeftToe_End': (10.797, 0.0, 14.439), 
-            'RightUpLeg': (-10.797, 91.863, -1.849), 
-            'RightLeg': (-10.797, 50.066, -0.255), 
-            'RightFoot': (-10.797, 8.223, -4.39), 
-            'RightToeBase': (-10.797, 0.001, 5.7), 
-            'RightToe_End': (-10.797, 0.0, 14.439), 
+        self.mainCurve = "mainCurve"
+        self.rootJoint = "Hips"
+        self.side = ["Left", "Right"]
+        self.arms = ["Shoulder", "Arm", "ForeArm", "Hand"]
+        self.legs = ["UpLeg", "Leg", "Foot", "ToeBase", "Toe_End"]
+        self.fingers = ["Thumb", "Index", "Middle", "Ring", "Pinky"]
+        self.fingers = [f"Hand{i}" for i in self.fingers]
+        self.spines = ["Spine", "Spine1", "Spine2"]
+        self.spines += ["Neck", "Head", "HeadTop_End"]
+        self.jointPosition = {
+            "Hips": (0.0, 98.223, 1.464), 
+            "Spine": (0.0, 107.814, 1.588), 
+            "Spine1": (0.0, 117.134, 0.203), 
+            "Spine2": (0.0, 125.82, -1.089), 
+            "Neck": (0.0, 141.589, -3.019), 
+            "Head": (0.0, 150.649, -1.431), 
+            "HeadTop_End": (0.0, 171.409, 5.635), 
+            "LeftShoulder": (4.305, 136.196, -3.124), 
+            "LeftArm": (19.934, 135.702, -5.494), 
+            "LeftForeArm": (42.774, 135.702, -6.376), 
+            "LeftHand": (63.913, 135.702, -6.131), 
+            "LeftHandThumb1": (65.761, 135.008, -2.444), 
+            "LeftHandThumb2": (68.495, 133.652, -0.242), 
+            "LeftHandThumb3": (70.727, 132.545, 1.556), 
+            "LeftHandThumb4": (72.412, 131.709, 2.913), 
+            "LeftHandIndex1": (71.683, 134.879, -2.495), 
+            "LeftHandIndex2": (74.972, 134.879, -2.495), 
+            "LeftHandIndex3": (77.576, 134.879, -2.495), 
+            "LeftHandIndex4": (80.181, 134.879, -2.495), 
+            "LeftHandMiddle1": (71.566, 134.682, -4.906), 
+            "LeftHandMiddle2": (75.085, 134.762, -4.906), 
+            "LeftHandMiddle3": (78.171, 134.832, -4.906), 
+            "LeftHandMiddle4": (81.57, 134.908, -4.906), 
+            "LeftHandRing1": (71.293, 134.575, -6.84), 
+            "LeftHandRing2": (74.241, 134.742, -6.84), 
+            "LeftHandRing3": (77.231, 134.912, -6.84), 
+            "LeftHandRing4": (80.134, 135.078, -6.84), 
+            "LeftHandPinky1": (70.702, 134.116, -8.847), 
+            "LeftHandPinky2": (73.811, 134.283, -8.847), 
+            "LeftHandPinky3": (75.625, 134.38, -8.847), 
+            "LeftHandPinky4": (77.461, 134.478, -8.847), 
+            "RightShoulder": (-4.305, 136.196, -3.124), 
+            "RightArm": (-21.859, 135.702, -5.585), 
+            "RightForeArm": (-42.316, 135.702, -6.381), 
+            "RightHand": (-63.913, 135.702, -6.131), 
+            "RightHandThumb1": (-65.761, 135.008, -2.444), 
+            "RightHandThumb2": (-68.495, 133.652, -0.242), 
+            "RightHandThumb3": (-70.727, 132.545, 1.556), 
+            "RightHandThumb4": (-72.412, 131.709, 2.913), 
+            "RightHandIndex1": (-71.683, 134.879, -2.495), 
+            "RightHandIndex2": (-74.972, 134.879, -2.495), 
+            "RightHandIndex3": (-77.576, 134.879, -2.495), 
+            "RightHandIndex4": (-80.181, 134.879, -2.495), 
+            "RightHandMiddle1": (-71.565, 134.682, -4.906), 
+            "RightHandMiddle2": (-75.085, 134.762, -4.906), 
+            "RightHandMiddle3": (-78.171, 134.832, -4.906), 
+            "RightHandMiddle4": (-81.569, 134.908, -4.906), 
+            "RightHandRing1": (-71.293, 134.575, -6.84), 
+            "RightHandRing2": (-74.24, 134.742, -6.84), 
+            "RightHandRing3": (-77.231, 134.912, -6.84), 
+            "RightHandRing4": (-80.134, 135.078, -6.84), 
+            "RightHandPinky1": (-70.702, 134.116, -8.847), 
+            "RightHandPinky2": (-73.811, 134.283, -8.847), 
+            "RightHandPinky3": (-75.625, 134.38, -8.847), 
+            "RightHandPinky4": (-77.461, 134.478, -8.847), 
+            "LeftUpLeg": (10.797, 91.863, -1.849), 
+            "LeftLeg": (10.797, 50.067, -0.255), 
+            "LeftFoot": (10.797, 8.223, -4.39), 
+            "LeftToeBase": (10.797, 0.001, 5.7), 
+            "LeftToe_End": (10.797, 0.0, 14.439), 
+            "RightUpLeg": (-10.797, 91.863, -1.849), 
+            "RightLeg": (-10.797, 50.066, -0.255), 
+            "RightFoot": (-10.797, 8.223, -4.39), 
+            "RightToeBase": (-10.797, 0.001, 5.7), 
+            "RightToe_End": (-10.797, 0.0, 14.439), 
             }
-        self.humanJointHierarchy = {
-            "Hips": [self.humanSpines] + [[i + j for j in self.humanLegs] for i in self.humanSide], 
-            "Spine2": [[i + j for j in self.humanArms] for i in self.humanSide],  
-            "LeftHand": [[f'LeftHand{i}{j}' for j in range(1, 5)] for i in self.humanFingers], 
-            "RightHand": [[f'RightHand{i}{j}' for j in range(1, 5)] for i in self.humanFingers], 
-        }
-        self.humanRigJointPositions = {
-            f"rig_{j}": k for j, k in self.humanJointPositions.items()
-        }
-        self.humanRigJointHierarchy = {
-            "Hips": [[f"rig_{i + k}_{j}" for k in self.humanLegs] for j in ["IK", "FK"] for i in self.humanSide], 
-            "LeftShoulder": [[f"rig_Left{j}_{i}" for j in self.humanArms[1:]] for i in ["IK", "FK"]], 
-            "RightShoulder": [[f"rig_Right{j}_{i}" for j in self.humanArms[1:]] for i in ["IK", "FK"]], 
+        self.hierarchy = {
+            "Hips": [self.spines] + [[i + j for j in self.legs] for i in self.side], 
+            "Spine2": [[i + j for j in self.arms] for i in self.side],  
+            "LeftHand": [[f"Left{i}{j}" for j in range(1, 5)] for i in self.fingers], 
+            "RightHand": [[f"Right{i}{j}" for j in range(1, 5)] for i in self.fingers], 
         }
 
 
     def createMixamoBones(self):
-        rootJoint = self.rootJoint
-        mainCurve = self.humanMainCurve
-        self.cleanObjects(mainCurve, self.humanJointPositions.keys())
-        self.createJointWithName(self.humanJointPositions)
-        self.buildJointsHumanStructure(self.humanJointHierarchy)
-        self.matchMainCurveToJointSize(rootJoint, mainCurve)
-        pm.parent(rootJoint, mainCurve)
+        self.cleanObjects(self.mainCurve, self.jointPosition.keys())
+        self.createJointWithName(self.jointPosition)
+        self.buildJointsHumanStructure(self.hierarchy)
+        self.matchMainCurveToJointSize(self.rootJoint, self.mainCurve)
+        pm.parent(self.rootJoint, self.mainCurve)
+
+
+    def createRigBones(self):
+        self.updateAllJointPositions()
+        # ====================================================================
+        spines = [self.rootJoint] + self.spines
+        rigSpines = [f"rig_{i}" for i in self.spines]
+        spinesPosition = self.createIKFK(spines, self.jointPosition)
+        spinesHierarchy = {"rig_" + self.rootJoint: [rigSpines]}
+        self.cleanObjects(spinesPosition)
+        self.createJointWithName(spinesPosition)
+        self.buildJointsHumanStructure(spinesHierarchy)
+        # ====================================================================
+        arm = self.arms[1:]
+        arms = [f"{i}{m}" for i in self.side for m in arm]
+        rigArms = [f"rig_{i}_{k}" for i in arms for k in ["IK", "FK"]]
+        leftRigArms = [i if "Left" in i else None for i in rigArms]
+        print(leftRigArms)
+        armsPosition = self.createIKFK(arms, self.jointPosition, "IK", "FK")
+        # ====================================================================
+        shoulder = self.arms[0]
+        shoulders = [f"{i}{shoulder}" for i in self.side]
+        rigShoulders = [[f"rig_{i}"] for i in shoulders]
+        shouldersPosition = self.createIKFK(shoulders, self.jointPosition)
+        shouldersHierarchy = {"rig_Spine2": rigShoulders}
+        self.cleanObjects(shouldersPosition)
+        self.createJointWithName(shouldersPosition)
+        self.buildJointsHumanStructure(shouldersHierarchy)
+        # ====================================================================
+        leg = self.legs
+        legs = [f"{i}{j}" for j in leg for i in self.side]
+        legsPosition = self.createIKFK(legs, self.jointPosition, "IK", "FK")
+        fingers = [f"{f}{g}" for g in range(1, 5) for f in self.fingers]
+        fingers = [f"{i}{g}" for g in fingers for i in self.side]
+        fingersPosition = self.createIKFK(fingers, self.jointPosition)
+        {
+            "Hips": [self.spines] + [[i + j for j in self.legs] for i in self.side], 
+            "Spine2": [[i + j for j in self.arms] for i in self.side],  
+            "LeftHand": [[f"Left{i}{j}" for j in range(1, 5)] for i in self.fingers], 
+            "RightHand": [[f"Right{i}{j}" for j in range(1, 5)] for i in self.fingers], 
+        }
+        # print(armsPosition)
+        # print(shouldersPosition)
+        # print(legsPosition)
+        # print(spinesPosition)
+        # print(fingersPosition)
+
+
 
 
     def alignSpinesCenter(self):
+        spineJoints = [self.rootJoint] + self.spines
         self.updateAllJointPositions()
-        self.spineJointToCenter()
+        self.moveJointsGridZero(spineJoints)
         self.createMixamoBones()
 
 
@@ -825,17 +866,6 @@ class QuickRig:
         sideA, sideB = self.getJointNameBothSide(direction)
         self.updateBothSideToSame(sideA, sideB)
         self.createMixamoBones()
-
-
-    def createRigJoints(self):
-        spines = self.createRigSpineJoints()
-        arms = self.createRigArmsJoints()
-        legs = self.createRigLegsJoints()
-        fingers = self.createRigFingersJoints()
-        humanRigJointsPositions = {**spines, **arms, **legs, **fingers}
-        self.createJointWithName(humanRigJointsPositions)
-        # self.addIKJoints()
-        # self.addFkJoints()
 
 
 # 79 char line ================================================================
@@ -857,16 +887,16 @@ class QuickRig:
 
 
     def updateAllJointPositions(self):
-        allJoints = self.humanJointPositions.keys()
+        allJoints = self.jointPosition.keys()
         for joint in allJoints:
             position = pm.xform(joint, q=True, t=True, ws=True)
-            self.humanJointPositions[joint] = tuple(position)
+            self.jointPosition[joint] = tuple(position)
 
 
     def updateBothSideToSame(self, sideA, sideB):
         for idx, joint in enumerate(sideA):
             x, y, z = pm.xform(joint, q=True, t=True, ws=True)
-            self.humanJointPositions[sideB[idx]] = (x*-1, y, z)
+            self.jointPosition[sideB[idx]] = (x*-1, y, z)
 
 
     def createJointWithName(self, nameAndPosition: dict):
@@ -894,19 +924,17 @@ class QuickRig:
         pm.circle(nr=(0, 1, 0), n=curveName, ch=0, r=objectSize)
 
 
-    def spineJointToCenter(self):
-        spineJoints = self.humanSpines
-        spineJoints.insert(0, self.rootJoint)
-        for joint in spineJoints:
+    def moveJointsGridZero(self, joints: list):
+        for joint in joints:
             x, y, z = pm.xform(joint, q=True, t=True, ws=True)
-            self.humanJointPositions[joint] = (0, y, z)
+            self.jointPosition[joint] = (0, y, z)
 
 
     def getJointNameBothSide(self, twoOptions: str):
         """ Direction has one of the options: 
         >>> "LeftToRight" or "RightToLeft" 
          """
-        allJoints = self.humanJointPositions.keys()
+        allJoints = self.jointPosition.keys()
         A, B = twoOptions.split("To")
         side = []
         otherSide = []
@@ -918,41 +946,6 @@ class QuickRig:
             else:
                 continue
         return side, otherSide
-
-
-    def createRigSpineJoints(self) -> dict:
-        spineGroup = [self.rootJoint] + self.humanSpines
-        result = {}
-        for i in spineGroup:
-            result[f"rig_{i}"] = self.humanJointPositions[i]
-        return result
-
-
-    def createRigArmsJoints(self) -> dict:
-        result = {}
-        for i in self.humanSide:
-            for j in ["IK", "FK"]:
-                for k in self.humanArms[1:]:
-                    result[f"rig_{i + k}_{j}"] = self.humanJointPositions[f"{i}{k}"]
-        return result
-
-
-    def createRigLegsJoints(self) -> dict:
-        result = {}
-        for i in self.humanSide:
-            for j in ["IK", "FK"]:
-                for k in self.humanLegs:
-                    result[f"rig_{i + k}_{j}"] = self.humanJointPositions[f"{i}{k}"]
-        return result
-
-
-    def createRigFingersJoints(self) -> dict:
-        result = {}
-        for i in self.humanFingers:
-            for j in self.humanSide:
-                for k in range(1, 5):
-                    result[f"rig_{j}Hand{i}{k}"] = self.humanJointPositions[f"{j}Hand{i}{k}"] 
-        return result
 
 
     def parentHierarchically(self, selections: list=[]):
@@ -980,10 +973,10 @@ class QuickRig:
         self.orientJoints(primaryAxis, secondaryAxis, jointList)
 
 
-    def orientJoints(self, primaryAxis='yzx', secondaryAxis='zup', selections=[]):
+    def orientJoints(self, primaryAxis='yzx', secondaryAxis='zup', joints=[]):
         """ The default value of primaryAxis and secondaryAxis are 
         the same as Mixamo spine. """
-        allJoints = selections if selections else self.selectJointOnly()
+        allJoints = joints if joints else self.selectJointOnly()
         endJoints = [i for i in allJoints if not pm.listRelatives(i, c=True)]
         initJoint = allJoints[0]
         pm.makeIdentity(allJoints, a=True, jo=True, n=0)
@@ -1011,54 +1004,24 @@ class QuickRig:
         return result
 
 
+    def createIKFK(self, joints=[], positionInfo={}, *ikFk):
+        result = {}
+        if ikFk:
+            for i in joints:
+                for k in ikFk:
+                    result[f"rig_{i}_{k}"] = positionInfo[i] 
+        else:
+            for i in joints:
+                result[f"rig_{i}"] = positionInfo[i]
+        return result
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================   
 
 
-qc = QuickRig()
-# qc.createMixamoBones()
-# qc.createRigJoints()
-# qc.addRigJoints()
-# qc.sameBothSide()
-# qc.createRigJoints()
-
-# jnt = Joints()
-# jnt.createPolevectorJoint()
-
-# ctrl = Controllers()
-# ctrl.createControllers(sphere=1)
-
-
-# grp = Grouping()
-# grp.groupingWithOwnPivot()
-
-    # def addRigJoints(self):
-    #     for parentsJoint in ["Hips", "Spine2"]:
-    #         for solver in ["IK", "FK"]:
-    #             positions, hierarchy = self.makeRigsPositionAndHierarchy(parentsJoint, solver)
-    #             self.createJointWithName(positions)
-    #             self.buildJointsHumanStructure(hierarchy)
-
-
-    # def makeRigsPositionAndHierarchy(self, parents="Hips", IKorFK="IK"):
-    #     originalHierarchy = self.humanJointHierarchy[parents]
-    #     try:
-    #         originalHierarchy.remove(self.humanSpines)
-    #     except:
-    #         pass
-    #     positions = {}
-    #     for i in originalHierarchy:
-    #         for j in i:
-    #             positions[f"rig_{j}_{IKorFK}"] = self.humanJointPositions[j]
-    #     hierarchy = {f"rig_{parents}": [[f"rig_{j}_{IKorFK}" for j in i] for i in originalHierarchy]}
-    #     return positions, hierarchy
-
-    # def addArmsRigJoints(self):
-    #     arms = self.humanJointHierarchy["Spine2"]
-    #     armsPositions = {}
-    #     for i in arms:
-    #         for j in i:
-    #             armsPositions[f"rig_{j}_IK"] = self.humanJointPositions[j]
-    #     armsHierarchy = {"rig_Spine2": [[f"rig_{j}_IK" for j in i] for i in arms]}
-    #     self.createJointWithName(armsPositions)
-    #     self.buildJointsHumanStructure(armsHierarchy)
+qcm = QuickRig_Mixamo()
+# qcm.createMixamoBones()
+# qcm.sameBothSide()
+# qcm.alignSpinesCenter()
+qcm.createRigBones()
