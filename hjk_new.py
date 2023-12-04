@@ -817,12 +817,25 @@ class QuickRig_Mixamo:
         self.createJointWithName(spinesPosition)
         self.buildJointsHumanStructure(spinesHierarchy)
         # ====================================================================
-        arm = self.arms[1:]
-        arms = [f"{i}{m}" for i in self.side for m in arm]
-        rigArms = [f"rig_{i}_{k}" for i in arms for k in ["IK", "FK"]]
-        leftRigArms = [i if "Left" in i else None for i in rigArms]
-        print(leftRigArms)
-        armsPosition = self.createIKFK(arms, self.jointPosition, "IK", "FK")
+        leftArms = [f"Left{i}" for i in self.arms]
+        rightArms = [f"Right{i}" for i in self.arms]
+        leftArmsIKPosition = self.createIKFK(leftArms[1:], self.jointPosition, "IK")
+        leftArmsFKPosition = self.createIKFK(leftArms[1:], self.jointPosition, "FK")
+        rightArmsPosition = self.createIKFK(rightArms[1:], self.jointPosition, "IK", "FK")
+        leftArmsIKHierarchy = {f"rig_{leftArms[0]}": [list(leftArmsIKPosition.keys())]}
+        leftArmsFKHierarchy = {f"rig_{leftArms[0]}": [list(leftArmsFKPosition.keys())]}
+        print(leftArmsIKHierarchy)
+        print(leftArmsFKHierarchy)
+        rightArmsHierarchy = {f"rig_{rightArms[0]}": [rightArms[1:]]}
+        self.cleanObjects(leftArmsIKPosition)
+        self.cleanObjects(leftArmsFKPosition)
+        self.createJointWithName(leftArmsIKPosition)
+        self.createJointWithName(leftArmsFKPosition)
+        self.buildJointsHumanStructure(leftArmsIKHierarchy)
+        self.buildJointsHumanStructure(leftArmsFKHierarchy)
+        self.cleanObjects(rightArmsPosition)
+        self.createJointWithName(rightArmsPosition)
+        self.buildJointsHumanStructure(rightArmsHierarchy)
         # ====================================================================
         shoulder = self.arms[0]
         shoulders = [f"{i}{shoulder}" for i in self.side]
@@ -1020,8 +1033,12 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-qcm = QuickRig_Mixamo()
+# qcm = QuickRig_Mixamo()
 # qcm.createMixamoBones()
 # qcm.sameBothSide()
 # qcm.alignSpinesCenter()
-qcm.createRigBones()
+# qcm.createRigBones()
+
+
+# cuv = Curves()
+# cuv.createCurveAimingPoint()
