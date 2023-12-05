@@ -714,15 +714,16 @@ class Rename:
 
 class QuickRig_Mixamo:
     def __init__(self):
-        self.mainCurve = "mainCurve"
-        self.rootJoint = "Hips"
-        self.side = ["Left", "Right"]
-        self.arms = ["Shoulder", "Arm", "ForeArm", "Hand"]
-        self.legs = ["UpLeg", "Leg", "Foot", "ToeBase", "Toe_End"]
-        self.fingers = ["Thumb", "Index", "Middle", "Ring", "Pinky"]
-        self.fingers = [f"Hand{i}" for i in self.fingers]
+        side = ["Left", "Right"]
+        l, r = side
+        arms = ["Shoulder", "Arm", "ForeArm", "Hand"]
+        legs = ["UpLeg", "Leg", "Foot", "ToeBase", "Toe_End"]
+        finger = ["Thumb", "Index", "Middle", "Ring", "Pinky"]
+        finger = [f"Hand{i}" for i in finger]
         self.spines = ["Spine", "Spine1", "Spine2"]
         self.spines += ["Neck", "Head", "HeadTop_End"]
+        self.mainCurve = "mainCurve"
+        self.rootJoint = "Hips"
         self.jointPosition = {
             "Hips": (0.0, 98.223, 1.464), 
             "Spine": (0.0, 107.814, 1.588), 
@@ -791,10 +792,10 @@ class QuickRig_Mixamo:
             "RightToe_End": (-10.797, 0.0, 14.439), 
             }
         self.hierarchy = {
-            "Hips": [self.spines] + [[i + j for j in self.legs] for i in self.side], 
-            "Spine2": [[i + j for j in self.arms] for i in self.side],  
-            "LeftHand": [[f"Left{i}{j}" for j in range(1, 5)] for i in self.fingers], 
-            "RightHand": [[f"Right{i}{j}" for j in range(1, 5)] for i in self.fingers], 
+            "Hips": [self.spines] + [[i + j for j in legs] for i in side], 
+            "Spine2": [[i + j for j in arms] for i in side],  
+            f"{l}Hand": [[f"{l}{i}{j}" for j in range(1, 5)] for i in finger], 
+            f"{r}Hand": [[f"{r}{i}{j}" for j in range(1, 5)] for i in finger], 
         }
 
 
@@ -804,67 +805,6 @@ class QuickRig_Mixamo:
         self.buildJointsHumanStructure(self.hierarchy)
         self.matchMainCurveToJointSize(self.rootJoint, self.mainCurve)
         pm.parent(self.rootJoint, self.mainCurve)
-
-
-    def createRigBones(self):
-        self.updateAllJointPositions()
-        # ====================================================================
-        spines = [self.rootJoint] + self.spines
-        rigSpines = [f"rig_{i}" for i in self.spines]
-        spinesPosition = self.createIKFK(spines, self.jointPosition)
-        spinesHierarchy = {"rig_" + self.rootJoint: [rigSpines]}
-        self.cleanObjects(spinesPosition)
-        self.createJointWithName(spinesPosition)
-        self.buildJointsHumanStructure(spinesHierarchy)
-        # ====================================================================
-        leftArms = [f"Left{i}" for i in self.arms]
-        rightArms = [f"Right{i}" for i in self.arms]
-        leftArmsIKPosition = self.createIKFK(leftArms[1:], self.jointPosition, "IK")
-        leftArmsFKPosition = self.createIKFK(leftArms[1:], self.jointPosition, "FK")
-        rightArmsPosition = self.createIKFK(rightArms[1:], self.jointPosition, "IK", "FK")
-        leftArmsIKHierarchy = {f"rig_{leftArms[0]}": [list(leftArmsIKPosition.keys())]}
-        leftArmsFKHierarchy = {f"rig_{leftArms[0]}": [list(leftArmsFKPosition.keys())]}
-        print(leftArmsIKHierarchy)
-        print(leftArmsFKHierarchy)
-        rightArmsHierarchy = {f"rig_{rightArms[0]}": [rightArms[1:]]}
-        self.cleanObjects(leftArmsIKPosition)
-        self.cleanObjects(leftArmsFKPosition)
-        self.createJointWithName(leftArmsIKPosition)
-        self.createJointWithName(leftArmsFKPosition)
-        self.buildJointsHumanStructure(leftArmsIKHierarchy)
-        self.buildJointsHumanStructure(leftArmsFKHierarchy)
-        self.cleanObjects(rightArmsPosition)
-        self.createJointWithName(rightArmsPosition)
-        self.buildJointsHumanStructure(rightArmsHierarchy)
-        # ====================================================================
-        shoulder = self.arms[0]
-        shoulders = [f"{i}{shoulder}" for i in self.side]
-        rigShoulders = [[f"rig_{i}"] for i in shoulders]
-        shouldersPosition = self.createIKFK(shoulders, self.jointPosition)
-        shouldersHierarchy = {"rig_Spine2": rigShoulders}
-        self.cleanObjects(shouldersPosition)
-        self.createJointWithName(shouldersPosition)
-        self.buildJointsHumanStructure(shouldersHierarchy)
-        # ====================================================================
-        leg = self.legs
-        legs = [f"{i}{j}" for j in leg for i in self.side]
-        legsPosition = self.createIKFK(legs, self.jointPosition, "IK", "FK")
-        fingers = [f"{f}{g}" for g in range(1, 5) for f in self.fingers]
-        fingers = [f"{i}{g}" for g in fingers for i in self.side]
-        fingersPosition = self.createIKFK(fingers, self.jointPosition)
-        {
-            "Hips": [self.spines] + [[i + j for j in self.legs] for i in self.side], 
-            "Spine2": [[i + j for j in self.arms] for i in self.side],  
-            "LeftHand": [[f"Left{i}{j}" for j in range(1, 5)] for i in self.fingers], 
-            "RightHand": [[f"Right{i}{j}" for j in range(1, 5)] for i in self.fingers], 
-        }
-        # print(armsPosition)
-        # print(shouldersPosition)
-        # print(legsPosition)
-        # print(spinesPosition)
-        # print(fingersPosition)
-
-
 
 
     def alignSpinesCenter(self):
@@ -879,6 +819,31 @@ class QuickRig_Mixamo:
         sideA, sideB = self.getJointNameBothSide(direction)
         self.updateBothSideToSame(sideA, sideB)
         self.createMixamoBones()
+
+
+    def createRigBones(self):
+        self.updateAllJointPositions()
+        spines = [self.rootJoint] + self.spines
+        pos = self.getRigBonesPosition(spines, "rig")
+        # hierarchy = self.getRigBonesHierarchy()
+        # self.cleanObjects(pos)
+        # self.createJointWithName(pos)
+        # self.buildJointsHumanStructure(hierarchy)
+
+
+    def getRigBonesPosition(self, joints: list, foreword="", tailword=""):
+        """ Change the joint name to something like 
+        >>> f"{foreword}_originalName_{tailword}"
+        And it returns a dictionary with the positions. 
+         """
+        foreword = f"{foreword}_" if foreword else foreword
+        tailword = f"_{tailword}" if tailword else tailword
+        jntPos = self.jointPosition
+        result = {}
+        for i in joints:
+            result[f"{foreword}{i}{tailword}"] = jntPos[i]
+        return result
+
 
 
 # 79 char line ================================================================
@@ -943,7 +908,7 @@ class QuickRig_Mixamo:
             self.jointPosition[joint] = (0, y, z)
 
 
-    def getJointNameBothSide(self, twoOptions: str):
+    def getJointNameBothSide(self, twoOptions: str) -> list:
         """ Direction has one of the options: 
         >>> "LeftToRight" or "RightToLeft" 
          """
@@ -974,10 +939,16 @@ class QuickRig_Mixamo:
 
     def orientJointsMixamoType(self, jointList=[]):
         firstJoint = jointList[0]
-        if "LeftShoulder" in firstJoint or "LeftHand" in firstJoint:
+        ls = "LeftShoulder"
+        la = "LeftArm"
+        lh = "LeftHand"
+        rs = "RightShoulder"
+        ra = "RightArm"
+        rh = "RightHand"
+        if ls in firstJoint or la in firstJoint or lh in firstJoint:
             primaryAxis = 'yxz'
             secondaryAxis = 'zdown'
-        elif "RightShoulder" in firstJoint or "RightHand" in firstJoint:
+        elif rs in firstJoint or ra in firstJoint or rh in firstJoint:
             primaryAxis = 'yxz'
             secondaryAxis = 'zup'
         else:
@@ -1017,27 +988,19 @@ class QuickRig_Mixamo:
         return result
 
 
-    def createIKFK(self, joints=[], positionInfo={}, *ikFk):
-        result = {}
-        if ikFk:
-            for i in joints:
-                for k in ikFk:
-                    result[f"rig_{i}_{k}"] = positionInfo[i] 
-        else:
-            for i in joints:
-                result[f"rig_{i}"] = positionInfo[i]
-        return result
+
 
 
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================   
 
 
-# qcm = QuickRig_Mixamo()
+qcm = QuickRig_Mixamo()
 # qcm.createMixamoBones()
 # qcm.sameBothSide()
 # qcm.alignSpinesCenter()
-# qcm.createRigBones()
+qcm.createRigBones()
+
 
 
 # cuv = Curves()
