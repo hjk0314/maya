@@ -792,10 +792,10 @@ class QuickRig_Mixamo:
             "RightToe_End": (-10.797, 0.0, 14.439), 
             }
         self.hierarchy = {
-            "Hips": [self.spines] + [[i + j for j in legs] for i in side], 
+            "Hips": [self.spines] + [[i + g for g in legs] for i in side], 
             "Spine2": [[i + j for j in arms] for i in side],  
-            f"{l}Hand": [[f"{l}{i}{j}" for j in range(1, 5)] for i in finger], 
-            f"{r}Hand": [[f"{r}{i}{j}" for j in range(1, 5)] for i in finger], 
+            f"{l}Hand": [[f"{l}{i}{n}" for n in range(1, 5)] for i in finger], 
+            f"{r}Hand": [[f"{r}{i}{n}" for n in range(1, 5)] for i in finger], 
         }
 
 
@@ -825,10 +825,10 @@ class QuickRig_Mixamo:
         self.updateAllJointPositions()
         spines = [self.rootJoint] + self.spines
         pos = self.getRigBonesPosition(spines, "rig")
-        # hierarchy = self.getRigBonesHierarchy()
-        # self.cleanObjects(pos)
-        # self.createJointWithName(pos)
-        # self.buildJointsHumanStructure(hierarchy)
+        hierarchy = self.getRigBonesHierarchy("rig_Hips", pos)
+        self.cleanObjects(pos)
+        self.createJointWithName(pos)
+        self.buildJointsHumanStructure(hierarchy)
 
 
     def getRigBonesPosition(self, joints: list, foreword="", tailword=""):
@@ -844,6 +844,17 @@ class QuickRig_Mixamo:
             result[f"{foreword}{i}{tailword}"] = jntPos[i]
         return result
 
+
+    def getRigBonesHierarchy(self, parents, *args):
+        if not parents:
+            return
+        hierarchy = []
+        for i in args:
+            if isinstance(i, dict):
+                hierarchy.append(list(i.keys()))
+            else:
+                hierarchy.append(i)
+        return {parents: hierarchy}
 
 
 # 79 char line ================================================================
