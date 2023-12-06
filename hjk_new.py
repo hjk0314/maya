@@ -821,40 +821,15 @@ class QuickRig_Mixamo:
         self.createMixamoBones()
 
 
-    def createRigBones(self):
+    def createNewBones(self):
         self.updateAllJointPositions()
-        spines = [self.rootJoint] + self.spines
-        pos = self.getRigBonesPosition(spines, "rig")
-        hierarchy = self.getRigBonesHierarchy("rig_Hips", pos)
+        jntPos = self.jointPosition
+        hierar = self.hierarchy
+        pos, hierarchy = self.getDataWithNewName(jntPos, hierar, "rig_")
         self.cleanObjects(pos)
         self.createJointWithName(pos)
         self.buildJointsHumanStructure(hierarchy)
 
-
-    def getRigBonesPosition(self, joints: list, foreword="", tailword=""):
-        """ Change the joint name to something like 
-        >>> f"{foreword}_originalName_{tailword}"
-        And it returns a dictionary with the positions. 
-         """
-        foreword = f"{foreword}_" if foreword else foreword
-        tailword = f"_{tailword}" if tailword else tailword
-        jntPos = self.jointPosition
-        result = {}
-        for i in joints:
-            result[f"{foreword}{i}{tailword}"] = jntPos[i]
-        return result
-
-
-    def getRigBonesHierarchy(self, parents, *args):
-        if not parents:
-            return
-        hierarchy = []
-        for i in args:
-            if isinstance(i, dict):
-                hierarchy.append(list(i.keys()))
-            else:
-                hierarchy.append(i)
-        return {parents: hierarchy}
 
 
 # 79 char line ================================================================
@@ -999,6 +974,60 @@ class QuickRig_Mixamo:
         return result
 
 
+    def getPosition(self, selection) -> list:
+        try:
+            position = pm.pointPosition(selection)
+        except:
+            position = pm.xform(selection, q=1, ws=1, rp=1)
+        return position
+
+
+    def getDataWithNewName(self, jointPosition: dict, hierarchy: dict, \
+        foreword="", tailword=""):
+        """ Copy the entire data with a new name. """
+        fw = foreword
+        tw = tailword
+        jointPosition = self.jointPosition
+        hierarchy = self.hierarchy
+        result1 = {f"{fw}{j}{tw}": p for j, p in jointPosition.items()}
+        result2 = {}
+        for p, h in hierarchy.items():
+            result2[f"{fw}{p}{tw}"] = [[f"{fw}{j}{tw}" for j in i] for i in h]
+        return result1, result2
+
+
+    def createIKFKJoints(self):
+        hierarchy = {
+            "Hips": [['LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToeBase', 'LeftToe_End'], ['RightUpLeg', 'RightLeg', 'RightFoot', 'RightToeBase', 'RightToe_End']], 
+            "LeftShoulder": [['LeftArm', 'LeftForeArm', 'LeftHand']], 
+            "RightShoulder": [['RightArm', 'RightForeArm', 'RightHand']], 
+        }
+        legsHierarchy = {"Hips": self.hierarchy["Hips"][1:]}
+        armsHierarchy = {i[0]: [i[1:]] for i in self.hierarchy["Spine2"]}
+        # print(legsHierarchy.values())
+        legsPosition = self.makeNewJointPosition(legsHierarchy.values())
+        # for i in legsHierarchy.values():
+        #     for j in i:
+        #         for k in j:
+        #             legsPosition[k] = self.jointPosition[k]
+        armsPosition = {}
+        for i in armsHierarchy.values():
+            for j in i:
+                for k in j:
+                    armsPosition[k] = self.jointPosition[k]
+        print(legsPosition)
+
+
+    def makeNewJointPosition(self, arg: list):
+        for i in arg:
+            isStr = isinstance(i, str)
+            isIter = isinstance(i, Iterable)
+            if not isStr and isIter:
+                self.makeNewJointPosition(i)
+            else:
+                return {i: self.jointPosition[i]}
+
+
 
 
 
@@ -1010,7 +1039,13 @@ qcm = QuickRig_Mixamo()
 # qcm.createMixamoBones()
 # qcm.sameBothSide()
 # qcm.alignSpinesCenter()
-qcm.createRigBones()
+# pm.makeIdentity(qcm.mainCurve, a=1, t=1, r=1, s=1, n=0, pn=1)
+# qcm.createNewBones()
+qcm.createIKFKJoints()
+# spine = ['Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'HeadTop_End']
+# leftLeg = ['LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToeBase', 'LeftToe_End']
+# qcm.createIKFKJoints(leftLeg, "_IK", "_FK")
+
 
 
 
