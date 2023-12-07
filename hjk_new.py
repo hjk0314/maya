@@ -714,12 +714,11 @@ class Rename:
 
 class QuickRig_Mixamo:
     def __init__(self):
-        side = ["Left", "Right"]
-        l, r = side
-        arms = ["Shoulder", "Arm", "ForeArm", "Hand"]
-        legs = ["UpLeg", "Leg", "Foot", "ToeBase", "Toe_End"]
+        self.side = ["Left", "Right"]
+        self.arms = ["Shoulder", "Arm", "ForeArm", "Hand"]
+        self.legs = ["UpLeg", "Leg", "Foot", "ToeBase", "Toe_End"]
         finger = ["Thumb", "Index", "Middle", "Ring", "Pinky"]
-        finger = [f"Hand{i}" for i in finger]
+        self.finger = [f"Hand{i}" for i in finger]
         self.spines = ["Spine", "Spine1", "Spine2"]
         self.spines += ["Neck", "Head", "HeadTop_End"]
         self.mainCurve = "mainCurve"
@@ -792,10 +791,14 @@ class QuickRig_Mixamo:
             "RightToe_End": (-10.797, 0.0, 14.439), 
             }
         self.hierarchy = {
-            "Hips": [self.spines] + [[i + g for g in legs] for i in side], 
-            "Spine2": [[i + j for j in arms] for i in side],  
-            f"{l}Hand": [[f"{l}{i}{n}" for n in range(1, 5)] for i in finger], 
-            f"{r}Hand": [[f"{r}{i}{n}" for n in range(1, 5)] for i in finger], 
+            "Hips": 
+                [self.spines] + [[i+g for g in self.legs] for i in self.side], 
+            "Spine2": 
+                [[i+j for j in self.arms] for i in self.side],  
+            "LeftHand": 
+                [[f"Left{i}{n}" for n in range(1, 5)] for i in self.finger], 
+            "RightHand": 
+                [[f"Right{i}{n}" for n in range(1, 5)] for i in self.finger], 
         }
 
 
@@ -821,15 +824,55 @@ class QuickRig_Mixamo:
         self.createMixamoBones()
 
 
-    def createNewBones(self):
+    def createAllRigJoints(self):
         self.updateAllJointPositions()
-        jntPos = self.jointPosition
-        hierar = self.hierarchy
-        pos, hierarchy = self.getDataWithNewName(jntPos, hierar, "rig_")
-        self.cleanObjects(pos)
-        self.createJointWithName(pos)
-        self.buildJointsHumanStructure(hierarchy)
+        positions = self.jointPosition
+        hierarchy = self.hierarchy
+        data = self.getDataIntoNewName(positions, hierarchy, "rig_")
+        rigPositions, rigHierarchy = data
+        self.cleanObjects(rigPositions)
+        self.createJointWithName(rigPositions)
+        self.buildJointsHumanStructure(rigHierarchy)
 
+
+    def createIKFKArms(self, *IKFK):
+        self.updateAllJointPositions()
+        sourceArms = [i + m for m in self.arms[1:] for i in self.side]
+        sourceHierarchy = {i[0]: [i[1:]] for i in self.hierarchy["Spine2"]}
+        armsPositions = {}
+        for i in sourceArms:
+            for k in IKFK:
+                armsPositions[f"rig_{i}_{k}"] = self.jointPosition[i]
+        armsHierarchy = {}
+        for parents, hierarchy in sourceHierarchy.items():
+            for h in hierarchy:
+                key = f"rig_{parents}"
+                value = [[f"rig_{i}_{k}" for i in h] for k in IKFK]
+                armsHierarchy[key] = value
+        self.cleanObjects(armsHierarchy.values())
+        self.createJointWithName(armsPositions)
+        self.buildJointsHumanStructure(armsHierarchy)
+
+
+    def createIKFKLegs(self, *IKFK):
+        self.updateAllJointPositions()
+        sourceLegs = [i + g for g in self.legs for i in self.side]
+        sourceHierarchy = {"Hips": self.hierarchy["Hips"][1:]}
+        
+        legsPositions = {}
+        for i in sourceLegs:
+            for k in IKFK:
+                legsPositions[f"rig_{i}_{k}"] = self.jointPosition[i]
+        # print(legsPositions)
+        legsHierarchy = {}
+        for parents, children in sourceHierarchy.items():
+            key = f"rig_{parents}"
+            value = [[f"rig_{i}_{k}" for i in h] for h in children for k in IKFK]
+            legsHierarchy[key] = value
+        print(legsHierarchy)
+        self.cleanObjects(legsHierarchy.values())
+        self.createJointWithName(legsPositions)
+        self.buildJointsHumanStructure(legsHierarchy)
 
 
 # 79 char line ================================================================
@@ -982,53 +1025,46 @@ class QuickRig_Mixamo:
         return position
 
 
-    def getDataWithNewName(self, jointPosition: dict, hierarchy: dict, \
+    def getDataIntoNewName(self, positions: dict, hierarchy: dict, \
         foreword="", tailword=""):
-        """ Copy the entire data with a new name. """
-        fw = foreword
-        tw = tailword
-        jointPosition = self.jointPosition
-        hierarchy = self.hierarchy
-        result1 = {f"{fw}{j}{tw}": p for j, p in jointPosition.items()}
+        """ Returns the data with a new name. 
+        - positions = {str: (float, float, float), ...}
+        - hierarchy = {str: [[ ],[ ]], ...}
+         """
+        result1 = {}
+        for jnt, pos in positions.items():
+            result1[f"{foreword}{jnt}{tailword}"] = pos 
         result2 = {}
-        for p, h in hierarchy.items():
-            result2[f"{fw}{p}{tw}"] = [[f"{fw}{j}{tw}" for j in i] for i in h]
+        for parents, hierarchy in hierarchy.items():
+            key = f"{foreword}{parents}{tailword}"
+            val = [[f"{foreword}{j}{tailword}" for j in i] for i in hierarchy]
+            result2[key] = val
         return result1, result2
 
 
-    def createIKFKJoints(self):
-        hierarchy = {
-            "Hips": [['LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToeBase', 'LeftToe_End'], ['RightUpLeg', 'RightLeg', 'RightFoot', 'RightToeBase', 'RightToe_End']], 
-            "LeftShoulder": [['LeftArm', 'LeftForeArm', 'LeftHand']], 
-            "RightShoulder": [['RightArm', 'RightForeArm', 'RightHand']], 
-        }
-        legsHierarchy = {"Hips": self.hierarchy["Hips"][1:]}
-        armsHierarchy = {i[0]: [i[1:]] for i in self.hierarchy["Spine2"]}
-        # print(legsHierarchy.values())
-        legsPosition = self.makeNewJointPosition(legsHierarchy.values())
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # legsPosition = {}
         # for i in legsHierarchy.values():
         #     for j in i:
         #         for k in j:
         #             legsPosition[k] = self.jointPosition[k]
-        armsPosition = {}
-        for i in armsHierarchy.values():
-            for j in i:
-                for k in j:
-                    armsPosition[k] = self.jointPosition[k]
-        print(legsPosition)
-
-
-    def makeNewJointPosition(self, arg: list):
-        for i in arg:
-            isStr = isinstance(i, str)
-            isIter = isinstance(i, Iterable)
-            if not isStr and isIter:
-                self.makeNewJointPosition(i)
-            else:
-                return {i: self.jointPosition[i]}
-
-
-
+        # armsPosition = {}
+        # for i in armsHierarchy.values():
+        #     for j in i:
+        #         for k in j:
+        #             armsPosition[k] = self.jointPosition[k]
 
 
 # 79 char line ================================================================
@@ -1040,14 +1076,6 @@ qcm = QuickRig_Mixamo()
 # qcm.sameBothSide()
 # qcm.alignSpinesCenter()
 # pm.makeIdentity(qcm.mainCurve, a=1, t=1, r=1, s=1, n=0, pn=1)
-# qcm.createNewBones()
-qcm.createIKFKJoints()
-# spine = ['Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'HeadTop_End']
-# leftLeg = ['LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToeBase', 'LeftToe_End']
-# qcm.createIKFKJoints(leftLeg, "_IK", "_FK")
-
-
-
-
-# cuv = Curves()
-# cuv.createCurveAimingPoint()
+# qcm.createAllRigJoints()
+qcm.createIKFKArms("IK", "FK")
+qcm.createIKFKLegs("IK", "FK")
