@@ -1067,7 +1067,7 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-# qcm = QuickRig_Mixamo()
+qcm = QuickRig_Mixamo()
 # qcm.createMixamoBones()
 # qcm.sameBothSide()
 # qcm.alignSpinesCenter()
@@ -1076,5 +1076,7 @@ class QuickRig_Mixamo:
 # qcm.createIKFKArms("IK", "FK")
 # qcm.createIKFKLegs("IK", "FK")
 
-
-
+# sel = pm.ls(sl=True)
+# qcm.orientJointsMixamoType(sel)
+# grp = Grouping()
+# grp.groupingWithOwnPivot()
