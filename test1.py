@@ -2,6 +2,8 @@
 import re
 import pymel.core as pm
 import maya.OpenMaya as om
+import os
+import json
 
 
 class AutoRig_Wheel:
@@ -290,4 +292,137 @@ class QuickRig:
             x, y, z = pm.xform(i, q=True, t=True, ws=True)
             position = [0-x, y, z]
             pm.xform(i, t=position, r=True, ws=True)
+
+
+class VertexSeletor:
+    def __init__(self):
+        self.jsonPath = self.getJsonPath()
+        if not self.jsonPath:
+            return
+        else:
+            self.setupUI()
+    
+
+    def getJsonPath(self):
+        """ Create the path of the json file based on this scene. """
+        fullPath = pm.Env().sceneName()
+        if not fullPath:
+            print("File not saved.")
+            return
+        else:
+            dir = os.path.dirname(fullPath)
+            # name_ext = os.path.basename(fullPath)
+            # name, ext = os.path.splitext(name_ext)
+            result = f"{dir}/vertexSeletor.json"
+            return result
+
+
+    # UI
+    def setupUI(self):
+        winName = 'vertexButton'
+        if pm.window(winName, exists=True):
+            pm.deleteUI(winName)
+        win = pm.window(winName, t='Vertex Selector', s=True, rtf=True)
+        pm.columnLayout(cat=('both', 4), rs=2, cw=178)
+        pm.separator(h=10)
+        pm.rowColumnLayout(nc=3, cw=[(1, 80), (2, 5), (3, 80)])
+        self.field = pm.textField(ed=True)
+        pm.text('')
+        pm.button(l="Create", c=lambda x: self.writeJson())
+        pm.setParent("..", u=True)
+        pm.separator(h=10)
+        pm.rowColumnLayout(nc=3, cw=[(1, 80), (2, 5), (3, 80)])
+        pm.radioCollection()
+        self.radioAdd = pm.radioButton(l='add', sl=True)
+        pm.text('')
+        self.radioTgl = pm.radioButton(l='tgl')
+        pm.setParent("..", u=True)
+        spacing = [(1, 80), (2, 3), (3, 80), (4, 3)]
+        pm.rowColumnLayout(nc=4, rs=(1, 3), cw=spacing)
+        chk = os.path.isfile(self.jsonPath)
+        if chk:
+            data = self.loadJson()
+            for key in data:
+                self.button(key)
+        else:
+            pass
+        pm.setParent("..", u=True)
+        pm.separator(h=10)
+        pm.button(l="Clear", c=lambda x: pm.select(cl=True))
+        pm.button(l="Delete Data", c=lambda x: self.deleteJson())
+        pm.button(l="Close", c=lambda x: pm.deleteUI(winName))
+        pm.separator(h=10)
+        pm.showWindow(win)
+
+
+    def button(self, *args):
+        """ Create the looping button. """
+        for i in args:
+            pm.button(l=i, c=lambda x: self.selectVtx(i))
+            pm.text(' ')
+
+
+    def writeJson(self) -> None:
+        """ If the json file does not exist, create a new one.
+        Otherwise, Save the dictionary as a json file
+         """
+        chk = os.path.isfile(self.jsonPath)
+        if not chk:
+            data = {}
+        else:
+            data = self.loadJson()
+        name = self.field.getText()
+        info = self.vertexNum()
+        data[name] = info
+        with open(self.jsonPath, 'w') as JSON:
+            json.dump(data, JSON, indent=4)
+        VertexSeletor()
+
+
+    def loadJson(self) -> dict:
+        """ Load information from json file and select vertex. """
+        with open(self.jsonPath, 'r') as JSON:
+            data = json.load(JSON)
+        return data
+
+
+    def deleteJson(self):
+        """ It doesn't delete the data, it destroys the file itself. """
+        chk = os.path.isfile(self.jsonPath)
+        if not chk:
+            return
+        else:
+            os.remove(self.jsonPath)
+
+
+    def vertexNum(self) -> dict:
+        """ Make a list of vertex numbers only. """
+        sel = pm.ls(sl=True)
+        obj = pm.ls(sel, o=True)
+        shapes = set(obj)
+        result = {}
+        for shp in shapes:
+            com = re.compile(f'(?<={shp}).+[0-9]+:*[0-9]*.+')
+            vtxNum = []
+            for j in sel:
+                try:
+                    tmp = com.search(j.name())
+                    vtxNum.append(tmp.group(0))
+                except:
+                    continue
+            result[shp.getParent().name()] = vtxNum
+        return result
+
+
+    def selectVtx(self, key: str):
+        """ Click the button, selects the vortex. """
+        data = self.loadJson()
+        temp = data[key]
+        result = []
+        for j, k in temp.items():
+            for i in k:
+                result.append(j + i)
+        ADD = self.radioAdd.getSelect()
+        TGL = self.radioTgl.getSelect()
+        pm.select(result, af=ADD, tgl=TGL)
 
