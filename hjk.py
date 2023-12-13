@@ -763,7 +763,7 @@ class VertexSeletor:
             return
         else:
             self.setupUI()
-    
+
 
     def getJsonPath(self):
         """ Create the path of the json file based on this scene. """
@@ -795,9 +795,9 @@ class VertexSeletor:
         pm.separator(h=10)
         pm.rowColumnLayout(nc=3, cw=[(1, 80), (2, 5), (3, 80)])
         pm.radioCollection()
-        self.radioAdd = pm.radioButton(l='add', sl=True)
+        self.radioAdd = pm.radioButton(l='add')
         pm.text('')
-        self.radioTgl = pm.radioButton(l='tgl')
+        self.radioTgl = pm.radioButton(l='tgl', sl=True)
         pm.setParent("..", u=True)
         spacing = [(1, 80), (2, 3), (3, 80), (4, 3)]
         pm.rowColumnLayout(nc=4, rs=(1, 3), cw=spacing)
@@ -838,7 +838,7 @@ class VertexSeletor:
         data[name] = info
         with open(self.jsonPath, 'w') as JSON:
             json.dump(data, JSON, indent=4)
-        VertexSeletor()
+        self.setupUI()
 
 
     def loadJson(self) -> dict:
@@ -2232,3 +2232,4 @@ def parentParty(n: int):
 # removeDeformed()
 # SoftSel()
 # zeroPivot()
+VertexSeletor()
