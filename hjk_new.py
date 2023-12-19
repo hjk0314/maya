@@ -1067,7 +1067,7 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-qcm = QuickRig_Mixamo()
+# qcm = QuickRig_Mixamo()
 # qcm.createMixamoBones()
 # qcm.sameBothSide()
 # qcm.alignSpinesCenter()
@@ -1080,3 +1080,11 @@ qcm = QuickRig_Mixamo()
 # qcm.orientJointsMixamoType(sel)
 # grp = Grouping()
 # grp.groupingWithOwnPivot()
+# ctrl = Controllers()
+# ctrl.createControllers(sphere=1)
+    
+ren = Rename()
+ren.changeWords("Left", "Right")
+    
+# jnt = Joints()
+# jnt.createPolevectorJoint()
