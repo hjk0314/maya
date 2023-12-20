@@ -1081,10 +1081,10 @@ class QuickRig_Mixamo:
 # grp = Grouping()
 # grp.groupingWithOwnPivot()
 # ctrl = Controllers()
-# ctrl.createControllers(sphere=1)
+# ctrl.createControllers(circle=1)
     
-ren = Rename()
-ren.changeWords("Left", "Right")
+# ren = Rename()
+# ren.changeWords("Left", "Right")
     
 # jnt = Joints()
 # jnt.createPolevectorJoint()
