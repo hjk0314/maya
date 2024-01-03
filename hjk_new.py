@@ -1078,13 +1078,13 @@ class QuickRig_Mixamo:
 
 # sel = pm.ls(sl=True)
 # qcm.orientJointsMixamoType(sel)
-grp = Grouping()
-grp.groupingWithOwnPivot()
+# grp = Grouping()
+# grp.groupingWithOwnPivot()
 # ctrl = Controllers()
 # ctrl.createControllers(circle=1)
     
 # ren = Rename()
-# ren.changeWords("Left", "Right")
+# ren.changeWords("_mesh1", "")
     
 # jnt = Joints()
 # jnt.createPolevectorJoint()
@@ -1092,8 +1092,12 @@ grp.groupingWithOwnPivot()
 
 # sel = pm.ls(sl=True)
 # for i in sel:
-#     # pm.parentConstraint(f"rig_{i}", i, mo=True)
-#     pm.connectAttr(f"rig_{i}.translate", f"{i}.translate", f=True)
-#     pm.connectAttr(f"rig_{i}.rotate", f"{i}.rotate", f=True)
+#     tra = pm.getAttr(f"{i}.translate")
+#     rot = pm.getAttr(f"{i}.rotate")
+#     r = i.replace("_l_", "_r_")
+#     x, y, z = tra
+#     tra = [x * -1, y, z]
+#     pm.setAttr(f"{r}.translate", tra)
+#     pm.setAttr(f"{r}.rotate", rot)
 
 
