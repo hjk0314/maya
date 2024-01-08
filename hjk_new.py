@@ -1067,37 +1067,14 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-# qcm = QuickRig_Mixamo()
-# qcm.createMixamoBones()
-# qcm.sameBothSide()
-# qcm.alignSpinesCenter()
-# pm.makeIdentity(qcm.mainCurve, a=1, t=1, r=1, s=1, n=0, pn=1)
-# qcm.createAllRigJoints()
-# qcm.createIKFKArms("IK", "FK")
-# qcm.createIKFKLegs("IK", "FK")
-
-# sel = pm.ls(sl=True)
-# qcm.orientJointsMixamoType(sel)
-# grp = Grouping()
-# grp.groupingWithOwnPivot()
-# ctrl = Controllers()
-# ctrl.createControllers(circle=1)
-    
-# ren = Rename()
-# ren.changeWords("_mesh1", "")
-    
-# jnt = Joints()
-# jnt.createPolevectorJoint()
+# qm = QuickRig_Mixamo()
+# qm.createMixamoBones()
+# qm.alignSpinesCenter()
+# qm.sameBothSide()
+# qm.createAllRigJoints()
+# qm.createIKFKArms("FK")
+# qm.createIKFKLegs("IK", "FK")
 
 
-# sel = pm.ls(sl=True)
-# for i in sel:
-#     tra = pm.getAttr(f"{i}.translate")
-#     rot = pm.getAttr(f"{i}.rotate")
-#     r = i.replace("_l_", "_r_")
-#     x, y, z = tra
-#     tra = [x * -1, y, z]
-#     pm.setAttr(f"{r}.translate", tra)
-#     pm.setAttr(f"{r}.rotate", rot)
-
-
+grp = Grouping()
+grp.groupingWithOwnPivot()
