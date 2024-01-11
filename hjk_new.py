@@ -835,6 +835,14 @@ class QuickRig_Mixamo:
         self.buildJointsHumanStructure(rigHierarchy)
 
 
+    def createIKFKSpines(self, *IKFK):
+        self.updateAllJointPositions()
+        spinesPositions, spinesHierarchy = self.getDataIKFKSpines(IKFK)
+        self.cleanObjects(spinesHierarchy.values())
+        self.createJointWithName(spinesPositions)
+        self.buildJointsHumanStructure(spinesHierarchy)
+
+
     def createIKFKArms(self, *IKFK):
         self.updateAllJointPositions()
         armsPositions, armsHierarchy = self.getDataIKFKArms(IKFK)
@@ -1018,8 +1026,24 @@ class QuickRig_Mixamo:
         return result1, result2
 
 
+    def getDataIKFKSpines(self, *IKFK):
+        IKFK = self.getFlattenList(IKFK)
+        sourceSpines = self.spines[:3]
+        sourceHierarchy = {"Hips": [sourceSpines]}
+        spinesPositions = {}
+        for i in sourceSpines:
+            for k in IKFK:
+                spinesPositions[f"rig_{i}_{k}"] = self.jointPosition[i]
+        spinesHierarchy = {}
+        for parents, c in sourceHierarchy.items():
+            key = f"rig_{parents}"
+            value = [[f"rig_{i}_{k}" for i in h] for h in c for k in IKFK]
+            spinesHierarchy[key] = value
+        return spinesPositions, spinesHierarchy
+
+
     def getDataIKFKArms(self, *IKFK):
-        IKFK = self.getFlatten(IKFK)
+        IKFK = self.getFlattenList(IKFK)
         sourceArms = [i + m for m in self.arms[1:] for i in self.side]
         sourceHierarchy = {i[0]: [i[1:]] for i in self.hierarchy["Spine2"]}
         armsPositions = {}
@@ -1036,7 +1060,7 @@ class QuickRig_Mixamo:
 
 
     def getDataIKFKLegs(self, *IKFK):
-        IKFK = self.getFlatten(IKFK)
+        IKFK = self.getFlattenList(IKFK)
         sourceLegs = [i + g for g in self.legs for i in self.side]
         sourceHierarchy = {"Hips": self.hierarchy["Hips"][1:]}
         legsPositions = {}
@@ -1051,15 +1075,16 @@ class QuickRig_Mixamo:
         return legsPositions, legsHierarchy
 
 
-    def getFlatten(self, iterable):
+    def getFlattenList(self, iterable):
         result = []
         for item in iterable:
             isIter = isinstance(item, Iterable)
             isStr = isinstance(item, str)
             if not isStr and isIter:
-                result.extend(self.getFlatten(item))
+                result.extend(self.getFlattenList(item))
             else :
                 result.append(item)
+        result = list(set(result))
         return result
 
 
@@ -1067,14 +1092,30 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-# qm = QuickRig_Mixamo()
+qm = QuickRig_Mixamo()
 # qm.createMixamoBones()
 # qm.alignSpinesCenter()
-# qm.sameBothSide()
-# qm.createAllRigJoints()
-# qm.createIKFKArms("FK")
-# qm.createIKFKLegs("IK", "FK")
+qm.sameBothSide()
+qm.createAllRigJoints()
+qm.createIKFKSpines("IK", "FK")
+qm.createIKFKArms("IK", "FK")
+qm.createIKFKLegs("IK", "FK")
+# sel = Selections()
+# sel.selectJointOnly()
+
+# grp = Grouping()
+# grp.groupingWithOwnPivot()
+    
+# jnt = Joints()
+# jnt.createPolevectorJoint()
+
+# ren = Rename()
+# ren.changeWords("_Left", "_Right")
 
 
-grp = Grouping()
-grp.groupingWithOwnPivot()
+characterName = ""
+characterHierarchy = {
+    characterName: ["rig", "MODEL"], 
+    "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
+    "skeletons": ["bindBones", "rigBones"]
+    }
