@@ -1113,9 +1113,9 @@ qm.createIKFKLegs("IK", "FK")
 # ren.changeWords("_Left", "_Right")
 
 
-characterName = ""
-characterHierarchy = {
-    characterName: ["rig", "MODEL"], 
+topGroupName = ""
+groupNameHierarchy = {
+    topGroupName: ["rig", "MODEL"], 
     "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
     "skeletons": ["bindBones", "rigBones"]
     }
