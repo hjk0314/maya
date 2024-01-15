@@ -1092,16 +1092,16 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-qm = QuickRig_Mixamo()
+# qm = QuickRig_Mixamo()
 # qm.createMixamoBones()
 # qm.alignSpinesCenter()
-qm.sameBothSide()
-qm.createAllRigJoints()
-qm.createIKFKSpines("IK", "FK")
-qm.createIKFKArms("IK", "FK")
-qm.createIKFKLegs("IK", "FK")
-# sel = Selections()
-# sel.selectJointOnly()
+# qm.sameBothSide()
+# qm.createAllRigJoints()
+# qm.createIKFKSpines("IK", "FK")
+# qm.createIKFKArms("IK", "FK")
+# qm.createIKFKLegs("IK", "FK")
+sel = Selections()
+sel.selectJointOnly()
 
 # grp = Grouping()
 # grp.groupingWithOwnPivot()
@@ -1113,9 +1113,9 @@ qm.createIKFKLegs("IK", "FK")
 # ren.changeWords("_Left", "_Right")
 
 
-topGroupName = ""
-groupNameHierarchy = {
-    topGroupName: ["rig", "MODEL"], 
-    "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
-    "skeletons": ["bindBones", "rigBones"]
-    }
+# topGroupName = ""
+# groupNameHierarchy = {
+#     topGroupName: ["rig", "MODEL"], 
+#     "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
+#     "skeletons": ["bindBones", "rigBones"]
+#     }
