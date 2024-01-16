@@ -1088,11 +1088,27 @@ class QuickRig_Mixamo:
         return result
 
 
+    def createRigGroup(self, assetName: str):
+        topGroupName = assetName if assetName else "assetName"
+        rigGroupHierarchy = {
+            topGroupName: ["rig", "MODEL"], 
+            "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
+            "skeletons": ["bindBones", "rigBones"]
+            }
+        for parent, children in rigGroupHierarchy.items():
+            if not pm.objExists(parent):
+                pm.group(em=True, n=parent)
+            for child in children:
+                if not pm.objExists(child):
+                    pm.group(em=True, n=child)
+                pm.parent(child, parent)
+
+
 # 79 char line ================================================================
 # 72 docstring or comments line ========================================   
 
 
-# qm = QuickRig_Mixamo()
+qm = QuickRig_Mixamo()
 # qm.createMixamoBones()
 # qm.alignSpinesCenter()
 # qm.sameBothSide()
@@ -1100,22 +1116,26 @@ class QuickRig_Mixamo:
 # qm.createIKFKSpines("IK", "FK")
 # qm.createIKFKArms("IK", "FK")
 # qm.createIKFKLegs("IK", "FK")
-sel = Selections()
-sel.selectJointOnly()
+qm.createRigGroup("grinderBladeA")
+
+
+# sel = Selections()
+# sel.selectJointOnly()
+
 
 # grp = Grouping()
 # grp.groupingWithOwnPivot()
-    
+
+
 # jnt = Joints()
 # jnt.createPolevectorJoint()
+
 
 # ren = Rename()
 # ren.changeWords("_Left", "_Right")
 
 
-# topGroupName = ""
-# groupNameHierarchy = {
-#     topGroupName: ["rig", "MODEL"], 
-#     "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
-#     "skeletons": ["bindBones", "rigBones"]
-#     }
+# ctrl = Controllers()
+# ctrl.createControllers(circle=1)
+
+
