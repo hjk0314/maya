@@ -1116,7 +1116,7 @@ qm = QuickRig_Mixamo()
 # qm.createIKFKSpines("IK", "FK")
 # qm.createIKFKArms("IK", "FK")
 # qm.createIKFKLegs("IK", "FK")
-qm.createRigGroup("grinderBladeA")
+qm.createRigGroup("gunA")
 
 
 # sel = Selections()
@@ -1136,6 +1136,6 @@ qm.createRigGroup("grinderBladeA")
 
 
 # ctrl = Controllers()
-# ctrl.createControllers(circle=1)
+# ctrl.createControllers(sphere=1)
 
 
