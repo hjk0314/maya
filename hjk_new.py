@@ -1108,7 +1108,7 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-qm = QuickRig_Mixamo()
+# qm = QuickRig_Mixamo()
 # qm.createMixamoBones()
 # qm.alignSpinesCenter()
 # qm.sameBothSide()
@@ -1116,7 +1116,7 @@ qm = QuickRig_Mixamo()
 # qm.createIKFKSpines("IK", "FK")
 # qm.createIKFKArms("IK", "FK")
 # qm.createIKFKLegs("IK", "FK")
-qm.createRigGroup("gunA")
+# qm.createRigGroup("gunA")
 
 
 # sel = Selections()
@@ -1139,3 +1139,10 @@ qm.createRigGroup("gunA")
 # ctrl.createControllers(sphere=1)
 
 
+sel = pm.ls(sl=True)
+selPosition = [pm.xform(i, q=True, t=True, ws=True) for i in sel]
+face = pm.polyCreateFacet(p=selPosition)
+normalVector = pm.polyInfo(face, fn=True)
+normalVector = normalVector[0].split(":")[-1].strip()
+result = [float(i) for i in normalVector.split(" ")]
+print(result)

@@ -2231,6 +2231,6 @@ def parentParty(n: int):
 # parentParty(4)
 # removeDeformed()
 # SoftSel()
-# zeroPivot()
+zeroPivot()
 # VertexSeletor()
 # selectVerts_influenced()

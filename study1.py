@@ -2,6 +2,8 @@ import maya.standalone
 import maya.cmds as cmds
 import pymel.core as pm
 from math import *
+import maya.OpenMaya as OpenMaya
+import pymel.core.datatypes as dt
 
 
 def standalone_template():
@@ -196,5 +198,42 @@ class ChangeRotateOrderPreserveKey:
             rotation = sourceObj.r.get()
             pasteObj.r.set(rotation)
             pm.setKeyframe(pasteObj.r)
+
+
+
+
+
+def create_triangle(joint1, joint2, joint3):
+    face = pm.polyCreateFacet(point=[pm.xform(joint, q=True, t=True, ws=True) for joint in [joint1, joint2, joint3]])
+    return face[0]
+
+
+def get_triangle_normal(face):
+    normalVector = pm.polyInfo(face, fn=True)
+    nv = normalVector[0].split(":")[-1].strip()
+    normal_vector = nv.split(" ")
+    normal_vector = (float(i) for i in normal_vector)
+    # print(normal_vector)
+    return normal_vector
+
+
+def move_joint_to_plane(joint, plane_normal, point_on_plane):
+    current_position = pm.xform(joint, q=True, t=True, ws=True)
+    current_vector = dt.Vector(current_position[0], current_position[1], current_position[2])
+    print(current_vector)
+    print(point_on_plane)
+    displacement_vector = current_vector - point_on_plane
+    distance_to_plane = displacement_vector * plane_normal
+    new_position = current_vector - (distance_to_plane * plane_normal)
+    pm.move(new_position.x, new_position.y, new_position.z, joint, a=True)
+
+
+sel = pm.ls(sl=True)
+joint1, joint2, joint3, joint4 = sel
+triangle_face = create_triangle(joint1, joint2, joint3)
+plane_normal = get_triangle_normal(triangle_face)
+point_on_plane = pm.xform(joint1, q=True, t=True, ws=True)
+move_joint_to_plane(joint4, plane_normal, point_on_plane)
+
 
 
