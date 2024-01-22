@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 import re
 import pymel.core as pm
+import numpy as np
 
 
 class Common:
@@ -1108,7 +1109,7 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-# qm = QuickRig_Mixamo()
+qm = QuickRig_Mixamo()
 # qm.createMixamoBones()
 # qm.alignSpinesCenter()
 # qm.sameBothSide()
@@ -1139,10 +1140,44 @@ class QuickRig_Mixamo:
 # ctrl.createControllers(sphere=1)
 
 
+try:
+    pm.delete("polySurface1")
+except:
+    pass
+pm.select(cl=True)
+pm.select(["pSphere1", "pSphere2", "pSphere3", "pSphere4"])
+
+
 sel = pm.ls(sl=True)
 selPosition = [pm.xform(i, q=True, t=True, ws=True) for i in sel]
-face = pm.polyCreateFacet(p=selPosition)
+threePoints = selPosition[:3]
+leftPoints = selPosition[3:]
+face = pm.polyCreateFacet(p=threePoints)
 normalVector = pm.polyInfo(face, fn=True)
 normalVector = normalVector[0].split(":")[-1].strip()
 result = [float(i) for i in normalVector.split(" ")]
 print(result)
+
+
+def find_intersection_point(plane_normal, plane_point, line_direction, line_point):
+    plane_normal = np.array(plane_normal)
+    plane_point = np.array(plane_point)
+    line_direction = np.array(line_direction)
+    line_point = np.array(line_point)
+    t = np.dot(plane_normal, (plane_point - line_point)) / np.dot(plane_normal, line_direction)
+    intersection_point = line_point + t * line_direction
+    return intersection_point
+
+
+plane_normal = result
+plane_point = selPosition[0]
+line_direction = result
+for i in sel[3:]:
+    line_point = pm.xform(i, q=True, t=True, ws=True)
+    intersection_point = find_intersection_point(plane_normal, plane_point, line_direction, line_point)
+    pm.move(i, intersection_point)
+
+
+
+
+
