@@ -1,7 +1,8 @@
-from collections.abc import Iterable
 import re
-import pymel.core as pm
 import numpy as np
+from collections.abc import Iterable
+import pymel.core as pm
+import maya.mel as mel
 
 
 class Common:
@@ -713,6 +714,89 @@ class Rename:
             print(warningMessages)
 
 
+class Align:
+    def __init__(self):
+        pass
+
+
+    def lineUp(self, threePoints=[]):
+        """ In 3D space, Three points make a face, 
+        The remaining objects are located on this plane.
+         """
+        selection = self.isThreePoints(threePoints)
+        parentsInfo = {i: i.getParent() for i in selection}
+        if not selection:
+            return
+        self.unParent(parentsInfo)
+        self.moveOjbectsToPoint(selection)
+        self.reParent(parentsInfo)
+
+
+    def moveOjbectsToPoint(self, selection: list):
+        point3 = selection[:3]
+        leftPoints = selection[3:]
+        point3Position = [pm.xform(i, q=1, t=1, ws=1) for i in point3]
+        normalVector = self.getFaceNormalVector(point3Position)
+        planePoint = point3Position[0]
+        for i in leftPoints:
+            pointOfLine = pm.xform(i, q=True, t=True, ws=True)
+            intersectionPoint = self.getIntersectionPoint(normalVector, \
+                                planePoint, normalVector, pointOfLine)
+            pm.move(i, intersectionPoint)
+
+
+    def isThreePoints(self, threePoints=[]):
+        point3 = pm.ls(threePoints) if threePoints else pm.ls(sl=True)
+        if len(point3) < 3:
+            return
+        else:
+            return point3
+
+
+    def unParent(self, parentsInfo: dict) -> None:
+        for child, parents in parentsInfo.items():
+            if not parents:
+                continue
+            else:
+                pm.parent(child, w=True)
+
+
+    def reParent(self, parentsInfo: dict) -> None:
+        for child, parents in parentsInfo.items():
+            if not parents:
+                continue
+            else:
+                pm.parent(child, parents)
+
+
+    def getFaceNormalVector(self, threePointsPosition=[]):
+        """ Given three points, 
+        create a face and return the normal vector of the face.
+        """
+        face = pm.polyCreateFacet(p=threePointsPosition)
+        info = pm.polyInfo(face, fn=True)
+        stripInfo = info[0].split(":")[-1].strip()
+        normalVector = [float(i) for i in stripInfo.split(" ")]
+        return normalVector
+
+
+    def getIntersectionPoint(self, normalOfPlane: list, pointOnPlane: list, \
+            directionOfLine: list, pointOnLine: list) -> list:
+        """ Get intersection of plane and line.
+        - Equation of surface: dot(normalOfPlane, X - pointOfPlane) = 0
+        - Equation of line: pointOfLine + lean*directionOfLine
+        """
+        planeNormal = np.array(normalOfPlane)
+        planePoint = np.array(pointOnPlane)
+        lineDirection = np.array(directionOfLine)
+        linePoint = np.array(pointOnLine)
+        delta1 = np.dot(planeNormal, (planePoint - linePoint)) 
+        delta2 = np.dot(planeNormal, lineDirection)
+        lean = delta1 / delta2
+        intersectionPoint = pointOnLine + (lean*lineDirection)
+        return intersectionPoint.tolist()
+
+
 class QuickRig_Mixamo:
     def __init__(self):
         self.side = ["Left", "Right"]
@@ -1140,44 +1224,7 @@ qm = QuickRig_Mixamo()
 # ctrl.createControllers(sphere=1)
 
 
-try:
-    pm.delete("polySurface1")
-except:
-    pass
-pm.select(cl=True)
-pm.select(["pSphere1", "pSphere2", "pSphere3", "pSphere4"])
-
-
-sel = pm.ls(sl=True)
-selPosition = [pm.xform(i, q=True, t=True, ws=True) for i in sel]
-threePoints = selPosition[:3]
-leftPoints = selPosition[3:]
-face = pm.polyCreateFacet(p=threePoints)
-normalVector = pm.polyInfo(face, fn=True)
-normalVector = normalVector[0].split(":")[-1].strip()
-result = [float(i) for i in normalVector.split(" ")]
-print(result)
-
-
-def find_intersection_point(plane_normal, plane_point, line_direction, line_point):
-    plane_normal = np.array(plane_normal)
-    plane_point = np.array(plane_point)
-    line_direction = np.array(line_direction)
-    line_point = np.array(line_point)
-    t = np.dot(plane_normal, (plane_point - line_point)) / np.dot(plane_normal, line_direction)
-    intersection_point = line_point + t * line_direction
-    return intersection_point
-
-
-plane_normal = result
-plane_point = selPosition[0]
-line_direction = result
-for i in sel[3:]:
-    line_point = pm.xform(i, q=True, t=True, ws=True)
-    intersection_point = find_intersection_point(plane_normal, plane_point, line_direction, line_point)
-    pm.move(i, intersection_point)
-
-
-
+# aln = Align()
+# aln.lineUp()
 
 

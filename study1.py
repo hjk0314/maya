@@ -4,6 +4,7 @@ import pymel.core as pm
 from math import *
 import maya.OpenMaya as OpenMaya
 import pymel.core.datatypes as dt
+import numpy as np
 
 
 def standalone_template():
@@ -130,7 +131,6 @@ def getCurvesVertexPosition(toINT=0):
 # 72 docstring or comments line ========================================
 
 
-
 class ChangeRotateOrderPreserveKey:
     def __init__(self):
         """ Change rotation order while maintaining key.
@@ -200,40 +200,63 @@ class ChangeRotateOrderPreserveKey:
             pm.setKeyframe(pasteObj.r)
 
 
+class Align:
+    def __init__(self):
+        pass
 
 
-
-def create_triangle(joint1, joint2, joint3):
-    face = pm.polyCreateFacet(point=[pm.xform(joint, q=True, t=True, ws=True) for joint in [joint1, joint2, joint3]])
-    return face[0]
-
-
-def get_triangle_normal(face):
-    normalVector = pm.polyInfo(face, fn=True)
-    nv = normalVector[0].split(":")[-1].strip()
-    normal_vector = nv.split(" ")
-    normal_vector = (float(i) for i in normal_vector)
-    # print(normal_vector)
-    return normal_vector
-
-
-def move_joint_to_plane(joint, plane_normal, point_on_plane):
-    current_position = pm.xform(joint, q=True, t=True, ws=True)
-    current_vector = dt.Vector(current_position[0], current_position[1], current_position[2])
-    print(current_vector)
-    print(point_on_plane)
-    displacement_vector = current_vector - point_on_plane
-    distance_to_plane = displacement_vector * plane_normal
-    new_position = current_vector - (distance_to_plane * plane_normal)
-    pm.move(new_position.x, new_position.y, new_position.z, joint, a=True)
+    def lineUp(self, threePoints=[]):
+        """ In 3D space, Three points make a face, 
+        The remaining objects are located on this plane.
+         """
+        sel = self.isThreePoints(threePoints)
+        if not sel:
+            return
+        point3 = sel[:3]
+        leftPoints = sel[3:]
+        point3Position = [pm.xform(i, q=1, t=1, ws=1) for i in point3]
+        normalVector = self.getFaceNormalVector(point3Position)
+        planePoint = point3Position[0]
+        for i in leftPoints:
+            pointOfLine = pm.xform(i, q=True, t=True, ws=True)
+            intersectionPoint = self.getIntersectionPoint(normalVector, \
+                                planePoint, normalVector, pointOfLine)
+            pm.move(i, intersectionPoint)
 
 
-sel = pm.ls(sl=True)
-joint1, joint2, joint3, joint4 = sel
-triangle_face = create_triangle(joint1, joint2, joint3)
-plane_normal = get_triangle_normal(triangle_face)
-point_on_plane = pm.xform(joint1, q=True, t=True, ws=True)
-move_joint_to_plane(joint4, plane_normal, point_on_plane)
+    def isThreePoints(self, threePoints=[]):
+        point3 = threePoints if threePoints else pm.ls(sl=True)
+        if len(point3) < 3:
+            return
+        else:
+            return point3
 
+
+    def getFaceNormalVector(self, threePointsPosition=[]):
+        """ Given three points, 
+        create a face and return the normal vector of the face.
+        """
+        face = pm.polyCreateFacet(p=threePointsPosition)
+        info = pm.polyInfo(face, fn=True)
+        stripInfo = info[0].split(":")[-1].strip()
+        normalVector = [float(i) for i in stripInfo.split(" ")]
+        return normalVector
+
+
+    def getIntersectionPoint(self, normalOfPlane: list, pointOnPlane: list, \
+            directionOfLine: list, pointOnLine: list) -> list:
+        """ Get intersection of plane and line.
+        - Equation of surface: dot(normalOfPlane, X - pointOfPlane) = 0
+        - Equation of line: pointOfLine + lean*directionOfLine
+        """
+        planeNormal = np.array(normalOfPlane)
+        planePoint = np.array(pointOnPlane)
+        lineDirection = np.array(directionOfLine)
+        linePoint = np.array(pointOnLine)
+        delta1 = np.dot(planeNormal, (planePoint - linePoint)) 
+        delta2 = np.dot(planeNormal, lineDirection)
+        lean = delta1 / delta2
+        intersectionPoint = pointOnLine + (lean*lineDirection)
+        return intersectionPoint.tolist()
 
 
