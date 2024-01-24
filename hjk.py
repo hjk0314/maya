@@ -721,10 +721,14 @@ class MirrorCopy:
 
     # Replace letter L with R
     def swapLR(self, objName):
-        if '_L' in objName:
-            result = objName.replace('_L', '_R')
-        elif '_R' in objName:
-            result = objName.replace('_R', '_L')
+        # if '_L' in objName:
+        #     result = objName.replace('_L', '_R')
+        # elif '_R' in objName:
+        #     result = objName.replace('_R', '_L')
+        if '_Left' in objName:
+            result = objName.replace('_Left', '_Right')
+        elif '_Right' in objName:
+            result = objName.replace('_Right', '_Left')
         else:
             result = ''
         return result
@@ -2234,3 +2238,4 @@ def parentParty(n: int):
 # zeroPivot()
 # VertexSeletor()
 # selectVerts_influenced()
+MirrorCopy(x=True)
