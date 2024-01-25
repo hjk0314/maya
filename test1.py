@@ -1,4 +1,5 @@
 
+import sys
 import re
 import pymel.core as pm
 import maya.OpenMaya as om
@@ -425,4 +426,105 @@ class VertexSeletor:
         ADD = self.radioAdd.getSelect()
         TGL = self.radioTgl.getSelect()
         pm.select(result, af=ADD, tgl=TGL)
+
+
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
+
+
+class Ui_MainWindow(QWidget):
+    def __init__(self):
+        super(Ui_MainWindow, self).__init__()
+        self.setWindowTitle("Ref3's Test")
+        self.resize(220, 220)
+        self.setMinimumSize(QSize(220, 220))
+        self.verticalLayout = QVBoxLayout()
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.lineEdit = QLineEdit()
+        self.lineEdit.setObjectName(u"lineEdit")
+        self.horizontalLayout.addWidget(self.lineEdit)
+        self.btnCreate = QPushButton()
+        self.btnCreate.setObjectName(u"btnCreate")
+        self.horizontalLayout.addWidget(self.btnCreate)
+        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.lineEdit_2 = QLineEdit()
+        self.lineEdit_2.setObjectName(u"lineEdit_2")
+        self.horizontalLayout_2.addWidget(self.lineEdit_2)
+        self.btnDelete = QPushButton()
+        self.btnDelete.setObjectName(u"btnDelete")
+        self.horizontalLayout_2.addWidget(self.btnDelete)
+        self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalSpacer_3 = QSpacerItem(30, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
+        self.rdBtnAdd = QRadioButton()
+        self.rdBtnAdd.setObjectName(u"rdBtnAdd")
+        self.rdBtnAdd.setChecked(True)
+        self.horizontalLayout_3.addWidget(self.rdBtnAdd)
+        self.horizontalSpacer_4 = QSpacerItem(31, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalLayout_3.addItem(self.horizontalSpacer_4)
+        self.rdBtnToggle = QRadioButton()
+        self.rdBtnToggle.setObjectName(u"rdBtnToggle")
+        self.horizontalLayout_3.addWidget(self.rdBtnToggle)
+        self.horizontalSpacer_2 = QSpacerItem(30, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalLayout_3.addItem(self.horizontalSpacer_2)
+        self.verticalLayout.addLayout(self.horizontalLayout_3)
+        self.line = QFrame()
+        self.line.setObjectName(u"line")
+        self.line.setFrameShape(QFrame.HLine)
+        self.line.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line)
+        self.gridLayout = QGridLayout()
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.btnSample3 = QPushButton()
+        self.btnSample3.setObjectName(u"btnSample3")
+        self.gridLayout.addWidget(self.btnSample3, 1, 0, 1, 1)
+        self.btnSample1 = QPushButton()
+        self.btnSample1.setObjectName(u"btnSample1")
+        self.gridLayout.addWidget(self.btnSample1, 0, 0, 1, 1)
+        self.btnSample2 = QPushButton()
+        self.btnSample2.setObjectName(u"btnSample2")
+        self.gridLayout.addWidget(self.btnSample2, 0, 1, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout)
+        self.line_2 = QFrame()
+        self.line_2.setObjectName(u"line_2")
+        self.line_2.setFrameShape(QFrame.HLine)
+        self.line_2.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_2)
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalLayout_4.addItem(self.horizontalSpacer)
+        self.btnDeleteJsonData = QPushButton()
+        self.btnDeleteJsonData.setObjectName(u"btnDeleteJsonData")
+        self.horizontalLayout_4.addWidget(self.btnDeleteJsonData)
+        self.verticalLayout.addLayout(self.horizontalLayout_4)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalLayout.addItem(self.verticalSpacer)
+        self.retranslateUi()
+        QMetaObject.connectSlotsByName(self)
+    # setupUi
+
+    def retranslateUi(self):
+        # MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"Vertex Selector", None))
+        self.btnCreate.setText(QCoreApplication.translate("MainWindow", u"Create", None))
+        self.btnDelete.setText(QCoreApplication.translate("MainWindow", u"Delete", None))
+        self.rdBtnAdd.setText(QCoreApplication.translate("MainWindow", u"Add", None))
+        self.rdBtnToggle.setText(QCoreApplication.translate("MainWindow", u"Toggle", None))
+        self.btnSample3.setText(QCoreApplication.translate("MainWindow", u"btn3", None))
+        self.btnSample1.setText(QCoreApplication.translate("MainWindow", u"btn1", None))
+        self.btnSample2.setText(QCoreApplication.translate("MainWindow", u"btn2", None))
+        self.btnDeleteJsonData.setText(QCoreApplication.translate("MainWindow", u"Delete Json Data", None))
+    # retranslateUi
+
+
+ui = Ui_MainWindow()
+ui.show()
+
 
