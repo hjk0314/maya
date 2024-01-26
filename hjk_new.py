@@ -1193,10 +1193,11 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-# qm = QuickRig_Mixamo()
+qm = QuickRig_Mixamo()
+# qm.updateAllJointPositions()
 # qm.createMixamoBones()
 # qm.alignSpinesCenter()
-# qm.sameBothSide()
+qm.sameBothSide()
 # qm.createAllRigJoints()
 # qm.createIKFKSpines("IK", "FK")
 # qm.createIKFKArms("IK", "FK")
@@ -1206,7 +1207,7 @@ class QuickRig_Mixamo:
 
 # sel = Selections()
 # sel.selectJointOnly()
-
+# sel.selectConstraintOnly()
 
 # grp = Grouping()
 # grp.groupingWithOwnPivot()
@@ -1228,8 +1229,3 @@ class QuickRig_Mixamo:
 # aln.lineUp()
 
 
-sel = pm.ls(sl=True)
-for cc in sel:
-    jnt = cc.split("_")[-1]
-    pm.parentConstraint(cc, jnt, mo=True)
-    pm.scaleConstraint(cc, jnt, mo=True)

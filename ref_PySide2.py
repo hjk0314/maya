@@ -150,10 +150,10 @@ class Ref4(QWidget):
             self.btnOk.setText("Everything is fine.")
 
 
-# if __name__ == '__main__':
-#     ref4 = Ref4()
-#     ref4.show()
-#     print(ref4.objectName())
+if __name__ == '__main__':
+    ref4 = Ref4()
+    ref4.show()
+    print(ref4.objectName())
 # =============================================================================
 
 
