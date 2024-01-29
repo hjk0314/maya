@@ -1193,21 +1193,22 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-qm = QuickRig_Mixamo()
+# qm = QuickRig_Mixamo()
 # qm.updateAllJointPositions()
 # qm.createMixamoBones()
 # qm.alignSpinesCenter()
-qm.sameBothSide()
+# qm.sameBothSide()
 # qm.createAllRigJoints()
 # qm.createIKFKSpines("IK", "FK")
 # qm.createIKFKArms("IK", "FK")
 # qm.createIKFKLegs("IK", "FK")
-# qm.createRigGroup("gunA")
+# qm.createRigGroup("dongsikA")
 
 
 # sel = Selections()
 # sel.selectJointOnly()
 # sel.selectConstraintOnly()
+# sel.selectGroupOnly()
 
 # grp = Grouping()
 # grp.groupingWithOwnPivot()
