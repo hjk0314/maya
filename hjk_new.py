@@ -1223,7 +1223,7 @@ class QuickRig_Mixamo:
 
 
 # ctrl = Controllers()
-# ctrl.createControllers(circle=3)
+# ctrl.createControllers(sphere=1)
 
 
 # aln = Align()
@@ -1231,11 +1231,11 @@ class QuickRig_Mixamo:
 
 
 
-for i in range(1, 62):
-    ctrl = "global_CTRL"
-    # fol = "oxygen2_follicle2_%d" % i
-    # jnt = pm.joint(p=(0,0,0), n="jnt_follicle2_%d" % i, rad=6)
-    # pm.matchTransform(jnt, fol, pos=True, rot=True)
-    # pm.parent(jnt, fol)
-    jnt = "jnt_follicle2_%d" % i
-    pm.scaleConstraint(ctrl, jnt, mo=True)
+# for i in range(1, 62):
+#     ctrl = "global_CTRL"
+#     # fol = "oxygen2_follicle2_%d" % i
+#     # jnt = pm.joint(p=(0,0,0), n="jnt_follicle2_%d" % i, rad=6)
+#     # pm.matchTransform(jnt, fol, pos=True, rot=True)
+#     # pm.parent(jnt, fol)
+#     jnt = "jnt_follicle2_%d" % i
+#     pm.scaleConstraint(ctrl, jnt, mo=True)
