@@ -1202,7 +1202,7 @@ class QuickRig_Mixamo:
 # qm.createIKFKSpines("IK", "FK")
 # qm.createIKFKArms("IK", "FK")
 # qm.createIKFKLegs("IK", "FK")
-# qm.createRigGroup("fishingNetA")
+# qm.createRigGroup("pomfretFishA")
 
 
 # sel = Selections()
@@ -1223,7 +1223,7 @@ class QuickRig_Mixamo:
 
 
 # ctrl = Controllers()
-# ctrl.createControllers(pipe=1, cylinder=1)
+# ctrl.createControllers(pipe=3)
 
 
 # aln = Align()
