@@ -1223,7 +1223,7 @@ class QuickRig_Mixamo:
 
 
 # ctrl = Controllers()
-# ctrl.createControllers(pipe=3)
+# ctrl.createControllers(sphere=1)
 
 
 # aln = Align()
