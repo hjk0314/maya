@@ -1,8 +1,7 @@
+from collections.abc import Iterable
 import re
 import numpy as np
-from collections.abc import Iterable
 import pymel.core as pm
-import maya.mel as mel
 
 
 class Common:
@@ -1230,12 +1229,3 @@ class QuickRig_Mixamo:
 # aln.lineUp()
 
 
-
-# for i in range(1, 62):
-#     ctrl = "global_CTRL"
-#     # fol = "oxygen2_follicle2_%d" % i
-#     # jnt = pm.joint(p=(0,0,0), n="jnt_follicle2_%d" % i, rad=6)
-#     # pm.matchTransform(jnt, fol, pos=True, rot=True)
-#     # pm.parent(jnt, fol)
-#     jnt = "jnt_follicle2_%d" % i
-#     pm.scaleConstraint(ctrl, jnt, mo=True)

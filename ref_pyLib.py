@@ -8,7 +8,7 @@ import heapq
 import pprint
 import bisect
 import enum
-import graphlib
+# import graphlib
 import math
 import decimal
 import fractions
@@ -53,7 +53,7 @@ import concurrent.futures
 import subprocess
 import sched
 import asyncio
-import aiohttp
+# import aiohttp
 import socket
 import ssl
 import select
@@ -67,7 +67,7 @@ import uu
 import html
 from html.parser import HTMLParser
 import xml.etree.ElementTree as ET
-import parse
+# import parse
 import webbrowser
 import cgi
 import cgitb
@@ -363,10 +363,10 @@ def graphlib_sample():
     그래프 처리를 위한 작업을 할 때 유용하게 사용할 수 있습니다.
     Graph 클래스의 객체를 생성하는 예제는 아래와 같지만 3.9서 사용 가능.
      """
-    g = graphlib.Graph()
-    g.add_node('A')
-    g.add_node('B')
-    g.add_edge('A', 'B')
+    # g = graphlib.Graph()
+    # g.add_node('A')
+    # g.add_node('B')
+    # g.add_edge('A', 'B')
     
 
 def gcdLcm_sample():
@@ -1744,19 +1744,19 @@ class asyncio_sample:
      """
 
 
-    async def fetch(self, session, url):
-        async with session.get(url) as response:
-            return await response.text()
+    # async def fetch(self, session, url):
+    #     async with session.get(url) as response:
+    #         return await response.text()
 
 
-    async def main(self):
-        async with aiohttp.ClientSession() as session:
-            html = await self.fetch(session, 'https://www.example.com')
-            print(html)
+    # async def main(self):
+    #     async with aiohttp.ClientSession() as session:
+    #         html = await self.fetch(session, 'https://www.example.com')
+    #         print(html)
 
 
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(main())
 
 
     """ 이 예제에서는 aiohttp 라이브러리를 사용하여 
@@ -2380,7 +2380,7 @@ def parse_sample():
 
 
     # 문자열 해석
-    result = parse('{greeting}, {name}!', string)
+    # result = parse('{greeting}, {name}!', string)
 
 
     # 결과 출력
@@ -2407,7 +2407,7 @@ def parse_sample():
 
 
     # 문자열 해석
-    result = parse(template, string)
+    # result = parse(template, string)
 
 
     # 결과 출력
