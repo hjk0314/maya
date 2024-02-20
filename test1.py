@@ -2,32 +2,35 @@
 from PySide2.QtWidgets import QApplication, QWidget, QDialog, \
 QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QLabel, \
 QFormLayout, QSpinBox, QSpacerItem, QSizePolicy, QRadioButton, \
-QFrame, QGridLayout
-from PySide2.QtCore import Qt, QSize
+QFrame, QGridLayout, QMainWindow, QListWidget
+from PySide2.QtCore import Qt, QSize, QDir
 from shiboken2 import wrapInstance
 import maya.OpenMayaUI as omui
+import json
 
 
 def mayaMainWindow():
     mainWindow_pointer = omui.MQtUtil.mainWindow()
-    return wrapInstance(int(mainWindow_pointer), QDialog)
+    return wrapInstance(int(mainWindow_pointer), QMainWindow)
 
 
-class TestDialog(QDialog):
-    # def __init__(self, parent=None):
+class TestDialog(QMainWindow):
+    # def __init__(self):
     def __init__(self, parent=mayaMainWindow()):
         super(TestDialog, self).__init__(parent)
-        self.setupUI()
+        mainWidget = QWidget(self)
+        self.setupUI(mainWidget)
         # self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
         # self.setWindowFlags(self.windowFlags()^Qt.WindowContextHelpButtonHint)
 
 
-    def setupUI(self):
+    def setupUI(self, mainWindow):
         self.setWindowTitle("Test_Dialog")
-        self.resize(220, 220)
+        self.move(0, 0)
         self.setMinimumSize(QSize(220, 220))
         self.setMinimumWidth(200)
-        self.verticalLayout = QVBoxLayout(self)
+        self.setCentralWidget(mainWindow)
+        self.verticalLayout = QVBoxLayout(mainWindow)
         self.horizontalLayout = QHBoxLayout()
         self.lineEdit = QLineEdit()
         self.horizontalLayout.addWidget(self.lineEdit)
@@ -59,12 +62,7 @@ class TestDialog(QDialog):
         self.verticalLayout.addWidget(self.line)
         # Start Buttons Looping ===============================
         self.gridLayout = QGridLayout()
-        self.btnSample1 = QPushButton("Sample1")
-        self.gridLayout.addWidget(self.btnSample1, 0, 0, 1, 1)
-        self.btnSample2 = QPushButton("Sample2")
-        self.gridLayout.addWidget(self.btnSample2, 0, 1, 1, 1)
-        self.btnSample3 = QPushButton("Sample3")
-        self.gridLayout.addWidget(self.btnSample3, 1, 0, 1, 1)
+        self.createButtons()
         self.verticalLayout.addLayout(self.gridLayout)
         # End Buttons Looping ===============================
         self.line_2 = QFrame()
@@ -74,12 +72,38 @@ class TestDialog(QDialog):
         self.horizontalLayout_4 = QHBoxLayout()
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_4.addItem(self.horizontalSpacer)
+        self.btnRefresh = QPushButton("Refresh")
+        self.horizontalLayout_4.addWidget(self.btnRefresh)
         self.btnClose = QPushButton("Close")
         self.horizontalLayout_4.addWidget(self.btnClose)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.verticalLayout.addItem(self.verticalSpacer)
+        self.btnRefresh.clicked.connect(self.createButtons)
         self.btnClose.clicked.connect(self.close)
+
+
+    def createButtons(self):
+        jsonPath = "T:/HRB/assets/char/russianWomanA/rig/dev/scenes/vertexSeletor1.json"
+        with open(jsonPath, 'r') as txt:
+            data = json.load(txt)
+        # self.btnSample3 = QPushButton()
+        # self.gridLayout.addWidget(self.btnSample3, 1, 0, 1, 1)
+        # self.btnSample1 = QPushButton()
+        # self.gridLayout.addWidget(self.btnSample1, 0, 0, 1, 1)
+        # self.btnSample2 = QPushButton()
+        # self.gridLayout.addWidget(self.btnSample2, 0, 1, 1, 1)
+        while self.gridLayout.count():
+            item = self.gridLayout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+        for j, k in enumerate(data.keys()):
+            h, v = divmod(j, 2)
+            btn = QPushButton(k, self)
+            self.gridLayout.addWidget(btn, h, v, 1, 1)
+        self.gridLayout.setSpacing(2)
+
 
 
 if __name__ == "__main__":
