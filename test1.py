@@ -5,16 +5,19 @@ QFormLayout, QSpinBox, QSpacerItem, QSizePolicy, QRadioButton, \
 QFrame, QGridLayout, QMainWindow, QListWidget
 from PySide2.QtCore import Qt, QSize, QDir
 from shiboken2 import wrapInstance
+import pymel.core as pm
 import maya.OpenMayaUI as omui
 import json
-
-
-def mayaMainWindow():
-    mainWindow_pointer = omui.MQtUtil.mainWindow()
-    return wrapInstance(int(mainWindow_pointer), QMainWindow)
+import os
+import re
 
 
 class TestDialog(QMainWindow):
+    def mayaMainWindow():
+        mainWindow_pointer = omui.MQtUtil.mainWindow()
+        return wrapInstance(int(mainWindow_pointer), QMainWindow)
+
+
     # def __init__(self):
     def __init__(self, parent=mayaMainWindow()):
         super(TestDialog, self).__init__(parent)
@@ -60,11 +63,11 @@ class TestDialog(QMainWindow):
         self.line.setFrameShape(QFrame.HLine)
         self.line.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line)
-        # Start Buttons Looping ===============================
+        # Create Buttons from json file.
         self.gridLayout = QGridLayout()
-        self.createButtons()
+        self.buttons = self.buttonsRefresh()
         self.verticalLayout.addLayout(self.gridLayout)
-        # End Buttons Looping ===============================
+        # End - Create Buttons from json file.
         self.line_2 = QFrame()
         self.line_2.setFrameShape(QFrame.HLine)
         self.line_2.setFrameShadow(QFrame.Sunken)
@@ -79,31 +82,137 @@ class TestDialog(QMainWindow):
         self.verticalLayout.addLayout(self.horizontalLayout_4)
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.verticalLayout.addItem(self.verticalSpacer)
-        self.btnRefresh.clicked.connect(self.createButtons)
+        # Button Clicked
+        self.btnCreate.clicked.connect(self.createJsonFile)
+        self.lineEdit.returnPressed.connect(self.createJsonFile)
+        self.btnDelete.clicked.connect(self.deleteButtons)
+        self.btnRefresh.clicked.connect(self.buttonsRefresh)
         self.btnClose.clicked.connect(self.close)
 
 
-    def createButtons(self):
-        jsonPath = "T:/HRB/assets/char/russianWomanA/rig/dev/scenes/vertexSeletor1.json"
-        with open(jsonPath, 'r') as txt:
+    def buttonClicked(self):
+        jsonPath = self.getJsonFilePath()
+        button = self.sender()
+        buttonsName = button.text()
+        self.lineEdit_2.setText(buttonsName)
+        data = self.loadJsonFile(jsonPath)
+        objectVertex = data[buttonsName]
+        vertices = []
+        for obj, vtxList in objectVertex.items():
+            for vtx in vtxList:
+                vertices.append(f"{obj}{vtx}")
+        boolAdd = self.rdBtnAdd.isChecked()
+        boolToggle = self.rdBtnToggle.isChecked()
+        pm.select(vertices, af=boolAdd, tgl=boolToggle)
+        
+
+    def getJsonFilePath(self) -> str:
+        scenePath = pm.Env().sceneName()
+        if not scenePath:
+            pm.warning("This scene was not saved.")
+            result = ""
+        else:
+            jsonFileName = "vertexForSkinWeight.json"
+            dir = os.path.dirname(scenePath)
+            result = "%s/%s" % (dir, jsonFileName)
+        return result
+
+
+    def createJsonFile(self):
+        """ If the json file doesn't exist, create a new one, but overwrite. """
+        vertexName = self.lineEdit.text()
+        vertexNumber = self.getListsOfVertexNumber()
+        if not vertexName:
+            pm.warning("Vertex name field is empty.")
+            return
+        if not vertexNumber:
+            pm.warning("Nothing selected.")
+            return
+        jsonPath = self.getJsonFilePath()
+        isJsonFile = os.path.isfile(jsonPath)
+        data = self.loadJsonFile(jsonPath) if isJsonFile else {}
+        data[vertexName] = vertexNumber
+        with open(jsonPath, 'w') as txt:
+            json.dump(data, txt, indent=4)
+        self.buttonsRefresh()
+
+
+    def deleteButtons(self):
+        jsonPath = self.getJsonFilePath()
+        data = self.loadJsonFile(jsonPath)
+        key = self.lineEdit_2.text()
+        data.pop(key, None)
+        with open(jsonPath, 'w') as txt:
+            json.dump(data, txt, indent=4)
+        self.buttonsRefresh()
+
+
+    def loadJsonFile(self, fullPath) -> dict:
+        with open(fullPath, 'r') as txt:
             data = json.load(txt)
-        # self.btnSample3 = QPushButton()
-        # self.gridLayout.addWidget(self.btnSample3, 1, 0, 1, 1)
-        # self.btnSample1 = QPushButton()
-        # self.gridLayout.addWidget(self.btnSample1, 0, 0, 1, 1)
-        # self.btnSample2 = QPushButton()
-        # self.gridLayout.addWidget(self.btnSample2, 0, 1, 1, 1)
+        return data
+
+
+    def getListsOfVertexNumber(self) -> dict:
+        """ Get vertex numbers only, strip others. """
+        sel = pm.ls(sl=True)
+        obj = pm.ls(sel, o=True)
+        shapes = set(obj)
+        result = {}
+        for shp in shapes:
+            compiled = re.compile(f'(?<={shp}).+[0-9]+:*[0-9]*.+')
+            vertexNumbers = []
+            for i in sel:
+                try:
+                    temp = compiled.search(i.name())
+                    vertexNumbers.append(temp.group(0))
+                except:
+                    continue
+            result[shp.getParent().name()] = vertexNumbers
+        return result
+
+
+    def buttonsRefresh(self):
+        jsonPath = self.getJsonFilePath()
+        if not os.path.isfile(jsonPath):
+            data = {}
+        else:
+            data = self.getJsonData(jsonPath)
+        self.deleteGridLayoutItems()
+        buttons = self.createButtons(data)
+        self.buttonsConnection(buttons)
+        # self.lineEdit.clear()
+        self.lineEdit_2.clear()
+
+
+    def buttonsConnection(self, buttons):
+        for btn in buttons:
+            btn.clicked.connect(self.buttonClicked)
+
+
+    def getJsonData(self, fullPath):
+        with open(fullPath, 'r') as txt:
+            data = json.load(txt)
+        return data
+
+
+    def deleteGridLayoutItems(self):
         while self.gridLayout.count():
             item = self.gridLayout.takeAt(0)
             widget = item.widget()
             if widget:
                 widget.deleteLater()
-        for j, k in enumerate(data.keys()):
-            h, v = divmod(j, 2)
-            btn = QPushButton(k, self)
-            self.gridLayout.addWidget(btn, h, v, 1, 1)
-        self.gridLayout.setSpacing(2)
 
+
+    def createButtons(self, data: dict) -> list:
+        buttons = []
+        for idx, buttonName in enumerate(data.keys()):
+            row, column = divmod(idx, 2)
+            button = QPushButton(buttonName, self)
+            buttons.append(button)
+            self.gridLayout.addWidget(button, row, column, 1, 1)
+        self.gridLayout.setSpacing(2)
+        return buttons
 
 
 if __name__ == "__main__":
