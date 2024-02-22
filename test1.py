@@ -1,9 +1,6 @@
-
-from PySide2.QtWidgets import QApplication, QWidget, QDialog, \
-QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QLabel, \
-QFormLayout, QSpinBox, QSpacerItem, QSizePolicy, QRadioButton, \
-QFrame, QGridLayout, QMainWindow, QListWidget
-from PySide2.QtCore import Qt, QSize, QDir
+from PySide2.QtWidgets import QWidget, QLineEdit, QPushButton, \
+    QVBoxLayout, QHBoxLayout, QSpacerItem, QSizePolicy, \
+    QRadioButton, QFrame, QGridLayout, QMainWindow
 from shiboken2 import wrapInstance
 import pymel.core as pm
 import maya.OpenMayaUI as omui
@@ -12,15 +9,14 @@ import os
 import re
 
 
-class TestDialog(QMainWindow):
+class VertexSelector(QMainWindow):
     def mayaMainWindow():
         mainWindow_pointer = omui.MQtUtil.mainWindow()
         return wrapInstance(int(mainWindow_pointer), QMainWindow)
 
 
-    # def __init__(self):
     def __init__(self, parent=mayaMainWindow()):
-        super(TestDialog, self).__init__(parent)
+        super(VertexSelector, self).__init__(parent)
         mainWidget = QWidget(self)
         self.setupUI(mainWidget)
         # self.setWindowFlag(Qt.WindowContextHelpButtonHint, False)
@@ -28,9 +24,9 @@ class TestDialog(QMainWindow):
 
 
     def setupUI(self, mainWindow):
-        self.setWindowTitle("Test_Dialog")
+        self.sortCount = 0
+        self.setWindowTitle("Vertex Selector")
         self.move(0, 0)
-        self.setMinimumSize(QSize(220, 220))
         self.setMinimumWidth(200)
         self.setCentralWidget(mainWindow)
         self.verticalLayout = QVBoxLayout(mainWindow)
@@ -38,23 +34,36 @@ class TestDialog(QMainWindow):
         self.lineEdit = QLineEdit()
         self.horizontalLayout.addWidget(self.lineEdit)
         self.btnCreate = QPushButton("Create")
+        self.btnCreate.setFixedSize(60, 23)
         self.horizontalLayout.addWidget(self.btnCreate)
         self.verticalLayout.addLayout(self.horizontalLayout)
         self.horizontalLayout_2 = QHBoxLayout()
         self.lineEdit_2 = QLineEdit()
+        self.lineEdit_2.textChanged.connect(self.enableRenameButton)
         self.horizontalLayout_2.addWidget(self.lineEdit_2)
         self.btnDelete = QPushButton("Delete")
+        self.btnDelete.setFixedSize(60, 23)
         self.horizontalLayout_2.addWidget(self.btnDelete)
         self.verticalLayout.addLayout(self.horizontalLayout_2)
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.lineEdit_3 = QLineEdit()
+        self.lineEdit_3.setStyleSheet("background-color: rgb(60, 60, 60);")
+        self.lineEdit_3.textChanged.connect(self.enableRenameButton)
+        self.horizontalLayout_3.addWidget(self.lineEdit_3)
+        self.btnRename = QPushButton("Rename")
+        self.btnRename.setEnabled(False)
+        self.btnRename.setFixedSize(60, 23)
+        self.horizontalLayout_3.addWidget(self.btnRename)
+        self.verticalLayout.addLayout(self.horizontalLayout_3)
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalSpacer_3 = QSpacerItem(30, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
         self.rdBtnAdd = QRadioButton("Add")
-        self.rdBtnAdd.setChecked(True)
         self.horizontalLayout_3.addWidget(self.rdBtnAdd)
         self.horizontalSpacer_4 = QSpacerItem(31, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(self.horizontalSpacer_4)
         self.rdBtnToggle = QRadioButton("Toggle")
+        self.rdBtnToggle.setChecked(True)
         self.horizontalLayout_3.addWidget(self.rdBtnToggle)
         self.horizontalSpacer_2 = QSpacerItem(30, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(self.horizontalSpacer_2)
@@ -63,31 +72,69 @@ class TestDialog(QMainWindow):
         self.line.setFrameShape(QFrame.HLine)
         self.line.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line)
-        # Create Buttons from json file.
         self.gridLayout = QGridLayout()
-        self.buttons = self.buttonsRefresh()
+        # Create Buttons from json file.
         self.verticalLayout.addLayout(self.gridLayout)
-        # End - Create Buttons from json file.
         self.line_2 = QFrame()
         self.line_2.setFrameShape(QFrame.HLine)
         self.line_2.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_2)
         self.horizontalLayout_4 = QHBoxLayout()
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
-        self.horizontalLayout_4.addItem(self.horizontalSpacer)
-        self.btnRefresh = QPushButton("Refresh")
-        self.horizontalLayout_4.addWidget(self.btnRefresh)
+        self.btnSort = QPushButton("Sort")
+        self.horizontalLayout_4.addWidget(self.btnSort)
+        # self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        # self.horizontalLayout_4.addItem(self.horizontalSpacer)
+        self.btnClear = QPushButton("Clear")
+        self.horizontalLayout_4.addWidget(self.btnClear)
         self.btnClose = QPushButton("Close")
         self.horizontalLayout_4.addWidget(self.btnClose)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.verticalLayout.addItem(self.verticalSpacer)
+        self.refresh()
         # Button Clicked
         self.btnCreate.clicked.connect(self.createJsonFile)
         self.lineEdit.returnPressed.connect(self.createJsonFile)
         self.btnDelete.clicked.connect(self.deleteButtons)
-        self.btnRefresh.clicked.connect(self.buttonsRefresh)
+        self.btnDelete.clicked.connect(self.deleteButtons)
+        self.btnRename.clicked.connect(self.renameJsonFile)
+        self.lineEdit_3.returnPressed.connect(self.renameJsonFile)
+        self.btnSort.clicked.connect(self.sortButtons)
+        self.btnClear.clicked.connect(self.clearSelection)
         self.btnClose.clicked.connect(self.close)
+    
+
+    def refresh(self):
+        """ Reload buttons. """
+        jsonPath = self.getJsonFilePath()
+        if not os.path.isfile(jsonPath):
+            data = {}
+        else:
+            data = self.loadJsonFile(jsonPath)
+        self.deleteGridLayoutItems()
+        buttons = self.createButtons(data)
+        self.buttonsConnection(buttons)
+        # self.lineEdit.clear()
+        self.lineEdit_2.clear()
+        self.lineEdit_3.clear()
+        self.adjustSize()
+
+
+    def createButtons(self, data: dict) -> list:
+        sortedKeys = sorted(data.keys()) if self.sortCount%2 == 1 else data.keys()
+        buttons = []
+        for idx, buttonName in enumerate(sortedKeys):
+            row, column = divmod(idx, 2)
+            button = QPushButton(buttonName, self)
+            buttons.append(button)
+            self.gridLayout.addWidget(button, row, column, 1, 1)
+        self.gridLayout.setSpacing(2)
+        return buttons
+
+
+    def buttonsConnection(self, buttons):
+        for btn in buttons:
+            btn.clicked.connect(self.buttonClicked)
 
 
     def buttonClicked(self):
@@ -99,12 +146,61 @@ class TestDialog(QMainWindow):
         objectVertex = data[buttonsName]
         vertices = []
         for obj, vtxList in objectVertex.items():
+            if not pm.objExists(obj):
+                # pm.warning('There is no "%s" mesh.' % obj)
+                return
             for vtx in vtxList:
                 vertices.append(f"{obj}{vtx}")
         boolAdd = self.rdBtnAdd.isChecked()
         boolToggle = self.rdBtnToggle.isChecked()
         pm.select(vertices, af=boolAdd, tgl=boolToggle)
         
+
+    def deleteButtons(self):
+        jsonPath = self.getJsonFilePath()
+        data = self.loadJsonFile(jsonPath)
+        key = self.lineEdit_2.text()
+        data.pop(key, None)
+        with open(jsonPath, 'w') as txt:
+            json.dump(data, txt, indent=4)
+        self.refresh()
+
+
+    def sortButtons(self):
+        self.sortCount += 1
+        self.refresh()
+
+
+    def clearSelection(self):
+        self.lineEdit.clear()
+        self.lineEdit_2.clear()
+        self.lineEdit_3.clear()
+        self.lineEdit.clearFocus()
+        self.lineEdit_2.clearFocus()
+        self.lineEdit_3.clearFocus()
+        pm.select(cl=True)
+
+
+    def adjustSize(self):
+        optimalSize = self.verticalLayout.sizeHint()
+        self.resize(optimalSize)
+        # self.setMinimumSize(QSize(optimalSize))
+
+
+    def deleteGridLayoutItems(self):
+        while self.gridLayout.count():
+            item = self.gridLayout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+
+    def enableRenameButton(self):
+        if self.lineEdit_2.text() and self.lineEdit_3.text():
+            self.btnRename.setEnabled(True)
+        else:
+            self.btnRename.setEnabled(False)
+
 
     def getJsonFilePath(self) -> str:
         scenePath = pm.Env().sceneName()
@@ -119,7 +215,9 @@ class TestDialog(QMainWindow):
 
 
     def createJsonFile(self):
-        """ If the json file doesn't exist, create a new one, but overwrite. """
+        """ If the json file doesn't exist, create a new one, 
+        but overwrite. 
+         """
         vertexName = self.lineEdit.text()
         vertexNumber = self.getListsOfVertexNumber()
         if not vertexName:
@@ -132,19 +230,25 @@ class TestDialog(QMainWindow):
         isJsonFile = os.path.isfile(jsonPath)
         data = self.loadJsonFile(jsonPath) if isJsonFile else {}
         data[vertexName] = vertexNumber
-        with open(jsonPath, 'w') as txt:
-            json.dump(data, txt, indent=4)
-        self.buttonsRefresh()
+        self.writeJsonFile(jsonPath, data)
+        self.refresh()
 
 
-    def deleteButtons(self):
+    def renameJsonFile(self):
+        old = self.lineEdit_2.text()
+        new = self.lineEdit_3.text()
+        if not old or not new:
+            return
         jsonPath = self.getJsonFilePath()
         data = self.loadJsonFile(jsonPath)
-        key = self.lineEdit_2.text()
-        data.pop(key, None)
-        with open(jsonPath, 'w') as txt:
+        data[new] = data.pop(old, None)
+        self.writeJsonFile(jsonPath, data)
+        self.refresh()
+
+
+    def writeJsonFile(self, fullPath, data):
+        with open(fullPath, 'w') as txt:
             json.dump(data, txt, indent=4)
-        self.buttonsRefresh()
 
 
     def loadJsonFile(self, fullPath) -> dict:
@@ -172,56 +276,13 @@ class TestDialog(QMainWindow):
         return result
 
 
-    def buttonsRefresh(self):
-        jsonPath = self.getJsonFilePath()
-        if not os.path.isfile(jsonPath):
-            data = {}
-        else:
-            data = self.getJsonData(jsonPath)
-        self.deleteGridLayoutItems()
-        buttons = self.createButtons(data)
-        self.buttonsConnection(buttons)
-        # self.lineEdit.clear()
-        self.lineEdit_2.clear()
-
-
-    def buttonsConnection(self, buttons):
-        for btn in buttons:
-            btn.clicked.connect(self.buttonClicked)
-
-
-    def getJsonData(self, fullPath):
-        with open(fullPath, 'r') as txt:
-            data = json.load(txt)
-        return data
-
-
-    def deleteGridLayoutItems(self):
-        while self.gridLayout.count():
-            item = self.gridLayout.takeAt(0)
-            widget = item.widget()
-            if widget:
-                widget.deleteLater()
-
-
-    def createButtons(self, data: dict) -> list:
-        buttons = []
-        for idx, buttonName in enumerate(data.keys()):
-            row, column = divmod(idx, 2)
-            button = QPushButton(buttonName, self)
-            buttons.append(button)
-            self.gridLayout.addWidget(button, row, column, 1, 1)
-        self.gridLayout.setSpacing(2)
-        return buttons
-
-
 if __name__ == "__main__":
     try:
-        test.close()
-        test.deleteLater()
+        vtxSel.close()
+        vtxSel.deleteLater()
     except:
         pass
-    test = TestDialog()
-    test.show()
+    vtxSel = VertexSelector()
+    vtxSel.show()
 
 
