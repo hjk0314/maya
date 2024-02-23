@@ -362,7 +362,7 @@ class Controllers:
             }
 
 
-    def createControllers(self, **kwargs):
+    def createControllers(self, *args):
         """ If there are no arguments, all controllers will be created.
         However, it is usually used as follows.
         >>> createCurveControllers(cube=3, sphere=2 ...)
@@ -376,22 +376,10 @@ class Controllers:
         - "scapula", "sphere", "square", 
         """
         allShapes = self.controllerShapes.keys()
-        inputs = kwargs.keys()
+        inputs = args
         curvesToMake = set(inputs) & set(allShapes) if inputs else allShapes
-        result = {}
-        for shapeName in curvesToMake:
-            try:
-                loopingNumbers = kwargs[shapeName]
-            except:
-                loopingNumbers = 1
-            curves = self.createCurveToShape(shapeName, loopingNumbers)
-            result[shapeName] = curves
-        return result
-
-
-    def createCurveToShape(self, shapeName, loopingNumbers):
         result = []
-        for i in range(loopingNumbers):
+        for shapeName in curvesToMake:
             position = self.controllerShapes[shapeName]
             curve = pm.curve(p=position, d=1, n=shapeName)
             result.append(curve)
@@ -466,17 +454,34 @@ class Grouping:
         pass
 
 
-    def groupingWithOwnPivot(self, tailName: str=None) -> None:
-        selections = pm.ls(sl=True)
+    def groupingWithOwnPivot(self, *arg) -> None:
+        selections = self.getFlattenList(arg) if arg else pm.ls(sl=True)
+        result = []
         for i in selections:
-            groupName = f"{i}_{tailName}_grp" if tailName else f"{i}_grp"
+            groupName = f"{i}_grp"
             emptyGroup = pm.group(em=True, n=groupName)
             pm.matchTransform(emptyGroup, i, pos=True, rot=True)
             try:
-                pm.parent(emptyGroup, i.getParent())
+                pm.parent(emptyGroup, pm.listRelatives(i, p=True))
             except:
                 pass
             pm.parent(i, emptyGroup)
+            result.append(groupName)
+        return result
+        
+
+
+    def getFlattenList(self, iterable):
+        result = []
+        for item in iterable:
+            isIter = isinstance(item, Iterable)
+            isStr = isinstance(item, str)
+            if not isStr and isIter:
+                result.extend(self.getFlattenList(item))
+            else :
+                result.append(item)
+        result = list(set(result))
+        return result
 
 
 class Joints:
@@ -502,12 +507,14 @@ class Joints:
             pm.joint(i, e=True, oj='none', ch=True, zso=True)
 
 
-    def createPolevectorJoint(self):
+    def createPolevectorJoint(self, *arg):
         """ Select three joints.
         Put the pole vector at 90 degrees to the direction 
         of the first and last joints.
+        >>> return [startJointOfPolevector, endJointOfPolevector]
          """
-        selections = pm.ls(sl=True)
+        joints = self.getFlattenList(arg)
+        selections = joints if joints else pm.ls(sl=True)
         if len(selections) != 3:
             return
         jointsNameAndPosition = self.getNameAndPosition(selections)
@@ -515,12 +522,14 @@ class Joints:
         jointPoint = jointsNameAndPosition.values()
         firstJoint, middleJoint, endJoint = jointNames
         firstPoint, middlePoint, endPoint = jointPoint
-        newJoint, newEndJoint = self.createJoints([firstPoint, endPoint])
+        result = self.createJoints([firstPoint, endPoint])
+        newJoint, newEndJoint = result
         pm.select(cl=True)
         pm.select(newJoint)
         self.orientJoints('xyz', 'yup')
         self.setPoleDirection(newJoint, endJoint, middleJoint)
         pm.matchTransform(newJoint, middleJoint, pos=True)
+        return result
 
 
     def setJointsStyleNone(self):
@@ -565,6 +574,19 @@ class Joints:
             else:
                 continue
         pm.select(result)
+        return result
+
+
+    def getFlattenList(self, iterable):
+        result = []
+        for item in iterable:
+            isIter = isinstance(item, Iterable)
+            isStr = isinstance(item, str)
+            if not isStr and isIter:
+                result.extend(self.getFlattenList(item))
+            else :
+                result.append(item)
+        result = list(set(result))
         return result
 
 
@@ -919,28 +941,77 @@ class QuickRig_Mixamo:
         self.buildJointsHumanStructure(rigHierarchy)
 
 
-    def createIKFKSpines(self, *IKFK):
+    def createIKFKSpinesJoints(self, *arg):
         self.updateAllJointPositions()
-        spinesPositions, spinesHierarchy = self.getDataIKFKSpines(IKFK)
+        spinesPositions, spinesHierarchy = self.getDataIKFKSpines(arg)
         self.cleanObjects(spinesHierarchy.values())
         self.createJointWithName(spinesPositions)
         self.buildJointsHumanStructure(spinesHierarchy)
 
 
-    def createIKFKArms(self, *IKFK):
+    def createIKFKArmsJoints(self, *arg):
         self.updateAllJointPositions()
-        armsPositions, armsHierarchy = self.getDataIKFKArms(IKFK)
+        armsPositions, armsHierarchy = self.getDataIKFKArms(arg)
         self.cleanObjects(armsHierarchy.values())
         self.createJointWithName(armsPositions)
         self.buildJointsHumanStructure(armsHierarchy)
 
 
-    def createIKFKLegs(self, *IKFK):
+    def createIKFKLegsJoints(self, *arg):
         self.updateAllJointPositions()
-        legsPositions, legsHierarchy = self.getDataIKFKLegs(IKFK)
+        legsPositions, legsHierarchy = self.getDataIKFKLegs(arg)
         self.cleanObjects(legsHierarchy.values())
         self.createJointWithName(legsPositions)
         self.buildJointsHumanStructure(legsHierarchy)
+
+
+    def createIKArmsControllers(self, *arg):
+        self.getFlattenList(arg)
+        # used class
+        ctrl = Controllers()
+        jnt = Joints()
+        grp = Grouping()
+        # input joints name
+        firstJoint = "rig_LeftArm_IK"
+        middleJoint = "rig_LeftForeArm_IK"
+        endJoint = "rig_LeftHand_IK"
+        # Create ctrl name and check exists
+        ccNames = [i.replace("rig_", "cc_") for i in [firstJoint, middleJoint, endJoint]]
+        isCCExist = [pm.objExists(i) for i in ccNames]
+        if any(isCCExist):
+            pm.warning("Same contollers aleady exist.")
+            return
+        rowCtrl = ctrl.createControllers("circle", "sphere", "cube")
+        ccCircle, ccSphere, ccCube = ccNames
+        for row, new in zip(rowCtrl, ccNames):
+            pm.rename(row, new)
+        # Rig - firstJoint
+        ikH = pm.ikHandle(sj=firstJoint, ee=endJoint, sol="ikRPsolver")[0]
+        pm.rotate(ccCircle, [0, 0, 90])
+        pm.makeIdentity(ccCircle, a=True, t=0, r=1, s=0, jo=0, n=0, pn=1)
+        pm.matchTransform(ccCircle, firstJoint, pos=True)
+        pm.pointConstraint(ccCircle, firstJoint, mo=True)
+        # Rig - middleJoint
+        polevectorJoints = jnt.createPolevectorJoint(firstJoint, middleJoint, endJoint)
+        startJointOfPolevector, endJointOfPolevector = polevectorJoints
+        pm.matchTransform(ccSphere, endJointOfPolevector, pos=True)
+        pm.delete(startJointOfPolevector)
+        pm.poleVectorConstraint(ccSphere, ikH, w=1)
+        # Rig - endJoint
+        pm.matchTransform(ccCube, endJoint, pos=True)
+        pm.orientConstraint(endJoint, ccCube, o=(-90, 0, 90), w=1)
+        pm.delete(ccCube, cn=True)
+        pm.orientConstraint(ccCube, endJoint, mo=True, w=1)
+        # Rig - cleanUp
+        ccNamesGroup = grp.groupingWithOwnPivot(ccNames)
+        armGroupName = ccCircle.rsplit("_", 1)[0]
+        pm.group(em=True, n=armGroupName)
+        for i in ccNamesGroup:
+            pm.parent(i, armGroupName)
+        pm.setAttr(f"{ikH}.visibility", 0)
+        pm.parent(ikH, ccCube)
+
+
 
 
 # 79 char line ================================================================
@@ -1126,19 +1197,26 @@ class QuickRig_Mixamo:
         return spinesPositions, spinesHierarchy
 
 
-    def getDataIKFKArms(self, *IKFK):
-        IKFK = self.getFlattenList(IKFK)
+    def getDataIKFKArms(self, *args):
+        """ Creates a joint with the input string, 
+        Returns positions and hierarchy.
+        >>> self.getDataIKFKArms("IK", "FK", ...)
+        >>> rig_Hand_IK, rig_Hand_FK, rig_Hand_...
+        >>> armsPositions = {"rig_Hand_IK": (0, 1, 2), "rig_Hand_FK": (3, 4, 5), ...}
+        >>> armsHierarchy = {"rig_ForeArm": ["rig_Hand_IK", "rig_Hand_FK"]}
+         """
+        ikOrFk = self.getFlattenList(args)
         sourceArms = [i + m for m in self.arms[1:] for i in self.side]
         sourceHierarchy = {i[0]: [i[1:]] for i in self.hierarchy["Spine2"]}
         armsPositions = {}
         for i in sourceArms:
-            for k in IKFK:
+            for k in ikOrFk:
                 armsPositions[f"rig_{i}_{k}"] = self.jointPosition[i]
         armsHierarchy = {}
         for parents, hierarchy in sourceHierarchy.items():
             for h in hierarchy:
                 key = f"rig_{parents}"
-                value = [[f"rig_{i}_{k}" for i in h] for k in IKFK]
+                value = [[f"rig_{i}_{k}" for i in h] for k in ikOrFk]
                 armsHierarchy[key] = value
         return armsPositions, armsHierarchy
 
@@ -1192,16 +1270,17 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-# qm = QuickRig_Mixamo()
+qm = QuickRig_Mixamo()
 # qm.updateAllJointPositions()
 # qm.createMixamoBones()
 # qm.alignSpinesCenter()
 # qm.sameBothSide()
 # qm.createAllRigJoints()
-# qm.createIKFKSpines("IK", "FK")
-# qm.createIKFKArms("IK", "FK")
-# qm.createIKFKLegs("IK", "FK")
+# qm.createIKFKSpinesJoints("IK", "FK")
+# qm.createIKFKArmsJoints("IK", "FK")
+# qm.createIKFKLegsJoints("IK", "FK")
 # qm.createRigGroup("pomfretFishA")
+qm.createIKArmsControllers()
 
 
 # sel = Selections()
