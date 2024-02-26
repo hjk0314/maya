@@ -17,14 +17,17 @@ class VertexSelector(QWidget):
     def __init__(self):
         """ This is a UI that gives a name to the selected vertex group 
         and turns it into a button.
+        >>> import vertexSelector as vtxSel
+        >>> 
+        >>> 
         >>> if __name__ == "__main__":
-        >>>    try:
-        >>>        vtxSel.close()
-        >>>        vtxSel.deleteLater()
-        >>>    except:
-        >>>        pass
-        >>>    vtxSel = VertexSelector()
-        >>>    vtxSel.show()
+        >>>     try:
+        >>>         vtx.close()
+        >>>         vtx.deleteLater()
+        >>>     except:
+        >>>         pass
+        >>>     vtx = vtxSel.VertexSelector()
+        >>>     vtx.show()
          """
         super(VertexSelector, self).__init__()
         self.sortCount = 0

@@ -513,7 +513,9 @@ class Joints:
         of the first and last joints.
         >>> return [startJointOfPolevector, endJointOfPolevector]
          """
+        print(arg)
         joints = self.getFlattenList(arg)
+        print(joints)
         selections = joints if joints else pm.ls(sl=True)
         if len(selections) != 3:
             return
@@ -966,7 +968,7 @@ class QuickRig_Mixamo:
 
 
     def createIKArmsControllers(self, *arg):
-        self.getFlattenList(arg)
+        # self.getFlattenList(arg)
         # used class
         ctrl = Controllers()
         jnt = Joints()
@@ -992,10 +994,10 @@ class QuickRig_Mixamo:
         pm.matchTransform(ccCircle, firstJoint, pos=True)
         pm.pointConstraint(ccCircle, firstJoint, mo=True)
         # Rig - middleJoint
-        polevectorJoints = jnt.createPolevectorJoint(firstJoint, middleJoint, endJoint)
+        polevectorJoints = jnt.createPolevectorJoint([firstJoint, middleJoint, endJoint])
         startJointOfPolevector, endJointOfPolevector = polevectorJoints
         pm.matchTransform(ccSphere, endJointOfPolevector, pos=True)
-        pm.delete(startJointOfPolevector)
+        # pm.delete(startJointOfPolevector)
         pm.poleVectorConstraint(ccSphere, ikH, w=1)
         # Rig - endJoint
         pm.matchTransform(ccCube, endJoint, pos=True)
@@ -1240,13 +1242,14 @@ class QuickRig_Mixamo:
     def getFlattenList(self, iterable):
         result = []
         for item in iterable:
-            isIter = isinstance(item, Iterable)
-            isStr = isinstance(item, str)
-            if not isStr and isIter:
+            # isIter = isinstance(item, Iterable)
+            # isStr = isinstance(item, str)
+            # if not isStr and isIter:
+            if isinstance(item, tuple):
                 result.extend(self.getFlattenList(item))
             else :
                 result.append(item)
-        result = list(set(result))
+        result = list(dict.fromkeys(iterable))
         return result
 
 
