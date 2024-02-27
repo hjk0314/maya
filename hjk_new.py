@@ -377,7 +377,7 @@ class Controllers:
         """
         allShapes = self.controllerShapes.keys()
         inputs = args
-        curvesToMake = set(inputs) & set(allShapes) if inputs else allShapes
+        curvesToMake = [i for i in inputs if i in allShapes]
         result = []
         for shapeName in curvesToMake:
             position = self.controllerShapes[shapeName]
@@ -579,16 +579,14 @@ class Joints:
         return result
 
 
-    def getFlattenList(self, iterable):
+    def getFlattenList(self, *args):
         result = []
-        for item in iterable:
-            isIter = isinstance(item, Iterable)
-            isStr = isinstance(item, str)
-            if not isStr and isIter:
-                result.extend(self.getFlattenList(item))
-            else :
-                result.append(item)
-        result = list(set(result))
+        for arg in args:
+            if not isinstance(arg, str) and isinstance(arg, Iterable):
+                for i in arg:
+                    result.extend(self.getFlattenList(i))
+            else:
+                result.append(arg)
         return result
 
 
@@ -984,6 +982,7 @@ class QuickRig_Mixamo:
             pm.warning("Same contollers aleady exist.")
             return
         rowCtrl = ctrl.createControllers("circle", "sphere", "cube")
+        print(rowCtrl)
         ccCircle, ccSphere, ccCube = ccNames
         for row, new in zip(rowCtrl, ccNames):
             pm.rename(row, new)
@@ -1239,17 +1238,14 @@ class QuickRig_Mixamo:
         return legsPositions, legsHierarchy
 
 
-    def getFlattenList(self, iterable):
+    def getFlattenList(self, *args):
         result = []
-        for item in iterable:
-            # isIter = isinstance(item, Iterable)
-            # isStr = isinstance(item, str)
-            # if not isStr and isIter:
-            if isinstance(item, tuple):
-                result.extend(self.getFlattenList(item))
-            else :
-                result.append(item)
-        result = list(dict.fromkeys(iterable))
+        for arg in args:
+            if not isinstance(arg, str) and isinstance(arg, Iterable):
+                for i in arg:
+                    result.extend(self.getFlattenList(i))
+            else:
+                result.append(arg)
         return result
 
 
@@ -1273,7 +1269,7 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-qm = QuickRig_Mixamo()
+# qm = QuickRig_Mixamo()
 # qm.updateAllJointPositions()
 # qm.createMixamoBones()
 # qm.alignSpinesCenter()
@@ -1283,7 +1279,7 @@ qm = QuickRig_Mixamo()
 # qm.createIKFKArmsJoints("IK", "FK")
 # qm.createIKFKLegsJoints("IK", "FK")
 # qm.createRigGroup("pomfretFishA")
-qm.createIKArmsControllers()
+# qm.createIKArmsControllers()
 
 
 # sel = Selections()
