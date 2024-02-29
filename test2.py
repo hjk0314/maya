@@ -1,5 +1,6 @@
 from collections.abc import Iterable
-import re
+import sys
+import sympy
 import numpy as np
 import pymel.core as pm
 
@@ -118,6 +119,16 @@ def setPoleDirection(object, aimJoint, upVectorJoint):
     pm.aimConstraint(aimJoint, object, o=(0,0,90), wut='object', 
                      wuo=upVectorJoint)
     pm.delete(object, cn=True)
+
+
+def removeDeformed():
+    """ Remove Deformed from all objects including the text Deformed. """
+    removeStr = "Deformed"
+    nullStr = ""
+    nodes = pm.ls("*{}*".format(removeStr), r=True)
+    for node in nodes:
+        new_name = node.name().replace(removeStr, nullStr)
+        node.rename(new_name)
 
 
 class Curves:
@@ -543,30 +554,45 @@ class Align:
         pass
 
 
-    def lineUp(self, threePoints=[]):
-        """ In 3D space, Three points make a face, 
-        The remaining objects are located on this plane.
+    def objectLineUp(self, threePoints=[]):
+        """ The three selected objects create a surface in space.
+        And the remaining objects are placed on this surface.
+        Select 4 or more objects for this function to be effective.
+        - Used to make the finger joints line up in space.
+        - Ball and toe joints can be placed in a straight line 
+        on the surface formed by the pelvis, knees, and ankles.
          """
-        selection = self.isThreePoints(threePoints)
-        parentsInfo = {i: i.getParent() for i in selection}
-        if not selection:
+        selections = self.isThreePoints(threePoints)
+        if not selections:
+            pm.warning("3 Points needed.")
             return
+        parentsInfo = {i: i.getParent() for i in selections}
         self.unParent(parentsInfo)
-        self.moveOjbectsToPoint(selection)
+        self.moveOjbectsToPoint(selections)
         self.reParent(parentsInfo)
 
 
-    def moveOjbectsToPoint(self, selection: list):
-        point3 = selection[:3]
-        leftPoints = selection[3:]
-        point3Position = [pm.xform(i, q=1, t=1, ws=1) for i in point3]
-        normalVector = self.getFaceNormalVector(point3Position)
-        planePoint = point3Position[0]
-        for i in leftPoints:
-            pointOfLine = pm.xform(i, q=True, t=True, ws=True)
-            intersectionPoint = self.getIntersectionPoint(normalVector, \
-                                planePoint, normalVector, pointOfLine)
-            pm.move(i, intersectionPoint)
+    def curveStraightUp(self):
+        """ Arrange the points in a straight line.
+        Use the equation of a straight line in space 
+        to make a curved line a straight line.
+        1. Create an equation
+        2. Check the condition.
+        3. Make a straight line.
+        """
+        originalCurveVertex = pm.ls(sl=True, fl=True)
+        if len(originalCurveVertex) < 2:
+            pm.warning("2 or more points needed.")
+            return
+        firstPoint = originalCurveVertex[0]
+        lastPoint = originalCurveVertex[-1]
+        solutions = self.calculateEquation(firstPoint, lastPoint)
+        copiedCurve = self.copyCurve(originalCurveVertex)
+        copiedCurveVertex = pm.ls(f"{copiedCurve}.cv[*]", fl=True)
+        for i in copiedCurveVertex:
+            pointPosition = i.getPosition(space="world")
+            finalPosition = self.getFinalPosition(pointPosition, solutions)
+            pm.move(i, finalPosition)
 
 
     def isThreePoints(self, threePoints=[]):
@@ -591,6 +617,19 @@ class Align:
                 continue
             else:
                 pm.parent(child, parents)
+
+
+    def moveOjbectsToPoint(self, selection: list):
+        point3 = selection[:3]
+        dotsLeftBehind = selection[3:]
+        point3Position = [pm.xform(i, q=1, t=1, ws=1) for i in point3]
+        normalVector = self.getFaceNormalVector(point3Position)
+        planePoint = point3Position[0]
+        for i in dotsLeftBehind:
+            pointOfLine = pm.xform(i, q=True, t=True, ws=True)
+            intersectionPoint = self.getIntersectionPoint(normalVector, \
+                                planePoint, normalVector, pointOfLine)
+            pm.move(i, intersectionPoint)
 
 
     def getFaceNormalVector(self, threePointsPosition=[]):
@@ -619,4 +658,57 @@ class Align:
         lean = delta1 / delta2
         intersectionPoint = pointOnLine + (lean*lineDirection)
         return intersectionPoint.tolist()
+
+
+    def copyCurve(self, vertices: list):
+        originalCurve = pm.ls(vertices, o=True)
+        copiedCurve = pm.duplicate(originalCurve, rr=True)
+        copiedCurve = copiedCurve[0]
+        return copiedCurve
+
+
+    def calculateEquation(self, firstPoint, lastPoint):
+        """ Create an equation for a straight line 
+        passing through two points. Calculate the positions of other points 
+        not included in the straight line. 
+         """
+        # Equation
+        x1, y1, z1 = firstPoint.getPosition(space="world")
+        x2, y2, z2 = lastPoint.getPosition(space="world")
+        A, B, C = (x2 - x1), (y2 - y1), (z2 - z1)
+        x, y, z = sympy.symbols('x y z')
+        expr1 = sympy.Eq(B*x - A*y, B*x1 - A*y1)
+        expr2 = sympy.Eq(C*y - B*z, C*y1 - B*z1)
+        expr3 = sympy.Eq(A*z - C*x, A*z1 - C*x1)
+        # Determine direction.
+        MAX = max([abs(i) for i in [A, B, C]])
+        if abs(A) == MAX:
+            idx = 0
+            highestGap = x
+            variables = [y, z]
+            expr = [expr1, expr3]
+        elif abs(B) == MAX:
+            idx = 1
+            highestGap = y
+            variables = [x, z]
+            expr = [expr1, expr2]
+        elif abs(C) == MAX:
+            idx = 2
+            highestGap = z
+            variables = [x, y]
+            expr = [expr2, expr3]
+        else:
+            return
+        return idx, highestGap, variables, expr, [x, y, z]
+
+
+    def getFinalPosition(self, pointPosition, solutions):
+        idx, highestGap, variables, expr, equation = solutions
+        value = pointPosition[idx]
+        fx = [i.subs(highestGap, value) for i in expr]
+        position = sympy.solve(fx, variables)
+        position[highestGap] = value
+        finalPosition = [round(float(position[i]), 4) for i in equation]
+        return finalPosition
+
 

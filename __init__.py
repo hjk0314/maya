@@ -1,0 +1,1 @@
+from maya.test2 import *

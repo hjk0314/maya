@@ -11,43 +11,6 @@ import maya.mel as mel
 import pathlib
 
 
-class SoftSel:
-    def __init__(self):
-        """ Get this code from internet. Modified to class. """
-        self.createSoftCluster()
-    
-    
-    def softSelection(self):
-        selection = om.MSelectionList()
-        softSelection = om.MRichSelection()
-        om.MGlobal.getRichSelection(softSelection)
-        softSelection.getSelection(selection)
-        dagPath = om.MDagPath()
-        component = om.MObject()
-        iter = om.MItSelectionList(selection, om.MFn.kMeshVertComponent)
-        elements = []
-        while not iter.isDone(): 
-            iter.getDagPath(dagPath, component)
-            dagPath.pop()
-            node = dagPath.fullPathName()
-            fnComp = om.MFnSingleIndexedComponent(component)   
-            for i in range(fnComp.elementCount()):
-                elem = fnComp.element(i)
-                infl = fnComp.weight(i).influence()
-                elements.append([node, elem, infl])
-            iter.next()
-        return elements
-
-    def createSoftCluster(self):
-        softElementData = self.softSelection()
-        selection = ["%s.vtx[%d]" % (el[0], el[1]) for el in softElementData] 
-        pm.select(selection, r=True)
-        cluster = pm.cluster(relative=True)
-        for i in range(len(softElementData)):
-            pm.percent(cluster[0], selection[i], v=softElementData[i][2])
-        pm.select(cluster[1], r=True)
-
-
 class Han:
     def __init__(self):
         """ Transform HanGeul unicode to bytes. Otherside too. """
@@ -1939,7 +1902,7 @@ def openFolder():
     os.startfile(dir)
 
 
-def lineStraight():
+def lineStraightUp():
     """ Arrange the points in a straight line.
     Use the equation of a straight line in space 
     to make a curved line a straight line.
@@ -1993,6 +1956,7 @@ def lineStraight():
         sol[xyz] = value
         p1, p2, p3 = [round(float(sol[var]), 4) for var in [x, y, z]]
         pm.move(p1, p2, p3, i)
+lineStraightUp()
 
 
 def lineStraight_rebuild():
@@ -2011,7 +1975,6 @@ def lineStraight_rebuild():
         kr=0, # keepRange
         kt=0, # keepTangents
         )
-
 
 def orientJnt(arg=None):
     """ Freeze and Orient joints
@@ -2038,56 +2001,6 @@ def orientJnt(arg=None):
         for i in endJnt:
             pm.joint(i, e=True, oj='none', ch=True, zso=True)
     return sel
-
-
-def jntNone(*arg: int) -> None:
-    '''Change the drawing style of a joint.
-    0: Bone
-    1: Multi Child as Box
-    2: None
-    '''
-    num = 2 if not arg else arg[0]
-    sel = pm.ls(sl=True)
-    if num < 0 or num > 2:
-        msg = "Allowed numbers are "
-        msg += "[0: Bone, 1: Multi Child as Box, 2: None]"
-        print(msg)
-    elif not sel:
-        print("Nothing selected.")
-    else:
-        jnt = [i for i in sel if pm.objectType(i)=='joint']
-        for i in jnt:
-            pm.setAttr(f"{i}.drawStyle", num)
-
-
-def attr_geoHide():
-    """ Create and connect <Geo_Hide> channels
-    1. Select a few geo group.
-    2. The Last one should be the Controller. 
-     """
-    sel = pm.ls(sl=True)
-    ctrl = sel.pop()
-    attr = "Geo"
-    vis = "visibility"
-    pm.addAttr(ctrl, ln=attr, at='bool')
-    pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
-    for geo in sel:
-        pm.connectAttr(f"{ctrl}.{attr}", f"{geo}.{vis}", f=True)
-
-
-def attr_subCtrl():
-    """ Create and connect <Sub_Ctrl> channels
-    1. Select a few <sub ctrl> group.
-    2. The Last one should be the Controller. 
-     """
-    sel = pm.ls(sl=True)
-    ctrl = sel.pop()
-    attr = "Sub_Ctrl"
-    vis = "visibility"
-    pm.addAttr(ctrl, ln=attr, at='bool')
-    pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
-    for grp in sel:
-        pm.connectAttr(f"{ctrl}.{attr}", f"{grp}.{vis}", f=True)
 
 
 def getPointPosition():
@@ -2147,17 +2060,6 @@ def makeFolder():
         shutil.copytree(src, folderPath)
         os.startfile(folderPath)
         return folderPath
-
-
-def removeDeformed():
-    """ Remove Deformed from all objects including the text Deformed.
-     """
-    OLD = "Deformed"
-    NEW = ""
-    nodes = pm.ls("*{}*".format(OLD), r=True)
-    for node in nodes:
-        new_name = node.name().replace(OLD, NEW)
-        node.rename(new_name)
 
 
 def getMaxVersion(fullPath: str) -> int:
