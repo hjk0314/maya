@@ -1956,7 +1956,6 @@ def lineStraightUp():
         sol[xyz] = value
         p1, p2, p3 = [round(float(sol[var]), 4) for var in [x, y, z]]
         pm.move(p1, p2, p3, i)
-lineStraightUp()
 
 
 def lineStraight_rebuild():
@@ -1975,6 +1974,7 @@ def lineStraight_rebuild():
         kr=0, # keepRange
         kt=0, # keepTangents
         )
+
 
 def orientJnt(arg=None):
     """ Freeze and Orient joints

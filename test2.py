@@ -1,5 +1,4 @@
-from collections.abc import Iterable
-import sys
+from collections.abc import Iterable 
 import sympy
 import numpy as np
 import pymel.core as pm
