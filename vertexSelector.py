@@ -76,16 +76,20 @@ class VertexSelector(QWidget):
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         # Radio button.
         self.horizontalLayout_3 = QHBoxLayout()
-        self.horizontalSpacer_3 = QSpacerItem(30, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_3 = QSpacerItem(23, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
         self.rdBtnAdd = QRadioButton("Add")
         self.horizontalLayout_3.addWidget(self.rdBtnAdd)
-        self.horizontalSpacer_4 = QSpacerItem(31, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_4 = QSpacerItem(23, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(self.horizontalSpacer_4)
         self.rdBtnToggle = QRadioButton("Toggle")
-        self.rdBtnToggle.setChecked(True)
         self.horizontalLayout_3.addWidget(self.rdBtnToggle)
-        self.horizontalSpacer_2 = QSpacerItem(30, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalSpacer_5 = QSpacerItem(22, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
+        self.horizontalLayout_3.addItem(self.horizontalSpacer_5)
+        self.rdBtnSingle = QRadioButton("Single")
+        self.rdBtnSingle.setChecked(True)
+        self.horizontalLayout_3.addWidget(self.rdBtnSingle)
+        self.horizontalSpacer_2 = QSpacerItem(23, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(self.horizontalSpacer_2)
         self.verticalLayout.addLayout(self.horizontalLayout_3)
         # HLine Bar.
@@ -180,7 +184,11 @@ class VertexSelector(QWidget):
                 vertices.append(f"{obj}{vtx}")
         boolAdd = self.rdBtnAdd.isChecked()
         boolToggle = self.rdBtnToggle.isChecked()
-        pm.select(vertices, af=boolAdd, tgl=boolToggle)
+        boolSingle = self.rdBtnSingle.isChecked()
+        if boolSingle:
+            pm.select(cl=True)
+            boolToggle = True
+        pm.select(vertices, af=boolAdd, tgl=boolToggle,)
         
 
     def deleteButtons(self):
@@ -198,11 +206,11 @@ class VertexSelector(QWidget):
 
 
     def clearSelection(self):
-        self.lineEdit.clear()
-        self.lineEdit_2.clear()
-        self.lineEdit_3.clear()
+        # self.lineEdit.clear()
         self.lineEdit.clearFocus()
+        self.lineEdit_2.clear()
         self.lineEdit_2.clearFocus()
+        self.lineEdit_3.clear()
         self.lineEdit_3.clearFocus()
         pm.select(cl=True)
 

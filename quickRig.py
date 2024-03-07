@@ -430,3 +430,4 @@ class QuickRig_Mixamo:
                     pm.group(em=True, n=child)
                 pm.parent(child, parent)
 
+

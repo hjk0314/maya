@@ -1269,16 +1269,16 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-# qm = QuickRig_Mixamo()
+qm = QuickRig_Mixamo()
 # qm.updateAllJointPositions()
 # qm.createMixamoBones()
 # qm.alignSpinesCenter()
-# qm.sameBothSide()
+qm.sameBothSide()
 # qm.createAllRigJoints()
 # qm.createIKFKSpinesJoints("IK", "FK")
 # qm.createIKFKArmsJoints("IK", "FK")
 # qm.createIKFKLegsJoints("IK", "FK")
-# qm.createRigGroup("pomfretFishA")
+# qm.createRigGroup("stnManA")
 # qm.createIKArmsControllers()
 
 
