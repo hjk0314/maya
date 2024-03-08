@@ -930,6 +930,13 @@ class QuickRig_Mixamo:
         self.createMixamoBones()
 
 
+    def moveJointsToMirror(self, direction: str="LeftToRight"):
+        self.updateAllJointPositions()
+        sideA, sideB = self.getJointNameBothSide(direction)
+        self.updateBothSideToSame(sideA, sideB)
+        self.moveBothSideToSame()
+
+
     def createAllRigJoints(self):
         self.updateAllJointPositions()
         positions = self.jointPosition
@@ -1044,6 +1051,11 @@ class QuickRig_Mixamo:
         for idx, joint in enumerate(sideA):
             x, y, z = pm.xform(joint, q=True, t=True, ws=True)
             self.jointPosition[sideB[idx]] = (x*-1, y, z)
+
+
+    def moveBothSideToSame(self):
+        for jnt, pos in self.jointPosition.items():
+            pm.move(jnt, pos)
 
 
     def createJointWithName(self, nameAndPosition: dict):
@@ -1269,11 +1281,12 @@ class QuickRig_Mixamo:
 # 72 docstring or comments line ========================================   
 
 
-qm = QuickRig_Mixamo()
+# qm = QuickRig_Mixamo()
 # qm.updateAllJointPositions()
 # qm.createMixamoBones()
 # qm.alignSpinesCenter()
-qm.sameBothSide()
+# qm.sameBothSide()
+# qm.moveJointsToMirror()
 # qm.createAllRigJoints()
 # qm.createIKFKSpinesJoints("IK", "FK")
 # qm.createIKFKArmsJoints("IK", "FK")

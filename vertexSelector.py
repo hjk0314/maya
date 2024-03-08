@@ -160,61 +160,6 @@ class VertexSelector(QWidget):
         self.btnPaintWeights.clicked.connect(self.paintAllWeightsOne)
     
 
-    def lockWeightsOnOff(self, originalFunction):
-        def wrapper(self, *args, **kwargs):
-            # Load json data
-            jsonPath = self.getJsonFilePath()
-            data = self.loadJsonFile(jsonPath)
-            # Joint's Lock Weights Status
-            lockWeights = []
-            for jnt in data.keys():
-                lockWeights.append(pm.getAttr(f"{jnt}.liw"))
-                pm.setAttr(f"{jnt}.liw", 0)
-            result = originalFunction(self, data, *args, **kwargs)
-            # Restore Lock Weights Status
-            for jnt, onOff in zip(data.keys(), lockWeights):
-                pm.setAttr(f"{jnt}.liw", onOff)
-            # Result
-            if result:
-                pm.warning("List of failures: ", result)
-            else:
-                pm.displayInfo("Successfully Done.")
-            return result
-        return wrapper
-
-
-    @lockWeightsOnOff
-    def paintAllWeightsOne(self, data, *args, **kwargs):
-        # paintWeightsToOne
-        failed = set()
-        for jnt, obj_vtxList in data.items():
-            for obj, vtxList in obj_vtxList.items():
-                if not pm.objExists(obj):
-                    continue
-                for vtx in vtxList:
-                    objVtx = f"{obj}{vtx}"
-                    skinClt = pm.listHistory(objVtx, type="skinCluster")
-                    try:
-                        pm.skinPercent(skinClt[0], objVtx, tv=(jnt, 1))
-                    except:
-                        failed.add(jnt)
-                        continue
-        return failed
-
-
-    def selectAllVertices(self):
-        jsonPath = self.getJsonFilePath()
-        data = self.loadJsonFile(jsonPath)
-        vertices = []
-        for obj_vtxList in data.values():
-            for obj, vtxList in obj_vtxList.items():
-                if not pm.objExists(obj):
-                    continue
-                for vtx in vtxList:
-                    vertices.append(f"{obj}{vtx}")
-        pm.select(vertices)
-
-
     def createButtons(self, data: dict) -> list:
         if self.sortCount % 2 == 1:
             sortedKeys = sorted(data.keys()) 
@@ -277,6 +222,63 @@ class VertexSelector(QWidget):
         self.lineEdit_3.clear()
         self.lineEdit_3.clearFocus()
         pm.select(cl=True)
+
+
+    def selectAllVertices(self):
+        jsonPath = self.getJsonFilePath()
+        if not jsonPath:
+            return
+        data = self.loadJsonFile(jsonPath)
+        vertices = []
+        for obj_vtxList in data.values():
+            for obj, vtxList in obj_vtxList.items():
+                if not pm.objExists(obj):
+                    continue
+                for vtx in vtxList:
+                    vertices.append(f"{obj}{vtx}")
+        pm.select(vertices)
+
+
+    def lockWeightsOnOff(originalFunction):
+        def wrapper(self):
+            # Load json data
+            jsonPath = self.getJsonFilePath()
+            if not jsonPath:
+                return
+            data = self.loadJsonFile(jsonPath)
+            # Joint's Lock Weights Status
+            lockWeights = []
+            for jnt in data.keys():
+                lockWeights.append(pm.getAttr(f"{jnt}.liw"))
+                pm.setAttr(f"{jnt}.liw", 0)
+            # Main Function
+            result = originalFunction(self, data)
+            # Restore Lock Weights Status
+            for jnt, onOff in zip(data.keys(), lockWeights):
+                pm.setAttr(f"{jnt}.liw", onOff)
+            # Result
+            if result:  pm.warning("List of failures: ", result)
+            else:       pm.displayInfo("Successfully Done.")
+            return result
+        return wrapper
+
+
+    @lockWeightsOnOff
+    def paintAllWeightsOne(self, data: dict):
+        failed = set()
+        for jnt, obj_vtxList in data.items():
+            for obj, vtxList in obj_vtxList.items():
+                if not pm.objExists(obj):
+                    continue
+                for vtx in vtxList:
+                    objVtx = f"{obj}{vtx}"
+                    skinClt = pm.listHistory(objVtx, type="skinCluster")
+                    try:
+                        pm.skinPercent(skinClt[0], objVtx, tv=(jnt, 1))
+                    except:
+                        failed.add(jnt)
+                        continue
+        return failed
 
 
     def adjustSize(self):
