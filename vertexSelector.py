@@ -105,15 +105,25 @@ class VertexSelector(QWidget):
         self.line_2.setFrameShape(QFrame.HLine)
         self.line_2.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_2)
-        # Sort, Clear, Close buttons.
         self.horizontalLayout_4 = QHBoxLayout()
+        # Sort
         self.btnSort = QPushButton("Sort")
         self.horizontalLayout_4.addWidget(self.btnSort)
+        # Clear
         self.btnClear = QPushButton("Clear")
         self.horizontalLayout_4.addWidget(self.btnClear)
+        # Close
         self.btnClose = QPushButton("Close")
         self.horizontalLayout_4.addWidget(self.btnClose)
         self.verticalLayout.addLayout(self.horizontalLayout_4)
+        # Select All
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.btnSelectAll = QPushButton("Select All")
+        self.horizontalLayout_5.addWidget(self.btnSelectAll)
+        # Paint weights to One
+        self.btnPaintWeights = QPushButton("Paint weights to 1.0")
+        self.horizontalLayout_5.addWidget(self.btnPaintWeights)
+        self.verticalLayout.addLayout(self.horizontalLayout_5)
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.verticalLayout.addItem(self.verticalSpacer)
         # Buttons reload and links.
@@ -146,7 +156,64 @@ class VertexSelector(QWidget):
         self.btnSort.clicked.connect(self.sortButtons)
         self.btnClear.clicked.connect(self.clearSelection)
         self.btnClose.clicked.connect(self.close)
+        self.btnSelectAll.clicked.connect(self.selectAllVertices)
+        self.btnPaintWeights.clicked.connect(self.paintAllWeightsOne)
     
+
+    def lockWeightsOnOff(self, originalFunction):
+        def wrapper(self, *args, **kwargs):
+            # Load json data
+            jsonPath = self.getJsonFilePath()
+            data = self.loadJsonFile(jsonPath)
+            # Joint's Lock Weights Status
+            lockWeights = []
+            for jnt in data.keys():
+                lockWeights.append(pm.getAttr(f"{jnt}.liw"))
+                pm.setAttr(f"{jnt}.liw", 0)
+            result = originalFunction(self, data, *args, **kwargs)
+            # Restore Lock Weights Status
+            for jnt, onOff in zip(data.keys(), lockWeights):
+                pm.setAttr(f"{jnt}.liw", onOff)
+            # Result
+            if result:
+                pm.warning("List of failures: ", result)
+            else:
+                pm.displayInfo("Successfully Done.")
+            return result
+        return wrapper
+
+
+    @lockWeightsOnOff
+    def paintAllWeightsOne(self, data, *args, **kwargs):
+        # paintWeightsToOne
+        failed = set()
+        for jnt, obj_vtxList in data.items():
+            for obj, vtxList in obj_vtxList.items():
+                if not pm.objExists(obj):
+                    continue
+                for vtx in vtxList:
+                    objVtx = f"{obj}{vtx}"
+                    skinClt = pm.listHistory(objVtx, type="skinCluster")
+                    try:
+                        pm.skinPercent(skinClt[0], objVtx, tv=(jnt, 1))
+                    except:
+                        failed.add(jnt)
+                        continue
+        return failed
+
+
+    def selectAllVertices(self):
+        jsonPath = self.getJsonFilePath()
+        data = self.loadJsonFile(jsonPath)
+        vertices = []
+        for obj_vtxList in data.values():
+            for obj, vtxList in obj_vtxList.items():
+                if not pm.objExists(obj):
+                    continue
+                for vtx in vtxList:
+                    vertices.append(f"{obj}{vtx}")
+        pm.select(vertices)
+
 
     def createButtons(self, data: dict) -> list:
         if self.sortCount % 2 == 1:
@@ -184,10 +251,7 @@ class VertexSelector(QWidget):
                 vertices.append(f"{obj}{vtx}")
         boolAdd = self.rdBtnAdd.isChecked()
         boolToggle = self.rdBtnToggle.isChecked()
-        boolSingle = self.rdBtnSingle.isChecked()
-        if boolSingle:
-            pm.select(cl=True)
-            boolToggle = True
+        # boolSingle = self.rdBtnSingle.isChecked()
         pm.select(vertices, af=boolAdd, tgl=boolToggle,)
         
 
