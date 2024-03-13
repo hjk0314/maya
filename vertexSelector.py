@@ -184,6 +184,7 @@ class VertexSelector(QWidget):
         jsonPath = self.getJsonFilePath()
         button = self.sender()
         buttonsName = button.text()
+        self.lineEdit.setText(buttonsName)
         self.lineEdit_2.setText(buttonsName)
         data = self.loadJsonFile(jsonPath)
         objectVertex = data[buttonsName]
