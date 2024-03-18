@@ -1291,7 +1291,7 @@ class QuickRig_Mixamo:
 # qm.createIKFKSpinesJoints("IK", "FK")
 # qm.createIKFKArmsJoints("IK", "FK")
 # qm.createIKFKLegsJoints("IK", "FK")
-# qm.createRigGroup("stnManA")
+# qm.createRigGroup("stnWomanB")
 # qm.createIKArmsControllers()
 
 
@@ -1306,7 +1306,7 @@ class QuickRig_Mixamo:
 
 # jnt = Joints()
 # jnt.createPolevectorJoint()
-
+# jnt.setJointsStyleNone()
 
 # ren = Rename()
 # ren.changeWords("_Left", "_Right")
