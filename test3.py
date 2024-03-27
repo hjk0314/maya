@@ -121,52 +121,91 @@ class AccuRig:
             'CC_Base_R_IndexToe1', 
             'CC_Base_R_MidToe1', 
             'CC_Base_R_RingToe1', 
-            'CC_Base_FacialBone', 
-            'CC_Base_JawRoot', 
-            'CC_Base_Tongue01', 
-            'CC_Base_Tongue02', 
             'CC_Base_Tongue03', 
+            'CC_Base_Tongue02', 
+            'CC_Base_Tongue01', 
             'CC_Base_Teeth02', 
-            'CC_Base_R_Eye', 
+            'CC_Base_JawRoot', 
             'CC_Base_L_Eye', 
-            'CC_Base_UpperJaw', 
+            'CC_Base_R_Eye', 
             'CC_Base_Teeth01', 
+            'CC_Base_UpperJaw', 
+            'CC_Base_FacialBone', 
             'CC_Base_L_ElbowShareBone', 
             'CC_Base_R_ElbowShareBone', 
-            'CC_Base_R_RibsTwist', 
-            'CC_Base_R_Breast', 
-            'CC_Base_L_RibsTwist', 
             'CC_Base_L_Breast', 
+            'CC_Base_L_RibsTwist', 
+            'CC_Base_R_Breast', 
+            'CC_Base_R_RibsTwist', 
             ]
         self.bindJnt = [i for i in self.allJnt if not i in self.delJnt]
+        self.unitTimeIndex = {
+            'game': 15, 
+            'film': 24, 
+            'pal': 25, 
+            'ntsc': 30, 
+            'show': 48, 
+            'palf': 50, 
+            'ntscf': 60, 
+            }
+        self.unitLengthIndex = {
+            'mm': 0.1, 
+            'cm': 1, 
+            'm': 100, 
+            'km': 100000, 
+            'in': 2.54, 
+            'ft': 30.48, 
+            'yd': 91.44, 
+            'mi': 160934, 
+            }
 
 
     def cleanUp(self):
+        # null check
         sel = pm.ls(sl=True)
+        if not sel:
+            return
+        # main flows
         self.cutJntKeyframe()
-        self.unbindSkin(*sel)
-        self.deleteUselessJnt()
+        unBindedJoints = self.unbindSkin(*sel)
         self.deleteBlendShape(*sel)
+        self.deleteUselessJnt(*unBindedJoints)
+        self.resetRotation()
+        self.unitChange()
+        # delete "RL_BoneRoot" joint
+        pm.parent(self.allJnt[1], w=True)
+        pm.delete(self.allJnt[0])
 
 
     def cutJntKeyframe(self):
-        pm.cutKey(self.allJnt, cl=True)
+        for i in self.allJnt:
+            try:
+                pm.cutKey(i, cl=True)
+            except:
+                continue
 
 
     def unbindSkin(self, *arg):
         """ *arg must be mesh type. """
+        result = []
         for geo in arg:
             skinClt = pm.listHistory(geo, type="skinCluster")
             skinClt = skinClt[0]
             try:
                 for jnt in self.delJnt:
                     pm.skinCluster(skinClt, e=True, ri=jnt)
+                    result.append(jnt)
             except:
                 continue
+        return result
 
 
-    def deleteUselessJnt(self):
-        pm.delete(self.delJnt)
+    def deleteUselessJnt(self, *arg):
+        for i in arg:
+            try:
+                pm.delete(i)
+            except:
+                continue
 
 
     def deleteBlendShape(self, *arg):
@@ -195,16 +234,23 @@ class AccuRig:
                 pm.setAttr(f"{jnt}.rotate{i}", 0)
                 
 
-    def groupings(self):
-        sel = pm.ls(sl=True)
-        rigGrp = RigGroups()
-        rigGrp.createRigGroups("sachaenamA")
-        pm.parent(self.bindJnt[1], "bindBones")
-        for i in sel:
-            pm.parent(i, "geoForBind")
-        
-        
+    def unitChange(self):
+        """ accuRig exports to fbx at 60fps. Fix to 
+        - 60fps -> 24fps
+        - cm -> cm
+        - startFrame, endFrame -> 0, 120
+         """
+        unitTime = pm.currentUnit(q=True, t=True)
+        unitLength = pm.currentUnit(q=True, l=True)
+        if unitTime != "film":
+            pm.currentUnit(t="film")
+        if unitLength != "cm":
+            pm.currentUnit(l="cm")
+        pm.playbackOptions(min=0, max=120)
 
 
-acc = AccuRig()
-acc.groupings()
+# acc = AccuRig()
+# acc.cleanUp()
+rigGrp = RigGroups()
+rigGrp.createRigGroups("sachaenamA")
+
