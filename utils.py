@@ -1,8 +1,8 @@
-import math
 import maya.OpenMayaUI as omui
 import pymel.core as pm
 from PySide2.QtWidgets import *
 from PySide2.QtCore import Qt
+from PySide2.QtGui import QIntValidator
 from shiboken2 import wrapInstance
 
 
@@ -13,9 +13,26 @@ def mayaMainWindow():
 
 class Speed(QWidget):
     def __init__(self):
+        self.unitTimeIndex = {
+            'game': 15, 
+            'film': 24, 
+            'pal': 25, 
+            'ntsc': 30, 
+            'show': 48, 
+            'palf': 50, 
+            'ntscf': 60
+            }
+        self.unitLengthIndex = {
+            'mm': 0.1, 
+            'cm': 1, 
+            'm': 100, 
+            'km': 100000, 
+            'in': 2.54, 
+            'ft': 30.48, 
+            'yd': 91.44, 
+            'mi': 160934
+            }
         super(Speed, self).__init__()
-        self.Min = pm.playbackOptions(q=True, min=True)    # min -> time slider Min value
-        self.Max = pm.playbackOptions(q=True, max=True)    # max -> time slider Max value
         self.setParent(mayaMainWindow())
         self.setWindowFlags(Qt.Window)
         self.setupUi()
@@ -24,131 +41,140 @@ class Speed(QWidget):
     def setupUi(self):
         self.setWindowTitle("Speed Measurement")
         self.move(0, 0)
-        self.resize(267, 151)
+        self.resize(250, 150)
+        # Layout
         self.verticalLayout = QVBoxLayout(self)
         self.formLayout = QFormLayout()
         self.label = QLabel("Duration")
         self.formLayout.setWidget(0, QFormLayout.LabelRole, self.label)
+        # Duration
         self.horizontalLayout = QHBoxLayout()
         self.lineEdit = QLineEdit()
+        self.lineEdit.setValidator(QIntValidator())
         self.horizontalLayout.addWidget(self.lineEdit)
         self.lineEdit_2 = QLineEdit()
+        self.lineEdit_2.setValidator(QIntValidator())
         self.horizontalLayout.addWidget(self.lineEdit_2)
-        self.pushButton = QPushButton("Load")
-        self.horizontalLayout.addWidget(self.pushButton)
         self.formLayout.setLayout(0, QFormLayout.FieldRole, self.horizontalLayout)
-        self.label_2 = QLabel("Create Curve")
+        # Curved path
+        self.label_2 = QLabel("Curved Path")
         self.formLayout.setWidget(1, QFormLayout.LabelRole, self.label_2)
         self.checkBox = QCheckBox()
         self.formLayout.setWidget(1, QFormLayout.FieldRole, self.checkBox)
+        # Speed1
         self.label_3 = QLabel("Speed1")
         self.formLayout.setWidget(2, QFormLayout.LabelRole, self.label_3)
-        self.lineEdit_3 = QLineEdit()
-        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.lineEdit_3)
+        self.speed1 = QLineEdit()
+        self.speed1.setReadOnly(True)
+        self.speed1.setStyleSheet("background-color: rgb(60, 60, 60);")
+        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.speed1)
+        # Speed2
         self.label_4 = QLabel("Speed2")
         self.formLayout.setWidget(3, QFormLayout.LabelRole, self.label_4)
-        self.lineEdit_4 = QLineEdit()
-        self.formLayout.setWidget(3, QFormLayout.FieldRole, self.lineEdit_4)
+        self.speed2 = QLineEdit()
+        self.speed2.setReadOnly(True)
+        self.speed2.setStyleSheet("background-color: rgb(60, 60, 60);")
+        self.formLayout.setWidget(3, QFormLayout.FieldRole, self.speed2)
         self.verticalLayout.addLayout(self.formLayout)
-        self.pushButton_2 = QPushButton("Speed")
-        self.verticalLayout.addWidget(self.pushButton_2)
+        # Buttons
+        self.btnSpeed = QPushButton("Speed")
+        self.verticalLayout.addWidget(self.btnSpeed)
+        self.btnClose = QPushButton("Close")
+        self.verticalLayout.addWidget(self.btnClose)
+        # Spacer
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.verticalLayout.addItem(self.verticalSpacer)
+        # functions
+        self.fillDuration()
+        self.buttonsLink()
 
 
-    # Functions for the Animation team.
-    def speedAni(self):
-        sel = pm.ls(sl=True, fl=True)
-        if len(sel) == 0:
-            pm.warning('Select at least One object.')
+    def fillDuration(self):
+        minTime = pm.playbackOptions(q=True, min=True)
+        maxTime = pm.playbackOptions(q=True, max=True)
+        minTime = int(minTime)
+        maxTime = int(maxTime)
+        self.lineEdit.setText(f"{minTime}")
+        self.lineEdit_2.setText(f"{maxTime}")
+
+
+    def buttonsLink(self):
+        self.btnSpeed.clicked.connect(self.getSpeed)
+        self.btnClose.clicked.connect(self.close)
+
+
+    def getSpeed(self):
+        # selection
+        sel = pm.ls(sl=True)
+        if not sel:
+            pm.warning('Nothing Selected.')
+            return
+        # time
+        startFrame = self.lineEdit.text()
+        startFrame = int(startFrame)
+        endFrame = self.lineEdit_2.text()
+        endFrame = int(endFrame)
+        duration = endFrame - startFrame + 1
+        # distance
+        curveCheckBox = self.checkBox.isChecked()
+        if curveCheckBox:
+            distance = self.getCurveLength(sel[0], startFrame, endFrame)
         else:
-            obj = pm.ls(sl=True, fl=True)[-1]
-            # Duration.
-            startFrame = pm.intFieldGrp(self.duration, q=True, v1=True)
-            endFrame = pm.intFieldGrp(self.duration, q=True, v2=True)
-            duration = endFrame - startFrame + 1
-            # Start and End Position.
-            pm.currentTime(startFrame)
-            sPoint = pm.xform(obj, q=True, ws=True, rp=True)
-            pm.currentTime(endFrame)
-            ePoint = pm.xform(obj, q=True, ws=True, rp=True)
-            # Straight or Curved distance.
-            chkBox = pm.checkBoxGrp(self.curvedChk, q=True, v1=True)
-            if not chkBox:    # True is Curved Trail
-                distance = self.calLinearDistance(sPoint, ePoint)
-            else:
-                distance = self.calCurvedDistance(obj, startFrame, endFrame)
-            # Result
-            result = self.calUnitVelocity(distance, duration)
-            # Send the result to textField.
-            self.speed1.setText('%0.3f km/h' % result[0])
-            self.speed2.setText('%0.3f m/s' % result[1])
+            distance = self.getDistance(sel[0], startFrame, endFrame)
+        # Result
+        print(distance)
+        print(duration)
+        speed = self.getVelocity(distance, duration)
+        kmPerHour, meterPerSec = speed
+        self.speed1.setText('%0.3f km/h' % kmPerHour)
+        self.speed2.setText('%0.3f m/s' % meterPerSec)
     
+
+    def getDistance(self, geo: str, startFrame: int, endFrame: int) -> float:
+        # positions
+        pm.currentTime(startFrame)
+        startPos = pm.xform(geo, q=True, ws=True, rp=True)
+        pm.currentTime(endFrame)
+        endPos = pm.xform(geo, q=True, ws=True, rp=True)
+        # result
+        startVector = pm.datatypes.Vector(startPos)
+        endVector = pm.datatypes.Vector(endPos)
+        distance = startVector.distanceTo(endVector)
+        return distance
+
     
-    # Calculate Velocity. Maya units
-    def calUnitVelocity(self, distance, duration):
-        # Units in this scene.
-        currUnitLen = pm.currentUnit(q=True, l=True)    # l -> lengthUnit
-        currUnitTim = pm.currentUnit(q=True, t=True)    # t -> timeUnit
-        # Units determined by Maya.
-        unitTimDic = {'game': 15, 'film': 24, 'pal': 25, 'ntsc': 30, 'show': 48, 'palf': 50, 'ntscf': 60}
-        unitLenDic = {'mm': 0.1, 'cm': 1, 'm': 100, 'km': 100000, 'in': 2.54, 'ft': 30.48, 'yd': 91.44, 'mi': 160934}
+    def getCurveLength(self, geo: str, startFrame: int, endFrame: int) -> str:
+        # positions every frame
+        positions = []
+        for i in range(startFrame, endFrame + 1):
+            pm.currentTime(i)
+            try:
+                positions.append(pm.pointPosition(geo))
+            except:
+                positions.append(pm.xform(geo, q=True, ws=True, rp=True))
+        cuv = pm.curve(p=positions)
+        # result
+        cuvLength = pm.arclen(cuv)
+        return cuvLength
+
+    
+    def getVelocity(self, distance, duration):
         # Convert Units to Centimeters.
-        cm = distance * unitLenDic[currUnitLen]
-        # Custom Time Units.(fps - > second)
-        if 'fps' in currUnitTim:
-            sec = duration / float(currUnitTim.split('fps')[0])
+        currUnitTime = pm.currentUnit(q=True, t=True)
+        currUnitLength = pm.currentUnit(q=True, l=True)
+        convertCentimeter = distance * self.unitLengthIndex[currUnitLength]
+        # fps -> second
+        if 'fps' in currUnitTime:
+            sec = duration / float(currUnitTime.split('fps')[0])
         else:
-            sec = duration / unitTimDic[currUnitTim]
-        # result -> km/h, m/s
-        vel_H = round((cm / unitLenDic['km']) / (sec / 60 / 60), 3)
-        vel_S = round((cm / unitLenDic['m']) / sec, 3)
-        return vel_H, vel_S
-        
+            sec = duration / self.unitTimeIndex[currUnitTime]
+        # result
+        kmPerHour = (convertCentimeter/self.unitLengthIndex['km'])/(sec/60/60)
+        kmPerHour = round(kmPerHour, 3)
+        meterPerSec = (convertCentimeter/self.unitLengthIndex['m'])/sec
+        meterPerSec = round(meterPerSec, 3)
+        return kmPerHour, meterPerSec
     
-    # Linear Distance between Start point and End point.
-    # input List or Tuple.
-    def calLinearDistance(self, startPoint, endPoint):
-        lenSP = len(startPoint) if isinstance(startPoint, list) or isinstance(startPoint, tuple) else True
-        lenEP = len(endPoint) if isinstance(endPoint, list) or isinstance(endPoint, tuple) else False
-        if lenSP == lenEP:
-            if lenSP == 3:
-                distance = math.sqrt(
-                math.pow(endPoint[0] - startPoint[0], 2) + 
-                math.pow(endPoint[1] - startPoint[1], 2) + 
-                math.pow(endPoint[2] - startPoint[2], 2)
-                )            
-            elif lenSP == 2:
-                distance = math.sqrt(
-                math.pow(endPoint[0] - startPoint[0], 2) + 
-                math.pow(endPoint[1] - startPoint[1], 2)
-                )
-            elif lenSP == 1:
-                distance = abs(endPoint[0] - startPoint[0])
-            else:
-                distance = False
-            return distance
-        else:
-            return False
-
-
-    # Create Curves or measure lengths.
-    def calCurvedDistance(self, obj, startFrame, endFrame):
-        objType = pm.ls(obj, dag=True, type=['nurbsCurve'])
-        if objType:
-            curveName = objType[-1].getParent().name()
-        else:
-            pList = []
-            for i in range(startFrame, endFrame + 1):
-                pm.currentTime(i)
-                try:
-                    pList.append(pm.pointPosition(obj))
-                except:
-                    pList.append(pm.xform(obj, q=True, ws=True, rp=True))
-            curveName = pm.curve(p=pList)
-        curveNameLength = pm.arclen(curveName)
-        return curveNameLength
-
 
 if __name__ == "__main__":
     try:
