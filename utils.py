@@ -687,6 +687,68 @@ class SpeedMeasurement(QWidget):
         return kmPerHour, meterPerSec
 
 
+class MoveToCameraKeysAndSequence(QWidget):
+    def __init__(self):
+        super(MoveToCameraKeysAndSequence, self).__init__()
+        self.setParent(mayaMainWindow())
+        self.setWindowFlags(Qt.Window)
+        self.setupUi()
+
+
+    def setupUi(self):
+        self.setWindowTitle("Offset Camera's Keys And ImageSequences")
+        self.move(0, 0)
+        self.resize(210, 75)
+        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.lblKeyframe = QLabel("Keyframes")
+        self.lblKeyframe.setObjectName(u"lblKeyframe")
+        self.horizontalLayout.addWidget(self.lblKeyframe)
+        self.txtKeyStep = QLineEdit()
+        self.txtKeyStep.setObjectName(u"txtKeyStep")
+        self.txtKeyStep.setValidator(QIntValidator())
+        self.txtKeyStep.setText("0")
+        self.horizontalLayout.addWidget(self.txtKeyStep)
+        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.btnOffset = QPushButton("Move Keyframes and imgPlane")
+        self.btnOffset.setObjectName(u"btnOffset")
+        self.verticalLayout.addWidget(self.btnOffset)
+        self.verticalSpacer = QSpacerItem(20, 1, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalLayout.addItem(self.verticalSpacer)
+        self.buttonsLink()
+
+
+    def buttonsLink(self):
+        self.btnOffset.clicked.connect(self.moveToKeyframe)
+
+
+    def moveToKeyframe(self):
+        keyStep = self.txtKeyStep.text()
+        try:
+            keyStep = int(keyStep)
+        except:
+            pm.warning("Nothing inputs")
+            return
+        sel = pm.ls(sl=True, dag=True, type=['camera'])
+        cam = pm.listRelatives(sel, p=True)
+        try:
+            currentKey = min(pm.keyframe(cam, q=True))
+            value = keyStep - currentKey
+        except:
+            value = 0
+            pm.warning("Camera must have at least one keyframes.")
+        img = pm.listRelatives(sel, c=True)
+        imgShape = pm.listRelatives(img, c=True)
+        if img:
+            pm.keyframe(cam, e=True, r=True, tc=value)
+            frameOffset = pm.getAttr(imgShape[0] + ".frameOffset")
+            pm.setAttr(imgShape[0] + ".frameOffset", frameOffset - value)
+        else:
+            pm.warning("Please Select a camera.")
+
+
 # if __name__ == "__main__":
 #     try:
 #         vtxSel.close()
@@ -706,3 +768,12 @@ class SpeedMeasurement(QWidget):
 #     spd = SpeedMeasurement()
 #     spd.show()
 
+
+# if __name__ == "__main__":
+#     try:
+#         offsetCam.close()
+#         offsetCam.deleteLater()
+#     except:
+#         pass
+#     offsetCam = MoveToCameraKeysAndSequence()
+#     offsetCam.show()
