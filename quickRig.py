@@ -482,6 +482,7 @@ class AccuRig:
         # null check
         sel = pm.ls(sl=True)
         if not sel:
+            pm.warning("Please, select bodies.")
             return
         # main flows
         self.cutJntKeyframe()
@@ -567,8 +568,122 @@ class AccuRig:
         pm.playbackOptions(min=0, max=120)
 
 
-# acc = AccuRig()
-# acc.cleanUp()
-rigGrp = RigGroups()
-rigGrp.createRigGroups("sachaenamA")
+    def duplicateHip(self):
+        if not pm.objExists("rig_Hip"):
+            pm.duplicate("CC_Base_Hip", rr=True, n="rig_Hip")
+        pm.parent("rig_Hip", "rigBones")
+        pm.select("rig_Hip", hi=True)
+        for i in pm.ls(sl=True):
+            new = i.replace("CC_Base_", "rig_")
+            pm.rename(i, new)
+
+
+    def duplicateArms(self):
+        for side in ["L", "R"]:
+            for handle in ["IK", "FK"]:
+                org = f"rig_{side}_Upperarm"
+                new = f"rig_{side}_Upperarm_{handle}"
+                if pm.objExists(new):
+                    continue
+                pm.duplicate(org, rr=True, n=new)
+                pm.select(new, hi=True)
+                for i in pm.ls(sl=True)[1:]:
+                    if handle == i.split("_")[-1]:
+                        continue
+                    else:
+                        pm.rename(i, f"{i}_{handle}")
+                deleteIKJnt = [
+                    f"rig_{side}_ForearmTwist01_{handle}", 
+                    f"rig_{side}_Mid1_{handle}", 
+                    f"rig_{side}_Index1_{handle}", 
+                    f"rig_{side}_Ring1_{handle}", 
+                    f"rig_{side}_Pinky1_{handle}", 
+                    f"rig_{side}_Thumb1_{handle}", 
+                    f"rig_{side}_UpperarmTwist01_{handle}"
+                    ]
+                try:
+                    pm.delete(deleteIKJnt)
+                except:
+                    pass
+
+
+    def duplicateLegs(self):
+        for side in ["L", "R"]:
+            for handle in ["IK", "FK"]:
+                org = f"rig_{side}_Thigh"
+                new = f"rig_{side}_Thigh_{handle}"
+                if pm.objExists(new):
+                    continue
+                pm.duplicate(org, rr=True, n=new)
+                pm.select(new, hi=True)
+                for i in pm.ls(sl=True)[1:]:
+                    if handle == i.split("_")[-1]:
+                        continue
+                    else:
+                        pm.rename(i, f"{i}_{handle}")
+                deleteIKJnt = [
+                    f"rig_{side}_ThighTwist01_{handle}", 
+                    f"rig_{side}_CalfTwist01_{handle}", 
+                    ]
+                try:
+                    pm.delete(deleteIKJnt)
+                except:
+                    pass
+
+
+
+acc = AccuRig()
+acc.cleanUp()
+# rigGrp = RigGroups()
+# rigGrp.createRigGroups("sachaenamA")
+# acc.duplicateHip()
+# acc.duplicateArms()
+# acc.duplicateLegs()
+
+
+def rigArms():
+    ctrl = Controllers()
+    ctrlLeftIK = {
+        "circle":"cc_LeftArm_IK", 
+        "sphere": "cc_LeftForeArmPoleVector", 
+        "cube": "cc_LeftHand_IK"
+        }
+    ccNames = ctrl.createControllers(**ctrlLeftIK)
+    if not ccNames:
+        return
+    ccCircle, ccSphere, ccCube = ccNames
+    jntIK = [
+        "rig_L_Upperarm_IK", 
+        "rig_L_Forearm_IK", 
+        "rig_L_Hand_IK"
+        ]
+    firstJnt, middleJnt, endJnt = jntIK
+    # Rig - firstJoint
+    ikH = pm.ikHandle(sj=firstJnt, ee=endJnt, sol="ikRPsolver")[0]
+    pm.rotate(ccCircle, [0, 0, 90])
+    pm.makeIdentity(ccCircle, a=True, t=0, r=1, s=0, jo=0, n=0, pn=1)
+    pm.matchTransform(ccCircle, firstJnt, pos=True)
+    pm.pointConstraint(ccCircle, firstJnt, mo=True)
+    # Rig - middleJoint
+    polevectorJoints = createPolevectorJoint([firstJnt, middleJnt, endJnt])
+    startJointOfPolevector, endJointOfPolevector = polevectorJoints
+    pm.matchTransform(ccSphere, endJointOfPolevector, pos=True)
+    pm.delete(startJointOfPolevector)
+    pm.poleVectorConstraint(ccSphere, ikH, w=1)
+    # Rig - endJoint
+    pm.matchTransform(ccCube, endJnt, pos=True)
+    pm.orientConstraint(endJnt, ccCube, o=(-90, 0, 90), w=1)
+    pm.delete(ccCube, cn=True)
+    pm.orientConstraint(ccCube, endJnt, mo=True, w=1)
+    # Rig - cleanUp
+    ccNamesGroup = groupingWithOwnPivot(*ccNames)
+    armGroupName = ccCircle.rsplit("_", 1)[0]
+    pm.group(em=True, n=armGroupName)
+    for i in ccNamesGroup:
+        pm.parent(i, armGroupName)
+    pm.setAttr(f"{ikH}.visibility", 0)
+    pm.parent(ikH, ccCube)
+
+
+    jntFK = ["rig_L_Upperarm_FK", "rig_L_Forearm_FK", "rig_L_Hand_FK"]
 
