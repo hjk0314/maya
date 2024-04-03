@@ -632,8 +632,8 @@ class AccuRig:
 
 
 
-acc = AccuRig()
-acc.cleanUp()
+# acc = AccuRig()
+# acc.cleanUp()
 # rigGrp = RigGroups()
 # rigGrp.createRigGroups("sachaenamA")
 # acc.duplicateHip()
@@ -685,5 +685,19 @@ def rigArms():
     pm.parent(ikH, ccCube)
 
 
-    jntFK = ["rig_L_Upperarm_FK", "rig_L_Forearm_FK", "rig_L_Hand_FK"]
+jntFK = [
+    "rig_L_Upperarm_FK", 
+    "rig_L_Forearm_FK", 
+    "rig_L_Hand_FK"
+    ]
+ctrlLeftFK = {
+    "cc_LeftArm_FK": 11, 
+    "cc_LeftForeArm_FK": 9, 
+    "cc_LeftHand_FK": 7, 
+}
+for ccName, size in ctrlLeftFK.items():
+    pm.circle(ch=False, r=size, nr=(1, 0, 0), n=ccName)
+
+
+    
 

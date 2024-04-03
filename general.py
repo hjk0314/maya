@@ -230,6 +230,47 @@ def selectJointOnly() -> list:
     return result
 
 
+def selectIKHandleOnly() -> list:
+    transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
+    result = []
+    for i in transformNodes:
+        iType = pm.objectType(i)
+        if iType == 'ikHandle':
+            result.append(i)
+        else:
+            continue
+    pm.select(result)
+    return result
+
+
+def selectClusterOnly() -> list:
+    transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
+    result = []
+    for i in transformNodes:
+        iShape = pm.listRelatives(i, s=True)
+        iNodeType = pm.nodeType(iShape)
+        if iNodeType == 'clusterHandle':
+            result.append(i)
+        else:
+            continue
+    pm.select(result)
+    return result
+
+
+def selectLocatorOnly() -> list:
+    transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
+    result = []
+    for i in transformNodes:
+        iShape = pm.listRelatives(i, s=True)
+        iNodeType = pm.nodeType(iShape)
+        if iNodeType == 'locator':
+            result.append(i)
+        else:
+            continue
+    pm.select(result)
+    return result
+
+
 def groupingWithOwnPivot(*arg) -> list:
     selections = arg if arg else pm.ls(sl=True)
     result = []
