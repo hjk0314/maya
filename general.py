@@ -271,12 +271,20 @@ def selectLocatorOnly() -> list:
     return result
 
 
+def selectNurbsCurveOnly() -> list:
+    transformNodes = pm.ls(sl=True, dag=True, type=['nurbsCurve'])
+    result = [i.getParent() for i in transformNodes]
+    pm.select(result)
+    return result
+
+
 def groupingWithOwnPivot(*arg) -> list:
     selections = arg if arg else pm.ls(sl=True)
     result = []
     for i in selections:
         groupName = f"{i}_grp"
         if pm.objExists(groupName) or not pm.objExists(i):
+            result.append(groupName)
             continue
         else:
             emptyGroup = pm.group(em=True, n=groupName)
@@ -369,6 +377,37 @@ def softSelection():
     for i in range(len(elements)):
         pm.percent(cluster[0], sel[i], v=elements[i][2])
     pm.select(cluster[1], r=True)
+
+
+def replaceLeftRight(objName: str) -> str:
+    """ Confinedly, used.
+    >>> replaceLeftRight('Left')
+    >>> 'Right'
+    >>> replaceLeftRight('Right')
+    >>> 'Left'
+    >>> replaceLeftRight('L_')
+    >>> 'R_'
+    >>> replaceLeftRight('R_')
+    >>> 'L_'
+     """
+    if not objName or not isinstance(objName, str):
+        return
+    elif "Left" in objName:
+        sideA = "Left"
+        sideB = "Right"
+    elif "L_" in objName:
+        sideA = "L_"
+        sideB = "R_"
+    elif "Right" in objName:
+        sideA = "Right"
+        sideB = "Left"
+    elif "R_" in objName:
+        sideA = "R_"
+        sideB = "L_"
+    else:
+        return
+    result = objName.replace(sideA, sideB)
+    return result
 
 
 class RigGroups:
