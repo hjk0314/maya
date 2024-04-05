@@ -283,18 +283,14 @@ def groupingWithOwnPivot(*arg) -> list:
     result = []
     for i in selections:
         groupName = f"{i}_grp"
-        if pm.objExists(groupName) or not pm.objExists(i):
-            result.append(groupName)
-            continue
-        else:
-            emptyGroup = pm.group(em=True, n=groupName)
-            pm.matchTransform(emptyGroup, i, pos=True, rot=True)
-            try:
-                pm.parent(emptyGroup, pm.listRelatives(i, p=True))
-            except:
-                pass
-            pm.parent(i, emptyGroup)
-            result.append(groupName)
+        emptyGroup = pm.group(em=True, n=groupName)
+        pm.matchTransform(emptyGroup, i, pos=True, rot=True)
+        try:
+            pm.parent(emptyGroup, pm.listRelatives(i, p=True))
+        except:
+            pass
+        pm.parent(i, emptyGroup)
+        result.append(emptyGroup)
     return result
 
 
@@ -793,11 +789,8 @@ class Controllers:
                 cuvName = kwargs[shpName]
             except:
                 cuvName = shpName
-            if pm.objExists(cuvName):
-                continue
-            else:
-                cuv = pm.curve(p=pos, d=1, n=cuvName)
-                result.append(cuv)
+            cuv = pm.curve(p=pos, d=1, n=cuvName)
+            result.append(cuv)
         return result
 
 

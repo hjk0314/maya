@@ -1,3 +1,4 @@
+from collections import Counter
 import pymel.core as pm
 import general as hjk
 
@@ -343,18 +344,22 @@ class RigArms:
 
 
     def rigArmsIK(self, *jnts):
-        ikJoints = jnts if jnts else pm.ls(sl=True)
+        # check joint's numbers
+        ikJoints = [pm.PyNode(i) for i in jnts] if jnts else pm.ls(sl=True)
         if len(ikJoints) < 3:
             pm.warning("Please, Select three joints.")
             return
+        # check Left or Right
         jntsSide = [self.getLeftOrRight(i.name()) for i in ikJoints]
-        if all(jntsSide):
-            side = jntsSide[0]
+        count = Counter(jntsSide).most_common(1)[0]
+        num = count[1]
+        if num == 3:
+            side = count[0]
+            print(side)
         else:
-            print(jntsSide)
-            pm.warning("The arm joints must have a left or right side.")
+            pm.warning("All joints must have a left or right side.")
             return
-        firstJnt, middleJnt, endJnt = ikJoints
+        # create controllers
         ctrlsName = [
             f"cc_{side}Arm_IK", 
             f"cc_{side}ForeArmPoleVector", 
@@ -365,18 +370,15 @@ class RigArms:
             "sphere", 
             "cube"
             ]
-        ctrlsList = {t: n for t, n in zip(ctrlsType, ctrlsName)}
+        ctrlsDict = {t: n for t, n in zip(ctrlsType, ctrlsName)}
+        for i in ctrlsName:
+            if pm.objExists(i):
+                pm.delete(i)
+            else:
+                continue
         ctrl = hjk.Controllers()
-        ccNames = ctrl.createControllers(**ctrlsList)
-        if not ccNames:
-            pm.delete(ctrlsName)
-            ccNames = ctrl.createControllers(**ctrlsList)
-        else:
-            pass
-        # if not ccNames:
-            # pm.warning("Controllers aleady exist.")
-            # return
-            # pm.delete(ccNames)
+        ccNames = ctrl.createControllers(**ctrlsDict)
+        firstJnt, endJnt = ikJoints[::2]
         ccCircle, ccSphere, ccCube = ccNames
         # Rig - firstJoint
         ikH = pm.ikHandle(sj=firstJnt, ee=endJnt, sol="ikRPsolver")[0]
@@ -384,30 +386,51 @@ class RigArms:
         pm.makeIdentity(ccCircle, a=True, t=0, r=1, s=0, jo=0, n=0, pn=1)
         pm.matchTransform(ccCircle, firstJnt, pos=True)
         pm.pointConstraint(ccCircle, firstJnt, mo=True)
+        if pm.objExists(f"{ccCircle}_grp"):
+            pm.delete(f"{ccCircle}_grp")
+        ccCircleGrp = hjk.groupingWithOwnPivot(ccCircle)[0]
         # Rig - middleJoint
         polevectorJoints = hjk.createPolevectorJoint(ikJoints)
         startJointOfPolevector, endJointOfPolevector = polevectorJoints
         pm.matchTransform(ccSphere, endJointOfPolevector, pos=True)
         pm.delete(startJointOfPolevector)
         pm.poleVectorConstraint(ccSphere, ikH, w=1)
+        if pm.objExists(f"{ccSphere}_grp"):
+            pm.delete(f"{ccSphere}_grp")
+        ccSphereGrp = hjk.groupingWithOwnPivot(ccSphere)[0]
         # Rig - endJoint
         pm.matchTransform(ccCube, endJnt, pos=True)
-        # pm.orientConstraint(endJnt, ccCube, o=(-90, 0, 90), w=1)
-        # pm.delete(ccCube, cn=True)
+        if pm.objExists(f"{ccCube}_grp"):
+            pm.delete(f"{ccCube}_grp")
         ccCubeGrp = hjk.groupingWithOwnPivot(ccCube)[0]
         if side == "Right":
             pm.rotate(ccCubeGrp, [180, 0, 0], r=True, os=True, fo=True)
         pm.orientConstraint(ccCube, endJnt, mo=True, w=1)
-        # Rig - cleanUp
-        ccNamesGroup = hjk.groupingWithOwnPivot(*ccNames)
-        armGroupName = ccCircle.rsplit("_", 1)[0]
-        if not pm.objExists(armGroupName):
-            pm.group(em=True, n=armGroupName)
-        for i in ccNamesGroup:
-            pm.parent(i, armGroupName)
+        # Rig - grouping
+        topGroupName = ccCircle.rsplit("_", 1)[0]
+        if pm.objExists(topGroupName):
+            pm.delete(topGroupName)
+        pm.group(em=True, n=topGroupName)
+        for i in [ccCircleGrp, ccSphereGrp, ccCubeGrp]:
+            pm.parent(i, topGroupName)
         pm.setAttr(f"{ikH}.visibility", 0)
         pm.parent(ikH, ccCube)
         pm.select(cl=True)
+
+
+    def cleanUp(self, *arg):
+        delList = []
+        for i in arg:
+            if pm.objExists(i):
+                delList.append(i)
+            if pm.objExists(f"{i}_g"):
+                delList.append(f"{i}_g")
+        for i in delList:
+            try:
+                pm.delete(i)
+            except:
+                continue
+        return delList
 
 
     def rigArmsFK(self, *jnts):
@@ -442,4 +465,4 @@ class RigArms:
 
 
 ra = RigArms()
-ra.rigArmsIK()
+ra.rigArmsIK("rig_R_Upperarm_IK", "rig_R_Forearm_IK", "rig_R_Hand_IK")
