@@ -1,4 +1,4 @@
-from collections import Iterable
+from collections import Iterable, Counter
 import numpy as np
 import sympy
 import pymel.core as pm
@@ -294,14 +294,14 @@ def groupingWithOwnPivot(*arg) -> list:
     return result
 
 
-def createPolevectorJoint(joints=[]) -> list:
+def createPolevectorJoint(*args) -> list:
     """ Select three joints.
     Put the pole vector at 90 degrees to the direction 
     of the first and last joints.
-    >>> return [startJointOfPolevector, endJointOfPolevector]
+    >>> return [polevectorJoint1, polevectorJoint2]
      """
-    jnt = joints if joints else pm.ls(sl=True)
-    if len(jnt) != 3:
+    jnt = args if args else pm.ls(sl=True)
+    if len(args) != 3:
         pm.warning("Three joints needed.")
         return
     jntPosition = [getPosition(i) for i in jnt]
@@ -403,6 +403,31 @@ def replaceLeftRight(objName: str) -> str:
     else:
         return
     result = objName.replace(sideA, sideB)
+    return result
+
+
+def getLeftOrRight(*args):
+    jntSide = []
+    for i in args:
+        jnt = i.name() if isinstance(i, pm.PyNode) else i
+        if "Left" in jnt:
+            jntSide.append("Left")
+        elif "L_" in jnt:
+            jntSide.append("Left")
+        elif "Right" in jnt:
+            jntSide.append("Right")
+        elif "R_" in jnt:
+            jntSide.append("Right")
+        else:
+            jntSide.append("")
+    count = Counter(jntSide).most_common(1)[0]
+    num = count[1]
+    if num == 3:
+        result = count[0]
+        print(result)
+    else:
+        pm.warning("Must have a left or right side.")
+        result = ""
     return result
 
 
