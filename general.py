@@ -422,9 +422,8 @@ def getLeftOrRight(*args):
             jntSide.append("")
     count = Counter(jntSide).most_common(1)[0]
     num = count[1]
-    if num == 3:
+    if num == len(args):
         result = count[0]
-        print(result)
     else:
         pm.warning("Must have a left or right side.")
         result = ""
