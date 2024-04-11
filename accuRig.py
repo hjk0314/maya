@@ -656,7 +656,8 @@ class RigLegs():
 # ra.rigArmsFK(*flJ)
 # ra.rigArmsFK(*frJ)
 
-rl = RigLegs()
-rl.locatorPreset(rl.leftLocators, 1)
+# rl = RigLegs()
+# rl.locatorPreset(rl.leftLocators, 1)
+# rl.locatorPreset(rl.rightLocators, -1)
 # rl.cleanUp()
 # rl.rigLegsIK()
