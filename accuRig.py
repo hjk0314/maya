@@ -476,7 +476,7 @@ class RigArms:
         ctrlGrp = ctrlGrp[0]
         rot = 0 if side=="Left" else 180
         pm.rotate(ctrlGrp, [rot, 0, 0], r=True, os=True, fo=True)
-        pm.orientConstraint(ctrlGrp, joint, mo=True, w=1)
+        pm.orientConstraint(ctrl, joint, mo=True, w=1)
         try:
             pm.parent(ikHandle, ctrl)
             pm.setAttr(f"{ikHandle}.visibility", 0)
@@ -661,3 +661,9 @@ class RigLegs():
 # rl.locatorPreset(rl.rightLocators, -1)
 # rl.cleanUp()
 # rl.rigLegsIK()
+
+
+# ctrl = hjk.Controllers()
+# ctrl.createControllers(foot2="cc_RightFoot_IK")
+# hjk.groupingWithOwnPivot()
+# hjk.createPolevectorJoint()

@@ -301,7 +301,7 @@ def createPolevectorJoint(*args) -> list:
     >>> return [polevectorJoint1, polevectorJoint2]
      """
     jnt = args if args else pm.ls(sl=True)
-    if len(args) != 3:
+    if len(jnt) != 3:
         pm.warning("Three joints needed.")
         return
     jntPosition = [getPosition(i) for i in jnt]
