@@ -1,3 +1,4 @@
+import re
 import pymel.core as pm
 import general as hjk
 
@@ -483,13 +484,14 @@ class RigArms:
         except:
             pass
 
+
     def topGrouping(self, parents: str, children: list=[]):
         if not pm.objExists(parents):
             pm.group(em=True, n=parents)
         pm.parent(children, parents)
 
 
-class RigLegs():
+class RigLegs:
     def __init__(self):
         self.leftTopGroup = "cc_LeftLeg_grp"
         self.rightTopGroup = "cc_RightLeg_grp"
@@ -645,6 +647,143 @@ class RigLegs():
         pass
 
 
+class RigFingers:
+    def __init__(self):
+        self.leftTopGroup = "cc_LeftHandFingers_grp"
+        self.rightTopGroup = "cc_RightHandFingers_grp"
+        self.leftCtrls = [
+            "cc_LeftHandThumb1", 
+            "cc_LeftHandThumb2", 
+            "cc_LeftHandThumb3", 
+            "cc_LeftHandIndex1", 
+            "cc_LeftHandIndex2", 
+            "cc_LeftHandIndex3", 
+            "cc_LeftHandMiddle1", 
+            "cc_LeftHandMiddle2", 
+            "cc_LeftHandMiddle3", 
+            "cc_LeftHandRing1", 
+            "cc_LeftHandRing2", 
+            "cc_LeftHandRing3", 
+            "cc_LeftHandPinky1", 
+            "cc_LeftHandPinky2", 
+            "cc_LeftHandPinky3", 
+            ]
+        self.leftCtrlsGrp = [
+            "cc_LeftHandThumb1_grp", 
+            "cc_LeftHandThumb2_grp", 
+            "cc_LeftHandThumb3_grp", 
+            "cc_LeftHandIndex1_grp", 
+            "cc_LeftHandIndex2_grp", 
+            "cc_LeftHandIndex3_grp", 
+            "cc_LeftHandMiddle1_grp", 
+            "cc_LeftHandMiddle2_grp", 
+            "cc_LeftHandMiddle3_grp", 
+            "cc_LeftHandRing1_grp", 
+            "cc_LeftHandRing2_grp", 
+            "cc_LeftHandRing3_grp", 
+            "cc_LeftHandPinky1_grp", 
+            "cc_LeftHandPinky2_grp", 
+            "cc_LeftHandPinky3_grp", 
+            ]
+        self.rightCtrls = [
+            "cc_RightHandThumb1", 
+            "cc_RightHandThumb2", 
+            "cc_RightHandThumb3", 
+            "cc_RightHandIndex1", 
+            "cc_RightHandIndex2", 
+            "cc_RightHandIndex3", 
+            "cc_RightHandMiddle1", 
+            "cc_RightHandMiddle2", 
+            "cc_RightHandMiddle3", 
+            "cc_RightHandRing1", 
+            "cc_RightHandRing2", 
+            "cc_RightHandRing3", 
+            "cc_RightHandPinky1", 
+            "cc_RightHandPinky2", 
+            "cc_RightHandPinky3", 
+            ]
+        self.rightCtrlsGrp = [
+            "cc_RightHandThumb1_grp", 
+            "cc_RightHandThumb2_grp", 
+            "cc_RightHandThumb3_grp", 
+            "cc_RightHandIndex1_grp", 
+            "cc_RightHandIndex2_grp", 
+            "cc_RightHandIndex3_grp", 
+            "cc_RightHandMiddle1_grp", 
+            "cc_RightHandMiddle2_grp", 
+            "cc_RightHandMiddle3_grp", 
+            "cc_RightHandRing1_grp", 
+            "cc_RightHandRing2_grp", 
+            "cc_RightHandRing3_grp", 
+            "cc_RightHandPinky1_grp", 
+            "cc_RightHandPinky2_grp", 
+            "cc_RightHandPinky3_grp", 
+            ]
+
+
+    def rigFingers(self, *jnts):
+        fingerJnt = [pm.PyNode(i) for i in jnts] if jnts else pm.ls(sl=True)
+        if len(fingerJnt) != 15:
+            pm.warning("15 joints needed.")
+            return
+        side = hjk.getLeftOrRight(*fingerJnt)
+        if side == "Left":
+            topGrp = self.leftTopGroup
+            ctrls = self.leftCtrls
+            size = 1.5
+            rot = 0
+        elif side == "Right":
+            topGrp = self.rightTopGroup
+            ctrls = self.rightCtrls
+            size = 1.5
+            rot = 180
+        else:
+            return
+        if not pm.objExists(topGrp):
+            pm.group(em=True, n=topGrp)
+        fingerGrp = []
+        for ctrl, jnt in zip(ctrls, fingerJnt):
+            # size = self.getCtrlSize(ctrl)
+            cc = pm.circle(ch=False, r=size, nr=(1, 0, 0), n=ctrl)
+            cc = cc[0]
+            pm.matchTransform(cc, jnt, pos=True)
+            pm.orientConstraint(jnt, cc, o=(0, 0, 90), w=1)
+            pm.delete(cc, cn=True)
+            ccGrp = hjk.groupingWithOwnPivot(cc)[0]
+            pm.rotate(ccGrp, [rot, 0, 0], r=True, os=True, fo=True)
+            pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+            fingerGrp.append(ccGrp)
+            fingerGrp.append(cc)
+        for i in range(0, len(fingerGrp), 6):
+            hjk.parentHierarchically(fingerGrp[i:i+6])
+            pm.parent(fingerGrp[i], topGrp)
+
+
+    def getCtrlSize(self, word: str) -> int:
+            numbers = re.findall(r'\d+', word)
+            num = int(numbers[-1])
+            if num == 1:
+                size = 3
+            elif num == 2:
+                size = 2
+            elif num == 3:
+                size = 1
+            else:
+                size = 0
+            return size
+
+
+    def cleanUp(self):
+        leftArms = self.leftCtrls + self.leftCtrlsGrp + [self.leftTopGroup]
+        rightArms = self.rightCtrls + self.rightCtrlsGrp + [self.rightTopGroup]
+        allArms = leftArms + rightArms
+        for i in allArms:
+            try:
+                pm.delete(i)
+            except:
+                continue
+
+
 # ilJ = ['rig_L_Upperarm_IK', 'rig_L_Forearm_IK', 'rig_L_Hand_IK']
 # irJ = ['rig_R_Upperarm_IK', 'rig_R_Forearm_IK', 'rig_R_Hand_IK']
 # flJ = ['rig_L_Upperarm_FK', 'rig_L_Forearm_FK', 'rig_L_Hand_FK']
@@ -667,3 +806,24 @@ class RigLegs():
 # ctrl.createControllers(foot2="cc_RightFoot_IK")
 # hjk.groupingWithOwnPivot()
 # hjk.createPolevectorJoint()
+
+leftFingers = [
+    'rig_L_Thumb1', 'rig_L_Thumb2', 'rig_L_Thumb3', 
+    'rig_L_Index1', 'rig_L_Index2', 'rig_L_Index3', 
+    'rig_L_Mid1', 'rig_L_Mid2', 'rig_L_Mid3', 
+    'rig_L_Ring1', 'rig_L_Ring2', 'rig_L_Ring3', 
+    'rig_L_Pinky1', 'rig_L_Pinky2', 'rig_L_Pinky3'
+    ]
+rightFingers = [
+    'rig_R_Thumb1', 'rig_R_Thumb2', 'rig_R_Thumb3', 
+    'rig_R_Index1', 'rig_R_Index2', 'rig_R_Index3', 
+    'rig_R_Mid1', 'rig_R_Mid2', 'rig_R_Mid3', 
+    'rig_R_Ring1', 'rig_R_Ring2', 'rig_R_Ring3', 
+    'rig_R_Pinky1', 'rig_R_Pinky2', 'rig_R_Pinky3'
+    ]
+
+
+rf = RigFingers()
+rf.cleanUp()
+rf.rigFingers(*leftFingers)
+rf.rigFingers(*rightFingers)
