@@ -495,8 +495,8 @@ class RigLegs:
     def __init__(self):
         self.leftTopGroup = "cc_LeftLeg_grp"
         self.rightTopGroup = "cc_RightLeg_grp"
-        self.leftFoot = "rig_L_Foot_IK"
-        self.rightFoot = "rig_R_Foot_IK"
+        self.leftFootJnt = "rig_L_Foot_IK"
+        self.rightFootJnt = "rig_R_Foot_IK"
         self.leftIKCtrls = [
             "cc_LeftUpLeg_IK", 
             "cc_LeftLegPoleVector", 
@@ -578,7 +578,14 @@ class RigLegs:
                 continue
 
 
-    def locatorPreset(self, locators: dict, mirrorConstant=1):
+    def locatorPreset(self, locators: dict):
+        side = hjk.getLeftOrRight(*locators.keys())
+        if side == "Left":
+            mirrorConstant = 1
+        elif side == "Right":
+            mirrorConstant = -1
+        else:
+            return
         for name, pos in locators.items():
             x, y, z = pos
             pos = [x, y, mirrorConstant*z]
@@ -605,12 +612,13 @@ class RigLegs:
         else:
             return
         _1stJnt, _2ndJnt, _3rdJnt, _4thJnt = ikJoints
+        # self.updateLocatorsPosition()
         ctrl = hjk.Controllers()
         ctrlType = {t: n for t, n in zip(self.ikCtrlsType, self.leftIKCtrls)}
         ccPelvis, ccKnee, ccFoot = ctrl.createControllers(**ctrlType)
         self.createPelvisIK(_1stJnt, ccPelvis, mirrorConstant)
         ikH = self.createKneeIK(ikJoints, ccKnee)
-        self.createFootIK()
+        self.createFootIK(ccFoot, _3rdJnt)
 
 
     def createPelvisIK(self, joint, controller, mirrorConstant=1):
@@ -635,12 +643,18 @@ class RigLegs:
         return ikH
 
 
-    def createFootIK(self):
-        ccFoot = "cc_LeftFoot_IK"
-        pm.matchTransform(ccFoot, "rig_L_Foot", pos=True)
-        pm.setAttr(f"{ccFoot}.translateY", 0)
-        x, y, z = hjk.getPosition(self.leftFoot)
-        pm.move(x,y,z, [f"{ccFoot}.rotatePivot", f"{ccFoot}.scalePivot"], ws=1)
+    def updateLocatorsPosition(self):
+        leftLoc = {i: hjk.getPosition(i) for i in self.leftLocators.keys()}
+        rightLoc = {i: hjk.getPosition(i) for i in self.rightLocators.keys()}
+        self.leftLocators = leftLoc
+        self.rightLocators = rightLoc
+            
+
+    def createFootIK(self, ctrl, jnt):
+        pm.matchTransform(ctrl, jnt, pos=True)
+        pm.setAttr(f"{ctrl}.translateY", 0)
+        x, y, z = hjk.getPosition(jnt)
+        pm.move(x, y, z, [f"{ctrl}.rotatePivot", f"{ctrl}.scalePivot"], ws=1)
 
 
     def rigLegsFK(self):
@@ -796,8 +810,8 @@ class RigFingers:
 # ra.rigArmsFK(*frJ)
 
 # rl = RigLegs()
-# rl.locatorPreset(rl.leftLocators, 1)
-# rl.locatorPreset(rl.rightLocators, -1)
+# rl.locatorPreset(rl.leftLocators)
+# rl.locatorPreset(rl.rightLocators)
 # rl.cleanUp()
 # rl.rigLegsIK()
 
@@ -807,23 +821,37 @@ class RigFingers:
 # hjk.groupingWithOwnPivot()
 # hjk.createPolevectorJoint()
 
-leftFingers = [
-    'rig_L_Thumb1', 'rig_L_Thumb2', 'rig_L_Thumb3', 
-    'rig_L_Index1', 'rig_L_Index2', 'rig_L_Index3', 
-    'rig_L_Mid1', 'rig_L_Mid2', 'rig_L_Mid3', 
-    'rig_L_Ring1', 'rig_L_Ring2', 'rig_L_Ring3', 
-    'rig_L_Pinky1', 'rig_L_Pinky2', 'rig_L_Pinky3'
-    ]
-rightFingers = [
-    'rig_R_Thumb1', 'rig_R_Thumb2', 'rig_R_Thumb3', 
-    'rig_R_Index1', 'rig_R_Index2', 'rig_R_Index3', 
-    'rig_R_Mid1', 'rig_R_Mid2', 'rig_R_Mid3', 
-    'rig_R_Ring1', 'rig_R_Ring2', 'rig_R_Ring3', 
-    'rig_R_Pinky1', 'rig_R_Pinky2', 'rig_R_Pinky3'
-    ]
+# leftFingers = [
+#     'rig_L_Thumb1', 'rig_L_Thumb2', 'rig_L_Thumb3', 
+#     'rig_L_Index1', 'rig_L_Index2', 'rig_L_Index3', 
+#     'rig_L_Mid1', 'rig_L_Mid2', 'rig_L_Mid3', 
+#     'rig_L_Ring1', 'rig_L_Ring2', 'rig_L_Ring3', 
+#     'rig_L_Pinky1', 'rig_L_Pinky2', 'rig_L_Pinky3'
+#     ]
+# rightFingers = [
+#     'rig_R_Thumb1', 'rig_R_Thumb2', 'rig_R_Thumb3', 
+#     'rig_R_Index1', 'rig_R_Index2', 'rig_R_Index3', 
+#     'rig_R_Mid1', 'rig_R_Mid2', 'rig_R_Mid3', 
+#     'rig_R_Ring1', 'rig_R_Ring2', 'rig_R_Ring3', 
+#     'rig_R_Pinky1', 'rig_R_Pinky2', 'rig_R_Pinky3'
+#     ]
 
 
-rf = RigFingers()
-rf.cleanUp()
-rf.rigFingers(*leftFingers)
-rf.rigFingers(*rightFingers)
+# rf = RigFingers()
+# rf.cleanUp()
+# rf.rigFingers(*leftFingers)
+# rf.rigFingers(*rightFingers)
+
+
+# rd = RowData()
+# for i in rd.bindJnt[1:]:
+#     jnt = i.replace("CC_Base_", "rig_")
+#     pm.connectAttr(f"{jnt}.translate", f"{i}.translate", f=True)
+#     pm.connectAttr(f"{jnt}.rotate", f"{i}.rotate", f=True)
+
+
+
+sel = pm.ls(sl=True)
+for i in sel:
+    a = pm.spaceLocator(p=(0,0,0))
+    pm.matchTransform(a, i, pos=True)
