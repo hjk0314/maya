@@ -3,7 +3,7 @@ import pymel.core as pm
 import general as hjk
 
 
-class RowData:
+class RawData:
     def __init__(self):
         self.allJnt = [
             'RL_BoneRoot', 
@@ -798,6 +798,69 @@ class RigFingers:
                 continue
 
 
+class Finish:
+    def __init__(self):
+        spine = [
+            'cc_HipsMain', 'cc_HipsSub', 
+            'cc_Spine_FK', 'cc_Spine1_FK', 'cc_Spine2_FK', 
+            'cc_Neck', 'cc_Head'
+            ]
+        leftIK = ['cc_LeftShoulder', 'cc_LeftHand_IK', 'cc_LeftFoot_IK']
+        leftFK = [
+            'cc_LeftArm_FK', 
+            'cc_LeftForeArm_FK', 
+            'cc_LeftHand_FK', 
+            'cc_LeftUpLeg_FK', 
+            'cc_LeftLeg_FK', 
+            'cc_LeftFoot_FK', 
+            'cc_LeftToeBase_FK'
+            ]
+        rightIK = ['cc_RightShoulder', 'cc_RightHand_IK', 'cc_RightFoot_IK']
+        rightFK = [
+            'cc_RightArm_FK', 
+            'cc_RightForeArm_FK', 
+            'cc_RightHand_FK', 
+            'cc_RightUpLeg_FK', 
+            'cc_RightLeg_FK', 
+            'cc_RightFoot_FK', 
+            'cc_RightToeBase_FK'
+            ]
+        leftFingers = [
+            'cc_LeftHandThumb1', 'cc_LeftHandThumb2', 'cc_LeftHandThumb3', 
+            'cc_LeftHandIndex1', 'cc_LeftHandIndex2', 'cc_LeftHandIndex3', 
+            'cc_LeftHandMiddle1', 'cc_LeftHandMiddle2', 'cc_LeftHandMiddle3', 
+            'cc_LeftHandRing1', 'cc_LeftHandRing2', 'cc_LeftHandRing3', 
+            'cc_LeftHandPinky1', 'cc_LeftHandPinky2', 'cc_LeftHandPinky3'
+            ]
+        rightFingers = [
+            'cc_LeftHandThumb1', 'cc_LeftHandThumb2', 'cc_LeftHandThumb3', 
+            'cc_LeftHandIndex1', 'cc_LeftHandIndex2', 'cc_LeftHandIndex3', 
+            'cc_LeftHandMiddle1', 'cc_LeftHandMiddle2', 'cc_LeftHandMiddle3', 
+            'cc_LeftHandRing1', 'cc_LeftHandRing2', 'cc_LeftHandRing3', 
+            'cc_LeftHandPinky1', 'cc_LeftHandPinky2', 'cc_LeftHandPinky3'
+            ]
+        self.lock_rotSclVis = [
+            'cc_LeftArm_IK', 'cc_LeftForeArmPoleVector', 
+            'cc_LeftUpLeg_IK', 'cc_LeftLegPoleVector', 
+            'cc_RightArm_IK', 'cc_RightForeArmPoleVector', 
+            'cc_RightUpLeg_IK', 'cc_RightLegPoleVector'
+            ]
+        self.lock_sclVis = spine 
+        self.lock_sclVis += leftIK + leftFK + rightIK + rightFK 
+        self.lock_sclVis += leftFingers + rightFingers
+
+
+    def connectJntAndJnt(self):
+        raw = RawData()
+        for cc in raw.bindJnt[1:]:
+            rig = cc.replace("CC_Base_", "rig_")
+            try:
+                pm.connectAttr(f"{rig}.translate", f"{cc}.translate", f=True)
+                pm.connectAttr(f"{rig}.rotate", f"{cc}.rotate", f=True)
+            except:
+                continue
+
+
 # ilJ = ['rig_L_Upperarm_IK', 'rig_L_Forearm_IK', 'rig_L_Hand_IK']
 # irJ = ['rig_R_Upperarm_IK', 'rig_R_Forearm_IK', 'rig_R_Hand_IK']
 # flJ = ['rig_L_Upperarm_FK', 'rig_L_Forearm_FK', 'rig_L_Hand_FK']
@@ -843,15 +906,19 @@ class RigFingers:
 # rf.rigFingers(*rightFingers)
 
 
-# rd = RowData()
-# for i in rd.bindJnt[1:]:
-#     jnt = i.replace("CC_Base_", "rig_")
-#     pm.connectAttr(f"{jnt}.translate", f"{i}.translate", f=True)
-#     pm.connectAttr(f"{jnt}.rotate", f"{i}.rotate", f=True)
+
+# sel = pm.ls(sl=True)
+# for i in sel:
+#     a = pm.spaceLocator(p=(0,0,0))
+#     pm.matchTransform(a, i, pos=True)
+
+
+# rigGrp = hjk.RigGroups()
+# rigGrp.createRigGroups("moggyeoknamA")
 
 
 
-sel = pm.ls(sl=True)
-for i in sel:
-    a = pm.spaceLocator(p=(0,0,0))
-    pm.matchTransform(a, i, pos=True)
+# cp = CopyRigJoints()
+# cp.copyHipsJoint()
+# cp.copyArmsJoint()
+# cp.copyLegsJoint()
