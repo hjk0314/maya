@@ -427,6 +427,38 @@ class VertexSelector(QWidget):
         return failed
 
 
+    # def paintAllWeightsOne(self):
+    #     # Load json data
+    #     jsonPath = self.getJsonFilePath()
+    #     if not jsonPath:
+    #         return
+    #     data = self.loadJsonFile(jsonPath)
+    #     # Joint's Lock Weights Status
+    #     lockWeights = []
+    #     for jnt in data.keys():
+    #         lockWeights.append(pm.getAttr(f"{jnt}.liw"))
+    #         pm.setAttr(f"{jnt}.liw", 0)
+    #     failed = set()
+    #     for jnt, obj_vtxList in data.items():
+    #         for obj, vtxList in obj_vtxList.items():
+    #             if not pm.objExists(obj):
+    #                 continue
+    #             for vtx in vtxList:
+    #                 objVtx = f"{obj}{vtx}"
+    #                 skinClt = pm.listHistory(objVtx, type="skinCluster")
+    #                 try:
+    #                     pm.skinPercent(skinClt[0], objVtx, tv=(jnt, 1))
+    #                 except:
+    #                     failed.add(jnt)
+    #                     continue
+    #     # Restore Lock Weights Status
+    #     for jnt, onOff in zip(data.keys(), lockWeights):
+    #         pm.setAttr(f"{jnt}.liw", onOff)
+    #     # Result
+    #     if failed:  pm.warning("List of failures: ", failed)
+    #     else:       pm.displayInfo("Successfully Done.")
+
+
     def adjustSize(self):
         optimalSize = self.verticalLayout.sizeHint()
         self.resize(optimalSize)
@@ -510,12 +542,12 @@ class VertexSelector(QWidget):
         shapes = set(obj)
         result = {}
         for shp in shapes:
-            compiled = re.compile(f'(?<={shp}).+[0-9]+:*[0-9]*.+')
+            pattern = r'\.vtx\[\d+(?::\d+)?\]'
             vertexNumbers = []
             for i in sel:
                 try:
-                    temp = compiled.search(i.name())
-                    vertexNumbers.append(temp.group(0))
+                    temp = re.search(pattern, i.name())
+                    vertexNumbers.append(temp.group())
                 except:
                     continue
             result[shp.getParent().name()] = vertexNumbers
