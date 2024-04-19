@@ -326,6 +326,26 @@ class RigArms:
     def __init__(self):
         self.leftTopGroup = "cc_LeftArm_grp"
         self.rightTopGroup = "cc_RightArm_grp"
+        self.leftIKJnts = [
+            "rig_L_Upperarm_IK", 
+            "rig_L_Forearm_IK", 
+            "rig_L_Hand_IK"
+            ]
+        self.rightIKJnts = [
+            "rig_R_Upperarm_IK", 
+            "rig_R_Forearm_IK", 
+            "rig_R_Hand_IK"
+            ]
+        self.leftFKJnts = [
+            "rig_L_Upperarm_FK", 
+            "rig_L_Forearm_FK", 
+            "rig_L_Hand_FK"
+            ]
+        self.rightFKJnts = [
+            "rig_R_Upperarm_FK", 
+            "rig_R_Forearm_FK", 
+            "rig_R_Hand_FK"
+            ]
         self.leftIKCtrls = [
             "cc_LeftArm_IK", 
             "cc_LeftForeArmPoleVector", 
@@ -387,66 +407,68 @@ class RigArms:
                 continue
 
 
-    def rigArmsIK(self, *jnts):
-        ikJoints = [pm.PyNode(i) for i in jnts] if jnts else pm.ls(sl=True)
-        if len(ikJoints) != 3:
-            pm.warning("Three joints needed.")
-            return
-        side = hjk.getLeftOrRight(*ikJoints)
-        if side == "Left":
-            topGrp = self.leftTopGroup
-            ctrls = self.leftIKCtrls
-            ctrlsGrp = self.leftIKCtrlsGrp
-        elif side == "Right":
-            topGrp = self.rightTopGroup
-            ctrls = self.rightIKCtrls
-            ctrlsGrp = self.rightIKCtrlsGrp
-        else:
-            return
-        ctrlType = {typ: name for typ, name in zip(self.ikCtrlsType, ctrls)}
-        ctrl = hjk.Controllers()
-        ccShoulder, ccElbow, ccWrist = ctrl.createControllers(**ctrlType)
-        firstJnt, endJnt = ikJoints[::2]
-        self.createShoulderIK(firstJnt, ccShoulder)
-        ikHandle = self.createElbowIK(ikJoints, ccElbow)
-        self.createWristIK(endJnt, ccWrist, ikHandle, side)
-        self.topGrouping(topGrp, ctrlsGrp)
+    def rigArmsIK(self):
+        ikJoints = [self.leftIKJnts, self.rightIKJnts]
+        for jnts in ikJoints:
+            if len(jnts) != 3:
+                pm.warning("Three joints needed.")
+                return
+            side = hjk.getLeftOrRight(*jnts)
+            if side == "Left":
+                topGrp = self.leftTopGroup
+                ctrls = self.leftIKCtrls
+                ctrlsGrp = self.leftIKCtrlsGrp
+            elif side == "Right":
+                topGrp = self.rightTopGroup
+                ctrls = self.rightIKCtrls
+                ctrlsGrp = self.rightIKCtrlsGrp
+            else:
+                return
+            ctrlType = {t: n for t, n in zip(self.ikCtrlsType, ctrls)}
+            ctrl = hjk.Controllers()
+            ccShoulder, ccElbow, ccWrist = ctrl.createControllers(**ctrlType)
+            firstJnt, endJnt = jnts[::2]
+            self.createShoulderIK(firstJnt, ccShoulder)
+            ikHandle = self.createElbowIK(jnts, ccElbow)
+            self.createWristIK(endJnt, ccWrist, ikHandle, side)
+            self.topGrouping(topGrp, ctrlsGrp)
 
 
-    def rigArmsFK(self, *jnts):
-        fkJoints = [pm.PyNode(i) for i in jnts] if jnts else pm.ls(sl=True)
-        if len(fkJoints) != 3:
-            pm.warning("Three joints needed.")
-            return
-        side = hjk.getLeftOrRight(*fkJoints)
-        if side == "Left":
-            topGrp = self.leftTopGroup
-            ctrls = self.leftFKCtrls
-            ctrlsGrp = self.leftFKCtrlsGrp
-            mirrorConstant = 1
-            rot = 0
-        elif side == "Right":
-            topGrp = self.rightTopGroup
-            ctrls = self.rightFKCtrls
-            ctrlsGrp = self.rightFKCtrlsGrp
-            mirrorConstant = -1
-            rot = 180
-        else:
-            return
-        fkGroups = []
-        for ctrl, jnt, size in zip(ctrls, fkJoints, self.fkCtrlsSize):
-            cc = pm.circle(ch=False, r=size, nr=(1, 0, 0), n=ctrl)
-            cc = cc[0]
-            pm.matchTransform(cc, jnt, pos=True, rot=True)
-            pm.rotate(cc, [0, 0, mirrorConstant*90], r=True, os=True, fo=True)
-            ccGrp = hjk.groupingWithOwnPivot(cc)
-            ccGrp = ccGrp[0]
-            pm.rotate(ccGrp, [rot, 0, 0], r=True, os=True, fo=True)
-            pm.parentConstraint(cc, jnt, mo=True, w=1.0)
-            fkGroups.append(ccGrp)
-            fkGroups.append(cc)
-        hjk.parentHierarchically(fkGroups)
-        self.topGrouping(topGrp, ctrlsGrp[:1:])
+    def rigArmsFK(self):
+        fkJoints = [self.leftFKJnts, self.rightFKJnts]
+        for jnts in fkJoints:
+            if len(jnts) != 3:
+                pm.warning("Three joints needed.")
+                return
+            side = hjk.getLeftOrRight(*jnts)
+            if side == "Left":
+                topGrp = self.leftTopGroup
+                ctrls = self.leftFKCtrls
+                ctrlsGrp = self.leftFKCtrlsGrp
+                mirrorConstant = 1
+                rot = 0
+            elif side == "Right":
+                topGrp = self.rightTopGroup
+                ctrls = self.rightFKCtrls
+                ctrlsGrp = self.rightFKCtrlsGrp
+                mirrorConstant = -1
+                rot = 180
+            else:
+                return
+            fkGroups = []
+            for ctrl, jnt, size in zip(ctrls, jnts, self.fkCtrlsSize):
+                cc = pm.circle(ch=False, r=size, nr=(1, 0, 0), n=ctrl)
+                cc = cc[0]
+                pm.matchTransform(cc, jnt, pos=True, rot=True)
+                pm.rotate(cc, [0, 0, mirrorConstant*90], r=True, os=True, fo=True)
+                ccGrp = hjk.groupingWithOwnPivot(cc)
+                ccGrp = ccGrp[0]
+                pm.rotate(ccGrp, [rot, 0, 0], r=True, os=True, fo=True)
+                pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+                fkGroups.append(ccGrp)
+                fkGroups.append(cc)
+            hjk.parentHierarchically(fkGroups)
+            self.topGrouping(topGrp, ctrlsGrp[:1:])
 
 
     def createShoulderIK(self, joint, controller):
@@ -665,6 +687,20 @@ class RigFingers:
     def __init__(self):
         self.leftTopGroup = "cc_LeftHandFingers_grp"
         self.rightTopGroup = "cc_RightHandFingers_grp"
+        self.leftFingerJnts = [
+            'rig_L_Thumb1', 'rig_L_Thumb2', 'rig_L_Thumb3', 
+            'rig_L_Index1', 'rig_L_Index2', 'rig_L_Index3', 
+            'rig_L_Mid1', 'rig_L_Mid2', 'rig_L_Mid3', 
+            'rig_L_Ring1', 'rig_L_Ring2', 'rig_L_Ring3', 
+            'rig_L_Pinky1', 'rig_L_Pinky2', 'rig_L_Pinky3'
+            ]
+        self.rightFingerJnts = [
+            'rig_R_Thumb1', 'rig_R_Thumb2', 'rig_R_Thumb3', 
+            'rig_R_Index1', 'rig_R_Index2', 'rig_R_Index3', 
+            'rig_R_Mid1', 'rig_R_Mid2', 'rig_R_Mid3', 
+            'rig_R_Ring1', 'rig_R_Ring2', 'rig_R_Ring3', 
+            'rig_R_Pinky1', 'rig_R_Pinky2', 'rig_R_Pinky3'
+            ]
         self.leftCtrls = [
             "cc_LeftHandThumb1", 
             "cc_LeftHandThumb2", 
@@ -735,42 +771,54 @@ class RigFingers:
             ]
 
 
-    def rigFingers(self, *jnts):
-        fingerJnt = [pm.PyNode(i) for i in jnts] if jnts else pm.ls(sl=True)
-        if len(fingerJnt) != 15:
-            pm.warning("15 joints needed.")
-            return
-        side = hjk.getLeftOrRight(*fingerJnt)
-        if side == "Left":
-            topGrp = self.leftTopGroup
-            ctrls = self.leftCtrls
-            size = 1.5
-            rot = 0
-        elif side == "Right":
-            topGrp = self.rightTopGroup
-            ctrls = self.rightCtrls
-            size = 1.5
-            rot = 180
-        else:
-            return
-        if not pm.objExists(topGrp):
-            pm.group(em=True, n=topGrp)
-        fingerGrp = []
-        for ctrl, jnt in zip(ctrls, fingerJnt):
-            # size = self.getCtrlSize(ctrl)
-            cc = pm.circle(ch=False, r=size, nr=(1, 0, 0), n=ctrl)
-            cc = cc[0]
-            pm.matchTransform(cc, jnt, pos=True)
-            pm.orientConstraint(jnt, cc, o=(0, 0, 90), w=1)
-            pm.delete(cc, cn=True)
-            ccGrp = hjk.groupingWithOwnPivot(cc)[0]
-            pm.rotate(ccGrp, [rot, 0, 0], r=True, os=True, fo=True)
-            pm.parentConstraint(cc, jnt, mo=True, w=1.0)
-            fingerGrp.append(ccGrp)
-            fingerGrp.append(cc)
-        for i in range(0, len(fingerGrp), 6):
-            hjk.parentHierarchically(fingerGrp[i:i+6])
-            pm.parent(fingerGrp[i], topGrp)
+    def cleanUp(self):
+        leftArms = self.leftCtrls + self.leftCtrlsGrp + [self.leftTopGroup]
+        rightArms = self.rightCtrls + self.rightCtrlsGrp + [self.rightTopGroup]
+        allArms = leftArms + rightArms
+        for i in allArms:
+            try:
+                pm.delete(i)
+            except:
+                continue
+
+
+    def rigFingers(self):
+        fingerJnt = [self.leftFingerJnts, self.rightFingerJnts]
+        for jnts in fingerJnt:
+            if len(jnts) != 15:
+                pm.warning("15 joints needed.")
+                return
+            side = hjk.getLeftOrRight(*jnts)
+            if side == "Left":
+                topGrp = self.leftTopGroup
+                ctrls = self.leftCtrls
+                size = 1.5
+                rot = 0
+            elif side == "Right":
+                topGrp = self.rightTopGroup
+                ctrls = self.rightCtrls
+                size = 1.5
+                rot = 180
+            else:
+                return
+            if not pm.objExists(topGrp):
+                pm.group(em=True, n=topGrp)
+            fingerGrp = []
+            for ctrl, jnt in zip(ctrls, jnts):
+                # size = self.getCtrlSize(ctrl)
+                cc = pm.circle(ch=False, r=size, nr=(1, 0, 0), n=ctrl)
+                cc = cc[0]
+                pm.matchTransform(cc, jnt, pos=True)
+                pm.orientConstraint(jnt, cc, o=(0, 0, 90), w=1)
+                pm.delete(cc, cn=True)
+                ccGrp = hjk.groupingWithOwnPivot(cc)[0]
+                pm.rotate(ccGrp, [rot, 0, 0], r=True, os=True, fo=True)
+                pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+                fingerGrp.append(ccGrp)
+                fingerGrp.append(cc)
+            for i in range(0, len(fingerGrp), 6):
+                hjk.parentHierarchically(fingerGrp[i:i+6])
+                pm.parent(fingerGrp[i], topGrp)
 
 
     def getCtrlSize(self, word: str) -> int:
@@ -785,17 +833,6 @@ class RigFingers:
             else:
                 size = 0
             return size
-
-
-    def cleanUp(self):
-        leftArms = self.leftCtrls + self.leftCtrlsGrp + [self.leftTopGroup]
-        rightArms = self.rightCtrls + self.rightCtrlsGrp + [self.rightTopGroup]
-        allArms = leftArms + rightArms
-        for i in allArms:
-            try:
-                pm.delete(i)
-            except:
-                continue
 
 
 class Finish:
@@ -861,64 +898,29 @@ class Finish:
                 continue
 
 
-# ilJ = ['rig_L_Upperarm_IK', 'rig_L_Forearm_IK', 'rig_L_Hand_IK']
-# irJ = ['rig_R_Upperarm_IK', 'rig_R_Forearm_IK', 'rig_R_Hand_IK']
-# flJ = ['rig_L_Upperarm_FK', 'rig_L_Forearm_FK', 'rig_L_Hand_FK']
-# frJ = ['rig_R_Upperarm_FK', 'rig_R_Forearm_FK', 'rig_R_Hand_FK']
-# ra = RigArms()
-# ra.cleanUp()
-# ra.rigArmsIK(*ilJ)
-# ra.rigArmsIK(*irJ)
-# ra.rigArmsFK(*flJ)
-# ra.rigArmsFK(*frJ)
-
-# rl = RigLegs()
-# rl.locatorPreset(rl.leftLocators)
-# rl.locatorPreset(rl.rightLocators)
-# rl.cleanUp()
-# rl.rigLegsIK()
+rd = RawData()
+rd.cleanUp()
 
 
-# ctrl = hjk.Controllers()
-# ctrl.createControllers(foot2="cc_RightFoot_IK")
-# hjk.groupingWithOwnPivot()
-# hjk.createPolevectorJoint()
-
-# leftFingers = [
-#     'rig_L_Thumb1', 'rig_L_Thumb2', 'rig_L_Thumb3', 
-#     'rig_L_Index1', 'rig_L_Index2', 'rig_L_Index3', 
-#     'rig_L_Mid1', 'rig_L_Mid2', 'rig_L_Mid3', 
-#     'rig_L_Ring1', 'rig_L_Ring2', 'rig_L_Ring3', 
-#     'rig_L_Pinky1', 'rig_L_Pinky2', 'rig_L_Pinky3'
-#     ]
-# rightFingers = [
-#     'rig_R_Thumb1', 'rig_R_Thumb2', 'rig_R_Thumb3', 
-#     'rig_R_Index1', 'rig_R_Index2', 'rig_R_Index3', 
-#     'rig_R_Mid1', 'rig_R_Mid2', 'rig_R_Mid3', 
-#     'rig_R_Ring1', 'rig_R_Ring2', 'rig_R_Ring3', 
-#     'rig_R_Pinky1', 'rig_R_Pinky2', 'rig_R_Pinky3'
-#     ]
+crj = CopyRigJoints()
+crj.copyHipsJoint()
+crj.copyArmsJoint()
+crj.copyLegsJoint()
 
 
-# rf = RigFingers()
-# rf.cleanUp()
-# rf.rigFingers(*leftFingers)
-# rf.rigFingers(*rightFingers)
+ra = RigArms()
+ra.cleanUp()
+ra.rigArmsIK()
+ra.rigArmsFK()
 
 
-
-# sel = pm.ls(sl=True)
-# for i in sel:
-#     a = pm.spaceLocator(p=(0,0,0))
-#     pm.matchTransform(a, i, pos=True)
-
-
-# rigGrp = hjk.RigGroups()
-# rigGrp.createRigGroups("moggyeoknamA")
+rl = RigLegs()
+rl.cleanUp()
+rl.rigLegsIK()
+rl.rigLegsFK()
 
 
+rf = RigFingers()
+rf.cleanUp()
+rf.rigFingers()
 
-# cp = CopyRigJoints()
-# cp.copyHipsJoint()
-# cp.copyArmsJoint()
-# cp.copyLegsJoint()
