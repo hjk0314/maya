@@ -1,3 +1,4 @@
+import os
 import re
 import pymel.core as pm
 import general as hjk
@@ -256,13 +257,29 @@ class CopyRigJoints:
     def __init__(self):
         self.srcRoot = "CC_Base_Hip"
         self.rigRoot = "rig_Hip"
-        self.topGroup = "rigBones"
+        self.bindBonesGroup = "bindBones"
+        self.rigBonesGroup = "rigBones"
+
+
+    def createGroup(self):
+        fullPath = pm.Env().sceneName()
+        try:
+            baseName = os.path.basename(fullPath)
+            createGrpName = baseName.split("_")[1]
+        except:
+            createGrpName = ""
+        rg = hjk.RigGroups()
+        rg.createRigGroups(createGrpName)
 
 
     def copyHipsJoint(self):
-        if not pm.objExists(self.rigRoot):
-            pm.duplicate(self.srcRoot, rr=True, n=self.rigRoot)
-        pm.parent(self.rigRoot, self.topGroup)
+        if not pm.objExists(self.srcRoot):
+            return
+        if pm.objExists(self.rigRoot):
+            return
+        pm.duplicate(self.srcRoot, rr=True, n=self.rigRoot)
+        pm.parent(self.srcRoot, self.bindBonesGroup)
+        pm.parent(self.rigRoot, self.rigBonesGroup)
         pm.select(self.rigRoot, hi=True)
         for i in pm.ls(sl=True):
             new = i.replace("CC_Base_", "rig_")
@@ -408,11 +425,12 @@ class RigArms:
 
 
     def rigArmsIK(self):
+        if not all([pm.objExists(i) for i in self.leftIKJnts]):
+            return
+        if not all([pm.objExists(i) for i in self.rightIKJnts]):
+            return
         ikJoints = [self.leftIKJnts, self.rightIKJnts]
         for jnts in ikJoints:
-            if len(jnts) != 3:
-                pm.warning("Three joints needed.")
-                return
             side = hjk.getLeftOrRight(*jnts)
             if side == "Left":
                 topGrp = self.leftTopGroup
@@ -430,16 +448,17 @@ class RigArms:
             firstJnt, endJnt = jnts[::2]
             self.createShoulderIK(firstJnt, ccShoulder)
             ikHandle = self.createElbowIK(jnts, ccElbow)
-            self.createWristIK(endJnt, ccWrist, ikHandle, side)
+            self.createWristIK(endJnt, ccWrist, ikHandle)
             self.topGrouping(topGrp, ctrlsGrp)
 
 
     def rigArmsFK(self):
+        if not all([pm.objExists(i) for i in self.leftFKJnts]):
+            return
+        if not all([pm.objExists(i) for i in self.rightFKJnts]):
+            return
         fkJoints = [self.leftFKJnts, self.rightFKJnts]
         for jnts in fkJoints:
-            if len(jnts) != 3:
-                pm.warning("Three joints needed.")
-                return
             side = hjk.getLeftOrRight(*jnts)
             if side == "Left":
                 topGrp = self.leftTopGroup
@@ -482,7 +501,8 @@ class RigArms:
     def createElbowIK(self, joints: list, controller: str):
         threeJoints = joints[0:3]
         _1stJnt, _3rdJnt = threeJoints[::2]
-        ikH = pm.ikHandle(sj=_1stJnt, ee=_3rdJnt, sol="ikRPsolver")
+        ikHName = _1stJnt.replace("rig_", "ikH_")
+        ikH = pm.ikHandle(sj=_1stJnt, ee=_3rdJnt, sol="ikRPsolver", n=ikHName)
         ikH = ikH[0]
         polevectorJoints = hjk.createPolevectorJoint(*threeJoints)
         polevectorJoint1, polevectorJoint2 = polevectorJoints
@@ -493,12 +513,12 @@ class RigArms:
         return ikH
 
 
-    def createWristIK(self, joint, ctrl, ikHandle, side):
+    def createWristIK(self, joint, ctrl, ikHandle):
         pm.matchTransform(ctrl, joint, pos=True)
         ctrlGrp = hjk.groupingWithOwnPivot(ctrl)
         ctrlGrp = ctrlGrp[0]
-        rot = 0 if side=="Left" else 180
-        pm.rotate(ctrlGrp, [rot, 0, 0], r=True, os=True, fo=True)
+        # rot = 0 if side=="Left" else 180
+        # pm.rotate(ctrlGrp, [rot, 0, 0], r=True, os=True, fo=True)
         pm.orientConstraint(ctrl, joint, mo=True, w=1)
         try:
             pm.parent(ikHandle, ctrl)
@@ -519,6 +539,30 @@ class RigLegs:
         self.rightTopGroup = "cc_RightLeg_grp"
         self.leftFootJnt = "rig_L_Foot_IK"
         self.rightFootJnt = "rig_R_Foot_IK"
+        self.leftIKJnts = [
+            "rig_L_Thigh_IK", 
+            "rig_L_Calf_IK", 
+            "rig_L_Foot_IK", 
+            "rig_L_ToeBase_IK"
+            ]
+        self.leftFKJnts = [
+            "rig_L_Thigh_FK", 
+            "rig_L_Calf_FK", 
+            "rig_L_Foot_FK", 
+            "rig_L_ToeBase_FK"
+            ]
+        self.rightIKJnts = [
+            "rig_R_Thigh_IK", 
+            "rig_R_Calf_IK", 
+            "rig_R_Foot_IK", 
+            "rig_R_ToeBase_IK"
+            ]
+        self.rightFKJnts = [
+            "rig_R_Thigh_FK", 
+            "rig_R_Calf_FK", 
+            "rig_R_Foot_FK", 
+            "rig_R_ToeBase_FK"
+            ]
         self.leftIKCtrls = [
             "cc_LeftUpLeg_IK", 
             "cc_LeftLegPoleVector", 
@@ -570,16 +614,16 @@ class RigLegs:
             ]
         self.fkCtrlsSize = [11, 9, 7]
         self.leftLocators = {
+            "loc_LeftToeEnd_IK": [6, 0, 15], 
             "loc_LeftHeel_IK": [6, 0, -3], 
-            "loc_LeftToe_End_IK": [6, 0, 15], 
             "loc_LeftBankIn_IK": [3, 0, 0], 
             "loc_LeftBankOut_IK": [15, 0, 0], 
             "loc_LeftToeBase_IK": [6, 3, 6], 
             "loc_LeftFoot_IK": [6, 12, -3], 
             }
         self.rightLocators = {
+            "loc_RightToeEnd_IK": [-6, 0, 15], 
             "loc_RightHeel_IK": [-6, 0, -3], 
-            "loc_RightToe_End_IK": [-6, 0, 15], 
             "loc_RightBankIn_IK": [-3, 0, 0], 
             "loc_RightBankOut_IK": [-15, 0, 0], 
             "loc_RightToeBase_IK": [-6, 3, 6], 
@@ -592,55 +636,117 @@ class RigLegs:
         leftArms += self.leftFKCtrls + self.leftFKCtrlsGrp
         rightArms = self.rightIKCtrls + self.rightIKCtrlsGrp
         rightArms += self.rightFKCtrls + self.rightFKCtrlsGrp
-        allArms = leftArms + rightArms
-        for i in allArms:
+        locators = [i for i in self.leftLocators]
+        locators += [i for i in self.rightLocators]
+        all = leftArms + rightArms + locators
+        for i in all:
             try:
                 pm.delete(i)
             except:
                 continue
 
 
-    def locatorPreset(self, locators: dict):
-        side = hjk.getLeftOrRight(*locators.keys())
-        if side == "Left":
-            mirrorConstant = 1
-        elif side == "Right":
-            mirrorConstant = -1
-        else:
-            return
-        for name, pos in locators.items():
-            x, y, z = pos
-            pos = [x, y, mirrorConstant*z]
-            loc = pm.spaceLocator(p=(0, 0, 0), n=name)
-            pm.move(loc, pos)
+    def createLocators(self):
+        locators = [self.leftLocators, self.rightLocators]
+        for loc in locators:
+            for name, pos in loc.items():
+                loc = pm.spaceLocator(p=(0, 0, 0), n=name)
+                pm.move(loc, pos)
 
 
-    def rigLegsIK(self, *jnts):
-        ikJoints = [pm.PyNode(i) for i in jnts] if jnts else pm.ls(sl=True)
-        if len(ikJoints) != 4:
-            pm.warning("Four joints needed.")
-            return
-        side = hjk.getLeftOrRight(*ikJoints)
-        if side == "Left":
-            topGrp = self.leftTopGroup
-            ctrls = self.leftIKCtrls
-            ctrlsGrp = self.leftIKCtrlsGrp
-            mirrorConstant = 1
-        elif side == "Right":
-            topGrp = self.rightTopGroup
-            ctrls = self.rightIKCtrls
-            ctrlsGrp = self.rightIKCtrlsGrp
-            mirrorConstant = -1
-        else:
-            return
-        _1stJnt, _2ndJnt, _3rdJnt, _4thJnt = ikJoints
-        # self.updateLocatorsPosition()
-        ctrl = hjk.Controllers()
-        ctrlType = {t: n for t, n in zip(self.ikCtrlsType, self.leftIKCtrls)}
-        ccPelvis, ccKnee, ccFoot = ctrl.createControllers(**ctrlType)
-        self.createPelvisIK(_1stJnt, ccPelvis, mirrorConstant)
-        ikH = self.createKneeIK(ikJoints, ccKnee)
-        self.createFootIK(ccFoot, _3rdJnt)
+    def rigLegsIK(self):
+        ikJoints = [self.leftIKJnts, self.rightIKJnts]
+        for jnts in ikJoints:
+            if len(jnts) != 4:
+                pm.warning("Four joints needed.")
+                return
+            side = hjk.getLeftOrRight(*jnts)
+            if side == "Left":
+                topGrp = self.leftTopGroup
+                ctrls = self.leftIKCtrls
+                ctrlsGrp = self.leftIKCtrlsGrp
+                footJnt = self.leftFootJnt
+                locators = list(self.leftLocators.keys())
+                joints = self.leftIKJnts
+                mirrorConstant = 1
+            elif side == "Right":
+                topGrp = self.rightTopGroup
+                ctrls = self.rightIKCtrls
+                ctrlsGrp = self.rightIKCtrlsGrp
+                footJnt = self.rightFootJnt
+                locators = list(self.rightLocators.keys())
+                joints = self.rightIKJnts
+                mirrorConstant = -1
+            else:
+                return
+            _1stJnt, _2ndJnt, _3rdJnt, _4thJnt = jnts
+            ctrl = hjk.Controllers()
+            ctrlType = {t: n for t, n in zip(self.ikCtrlsType, ctrls)}
+            ccPelvis, ccKnee, ccFoot = ctrl.createControllers(**ctrlType)
+            # self.createPelvisIK(_1stJnt, ccPelvis, mirrorConstant)
+            # ikH = self.createKneeIK(jnts, ccKnee)
+            self.createFootIKCtrl(ccFoot, footJnt)
+            self.rigFootIK(ccFoot, locators, joints)
+
+
+    def createFootIKCtrl(self, ctrl, jnt):
+        pm.matchTransform(ctrl, jnt, pos=True)
+        pm.setAttr(f"{ctrl}.translateY", 0)
+        x, y, z = hjk.getPosition(jnt)
+        pm.move(x, y, z, [f"{ctrl}.rotatePivot", f"{ctrl}.scalePivot"], ws=1)
+
+
+    def rigFootIK(self, ctrl, locs, jnts):
+        # locators
+        toeLoc = locs[0]
+        outLoc = locs[3]
+        ballLoc = locs[4]
+        ankleLoc = locs[5]
+        # joints
+        thighJnt = jnts[0]
+        ankleJnt = jnts[2]
+        ballJnt = jnts[3]
+        # align
+        temp = jnts[1:4] + [toeLoc]
+        alo = hjk.AlignObjects()
+        alo.lineUp(*temp)
+        pm.matchTransform(ballLoc, ballJnt, pos=True)
+        pm.matchTransform(ankleLoc, ankleJnt, pos=True)
+        pm.aimConstraint(ankleJnt, ballLoc, aim=(0, 0, -1))
+        pm.delete(ballLoc, cn=True)
+        # grouping
+        mergeList = [ctrl] + locs
+        hjk.parentHierarchically(*mergeList)
+        hjk.groupingWithOwnPivot(ballLoc)
+        hjk.groupingWithOwnPivot(ctrl)
+        # add end joint
+        head, tail = ballJnt.rsplit("_", 1)
+        jntName = head + "End_" + tail
+        pm.select(cl=True)
+        newJnt = pm.joint(p=(0,0,0), n=jntName)
+        pm.matchTransform(newJnt, toeLoc, pos=True)
+        pm.connectJoint(newJnt, ballJnt, pm=True)
+        # add ikHandles
+        ikH1 = thighJnt.replace("rig_", "ikH_")
+        ikH1 = pm.ikHandle(sj=thighJnt, ee=ankleJnt, sol="ikRPsolver", n=ikH1)
+        ikH1 = ikH1[0]
+        ikH2 = ankleJnt.replace("rig_", "ikH_")
+        ikH2 = pm.ikHandle(sj=ankleJnt, ee=ballJnt, sol="ikSCsolver", n=ikH2)
+        ikH2 = ikH2[0]
+        ikH3 = ballJnt.replace("rig_", "ikH_")
+        ikH3 = pm.ikHandle(sj=ballJnt, ee=newJnt, sol="ikSCsolver", n=ikH3)
+        ikH3 = ikH3[0]
+        # grouping
+        ikH1_grp = hjk.groupingWithOwnPivot(ikH1)[0]
+        pm.parent(ikH2, ikH1_grp)
+        pm.parent(ikH1_grp, ankleLoc)
+        ikH3_grp = ikH3 + "_grp"
+        pm.group(em=True, n=ikH3_grp)
+        ikH3_null = ikH3 + "_null"
+        pm.group(em=True, n=ikH3_null, p=ikH3_grp)
+        pm.matchTransform(ikH3_grp, ballJnt, pos=True, rot=True)
+        pm.parent(ikH3, ikH3_null)
+        pm.parent(ikH3_grp, outLoc)
 
 
     def createPelvisIK(self, joint, controller, mirrorConstant=1):
@@ -671,13 +777,6 @@ class RigLegs:
         self.leftLocators = leftLoc
         self.rightLocators = rightLoc
             
-
-    def createFootIK(self, ctrl, jnt):
-        pm.matchTransform(ctrl, jnt, pos=True)
-        pm.setAttr(f"{ctrl}.translateY", 0)
-        x, y, z = hjk.getPosition(jnt)
-        pm.move(x, y, z, [f"{ctrl}.rotatePivot", f"{ctrl}.scalePivot"], ws=1)
-
 
     def rigLegsFK(self):
         pass
@@ -898,29 +997,30 @@ class Finish:
                 continue
 
 
-rd = RawData()
-rd.cleanUp()
+# rd = RawData()
+# rd.cleanUp()
 
 
-crj = CopyRigJoints()
-crj.copyHipsJoint()
-crj.copyArmsJoint()
-crj.copyLegsJoint()
+# crj = CopyRigJoints()
+# crj.createGroup()
+# crj.copyHipsJoint()
+# crj.copyArmsJoint()
+# crj.copyLegsJoint()
 
 
-ra = RigArms()
-ra.cleanUp()
-ra.rigArmsIK()
-ra.rigArmsFK()
+# ra = RigArms()
+# ra.cleanUp()
+# ra.rigArmsIK()
+# ra.rigArmsFK()
 
 
-rl = RigLegs()
-rl.cleanUp()
-rl.rigLegsIK()
-rl.rigLegsFK()
+# rl = RigLegs()
+# rl.cleanUp()
+# rl.createLocators()
+# rl.rigLegsIK()
 
 
-rf = RigFingers()
-rf.cleanUp()
-rf.rigFingers()
+# rf = RigFingers()
+# rf.cleanUp()
+# rf.rigFingers()
 

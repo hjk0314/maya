@@ -334,11 +334,11 @@ def setJointsStyle(joints=[], drawStyle=2) -> list:
     return result
 
 
-def parentHierarchically(selections: list=[]):
-    if not selections:
-        sel = pm.selected()
-    else:
-        sel = [pm.PyNode(i) for i in selections]
+def parentHierarchically(*args) -> None:
+    """ Hierarchically parent.
+    >>> parentHierarchically(*lst)
+     """
+    sel = [pm.PyNode(i) for i in args] if args else pm.selected()
     for idx, parents in enumerate(sel):
         try:
             child = sel[idx + 1]
@@ -473,9 +473,15 @@ class AlignObjects:
         # information of parents
         parentsInfo = {i: i.getParent() for i in sel}
         # unParent
+        transformNodes = []
         for child, parents in parentsInfo.items():
-            try:    pm.parent(child, w=True)
-            except: continue
+            try:
+                pm.parent(child, w=True)
+                transformNode = child.getParent()
+                if transformNode:
+                    transformNodes.append(transformNode)
+            except:
+                continue
         # main
         mainDots = sel[:3]
         lastDots = sel[3:]
@@ -489,8 +495,11 @@ class AlignObjects:
             pm.move(i, intersectionPoint)
         # reParent
         for child, parents in parentsInfo.items():
-            try:    pm.parent(child, parents)
-            except: continue
+            try:
+                pm.parent(child, parents)
+            except:
+                continue
+        pm.delete(transformNodes)
 
 
     def getFaceNormalVector(self, threePointsPosition=[]):
@@ -501,6 +510,7 @@ class AlignObjects:
         info = pm.polyInfo(face, fn=True)
         stripInfo = info[0].split(":")[-1].strip()
         normalVector = [float(i) for i in stripInfo.split(" ")]
+        pm.delete(face)
         return normalVector
 
 
