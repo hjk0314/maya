@@ -341,68 +341,81 @@ class CopyRigJoints:
 
 class RigArms:
     def __init__(self):
+        # Left
         self.leftTopGroup = "cc_LeftArm_grp"
-        self.rightTopGroup = "cc_RightArm_grp"
+        self.leftScapulaJnt = "rig_L_Clavicle"
+        self.leftScapulaCtrl = "cc_LeftShoulder"
+        self.leftScapulaCtrlGrp = "cc_LeftShoulder_grp"
+        self.leftScapulaSpace = "null_leftShoulderSpace"
         self.leftIKJnts = [
             "rig_L_Upperarm_IK", 
             "rig_L_Forearm_IK", 
             "rig_L_Hand_IK"
-            ]
-        self.rightIKJnts = [
-            "rig_R_Upperarm_IK", 
-            "rig_R_Forearm_IK", 
-            "rig_R_Hand_IK"
-            ]
-        self.leftFKJnts = [
-            "rig_L_Upperarm_FK", 
-            "rig_L_Forearm_FK", 
-            "rig_L_Hand_FK"
-            ]
-        self.rightFKJnts = [
-            "rig_R_Upperarm_FK", 
-            "rig_R_Forearm_FK", 
-            "rig_R_Hand_FK"
             ]
         self.leftIKCtrls = [
             "cc_LeftArm_IK", 
             "cc_LeftForeArmPoleVector", 
             "cc_LeftHand_IK", 
             ]
-        self.rightIKCtrls = [
-            "cc_RightArm_IK", 
-            "cc_RightForeArmPoleVector", 
-            "cc_RightHand_IK", 
+        self.leftIKCtrlsGrp = [
+            "cc_LeftArm_IK_grp", 
+            "cc_LeftForeArmPoleVector_grp", 
+            "cc_LeftHand_IK_grp", 
+            ]
+        self.leftIKSpace = "null_leftHandSpace"
+        self.leftFKJnts = [
+            "rig_L_Upperarm_FK", 
+            "rig_L_Forearm_FK", 
+            "rig_L_Hand_FK"
             ]
         self.leftFKCtrls = [
             "cc_LeftArm_FK", 
             "cc_LeftForeArm_FK", 
             "cc_LeftHand_FK"
             ]
-        self.rightFKCtrls = [
-            "cc_RightArm_FK", 
-            "cc_RightForeArm_FK", 
-            "cc_RightHand_FK"
+        self.leftFKCtrlsGrp = [
+            "cc_LeftArm_FK_grp", 
+            "cc_LeftForeArm_FK_grp", 
+            "cc_LeftHand_FK_grp"
             ]
-        self.leftIKCtrlsGrp = [
-            "cc_LeftArm_IK_grp", 
-            "cc_LeftForeArmPoleVector_grp", 
-            "cc_LeftHand_IK_grp", 
+        # Right
+        self.rightTopGroup = "cc_RightArm_grp"
+        self.rightScapulaJnt = "rig_R_Clavicle"
+        self.rightScapulaCtrl = "cc_RightShoulder"
+        self.rightScapulaCtrlGrp = "cc_RightShoulder_grp"
+        self.rightScapulaSpace = "null_rightShoulderSpace"
+        self.rightIKJnts = [
+            "rig_R_Upperarm_IK", 
+            "rig_R_Forearm_IK", 
+            "rig_R_Hand_IK"
+            ]
+        self.rightIKCtrls = [
+            "cc_RightArm_IK", 
+            "cc_RightForeArmPoleVector", 
+            "cc_RightHand_IK", 
             ]
         self.rightIKCtrlsGrp = [
             "cc_RightArm_IK_grp", 
             "cc_RightForeArmPoleVector_grp", 
             "cc_RightHand_IK_grp", 
             ]
-        self.leftFKCtrlsGrp = [
-            "cc_LeftArm_FK_grp", 
-            "cc_LeftForeArm_FK_grp", 
-            "cc_LeftHand_FK_grp"
+        self.rightIKSpace = "null_rightHandSpace"
+        self.rightFKJnts = [
+            "rig_R_Upperarm_FK", 
+            "rig_R_Forearm_FK", 
+            "rig_R_Hand_FK"
+            ]
+        self.rightFKCtrls = [
+            "cc_RightArm_FK", 
+            "cc_RightForeArm_FK", 
+            "cc_RightHand_FK"
             ]
         self.rightFKCtrlsGrp = [
             "cc_RightArm_FK_grp", 
             "cc_RightForeArm_FK_grp", 
             "cc_RightHand_FK_grp"
             ]
+        # Etc
         self.ikCtrlsType = [
             "circle", 
             "sphere", 
@@ -412,11 +425,13 @@ class RigArms:
 
 
     def cleanUp(self):
+        leftScapula = [self.leftScapulaCtrl, self.leftScapulaCtrlGrp]
+        rightScapula = [self.rightScapulaCtrl, self.rightScapulaCtrlGrp]
         leftArms = self.leftIKCtrls + self.leftIKCtrlsGrp
         leftArms += self.leftFKCtrls + self.leftFKCtrlsGrp
         rightArms = self.rightIKCtrls + self.rightIKCtrlsGrp
         rightArms += self.rightFKCtrls + self.rightFKCtrlsGrp
-        allArms = leftArms + rightArms
+        allArms = leftArms + rightArms + leftScapula + rightScapula
         for i in allArms:
             try:
                 pm.delete(i)
@@ -436,10 +451,12 @@ class RigArms:
                 topGrp = self.leftTopGroup
                 ctrls = self.leftIKCtrls
                 ctrlsGrp = self.leftIKCtrlsGrp
+                ctrlSpace = self.leftIKSpace
             elif side == "Right":
                 topGrp = self.rightTopGroup
                 ctrls = self.rightIKCtrls
                 ctrlsGrp = self.rightIKCtrlsGrp
+                ctrlSpace = self.rightIKSpace
             else:
                 return
             ctrlType = {t: n for t, n in zip(self.ikCtrlsType, ctrls)}
@@ -448,8 +465,9 @@ class RigArms:
             firstJnt, endJnt = jnts[::2]
             self.createShoulderIK(firstJnt, ccShoulder)
             ikHandle = self.createElbowIK(jnts, ccElbow)
-            self.createWristIK(endJnt, ccWrist, ikHandle)
+            self.createWristIK(endJnt, ccWrist, ctrlSpace, ikHandle)
             self.topGrouping(topGrp, ctrlsGrp)
+            self.addArmsAttr(ccWrist)
 
 
     def rigArmsFK(self):
@@ -486,8 +504,44 @@ class RigArms:
                 pm.parentConstraint(cc, jnt, mo=True, w=1.0)
                 fkGroups.append(ccGrp)
                 fkGroups.append(cc)
-            hjk.parentHierarchically(fkGroups)
+            hjk.parentHierarchically(*fkGroups)
             self.topGrouping(topGrp, ctrlsGrp[:1:])
+
+
+    def rigScapula(self):
+        if not pm.objExists(self.leftScapulaJnt):
+            return
+        if not pm.objExists(self.rightScapulaJnt):
+            return
+        scapulaJoints = [self.leftScapulaJnt, self.rightScapulaJnt]
+        for jnt in scapulaJoints:
+            side = hjk.getLeftOrRight(jnt)
+            if side == "Left":
+                ctrls = self.leftScapulaCtrl
+                ctrlsGrp = self.leftScapulaCtrlGrp
+                spaceGrp = self.leftScapulaSpace
+                mirrorRot = -45
+                rot = 0
+            elif side == "Right":
+                ctrls = self.rightScapulaCtrl
+                ctrlsGrp = self.rightScapulaCtrlGrp
+                spaceGrp = self.rightScapulaSpace
+                mirrorRot = 135
+                rot = 180
+            else:
+                return
+            ctrl = hjk.Controllers()
+            ccScapula = ctrl.createControllers(scapula=ctrls)
+            ccScapula = ccScapula[0]
+            pm.matchTransform(ccScapula, jnt, pos=True)
+            hjk.groupingWithOwnPivot(ccScapula)
+            pm.rotate(ctrlsGrp, [rot, 0, 0], r=True, os=True, fo=True)
+            pm.rotate(ccScapula, [0, 0, mirrorRot])
+            pm.makeIdentity(ccScapula, a=True, t=0, r=1, s=0, jo=0, n=0, pn=1)
+            pm.parentConstraint(ccScapula, jnt, mo=True)
+            nullGrp = pm.group(em=True, n=spaceGrp)
+            pm.matchTransform(nullGrp, ccScapula, pos=True)
+            pm.parent(nullGrp, ccScapula)
 
 
     def createShoulderIK(self, joint, controller):
@@ -510,10 +564,11 @@ class RigArms:
         pm.delete(polevectorJoint1)
         pm.poleVectorConstraint(controller, ikH, w=1)
         hjk.groupingWithOwnPivot(controller)
+        self.addArmsPolevectorAttr(controller)
         return ikH
 
 
-    def createWristIK(self, joint, ctrl, ikHandle):
+    def createWristIK(self, joint, ctrl, ctrlSpace, ikHandle):
         pm.matchTransform(ctrl, joint, pos=True)
         ctrlGrp = hjk.groupingWithOwnPivot(ctrl)
         ctrlGrp = ctrlGrp[0]
@@ -525,6 +580,9 @@ class RigArms:
             pm.setAttr(f"{ikHandle}.visibility", 0)
         except:
             pass
+        nullGrp = pm.group(em=True, n=ctrlSpace)
+        pm.matchTransform(nullGrp, ctrl, pos=True)
+        pm.parent(nullGrp, ctrl)
 
 
     def topGrouping(self, parents: str, children: list=[]):
@@ -533,45 +591,55 @@ class RigArms:
         pm.parent(children, parents)
 
 
+    def addArmsAttr(self, ctrl):
+        # __ Space
+        pm.addAttr(ctrl, ln="__", at="enum", en="Space")
+        pm.setAttr(f'{ctrl}.__', e=True, cb=True)
+        # world0_root1
+        long = "world0_shoulder1"
+        nice = "World0 Shoulder1"
+        pm.addAttr(ctrl, ln=long, nn=nice, at="double", min=0, max=1, dv=0)
+        pm.setAttr(f'{ctrl}.{long}', e=True, k=True)
+
+
+    def addArmsPolevectorAttr(self, ctrl):
+        # __ Space
+        pm.addAttr(ctrl, ln="__", at="enum", en="Space")
+        pm.setAttr(f'{ctrl}.__', e=True, cb=True)
+        # world0_root1
+        long = "world0_hand1"
+        nice = "World0 Hand1"
+        pm.addAttr(ctrl, ln=long, nn=nice, at="double", min=0, max=1, dv=0)
+        pm.setAttr(f'{ctrl}.{long}', e=True, k=True)
+
+
 class RigLegs:
     def __init__(self):
+        # Left
         self.leftTopGroup = "cc_LeftLeg_grp"
-        self.rightTopGroup = "cc_RightLeg_grp"
         self.leftFootJnt = "rig_L_Foot_IK"
-        self.rightFootJnt = "rig_R_Foot_IK"
         self.leftIKJnts = [
             "rig_L_Thigh_IK", 
             "rig_L_Calf_IK", 
             "rig_L_Foot_IK", 
             "rig_L_ToeBase_IK"
             ]
-        self.leftFKJnts = [
-            "rig_L_Thigh_FK", 
-            "rig_L_Calf_FK", 
-            "rig_L_Foot_FK", 
-            "rig_L_ToeBase_FK"
-            ]
-        self.rightIKJnts = [
-            "rig_R_Thigh_IK", 
-            "rig_R_Calf_IK", 
-            "rig_R_Foot_IK", 
-            "rig_R_ToeBase_IK"
-            ]
-        self.rightFKJnts = [
-            "rig_R_Thigh_FK", 
-            "rig_R_Calf_FK", 
-            "rig_R_Foot_FK", 
-            "rig_R_ToeBase_FK"
-            ]
         self.leftIKCtrls = [
             "cc_LeftUpLeg_IK", 
             "cc_LeftLegPoleVector", 
             "cc_LeftFoot_IK"
             ]
-        self.rightIKCtrls = [
-            "cc_rightUpLeg_IK", 
-            "cc_rightLegPoleVector", 
-            "cc_rightFoot_IK"
+        self.leftIKCtrlsGrp = [
+            "cc_LeftUpLeg_IK_grp", 
+            "cc_LeftLegPoleVector_grp", 
+            "cc_LeftFoot_IK_grp"
+            ]
+        self.leftIKSpace = "null_leftFootSpace"
+        self.leftFKJnts = [
+            "rig_L_Thigh_FK", 
+            "rig_L_Calf_FK", 
+            "rig_L_Foot_FK", 
+            "rig_L_ToeBase_FK"
             ]
         self.leftFKCtrls = [
             "cc_LeftUpLeg_FK", 
@@ -579,40 +647,12 @@ class RigLegs:
             "cc_LeftFoot_FK", 
             "cc_LeftToeBase_IK"
             ]
-        self.rightFKCtrls = [
-            "cc_rightUpLeg_FK", 
-            "cc_rightLeg_FK", 
-            "cc_rightFoot_FK", 
-            "cc_rightToeBase_IK"
-            ]
-        self.leftIKCtrlsGrp = [
-            "cc_LeftUpLeg_IK_grp", 
-            "cc_LeftLegPoleVector_grp", 
-            "cc_LeftFoot_IK_grp"
-            ]
-        self.rightIKCtrlsGrp = [
-            "cc_rightUpLeg_IK_grp", 
-            "cc_rightLegPoleVector_grp", 
-            "cc_rightFoot_IK_grp"
-            ]
         self.leftFKCtrlsGrp = [
             "cc_LeftUpLeg_FK_grp", 
             "cc_LeftLeg_FK_grp", 
             "cc_LeftFoot_FK_grp", 
             "cc_LeftToeBase_IK_grp"
             ]
-        self.rightFKCtrlsGrp = [
-            "cc_rightUpLeg_FK_grp", 
-            "cc_rightLeg_FK_grp", 
-            "cc_rightFoot_FK_grp", 
-            "cc_rightToeBase_IK_grp"
-            ]
-        self.ikCtrlsType = [
-            "scapula", 
-            "sphere", 
-            "foot2"
-            ]
-        self.fkCtrlsSize = [11, 9, 7]
         self.leftLocators = {
             "loc_LeftToeEnd_IK": [6, 0, 15], 
             "loc_LeftHeel_IK": [6, 0, -3], 
@@ -621,6 +661,44 @@ class RigLegs:
             "loc_LeftToeBase_IK": [6, 3, 6], 
             "loc_LeftFoot_IK": [6, 12, -3], 
             }
+        # Right
+        self.rightTopGroup = "cc_RightLeg_grp"
+        self.rightFootJnt = "rig_R_Foot_IK"
+        self.rightIKJnts = [
+            "rig_R_Thigh_IK", 
+            "rig_R_Calf_IK", 
+            "rig_R_Foot_IK", 
+            "rig_R_ToeBase_IK"
+            ]
+        self.rightIKCtrls = [
+            "cc_rightUpLeg_IK", 
+            "cc_rightLegPoleVector", 
+            "cc_rightFoot_IK"
+            ]
+        self.rightIKCtrlsGrp = [
+            "cc_rightUpLeg_IK_grp", 
+            "cc_rightLegPoleVector_grp", 
+            "cc_rightFoot_IK_grp"
+            ]
+        self.rightIKSpace = "null_rightFootSpace"
+        self.rightFKJnts = [
+            "rig_R_Thigh_FK", 
+            "rig_R_Calf_FK", 
+            "rig_R_Foot_FK", 
+            "rig_R_ToeBase_FK"
+            ]
+        self.rightFKCtrls = [
+            "cc_rightUpLeg_FK", 
+            "cc_rightLeg_FK", 
+            "cc_rightFoot_FK", 
+            "cc_rightToeBase_IK"
+            ]
+        self.rightFKCtrlsGrp = [
+            "cc_rightUpLeg_FK_grp", 
+            "cc_rightLeg_FK_grp", 
+            "cc_rightFoot_FK_grp", 
+            "cc_rightToeBase_IK_grp"
+            ]
         self.rightLocators = {
             "loc_RightToeEnd_IK": [-6, 0, 15], 
             "loc_RightHeel_IK": [-6, 0, -3], 
@@ -629,6 +707,22 @@ class RigLegs:
             "loc_RightToeBase_IK": [-6, 3, 6], 
             "loc_RightFoot_IK": [-6, 12, -3], 
             }
+        # Etc
+        self.ikCtrlsType = [
+            "scapula", 
+            "sphere", 
+            "foot2"
+            ]
+        self.fkCtrlsSize = [12, 10, 8, 6]
+        self.legAttr = [
+            "ballUp", 
+            "ballDown", 
+            "bank", 
+            "heelUp", 
+            "heelTwist", 
+            "toeUp", 
+            "toeTwist"
+            ]
 
 
     def cleanUp(self):
@@ -665,28 +759,74 @@ class RigLegs:
                 topGrp = self.leftTopGroup
                 ctrls = self.leftIKCtrls
                 ctrlsGrp = self.leftIKCtrlsGrp
-                footJnt = self.leftFootJnt
+                ctrlSpace = self.leftIKSpace
                 locators = list(self.leftLocators.keys())
-                joints = self.leftIKJnts
                 mirrorConstant = 1
             elif side == "Right":
                 topGrp = self.rightTopGroup
                 ctrls = self.rightIKCtrls
                 ctrlsGrp = self.rightIKCtrlsGrp
-                footJnt = self.rightFootJnt
+                ctrlSpace = self.rightIKSpace
                 locators = list(self.rightLocators.keys())
-                joints = self.rightIKJnts
                 mirrorConstant = -1
             else:
                 return
-            _1stJnt, _2ndJnt, _3rdJnt, _4thJnt = jnts
+            thighJnt, kneeJnt, ankleJnt, ballJnt = jnts
             ctrl = hjk.Controllers()
             ctrlType = {t: n for t, n in zip(self.ikCtrlsType, ctrls)}
             ccPelvis, ccKnee, ccFoot = ctrl.createControllers(**ctrlType)
-            # self.createPelvisIK(_1stJnt, ccPelvis, mirrorConstant)
-            # ikH = self.createKneeIK(jnts, ccKnee)
-            self.createFootIKCtrl(ccFoot, footJnt)
-            self.rigFootIK(ccFoot, locators, joints)
+            self.createPelvisIK(thighJnt, ccPelvis, mirrorConstant)
+            self.createFootIKCtrl(ccFoot, ankleJnt)
+            ikH = self.rigFootIK(ccFoot, ctrlSpace, locators, jnts)
+            self.createKneeIK(jnts, ccKnee, ikH)
+            self.topGrouping(topGrp, ctrlsGrp)
+            self.addLegsAttr(ccFoot)
+
+
+    def rigLegsFK(self):
+        if not all([pm.objExists(i) for i in self.leftFKJnts]):
+            return
+        if not all([pm.objExists(i) for i in self.rightFKJnts]):
+            return
+        fkJoints = [self.leftFKJnts, self.rightFKJnts]
+        for jnts in fkJoints:
+            side = hjk.getLeftOrRight(*jnts)
+            if side == "Left":
+                topGrp = self.leftTopGroup
+                ctrls = self.leftFKCtrls
+                ctrlsGrp = self.leftFKCtrlsGrp
+                mirrorConstant = 1
+                rot = 0
+            elif side == "Right":
+                topGrp = self.rightTopGroup
+                ctrls = self.rightFKCtrls
+                ctrlsGrp = self.rightFKCtrlsGrp
+                mirrorConstant = -1
+                rot = 180
+            else:
+                return
+            fkGroups = []
+            for ctrl, jnt, size in zip(ctrls, jnts, self.fkCtrlsSize):
+                cc = pm.circle(ch=False, r=size, nr=(0, 1, 0), n=ctrl)
+                cc = cc[0]
+                pm.matchTransform(cc, jnt, pos=True, rot=True)
+                pm.rotate(cc, [0, 0, mirrorConstant*180], r=True, os=True, fo=True)
+                ccGrp = hjk.groupingWithOwnPivot(cc)
+                ccGrp = ccGrp[0]
+                pm.rotate(ccGrp, [rot, 0, 0], r=True, os=True, fo=True)
+                pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+                fkGroups.append(ccGrp)
+                fkGroups.append(cc)
+            hjk.parentHierarchically(*fkGroups)
+            self.topGrouping(topGrp, ctrlsGrp[:1:])
+
+
+    def createPelvisIK(self, joint, controller, mirrorConstant=1):
+        pm.rotate(controller, [0, 0, mirrorConstant*(-90)])
+        pm.makeIdentity(controller, a=True, t=0, r=1, s=0, jo=0, n=0, pn=1)
+        pm.matchTransform(controller, joint, pos=True)
+        pm.pointConstraint(controller, joint, mo=True)
+        hjk.groupingWithOwnPivot(controller)
 
 
     def createFootIKCtrl(self, ctrl, jnt):
@@ -696,7 +836,7 @@ class RigLegs:
         pm.move(x, y, z, [f"{ctrl}.rotatePivot", f"{ctrl}.scalePivot"], ws=1)
 
 
-    def rigFootIK(self, ctrl, locs, jnts):
+    def rigFootIK(self, ctrl, ctrlSpace, locs, jnts) -> str:
         # locators
         toeLoc = locs[0]
         outLoc = locs[3]
@@ -747,39 +887,59 @@ class RigLegs:
         pm.matchTransform(ikH3_grp, ballJnt, pos=True, rot=True)
         pm.parent(ikH3, ikH3_null)
         pm.parent(ikH3_grp, outLoc)
+        # Space
+        nullGrp = pm.group(em=True, n=ctrlSpace)
+        pm.matchTransform(nullGrp, ctrl, pos=True)
+        pm.parent(nullGrp, ctrl)
+        return ikH1
 
 
-    def createPelvisIK(self, joint, controller, mirrorConstant=1):
-        pm.rotate(controller, [0, 0, mirrorConstant*(-90)])
-        pm.makeIdentity(controller, a=True, t=0, r=1, s=0, jo=0, n=0, pn=1)
-        pm.matchTransform(controller, joint, pos=True)
-        pm.pointConstraint(controller, joint, mo=True)
-        hjk.groupingWithOwnPivot(controller)
-
-
-    def createKneeIK(self, joints: list, controller: str):
+    def createKneeIK(self, joints: list, controller: str, ikH: str):
+        if len(joints) < 3:
+            return
         threeJoints = joints[0:3]
-        _1stJnt, _3rdJnt = threeJoints[::2]
-        ikH = pm.ikHandle(sj=_1stJnt, ee=_3rdJnt, sol="ikRPsolver")
-        ikH = ikH[0]
         polevectorJoints = hjk.createPolevectorJoint(*threeJoints)
         polevectorJoint1, polevectorJoint2 = polevectorJoints
         pm.matchTransform(controller, polevectorJoint2, pos=True)
         pm.delete(polevectorJoint1)
         pm.poleVectorConstraint(controller, ikH, w=1)
         hjk.groupingWithOwnPivot(controller)
-        return ikH
+        self.addLegsPolevectorAttr(controller)
 
 
-    def updateLocatorsPosition(self):
-        leftLoc = {i: hjk.getPosition(i) for i in self.leftLocators.keys()}
-        rightLoc = {i: hjk.getPosition(i) for i in self.rightLocators.keys()}
-        self.leftLocators = leftLoc
-        self.rightLocators = rightLoc
-            
+    def topGrouping(self, parents: str, children: list=[]):
+        if not pm.objExists(parents):
+            pm.group(em=True, n=parents)
+        pm.parent(children, parents)
 
-    def rigLegsFK(self):
-        pass
+
+    def addLegsAttr(self, ctrl):
+        # _ Controllers
+        pm.addAttr(ctrl, ln="_", at="enum", en="Controllers")
+        pm.setAttr(f'{ctrl}._', e=True, cb=True)
+        # Channels
+        for i in self.legAttr:
+            pm.addAttr(ctrl, ln=i, at="double", dv=0)
+            pm.setAttr(f'{ctrl}.{i}', e=True, k=True)
+        # __ Space
+        pm.addAttr(ctrl, ln="__", at="enum", en="Space")
+        pm.setAttr(f'{ctrl}.__', e=True, cb=True)
+        # world0_root1
+        long = "world0_root1"
+        nice = "World0 Root1"
+        pm.addAttr(ctrl, ln=long, nn=nice, at="double", min=0, max=1, dv=0)
+        pm.setAttr(f'{ctrl}.{long}', e=True, k=True)
+
+
+    def addLegsPolevectorAttr(self, ctrl):
+        # __ Space
+        pm.addAttr(ctrl, ln="__", at="enum", en="Space")
+        pm.setAttr(f'{ctrl}.__', e=True, cb=True)
+        # world0_root1
+        long = "world0_foot1"
+        nice = "World0 Foot1"
+        pm.addAttr(ctrl, ln=long, nn=nice, at="double", min=0, max=1, dv=0)
+        pm.setAttr(f'{ctrl}.{long}', e=True, k=True)
 
 
 class RigFingers:
@@ -934,6 +1094,16 @@ class RigFingers:
             return size
 
 
+class RigFacial:
+    def __init__(self):
+        pass
+
+
+class RigSpine:
+    def __init__(self):
+        pass
+
+
 class Finish:
     def __init__(self):
         spine = [
@@ -1012,15 +1182,20 @@ class Finish:
 # ra.cleanUp()
 # ra.rigArmsIK()
 # ra.rigArmsFK()
+# ra.rigScapula()
 
 
 # rl = RigLegs()
 # rl.cleanUp()
 # rl.createLocators()
 # rl.rigLegsIK()
+# rl.rigLegsFK()
 
 
 # rf = RigFingers()
 # rf.cleanUp()
 # rf.rigFingers()
+
+
+
 
