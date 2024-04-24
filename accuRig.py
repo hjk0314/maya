@@ -1197,5 +1197,3 @@ class Finish:
 # rf.rigFingers()
 
 
-
-
