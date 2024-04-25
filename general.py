@@ -828,5 +828,3 @@ class Controllers:
         return result
 
 
-ctrl = Controllers()
-ctrl.createControllers(scapula="s")
