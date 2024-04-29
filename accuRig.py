@@ -761,6 +761,16 @@ class RigLegs:
                 ctrlsGrp = self.leftIKCtrlsGrp
                 ctrlSpace = self.leftIKSpace
                 locators = list(self.leftLocators.keys())
+                connAttrs = [
+                    "loc_LeftToeBase_IK", 
+                    "ikH_L_ToeBase_IK_null", 
+                    "loc_LeftToeEnd_IK", 
+                    "loc_LeftToeEnd_IK", 
+                    "loc_LeftHeel_IK", 
+                    "loc_LeftHeel_IK", 
+                    "loc_LeftBankOut_IK", 
+                    "loc_LeftBankIn_IK", 
+                    ]
                 mirrorConstant = 1
             elif side == "Right":
                 topGrp = self.rightTopGroup
@@ -768,6 +778,16 @@ class RigLegs:
                 ctrlsGrp = self.rightIKCtrlsGrp
                 ctrlSpace = self.rightIKSpace
                 locators = list(self.rightLocators.keys())
+                connAttrs = [
+                    "loc_RightToeBase_IK", 
+                    "ikH_R_ToeBase_IK_null", 
+                    "loc_RightToeEnd_IK", 
+                    "loc_RightToeEnd_IK", 
+                    "loc_RightHeel_IK", 
+                    "loc_RightHeel_IK", 
+                    "loc_RightBankOut_IK", 
+                    "loc_RightBankIn_IK", 
+                    ]
                 mirrorConstant = -1
             else:
                 return
@@ -781,6 +801,7 @@ class RigLegs:
             self.createKneeIK(jnts, ccKnee, ikH)
             self.topGrouping(topGrp, ctrlsGrp)
             self.addLegsAttr(ccFoot)
+            self.connectLegsAttr(ccFoot, connAttrs, mirrorConstant)
 
 
     def rigLegsFK(self):
@@ -940,6 +961,27 @@ class RigLegs:
         nice = "World0 Foot1"
         pm.addAttr(ctrl, ln=long, nn=nice, at="double", min=0, max=1, dv=0)
         pm.setAttr(f'{ctrl}.{long}', e=True, k=True)
+
+
+    def connectLegsAttr(self, ccFoot, attrs, mirrorConstant):
+        rx, ry, rz = ["rotateX", "rotateY", "rotateZ"]
+        pm.connectAttr(f"{ccFoot}.ballUp", f"{attrs[0]}.{rx}", f=True)
+        pm.connectAttr(f"{ccFoot}.ballDown", f"{attrs[1]}.{rx}", f=True)
+        pm.connectAttr(f"{ccFoot}.toeUp", f"{attrs[2]}.{rx}", f=True)
+        pm.connectAttr(f"{ccFoot}.toeTwist", f"{attrs[3]}.{ry}", f=True)
+        pm.connectAttr(f"{ccFoot}.heelUp", f"{attrs[4]}.{rx}", f=True)
+        pm.connectAttr(f"{ccFoot}.heelTwist", f"{attrs[5]}.{ry}", f=True)
+        nodeName = pm.shadingNode("clamp", au=True)
+        pm.setAttr(f"{nodeName}.minR", -180)
+        pm.setAttr(f"{nodeName}.maxG", 180)
+        pm.connectAttr(f"{ccFoot}.bank", f"{nodeName}.inputR", f=True)
+        pm.connectAttr(f"{ccFoot}.bank", f"{nodeName}.inputG", f=True)
+        if 1 == mirrorConstant:
+            pm.connectAttr(f"{nodeName}.outputR", f"{attrs[6]}.{rz}", f=True)
+            pm.connectAttr(f"{nodeName}.outputG", f"{attrs[7]}.{rz}", f=True)
+        else:
+            pm.connectAttr(f"{nodeName}.outputG", f"{attrs[6]}.{rz}", f=True)
+            pm.connectAttr(f"{nodeName}.outputR", f"{attrs[7]}.{rz}", f=True)
 
 
 class RigFingers:
@@ -1185,11 +1227,11 @@ class Finish:
 # ra.rigScapula()
 
 
-# rl = RigLegs()
-# rl.cleanUp()
-# rl.createLocators()
-# rl.rigLegsIK()
-# rl.rigLegsFK()
+rl = RigLegs()
+rl.cleanUp()
+rl.createLocators()
+rl.rigLegsIK()
+rl.rigLegsFK()
 
 
 # rf = RigFingers()
