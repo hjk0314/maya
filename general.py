@@ -848,3 +848,9 @@ class Controllers:
 #     pm.parentConstraint(cc, jnt, mo=True, w=1.0)
 #     pm.scaleConstraint(cc, jnt, mo=True, w=1.0)
 # selectJointOnly()
+# sel = pm.ls(sl=True)
+# for fbx in sel:
+#     jnt = fbx.replace("fbx_", "jnt_")
+#     pm.connectAttr(f"{fbx}.translate", f"{jnt}.translate", f=True)
+#     pm.connectAttr(f"{fbx}.rotate", f"{jnt}.rotate", f=True)
+#     pm.connectAttr(f"{fbx}.scale", f"{jnt}.scale", f=True)
