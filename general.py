@@ -5,17 +5,18 @@ import pymel.core as pm
 import maya.OpenMaya as om
 
 
-def getPosition(selection: str) -> list:
+def getPosition(selection: str) -> tuple:
     """ Get the coordinates of an object or point.
     >>> getPosition("pSphere1")
     >>> getPosition("pSphere1.vtx[317]")
-    >>> [0.0, 0.0, 0.0]
+    >>> (0.0, 0.0, 0.0)
      """
     try:
         position = pm.pointPosition(selection)
     except:
         position = pm.xform(selection, q=1, ws=1, rp=1)
-    return position
+    result = tuple(position)
+    return result
 
 
 def makeSameAsParentPivot(object, parents) -> None:
@@ -854,3 +855,4 @@ class Controllers:
 #     pm.connectAttr(f"{fbx}.translate", f"{jnt}.translate", f=True)
 #     pm.connectAttr(f"{fbx}.rotate", f"{jnt}.rotate", f=True)
 #     pm.connectAttr(f"{fbx}.scale", f"{jnt}.scale", f=True)
+
