@@ -338,6 +338,7 @@ def setJointsStyle(joints=[], drawStyle=2) -> list:
 def parentHierarchically(*args) -> None:
     """ Hierarchically parent.
     >>> parentHierarchically(*lst)
+    >>> parentHierarchically(parents, child)
      """
     sel = [pm.PyNode(i) for i in args] if args else pm.selected()
     for idx, parents in enumerate(sel):
