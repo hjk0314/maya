@@ -334,18 +334,18 @@ class Car(QWidget):
         pm.expression(s=expr, o='', ae=1, uc='all')
 
 
-# if __name__ == "__main__":
-#     try:
-#         qrCar.close()
-#         qrCar.deleteLater()
-#     except:
-#         pass
-#     qrCar = Car()
-#     qrCar.show()
+if __name__ == "__main__":
+    try:
+        qrCar.close()
+        qrCar.deleteLater()
+    except:
+        pass
+    qrCar = Car()
+    qrCar.show()
 
 
 # car = Car()
-# obj = "pSphere1"
+# obj = "jaguarA_down_tire_Ft_L_tire_rubber_1"
 # ctrl = "cc_wheelLeftFront"
 # grpNames = car.createWheelGroups(ctrl)
 # ccSub = car.createWheelCtrl(obj, ctrl, grpNames[1])
