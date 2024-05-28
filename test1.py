@@ -334,14 +334,14 @@ class Car(QWidget):
         pm.expression(s=expr, o='', ae=1, uc='all')
 
 
-if __name__ == "__main__":
-    try:
-        qrCar.close()
-        qrCar.deleteLater()
-    except:
-        pass
-    qrCar = Car()
-    qrCar.show()
+# if __name__ == "__main__":
+#     try:
+#         qrCar.close()
+#         qrCar.deleteLater()
+#     except:
+#         pass
+#     qrCar = Car()
+#     qrCar.show()
 
 
 # car = Car()
@@ -352,3 +352,5 @@ if __name__ == "__main__":
 # locator = car.createRotationLocator(ccSub)
 # car.createExpression(ccSub, locator, grpNames)
 
+
+groupingWithOwnPivot()
