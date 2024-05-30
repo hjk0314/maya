@@ -2,6 +2,7 @@ from PySide2.QtWidgets import *
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QIntValidator
 from shiboken2 import wrapInstance
+# from functools import partial
 from general import *
 import pymel.core as pm
 import maya.OpenMayaUI as omui
@@ -51,85 +52,119 @@ class Car(QWidget):
         self.setupUI()
     
 
+
+        
     def setupUI(self):
         self.setWindowTitle("quickRig_car")
         self.move(0, 0)
-        self.resize(250, 330)
+        self.resize(250, 500)
         self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setSpacing(5)
-        self.fldCarName = QLineEdit("carName")
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.fldCarName = QLineEdit()
         self.fldCarName.setClearButtonEnabled(True)
         self.fldCarName.setPlaceholderText("Input your car name")
         self.verticalLayout.addWidget(self.fldCarName)
-        self.line0 = QFrame()
-        self.line0.setFrameShape(QFrame.HLine)
-        self.line0.setFrameShadow(QFrame.Sunken)
-        self.verticalLayout.addWidget(self.line0)
+        self.btnCarGrp = QPushButton("Car group")
+        self.verticalLayout.addWidget(self.btnCarGrp)
+        self.line = QFrame()
+        self.line.setFrameShape(QFrame.HLine)
+        self.line.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line)
         self.btnTempJnt = QPushButton("Create temp joints")
         self.verticalLayout.addWidget(self.btnTempJnt)
         self.horizontalLayout = QHBoxLayout()
-        self.btnLtoR = QPushButton("Left -> Right")
+        self.btnLtoR = QPushButton("Left To Right")
         self.horizontalLayout.addWidget(self.btnLtoR)
-        self.btnRtoL = QPushButton("Right -> Left")
+        self.btnRtoL = QPushButton("Right To Left")
         self.horizontalLayout.addWidget(self.btnRtoL)
         self.verticalLayout.addLayout(self.horizontalLayout)
-        self.line1 = QFrame()
-        self.line1.setFrameShape(QFrame.HLine)
-        self.line1.setFrameShadow(QFrame.Sunken)
-        self.verticalLayout.addWidget(self.line1)
+        self.line_2 = QFrame()
+        self.line_2.setFrameShape(QFrame.HLine)
+        self.line_2.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_2)
         self.btnBuild = QPushButton("Build")
         self.verticalLayout.addWidget(self.btnBuild)
-        self.gridLayout = QGridLayout()
-        self.btnAutoWheel = QPushButton("Auto Wheel")
-        self.gridLayout.addWidget(self.btnAutoWheel, 0, 0, 1, 1)
-        self.btnKeyWheel = QPushButton("Key Wheel")
-        self.gridLayout.addWidget(self.btnKeyWheel, 0, 1, 1, 1)
-        self.btnDoor = QPushButton("Door")
-        self.gridLayout.addWidget(self.btnDoor, 1, 0, 1, 1)
-        self.btnHandle = QPushButton("Handle")
-        self.gridLayout.addWidget(self.btnHandle, 1, 1, 1, 1)
-        self.btnTirePressure = QPushButton("Tire Pressure")
-        self.gridLayout.addWidget(self.btnTirePressure, 2, 0, 1, 1)
-        self.btnEtc = QPushButton("Etc")
-        self.gridLayout.addWidget(self.btnEtc, 2, 1, 1, 1)
-        self.verticalLayout.addLayout(self.gridLayout)
+        self.btnCancel = QPushButton("Cancel")
+        self.verticalLayout.addWidget(self.btnCancel)
+        self.line_5 = QFrame()
+        self.line_5.setFrameShape(QFrame.HLine)
+        self.line_5.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_5)
+        self.fldSelectWheel = QLineEdit()
+        self.fldSelectWheel.setEnabled(True)
+        self.fldSelectWheel.setPlaceholderText("Input Ctrl's Name or Click below")
+        self.fldSelectWheel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.verticalLayout.addWidget(self.fldSelectWheel)
+        self.gridLayout_4 = QGridLayout()
+        self.btnLeftFront = QPushButton("Left Front")
+        self.gridLayout_4.addWidget(self.btnLeftFront, 0, 0, 1, 1)
+        self.btnRightFront = QPushButton("Right Front")
+        self.gridLayout_4.addWidget(self.btnRightFront, 0, 1, 1, 1)
+        self.btnLeftRear = QPushButton("Left Rear")
+        self.gridLayout_4.addWidget(self.btnLeftRear, 2, 0, 1, 1)
+        self.btnRightRear = QPushButton("Right Rear")
+        self.gridLayout_4.addWidget(self.btnRightRear, 2, 1, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout_4)
+        self.btnCreateCtrl = QPushButton("Create a Controller")
+        self.verticalLayout.addWidget(self.btnCreateCtrl)
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.btnSetExpr = QPushButton("Set Expression")
+        self.horizontalLayout_4.addWidget(self.btnSetExpr)
+        self.btnDelExpr = QPushButton("Del Expression")
+        self.horizontalLayout_4.addWidget(self.btnDelExpr)
+        self.verticalLayout.addLayout(self.horizontalLayout_4)
+        self.btnTirePressure = QPushButton("Apply Tire Pressure")
+        self.verticalLayout.addWidget(self.btnTirePressure)
         self.btnCleanUp = QPushButton("Clean Up")
         self.verticalLayout.addWidget(self.btnCleanUp)
-        self.line2 = QFrame()
-        self.line2.setFrameShape(QFrame.HLine)
-        self.line2.setFrameShadow(QFrame.Sunken)
-        self.verticalLayout.addWidget(self.line2)
+        self.line_3 = QFrame()
+        self.line_3.setFrameShape(QFrame.HLine)
+        self.line_3.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_3)
         self.btnConnection = QPushButton("Joint Connection")
         self.verticalLayout.addWidget(self.btnConnection)
         self.btnDisconnection = QPushButton("Disconnection")
         self.verticalLayout.addWidget(self.btnDisconnection)
-        self.btnDeleteAll = QPushButton("Delete All")
-        self.verticalLayout.addWidget(self.btnDeleteAll)
-        self.line3 = QFrame()
-        self.line3.setFrameShape(QFrame.HLine)
-        self.line3.setFrameShadow(QFrame.Sunken)
-        self.verticalLayout.addWidget(self.line3)
+        self.line_4 = QFrame()
+        self.line_4.setFrameShape(QFrame.HLine)
+        self.line_4.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_4)
         self.btnClose = QPushButton("Close")
         self.verticalLayout.addWidget(self.btnClose)
-        spacerItem = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
-        self.verticalLayout.addItem(spacerItem)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalLayout.addItem(self.verticalSpacer)
         # Buttons Links
         self.buttonsLink()
 
 
     def buttonsLink(self):
+        self.fldCarName.returnPressed.connect(self.createGroups)
+        self.btnCarGrp.clicked.connect(self.createGroups)
+        self.btnTempJnt.clicked.connect(self.createJoints)
+        self.btnLtoR.clicked.connect(self.test)
+        self.btnRtoL.clicked.connect(self.test)
         self.btnClose.clicked.connect(self.close)
 
 
     def build(self):
         self.updateJointsPosition()
-        self.updateSameSide()
         self.cleanUp()
         self.createGroups()
         self.createJoints()
         self.createFbxJoints()
         self.createCtrls()
         # self.setControllers()
+
+
+    def test(self):
+        button = self.sender()
+        buttonName = button.text()
+        buttonName = buttonName.replace(" ", "")
+        self.updateJointsPosition()
+        self.updateSameSide(buttonName)
+        self.cleanUp()
+        self.createJoints()
 
 
     def updateJointsPosition(self):
@@ -174,9 +209,12 @@ class Car(QWidget):
 
 
     def createGroups(self):
-        carName = "test"
-        rg = RigGroups()
-        rg.createRigGroups(carName)
+        carName = self.fldCarName.text()
+        if carName:
+            rg = RigGroups()
+            rg.createRigGroups(carName)
+        else:
+            pm.warning("Input the group name.")
 
 
     def createJoints(self):
@@ -334,14 +372,14 @@ class Car(QWidget):
         pm.expression(s=expr, o='', ae=1, uc='all')
 
 
-# if __name__ == "__main__":
-#     try:
-#         qrCar.close()
-#         qrCar.deleteLater()
-#     except:
-#         pass
-#     qrCar = Car()
-#     qrCar.show()
+if __name__ == "__main__":
+    try:
+        qrCar.close()
+        qrCar.deleteLater()
+    except:
+        pass
+    qrCar = Car()
+    qrCar.show()
 
 
 # car = Car()
@@ -353,4 +391,3 @@ class Car(QWidget):
 # car.createExpression(ccSub, locator, grpNames)
 
 
-groupingWithOwnPivot()
