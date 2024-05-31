@@ -15,6 +15,7 @@ def mayaMainWindow():
 
 class Car(QWidget):
     def __init__(self):
+        self.topGroup = ""
         self.rootJnt = "jnt_root"
         self.rootFbx = "fbx_root"
         self.mainCtrl = "cc_main"
@@ -52,8 +53,6 @@ class Car(QWidget):
         self.setupUI()
     
 
-
-        
     def setupUI(self):
         self.setWindowTitle("quickRig_car")
         self.move(0, 0)
@@ -85,8 +84,8 @@ class Car(QWidget):
         self.verticalLayout.addWidget(self.line_2)
         self.btnBuild = QPushButton("Build")
         self.verticalLayout.addWidget(self.btnBuild)
-        self.btnCancel = QPushButton("Cancel")
-        self.verticalLayout.addWidget(self.btnCancel)
+        self.btnCleanUp = QPushButton("Clean Up")
+        self.verticalLayout.addWidget(self.btnCleanUp)
         self.line_5 = QFrame()
         self.line_5.setFrameShape(QFrame.HLine)
         self.line_5.setFrameShadow(QFrame.Sunken)
@@ -96,6 +95,7 @@ class Car(QWidget):
         self.fldSelectWheel.setPlaceholderText("Input Ctrl's Name or Click below")
         self.fldSelectWheel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
         self.verticalLayout.addWidget(self.fldSelectWheel)
+
         self.gridLayout_4 = QGridLayout()
         self.btnLeftFront = QPushButton("Left Front")
         self.gridLayout_4.addWidget(self.btnLeftFront, 0, 0, 1, 1)
@@ -106,30 +106,39 @@ class Car(QWidget):
         self.btnRightRear = QPushButton("Right Rear")
         self.gridLayout_4.addWidget(self.btnRightRear, 2, 1, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout_4)
-        self.btnCreateCtrl = QPushButton("Create a Controller")
-        self.verticalLayout.addWidget(self.btnCreateCtrl)
-        self.horizontalLayout_4 = QHBoxLayout()
+
+        self.btnCreateWheel = QPushButton("Create Wheel")
+        self.verticalLayout.addWidget(self.btnCreateWheel)
+        self.btnWheelCleanUp = QPushButton("Clean Up")
+        self.verticalLayout.addWidget(self.btnWheelCleanUp)
+
+        self.gridLayout_5 = QGridLayout()
         self.btnSetExpr = QPushButton("Set Expression")
-        self.horizontalLayout_4.addWidget(self.btnSetExpr)
+        self.gridLayout_5.addWidget(self.btnSetExpr, 0, 0, 1, 1)
         self.btnDelExpr = QPushButton("Del Expression")
-        self.horizontalLayout_4.addWidget(self.btnDelExpr)
-        self.verticalLayout.addLayout(self.horizontalLayout_4)
-        self.btnTirePressure = QPushButton("Apply Tire Pressure")
-        self.verticalLayout.addWidget(self.btnTirePressure)
-        self.btnCleanUp = QPushButton("Clean Up")
-        self.verticalLayout.addWidget(self.btnCleanUp)
+        self.gridLayout_5.addWidget(self.btnDelExpr, 0, 1, 1, 1)
+        self.btnSetPressure = QPushButton("Set Pressure")
+        self.gridLayout_5.addWidget(self.btnSetPressure, 2, 0, 1, 1)
+        self.btnDelPressure = QPushButton("Del Pressure")
+        self.gridLayout_5.addWidget(self.btnDelPressure, 2, 1, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout_5)
+
+
         self.line_3 = QFrame()
         self.line_3.setFrameShape(QFrame.HLine)
         self.line_3.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_3)
+
         self.btnConnection = QPushButton("Joint Connection")
         self.verticalLayout.addWidget(self.btnConnection)
         self.btnDisconnection = QPushButton("Disconnection")
         self.verticalLayout.addWidget(self.btnDisconnection)
+
         self.line_4 = QFrame()
         self.line_4.setFrameShape(QFrame.HLine)
         self.line_4.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_4)
+
         self.btnClose = QPushButton("Close")
         self.verticalLayout.addWidget(self.btnClose)
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -142,8 +151,16 @@ class Car(QWidget):
         self.fldCarName.returnPressed.connect(self.createGroups)
         self.btnCarGrp.clicked.connect(self.createGroups)
         self.btnTempJnt.clicked.connect(self.createJoints)
-        self.btnLtoR.clicked.connect(self.test)
-        self.btnRtoL.clicked.connect(self.test)
+        self.btnLtoR.clicked.connect(self.buildSymmetry)
+        self.btnRtoL.clicked.connect(self.buildSymmetry)
+        self.btnBuild.clicked.connect(self.build)
+        self.btnCleanUp.clicked.connect(self.cleanUp)
+        self.btnLeftFront.clicked.connect(self.setWheelName)
+        self.btnRightFront.clicked.connect(self.setWheelName)
+        self.btnLeftRear.clicked.connect(self.setWheelName)
+        self.btnRightRear.clicked.connect(self.setWheelName)
+        self.btnCreateWheel.clicked.connect(self.buildWheels)
+
         self.btnClose.clicked.connect(self.close)
 
 
@@ -154,10 +171,9 @@ class Car(QWidget):
         self.createJoints()
         self.createFbxJoints()
         self.createCtrls()
-        # self.setControllers()
 
 
-    def test(self):
+    def buildSymmetry(self):
         button = self.sender()
         buttonName = button.text()
         buttonName = buttonName.replace(" ", "")
@@ -167,10 +183,27 @@ class Car(QWidget):
         self.createJoints()
 
 
+    def buildWheels(self):
+        ctrl = self.fldSelectWheel.text()
+        obj = selectObjectOnly()[0]
+        if not ctrl:
+            pm.warning("Input your Controller's name.")
+            return
+        if not obj:
+            pm.warning("Select the polygonal mesh of the wheel.")
+            return
+        self.createWheelGroups(ctrl)
+        loc = self.createRotationLocator(ctrl, obj)
+        self.createWheelCtrl(loc, ctrl, obj)
+
+
     def updateJointsPosition(self):
         for jnt in self.jntNameAndPos.keys():
-            pos = getPosition(jnt)
-            self.jntNameAndPos[jnt] = pos
+            try:
+                pos = getPosition(jnt)
+                self.jntNameAndPos[jnt] = pos
+            except:
+                continue
 
 
     def updateSameSide(self, side: str="LeftToRight"):
@@ -197,6 +230,7 @@ class Car(QWidget):
 
     def cleanUp(self):
         listDelete = [
+            self.topGroup, 
             self.rootJnt, 
             self.rootFbx, 
             self.mainCtrl + "_grp", 
@@ -210,17 +244,26 @@ class Car(QWidget):
 
     def createGroups(self):
         carName = self.fldCarName.text()
-        if carName:
-            rg = RigGroups()
-            rg.createRigGroups(carName)
+        if self.topGroup == carName:
+            grpName = carName
+        elif self.topGroup != "" and carName == "":
+            grpName = self.topGroup
         else:
-            pm.warning("Input the group name.")
+            grpName = carName
+            self.topGroup = carName
+        rg = RigGroups()
+        rg.createRigGroups(grpName)
+        self.fldCarName.setText(grpName)
+        self.fldCarName.clearFocus()
 
 
     def createJoints(self):
         for jnt, pos in self.jntNameAndPos.items():
-            pm.select(cl=True)
-            pm.joint(p=pos, n=jnt)
+            if pm.objExists(jnt):
+                continue
+            else:
+                pm.select(cl=True)
+                pm.joint(p=pos, n=jnt)
         for parents, childList in self.hierarchy.items():
             for children in childList:
                 parentHierarchically(*children)
@@ -264,6 +307,14 @@ class Car(QWidget):
             pass
 
 
+    def setWheelName(self):
+        button = self.sender()
+        buttonName = button.text()
+        ctrlName = "cc_wheel%s" % buttonName.replace(" ", "")
+        self.fldSelectWheel.setText(ctrlName)
+        self.fldSelectWheel.clearFocus()
+
+
     def createWheelGroups(self, ctrl):
         grpNames = [
             f"{ctrl}_grp", 
@@ -288,11 +339,18 @@ class Car(QWidget):
 
 
     def createWheelCtrl(self, obj, ccName, parentsGroup="") -> str:
-        cc = [f"{ccName}_upDownMain", f"{ccName}_upDownSub", 
-            f"{ccName}_Main", f"{ccName}_Sub"]
+        cc = [
+            f"{ccName}_upDownMain", 
+            f"{ccName}_upDownSub", 
+            f"{ccName}_Main", 
+            f"{ccName}_Sub"
+        ]
+        ccType = ["square", "square", "circle", "circle"]
+        temp = {key: value for key, value in zip(ccType, cc)}
+        ctrl = Controllers()
+        ctrlName = ctrl.createControllers(temp)
         ccGrp = []
         sizeRatio = [14, 18, 9, 11]
-        ctrl = Controllers()
         rad = getBoundingBoxSize(obj)
         for ccName, sr in zip(cc[:2], sizeRatio[:2]):
             cuv = ctrl.createControllers(square=ccName)[0]
@@ -325,11 +383,13 @@ class Car(QWidget):
         return ccSub
 
 
-    def createRotationLocator(self, ctrl):
-        locName = ctrl.replace("cc_", "loc_")
+    def createRotationLocator(self, ctrl, obj):
+        if "cc_" in ctrl:
+            locName = ctrl.replace("cc_", "loc_")
+        else:
+            locName = f"{ctrl}_%s" % "exprLocator"
         locator = pm.spaceLocator(n=locName)
-        pm.matchTransform(locator, ctrl, pos=True)
-        pm.parent(locator, ctrl)
+        pm.matchTransform(locator, obj, pos=True)
         return locator
 
 
@@ -372,14 +432,14 @@ class Car(QWidget):
         pm.expression(s=expr, o='', ae=1, uc='all')
 
 
-if __name__ == "__main__":
-    try:
-        qrCar.close()
-        qrCar.deleteLater()
-    except:
-        pass
-    qrCar = Car()
-    qrCar.show()
+# if __name__ == "__main__":
+#     try:
+#         qrCar.close()
+#         qrCar.deleteLater()
+#     except:
+#         pass
+#     qrCar = Car()
+#     qrCar.show()
 
 
 # car = Car()

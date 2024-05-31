@@ -295,6 +295,42 @@ def groupingWithOwnPivot(*arg) -> list:
     return result
 
 
+def groupingWithOwnPivot2(*args, **kwargs) -> list:
+    selections = args if args else pm.ls(sl=True)
+    options = {"null": False, "n": ""}
+    for key, value in kwargs.items():
+        if key in options:
+            options[key] = value
+        else:
+            continue
+    result = []
+    for i in selections:
+        objName = options["n"]
+        objName = objName if objName else i
+        topGroup = pm.listRelatives(i, p=True)
+        temp = []
+        if True == options["null"]:
+            grpName = [f"{objName}_grp", f"{objName}_null"]
+            for name in grpName:
+                grp = pm.group(em=True, n=name)
+                pm.matchTransform(grp, i, pos=True, rot=True)
+                temp.append(grp)
+        else:
+            grpName = f"{objName}_grp"
+            grp = pm.group(em=True, n=grpName)
+            pm.matchTransform(grp, i, pos=True, rot=True)
+            temp.append(grp)
+        for j in temp:
+            result.append(j)
+            try:
+                pm.parent(j, topGroup)
+            except:
+                continue
+        temp.append(i)
+        parentHierarchically(*temp)
+    return result
+
+
 def createPolevectorJoint(*args) -> list:
     """ Select three joints.
     Put the pole vector at 90 degrees to the direction 
@@ -451,6 +487,9 @@ class RigGroups:
                 if not pm.objExists(child):
                     pm.group(em=True, n=child)
                 pm.parent(child, parents)
+        result = self.groupNames.keys()
+        result = list(result)
+        return result
 
 
 class AlignObjects:
