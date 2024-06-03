@@ -326,7 +326,8 @@ def groupingWithOwnPivot2(*args, **kwargs) -> list:
                 pm.parent(j, topGroup)
             except:
                 continue
-        temp.append(i)
+        temp.append(objName)
+        result.append(objName)
         parentHierarchically(*temp)
     return result
 

@@ -160,6 +160,7 @@ class Car(QWidget):
         self.btnLeftRear.clicked.connect(self.setWheelName)
         self.btnRightRear.clicked.connect(self.setWheelName)
         self.btnCreateWheel.clicked.connect(self.buildWheels)
+        self.btnSetExpr.clicked.connect(self.buildExpression)
 
         self.btnClose.clicked.connect(self.close)
 
@@ -185,16 +186,44 @@ class Car(QWidget):
 
     def buildWheels(self):
         ctrl = self.fldSelectWheel.text()
-        obj = selectObjectOnly()[0]
+        obj = selectObjectOnly()
         if not ctrl:
             pm.warning("Input your Controller's name.")
             return
         if not obj:
             pm.warning("Select the polygonal mesh of the wheel.")
             return
-        self.createWheelGroups(ctrl)
-        loc = self.createRotationLocator(ctrl, obj)
-        self.createWheelCtrl(loc, ctrl, obj)
+        # grps = self.createWheelGroups(ctrl)
+        self.createWheelCtrl(ctrl, obj)
+        # loc = self.createRotationLocator(ctrl, obj, ccSub)
+
+
+    def buildExpression(self):
+        ctrl = self.fldSelectWheel.text()
+        if not ctrl:
+            pm.warning("Input your Controller's name.")
+            return
+        grpNames = [
+            f"{ctrl}_grp", 
+            f"{ctrl}_offset", 
+            f"{ctrl}_offsetNull", 
+            f"{ctrl}_offsetPrevious", 
+            f"{ctrl}_offsetOrient"
+            ]
+        if True in [pm.objExists(i) for i in grpNames]:
+            pm.warning("Expression groups already exist. Clean up first.")
+            return
+        ctrlTopGrp = f"{ctrl}_upDownMain_grp"
+        if not pm.objExists(ctrlTopGrp):
+            pm.warning("The upDownMain_grp does not exist.")
+            return
+        exprGrps = self.createWheelGroups(ctrl)
+        locator = self.createRotationLocator(ctrl)
+        self.createExpression(ctrl, locator, exprGrps)
+        pm.parent(ctrlTopGrp, w=True)
+        pm.delete(ctrlTopGrp, cn=True)
+        print(exprGrps)
+        pm.parent(ctrlTopGrp, exprGrps[1])
 
 
     def updateJointsPosition(self):
@@ -338,19 +367,15 @@ class Car(QWidget):
         return result
 
 
-    def createWheelCtrl(self, obj, ccName, parentsGroup="") -> str:
+    def createWheelCtrl(self, ccName, obj) -> str:
         cc = [
             f"{ccName}_upDownMain", 
             f"{ccName}_upDownSub", 
-            f"{ccName}_Main", 
-            f"{ccName}_Sub"
+            f"{ccName}_main", 
+            f"{ccName}_sub"
         ]
-        ccType = ["square", "square", "circle", "circle"]
-        temp = {key: value for key, value in zip(ccType, cc)}
-        ctrl = Controllers()
-        ctrlName = ctrl.createControllers(temp)
-        ccGrp = []
         sizeRatio = [14, 18, 9, 11]
+        ctrl = Controllers()
         rad = getBoundingBoxSize(obj)
         for ccName, sr in zip(cc[:2], sizeRatio[:2]):
             cuv = ctrl.createControllers(square=ccName)[0]
@@ -362,34 +387,28 @@ class Car(QWidget):
             pm.scale(cuv, (rad/sr, rad/sr, rad/sr))
             pm.rotate(cuv, (0, 0, 90))
             pm.matchTransform(cuv, obj, pos=True)
-        for i in cc:
-            pm.makeIdentity(i, a=1, t=0, r=1, s=1, n=0, pn=1)
-            cuvGrp = groupingWithOwnPivot(i)[0]
-            ccGrp.append(cuvGrp)
-        for parents, child in zip(cc[:3], ccGrp[1:]):
-            parentHierarchically(parents, child)
-        ccSub = cc[-1]
-        ccUpDownMainGrp = ccGrp[0]
-        if pm.objExists(parentsGroup):
-            parentHierarchically(parentsGroup, ccUpDownMainGrp)
-        # Create wheel controllers channel.
+        ccGrp = groupingWithOwnPivot2(*cc, null=True)
+        parentHierarchically(*ccGrp)
+        pm.makeIdentity(ccGrp, a=1, t=1, r=1, s=1, n=0, pn=1)
+        ccMain = cc[2]
         attrRad = "Radius"
-        pm.addAttr(ccSub, ln=attrRad, at='double', min=0.0001, dv=1)
-        pm.setAttr(f'{ccSub}.{attrRad}', e=True, k=True)
-        attrAuto = 'AutoRoll'
-        pm.addAttr(ccSub, ln=attrAuto, at='long', min=0, max=1, dv=1)
-        pm.setAttr(f'{ccSub}.{attrAuto}', e=True, k=True)
-        pm.setAttr(f"{ccSub}.Radius", rad)
-        return ccSub
+        pm.addAttr(ccMain, ln=attrRad, at='double', min=0.0001, dv=1)
+        pm.setAttr(f'{ccMain}.{attrRad}', e=True, k=True)
+        # attrAuto = 'AutoRoll'
+        # pm.addAttr(ccMain, ln=attrAuto, at='long', min=0, max=1, dv=1)
+        # pm.setAttr(f'{ccMain}.{attrAuto}', e=True, k=True)
+        # pm.setAttr(f"{ccMain}.Radius", rad)
 
 
-    def createRotationLocator(self, ctrl, obj):
+    def createRotationLocator(self, ctrl):
+        ctrlSub = f"{ctrl}_sub"
         if "cc_" in ctrl:
             locName = ctrl.replace("cc_", "loc_")
         else:
             locName = f"{ctrl}_%s" % "exprLocator"
         locator = pm.spaceLocator(n=locName)
-        pm.matchTransform(locator, obj, pos=True)
+        pm.matchTransform(locator, ctrlSub, pos=True)
+        pm.parent(locator, ctrlSub)
         return locator
 
 
@@ -443,11 +462,11 @@ class Car(QWidget):
 
 
 # car = Car()
-# obj = "jaguarA_down_tire_Ft_L_tire_rubber_1"
+# obj = "pSphere1"
 # ctrl = "cc_wheelLeftFront"
-# grpNames = car.createWheelGroups(ctrl)
-# ccSub = car.createWheelCtrl(obj, ctrl, grpNames[1])
-# locator = car.createRotationLocator(ccSub)
-# car.createExpression(ccSub, locator, grpNames)
+# # grpNames = car.createWheelGroups(ctrl)
+# # locator = car.createRotationLocator(ctrl, obj)
+# car.createWheelCtrl(ctrl, obj)
+# # car.createExpression(ccSub, locator, grpNames)
 
 
