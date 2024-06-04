@@ -91,11 +91,11 @@ class Car(QWidget):
         self.line_5.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_5)
         self.fldSelectWheel = QLineEdit()
+        self.fldSelectWheel.setClearButtonEnabled(True)
         self.fldSelectWheel.setEnabled(True)
         self.fldSelectWheel.setPlaceholderText("Input Ctrl's Name or Click below")
         self.fldSelectWheel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
         self.verticalLayout.addWidget(self.fldSelectWheel)
-
         self.gridLayout_4 = QGridLayout()
         self.btnLeftFront = QPushButton("Left Front")
         self.gridLayout_4.addWidget(self.btnLeftFront, 0, 0, 1, 1)
@@ -106,12 +106,10 @@ class Car(QWidget):
         self.btnRightRear = QPushButton("Right Rear")
         self.gridLayout_4.addWidget(self.btnRightRear, 2, 1, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout_4)
-
         self.btnCreateWheel = QPushButton("Create Wheel")
         self.verticalLayout.addWidget(self.btnCreateWheel)
         self.btnWheelCleanUp = QPushButton("Clean Up")
         self.verticalLayout.addWidget(self.btnWheelCleanUp)
-
         self.gridLayout_5 = QGridLayout()
         self.btnSetExpr = QPushButton("Set Expression")
         self.gridLayout_5.addWidget(self.btnSetExpr, 0, 0, 1, 1)
@@ -122,23 +120,18 @@ class Car(QWidget):
         self.btnDelPressure = QPushButton("Del Pressure")
         self.gridLayout_5.addWidget(self.btnDelPressure, 2, 1, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout_5)
-
-
         self.line_3 = QFrame()
         self.line_3.setFrameShape(QFrame.HLine)
         self.line_3.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_3)
-
         self.btnConnection = QPushButton("Joint Connection")
         self.verticalLayout.addWidget(self.btnConnection)
         self.btnDisconnection = QPushButton("Disconnection")
         self.verticalLayout.addWidget(self.btnDisconnection)
-
         self.line_4 = QFrame()
         self.line_4.setFrameShape(QFrame.HLine)
         self.line_4.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_4)
-
         self.btnClose = QPushButton("Close")
         self.verticalLayout.addWidget(self.btnClose)
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -160,8 +153,11 @@ class Car(QWidget):
         self.btnLeftRear.clicked.connect(self.setWheelName)
         self.btnRightRear.clicked.connect(self.setWheelName)
         self.btnCreateWheel.clicked.connect(self.buildWheels)
+        self.btnWheelCleanUp.clicked.connect(self.cleanUpWheel)
         self.btnSetExpr.clicked.connect(self.buildExpression)
-
+        self.btnDelExpr.clicked.connect(self.deleteExpression)
+        self.btnConnection.clicked.connect(self.jointConnect)
+        self.btnDisconnection.clicked.connect(self.jointDisconnect)
         self.btnClose.clicked.connect(self.close)
 
 
@@ -193,9 +189,10 @@ class Car(QWidget):
         if not obj:
             pm.warning("Select the polygonal mesh of the wheel.")
             return
-        # grps = self.createWheelGroups(ctrl)
+        if pm.objExists(f"{ctrl}_main"):
+            pm.warning(f"{ctrl}_main ctrl aleady exists.")
+            return
         self.createWheelCtrl(ctrl, obj)
-        # loc = self.createRotationLocator(ctrl, obj, ccSub)
 
 
     def buildExpression(self):
@@ -222,7 +219,6 @@ class Car(QWidget):
         self.createExpression(ctrl, locator, exprGrps)
         pm.parent(ctrlTopGrp, w=True)
         pm.delete(ctrlTopGrp, cn=True)
-        print(exprGrps)
         pm.parent(ctrlTopGrp, exprGrps[1])
 
 
@@ -269,6 +265,20 @@ class Car(QWidget):
                 pm.delete(i)
             except:
                 continue
+
+
+    def cleanUpWheel(self):
+        ctrl = self.fldSelectWheel.text()
+        if not ctrl:
+            pm.warning("The ctrl's name field is empty.")
+            return
+        ctrlGrp = f"{ctrl}_grp"
+        ctrlTopGrp = f"{ctrl}_upDownMain_grp"
+        for i in [ctrlGrp, ctrlTopGrp]:
+            try:
+                pm.delete(i)
+            except:
+                pass
 
 
     def createGroups(self):
@@ -394,10 +404,7 @@ class Car(QWidget):
         attrRad = "Radius"
         pm.addAttr(ccMain, ln=attrRad, at='double', min=0.0001, dv=1)
         pm.setAttr(f'{ccMain}.{attrRad}', e=True, k=True)
-        # attrAuto = 'AutoRoll'
-        # pm.addAttr(ccMain, ln=attrAuto, at='long', min=0, max=1, dv=1)
-        # pm.setAttr(f'{ccMain}.{attrAuto}', e=True, k=True)
-        # pm.setAttr(f"{ccMain}.Radius", rad)
+        pm.setAttr(f"{ccMain}.Radius", rad)
 
 
     def createRotationLocator(self, ctrl):
@@ -406,19 +413,28 @@ class Car(QWidget):
             locName = ctrl.replace("cc_", "loc_")
         else:
             locName = f"{ctrl}_%s" % "exprLocator"
-        locator = pm.spaceLocator(n=locName)
-        pm.matchTransform(locator, ctrlSub, pos=True)
-        pm.parent(locator, ctrlSub)
-        return locator
+        if pm.objExists(locName):
+            return locName
+        else:
+            locator = pm.spaceLocator(n=locName)
+            pm.matchTransform(locator, ctrlSub, pos=True)
+            pm.parent(locator, ctrlSub)
+            pm.makeIdentity(locator, a=1, t=1, r=0, s=0, n=0, pn=1)
+            return locator
 
 
     def createExpression(self, ctrl: str, locator: str, names: list) -> None:
+        ctrlMain = f"{ctrl}_main"
+        if not pm.attributeQuery("AutoRoll", node=ctrlMain, ex=True):
+            attrAuto = 'AutoRoll'
+            pm.addAttr(ctrlMain, ln=attrAuto, at='long', min=0, max=1, dv=1)
+            pm.setAttr(f'{ctrlMain}.{attrAuto}', e=True, k=True)
         br = '\n'
         offset = names[1]
         previous, orient = names[3:]
         # expression1
-        expr1 = f'float $rad = {ctrl}.Radius;{br}'
-        expr1 += f'float $auto = {ctrl}.AutoRoll;{br}'
+        expr1 = f'float $rad = {ctrlMain}.Radius;{br}'
+        expr1 += f'float $auto = {ctrlMain}.AutoRoll;{br}'
         expr1 += f'float $locator = {locator}.rotateX;{br}'
         expr1 += f'float $circleLength = 2 * 3.141 * $rad;{br}'
         expr1 += f'float $orientRotY = {orient}.rotateY;{br}'
@@ -451,14 +467,59 @@ class Car(QWidget):
         pm.expression(s=expr, o='', ae=1, uc='all')
 
 
-# if __name__ == "__main__":
-#     try:
-#         qrCar.close()
-#         qrCar.deleteLater()
-#     except:
-#         pass
-#     qrCar = Car()
-#     qrCar.show()
+    def deleteExpression(self):
+        ctrl = self.fldSelectWheel.text()
+        if not ctrl:
+            pm.warning("The ctrl's name field is empty.")
+            return
+        ctrlTopGrp = f"{ctrl}_upDownMain_grp"
+        exprTopGrp = f"{ctrl}_grp"
+        ctrlMain = f"{ctrl}_main"
+        exprList = pm.listConnections(ctrlMain, type="expression", d=True)
+        try:
+            pm.delete(exprList)
+            pm.parent(ctrlTopGrp, w=True)
+            pm.delete(exprTopGrp)
+        except:
+            pass
+        if pm.attributeQuery("AutoRoll", node=ctrlMain, ex=True):
+            pm.deleteAttr(f"{ctrlMain}.AutoRoll")
+
+
+    def jointConnect(self):
+        jntNames = self.jntNameAndPos.keys()
+        for jnt in jntNames:
+            fbx = jnt.replace("jnt_", "fbx_")
+            try:
+                pm.connectAttr(f"{fbx}.translate", f"{jnt}.translate", f=True)
+                pm.connectAttr(f"{fbx}.rotate", f"{jnt}.rotate", f=True)
+                pm.connectAttr(f"{fbx}.scale", f"{jnt}.scale", f=True)
+                pm.connectAttr(f"{fbx}.visibility", f"{jnt}.visibility", f=True)
+            except:
+                continue
+
+
+    def jointDisconnect(self):
+        jntNames = self.jntNameAndPos.keys()
+        for jnt in jntNames:
+            fbx = jnt.replace("jnt_", "fbx_")
+            try:
+                pm.disconnectAttr(f"{fbx}.translate", f"{jnt}.translate")
+                pm.disconnectAttr(f"{fbx}.rotate", f"{jnt}.rotate")
+                pm.disconnectAttr(f"{fbx}.scale", f"{jnt}.scale")
+                pm.disconnectAttr(f"{fbx}.visibility", f"{jnt}.visibility")
+            except:
+                continue
+
+
+if __name__ == "__main__":
+    try:
+        qrCar.close()
+        qrCar.deleteLater()
+    except:
+        pass
+    qrCar = Car()
+    qrCar.show()
 
 
 # car = Car()
