@@ -2,7 +2,6 @@ from PySide2.QtWidgets import *
 from PySide2.QtCore import Qt
 from PySide2.QtGui import QIntValidator
 from shiboken2 import wrapInstance
-# from functools import partial
 from general import *
 import pymel.core as pm
 import maya.OpenMayaUI as omui
@@ -56,7 +55,7 @@ class Car(QWidget):
     def setupUI(self):
         self.setWindowTitle("quickRig_car")
         self.move(0, 0)
-        self.resize(250, 500)
+        self.resize(250, 590)
         self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setSpacing(5)
         self.verticalLayout.setObjectName(u"verticalLayout")
@@ -93,7 +92,7 @@ class Car(QWidget):
         self.fldSelectWheel = QLineEdit()
         self.fldSelectWheel.setClearButtonEnabled(True)
         self.fldSelectWheel.setEnabled(True)
-        self.fldSelectWheel.setPlaceholderText("Input Ctrl's Name or Click below")
+        self.fldSelectWheel.setPlaceholderText("Wheel Name")
         self.fldSelectWheel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
         self.verticalLayout.addWidget(self.fldSelectWheel)
         self.gridLayout_4 = QGridLayout()
@@ -108,8 +107,6 @@ class Car(QWidget):
         self.verticalLayout.addLayout(self.gridLayout_4)
         self.btnCreateWheel = QPushButton("Create Wheel")
         self.verticalLayout.addWidget(self.btnCreateWheel)
-        self.btnWheelCleanUp = QPushButton("Clean Up")
-        self.verticalLayout.addWidget(self.btnWheelCleanUp)
         self.gridLayout_5 = QGridLayout()
         self.btnSetExpr = QPushButton("Set Expression")
         self.gridLayout_5.addWidget(self.btnSetExpr, 0, 0, 1, 1)
@@ -120,18 +117,44 @@ class Car(QWidget):
         self.btnDelPressure = QPushButton("Del Pressure")
         self.gridLayout_5.addWidget(self.btnDelPressure, 2, 1, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout_5)
+        self.btnWheelCleanUp = QPushButton("Clean Up")
+        self.verticalLayout.addWidget(self.btnWheelCleanUp)
         self.line_3 = QFrame()
         self.line_3.setFrameShape(QFrame.HLine)
         self.line_3.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_3)
-        self.btnConnection = QPushButton("Joint Connection")
-        self.verticalLayout.addWidget(self.btnConnection)
-        self.btnDisconnection = QPushButton("Disconnection")
-        self.verticalLayout.addWidget(self.btnDisconnection)
+        self.fldSelectDoor = QLineEdit()
+        self.fldSelectDoor.setClearButtonEnabled(True)
+        self.fldSelectDoor.setEnabled(True)
+        self.fldSelectDoor.setPlaceholderText("Door Name")
+        self.fldSelectDoor.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.verticalLayout.addWidget(self.fldSelectDoor)
+        self.gridLayout_6 = QGridLayout()
+        self.btnLeftDoor = QPushButton("Left Front")
+        self.gridLayout_6.addWidget(self.btnLeftDoor, 0, 0, 1, 1)
+        self.btnRightDoor = QPushButton("Right Front")
+        self.gridLayout_6.addWidget(self.btnRightDoor, 0, 1, 1, 1)
+        self.btnLeftDoor2 = QPushButton("Left Rear")
+        self.gridLayout_6.addWidget(self.btnLeftDoor2, 2, 0, 1, 1)
+        self.btnRightDoor2 = QPushButton("Right Rear")
+        self.gridLayout_6.addWidget(self.btnRightDoor2, 2, 1, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout_6)
+        self.btnCreateDoor = QPushButton("Create Door")
+        self.verticalLayout.addWidget(self.btnCreateDoor)
+        self.btnDoorCleanUp = QPushButton("Clean Up")
+        self.verticalLayout.addWidget(self.btnDoorCleanUp)
         self.line_4 = QFrame()
         self.line_4.setFrameShape(QFrame.HLine)
         self.line_4.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_4)
+        self.btnConnection = QPushButton("Joint Connection")
+        self.verticalLayout.addWidget(self.btnConnection)
+        self.btnDisconnection = QPushButton("Disconnection")
+        self.verticalLayout.addWidget(self.btnDisconnection)
+        self.line_5 = QFrame()
+        self.line_5.setFrameShape(QFrame.HLine)
+        self.line_5.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_5)
         self.btnClose = QPushButton("Close")
         self.verticalLayout.addWidget(self.btnClose)
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
@@ -153,9 +176,14 @@ class Car(QWidget):
         self.btnLeftRear.clicked.connect(self.setWheelName)
         self.btnRightRear.clicked.connect(self.setWheelName)
         self.btnCreateWheel.clicked.connect(self.buildWheels)
-        self.btnWheelCleanUp.clicked.connect(self.cleanUpWheel)
         self.btnSetExpr.clicked.connect(self.buildExpression)
         self.btnDelExpr.clicked.connect(self.deleteExpression)
+        self.btnWheelCleanUp.clicked.connect(self.cleanUpWheel)
+        self.btnLeftDoor.clicked.connect(self.setDoorName)
+        self.btnRightDoor.clicked.connect(self.setDoorName)
+        self.btnLeftDoor2.clicked.connect(self.setDoorName)
+        self.btnRightDoor2.clicked.connect(self.setDoorName)
+        self.btnCreateDoor.clicked.connect(self.createDoor)
         self.btnConnection.clicked.connect(self.jointConnect)
         self.btnDisconnection.clicked.connect(self.jointDisconnect)
         self.btnClose.clicked.connect(self.close)
@@ -354,6 +382,14 @@ class Car(QWidget):
         self.fldSelectWheel.clearFocus()
 
 
+    def setDoorName(self):
+        button = self.sender()
+        buttonName = button.text()
+        ctrlName = "cc_door%s" % buttonName.replace(" ", "")
+        self.fldSelectDoor.setText(ctrlName)
+        self.fldSelectDoor.clearFocus()
+
+
     def createWheelGroups(self, ctrl):
         grpNames = [
             f"{ctrl}_grp", 
@@ -512,22 +548,36 @@ class Car(QWidget):
                 continue
 
 
-if __name__ == "__main__":
-    try:
-        qrCar.close()
-        qrCar.deleteLater()
-    except:
-        pass
-    qrCar = Car()
-    qrCar.show()
+    def createDoor(self):
+        obj = self.fldSelectDoor.text()
+        _R = "_R" in obj
+        Ri = "Right" in obj
+        ri = "right" in obj
+        if any([_R, Ri, ri]):
+            factor = -1
+        else:
+            factor = 1
+        _B = "_Bk" in obj
+        Ba = "Back" in obj
+        ba = "back" in obj
+        Re = "Rear" in obj
+        re = "rear" in obj
+        if any([_B, Ba, ba, Re, re]):
+            doorType = "door2"
+        else:
+            doorType = "door"
+        
+        ctrl = Controllers()
+        cc = ctrl.createControllers(**{doorType: obj})
 
 
-# car = Car()
-# obj = "pSphere1"
-# ctrl = "cc_wheelLeftFront"
-# # grpNames = car.createWheelGroups(ctrl)
-# # locator = car.createRotationLocator(ctrl, obj)
-# car.createWheelCtrl(ctrl, obj)
-# # car.createExpression(ccSub, locator, grpNames)
+# if __name__ == "__main__":
+#     try:
+#         qrCar.close()
+#         qrCar.deleteLater()
+#     except:
+#         pass
+#     qrCar = Car()
+#     qrCar.show()
 
 

@@ -1,47 +1,94 @@
 import pymel.core as pm
-from general import *
 
 
-class temp:
-    def createWheelCtrl(self, obj, ccName, parentsGroup="") -> str:
-        cc = [
-            f"{ccName}_upDownMain", 
-            f"{ccName}_upDownSub", 
-            f"{ccName}_Main", 
-            f"{ccName}_Sub"
-        ]
-        ccGrp = []
-        sizeRatio = [14, 18, 9, 11]
-        ctrl = Controllers()
-        rad = getBoundingBoxSize(obj)
-        for ccName, sr in zip(cc[:2], sizeRatio[:2]):
-            cuv = ctrl.createControllers(square=ccName)[0]
-            pm.scale(cuv, (rad/(sr*2), rad/sr, rad/sr))
-            pm.matchTransform(cuv, obj, pos=True)
-            pm.setAttr(f"{cuv}.translateY", 0)
-        for ccName, sr in zip(cc[2:], sizeRatio[2:]):
-            cuv = ctrl.createControllers(circle=ccName)[0]
-            pm.scale(cuv, (rad/sr, rad/sr, rad/sr))
-            pm.rotate(cuv, (0, 0, 90))
-            pm.matchTransform(cuv, obj, pos=True)
-        for i in cc:
-            pm.makeIdentity(i, a=1, t=0, r=1, s=1, n=0, pn=1)
-            cuvGrp = groupingWithOwnPivot(i)[0]
-            ccGrp.append(cuvGrp)
-        for parents, child in zip(cc[:3], ccGrp[1:]):
-            parentHierarchically(parents, child)
-        ccSub = cc[-1]
-        ccUpDownMainGrp = ccGrp[0]
-        if pm.objExists(parentsGroup):
-            parentHierarchically(parentsGroup, ccUpDownMainGrp)
-        # Create wheel controllers channel.
-        attrRad = "Radius"
-        pm.addAttr(ccSub, ln=attrRad, at='double', min=0.0001, dv=1)
-        pm.setAttr(f'{ccSub}.{attrRad}', e=True, k=True)
-        attrAuto = 'AutoRoll'
-        pm.addAttr(ccSub, ln=attrAuto, at='long', min=0, max=1, dv=1)
-        pm.setAttr(f'{ccSub}.{attrAuto}', e=True, k=True)
-        pm.setAttr(f"{ccSub}.Radius", rad)
-        return ccSub
+class MirrorCopy:
+    def __init__(self, **kwargs):
+        """ Parameter can be (x=True or z=True).
+        First Select groups.
+        Copy the group and mirror it in the direction. 
+        If there is a curve in it, copy the curve and mirror it.
+         """
+        if not kwargs:
+            print("Parameter is required. ex) x=True or z=True")
+            return
+        keys = [i for i in kwargs.keys() if i == ('x' or 'z')]
+        keys = [i for i in keys if kwargs[i]]
+        if not keys:
+            print("None of the parameters are True.")
+        else:
+            self.key = keys[0]
+            self.val = kwargs[self.key]
+            self.sel = pm.ls(sl=True)
+            self.main()
 
+
+    # Check the conditions.
+    def main(self):
+        if not self.sel:
+            print("Nothing selected.")
+            return
+        for i in self.sel:
+            self.mirrorCopy(i)
+
+
+    # If there is a curve in the group, copy the curve and mirror it.
+    def mirrorCopy(self, selection):
+        cuv = selection.getChildren()
+        shp = pm.ls(cuv, dag=True, s=True)
+        typ = 'nurbsCurve'
+        objs = {i.getParent().name() for i in shp if pm.objectType(i)==typ}
+        objs = list(objs)
+        if not objs:
+            self.mirrorGroup(selection)
+        else:
+            for obj in objs:
+                name = self.swapLR(obj)
+                copy = pm.duplicate(obj, rr=True, n=name)
+                pm.parent(copy, w=True)
+                grp = pm.group(em=True)
+                pm.parent(copy, grp)
+                direction = [-1, 1, 1] if self.key=='x' else [1, 1, -1]
+                pm.scale(grp, direction, r=True)
+                mirrorGrp = self.mirrorGroup(selection)
+                pm.parent(copy, mirrorGrp)
+                pm.makeIdentity(copy, a=True, t=1, r=1, s=1, n=0, pn=1)
+                pm.delete(grp)
+        
+
+    # Replace letter L with R
+    def swapLR(self, objName):
+        # if '_L' in objName:
+        #     result = objName.replace('_L', '_R')
+        # elif '_R' in objName:
+        #     result = objName.replace('_R', '_L')
+        if '_Left' in objName:
+            result = objName.replace('_Left', '_Right')
+        elif '_Right' in objName:
+            result = objName.replace('_Right', '_Left')
+        else:
+            result = ''
+        return result
+
+
+    # Create a mirrored group.
+    def mirrorGroup(self, selection):
+        name = self.swapLR(selection.name())
+        grp = pm.group(em=True, n=name)
+        pm.matchTransform(grp, selection, pos=True, rot=True)
+        tra = pm.getAttr(f'{grp}.translate')
+        rot = pm.getAttr(f'{grp}.rotate')
+        tx, ty, tz = tra
+        rx, ry, rz = rot
+        if self.key == 'x':
+            tx *= -1
+            rx += (180 if rx < 0 else -180)
+            ry *= -1
+            rz *= -1
+        else:
+            tz *= -1
+            rz += (180 if rz < 0 else -180)
+        attr = {'tx': tx, 'ty': ty, 'tz': tz, 'rx': rx, 'ry': ry, 'rz': rz}
+        for j, k in attr.items():
+            pm.setAttr(f'{grp}.{j}', k)
+        return grp
 

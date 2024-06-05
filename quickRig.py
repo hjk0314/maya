@@ -1,20 +1,36 @@
+from PySide2.QtWidgets import *
+from PySide2.QtCore import Qt
+# from PySide2.QtGui import QIntValidator
+from shiboken2 import wrapInstance
 from general import *
-import os
+import pymel.core as pm
+import maya.OpenMayaUI as omui
 
 
-class Car:
+def mayaMainWindow():
+    mainWindow_pointer = omui.MQtUtil.mainWindow()
+    return wrapInstance(int(mainWindow_pointer), QWidget)
+
+
+class Car(QWidget):
     def __init__(self):
-        self.assetName = "assetName"
-        self.sizeRatio = 1
-        self.sizeCtrl = "cc_sizeController"
+        """ It was made for rough car rigging.
+        - Function to make joints symmetrical.
+        - Function to create a wheel controllers.
+        - Function to add an expressions that rotates by the distance moved.
+        - Tire compression function.
+        - Function to create a door controllers.
+        - Function to connect bind joint and rig joint.
+         """
+        self.topGroup = ""
+        self.rootJnt = "jnt_root"
+        self.rootFbx = "fbx_root"
         self.mainCtrl = "cc_main"
-        self.subCtrl = "cc_sub"
-        self.rootJoint = "jnt_root"
         self.ctrlNames = {
             "car": "cc_body", 
             "car2": "cc_sub", 
-            "car3": "cc_main", 
-        }
+            "circle": "cc_main", 
+            }
         self.jntNameAndPos = {
             "jnt_root": (0, 15, 0), 
             "jnt_body": (0, 45, 0), 
@@ -27,7 +43,7 @@ class Car:
             "jnt_wheelLeftRearEnd": (85, 30, -140), 
             "jnt_wheelRightRear": (-70, 30, -140), 
             "jnt_wheelRightRearEnd": (-85, 30, -140), 
-        }
+            }
         self.hierarchy = {
             "jnt_root": [
                 [f"jnt_body{i}" for i in ["", "End"]], 
@@ -37,58 +53,235 @@ class Car:
                 [f"jnt_wheelRightRear{i}" for i in ["", "End"]], 
                 ], 
             }
+        super(Car, self).__init__()
+        self.sortCount = 0
+        self.setParent(mayaMainWindow())
+        self.setWindowFlags(Qt.Window)
+        self.setupUI()
+    
+
+    def setupUI(self):
+        self.setWindowTitle("quickRig_car")
+        self.move(0, 0)
+        self.resize(250, 590)
+        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setSpacing(5)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.fldCarName = QLineEdit()
+        self.fldCarName.setClearButtonEnabled(True)
+        self.fldCarName.setPlaceholderText("Input your car name")
+        self.verticalLayout.addWidget(self.fldCarName)
+        self.btnCarGrp = QPushButton("Car group")
+        self.verticalLayout.addWidget(self.btnCarGrp)
+        self.line = QFrame()
+        self.line.setFrameShape(QFrame.HLine)
+        self.line.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line)
+        self.btnTempJnt = QPushButton("Create temp joints")
+        self.verticalLayout.addWidget(self.btnTempJnt)
+        self.horizontalLayout = QHBoxLayout()
+        self.btnLtoR = QPushButton("Left To Right")
+        self.horizontalLayout.addWidget(self.btnLtoR)
+        self.btnRtoL = QPushButton("Right To Left")
+        self.horizontalLayout.addWidget(self.btnRtoL)
+        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.line_2 = QFrame()
+        self.line_2.setFrameShape(QFrame.HLine)
+        self.line_2.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_2)
+        self.btnBuild = QPushButton("Build")
+        self.verticalLayout.addWidget(self.btnBuild)
+        self.btnCleanUp = QPushButton("Clean Up")
+        self.verticalLayout.addWidget(self.btnCleanUp)
+        self.line_5 = QFrame()
+        self.line_5.setFrameShape(QFrame.HLine)
+        self.line_5.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_5)
+        self.fldSelectWheel = QLineEdit()
+        self.fldSelectWheel.setClearButtonEnabled(True)
+        self.fldSelectWheel.setEnabled(True)
+        self.fldSelectWheel.setPlaceholderText("Wheel Name")
+        self.fldSelectWheel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.verticalLayout.addWidget(self.fldSelectWheel)
+        self.gridLayout_4 = QGridLayout()
+        self.btnLeftFront = QPushButton("Left Front")
+        self.gridLayout_4.addWidget(self.btnLeftFront, 0, 0, 1, 1)
+        self.btnRightFront = QPushButton("Right Front")
+        self.gridLayout_4.addWidget(self.btnRightFront, 0, 1, 1, 1)
+        self.btnLeftRear = QPushButton("Left Rear")
+        self.gridLayout_4.addWidget(self.btnLeftRear, 2, 0, 1, 1)
+        self.btnRightRear = QPushButton("Right Rear")
+        self.gridLayout_4.addWidget(self.btnRightRear, 2, 1, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout_4)
+        self.btnCreateWheel = QPushButton("Create Wheel")
+        self.verticalLayout.addWidget(self.btnCreateWheel)
+        self.gridLayout_5 = QGridLayout()
+        self.btnSetExpr = QPushButton("Set Expression")
+        self.gridLayout_5.addWidget(self.btnSetExpr, 0, 0, 1, 1)
+        self.btnDelExpr = QPushButton("Del Expression")
+        self.gridLayout_5.addWidget(self.btnDelExpr, 0, 1, 1, 1)
+        self.btnSetPressure = QPushButton("Set Pressure")
+        self.gridLayout_5.addWidget(self.btnSetPressure, 2, 0, 1, 1)
+        self.btnDelPressure = QPushButton("Del Pressure")
+        self.gridLayout_5.addWidget(self.btnDelPressure, 2, 1, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout_5)
+        self.btnWheelCleanUp = QPushButton("Clean Up")
+        self.verticalLayout.addWidget(self.btnWheelCleanUp)
+        self.line_3 = QFrame()
+        self.line_3.setFrameShape(QFrame.HLine)
+        self.line_3.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_3)
+        self.fldSelectDoor = QLineEdit()
+        self.fldSelectDoor.setClearButtonEnabled(True)
+        self.fldSelectDoor.setEnabled(True)
+        self.fldSelectDoor.setPlaceholderText("Door Name")
+        self.fldSelectDoor.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.verticalLayout.addWidget(self.fldSelectDoor)
+        self.gridLayout_6 = QGridLayout()
+        self.btnLeftDoor = QPushButton("Left Front")
+        self.gridLayout_6.addWidget(self.btnLeftDoor, 0, 0, 1, 1)
+        self.btnRightDoor = QPushButton("Right Front")
+        self.gridLayout_6.addWidget(self.btnRightDoor, 0, 1, 1, 1)
+        self.btnLeftDoor2 = QPushButton("Left Rear")
+        self.gridLayout_6.addWidget(self.btnLeftDoor2, 2, 0, 1, 1)
+        self.btnRightDoor2 = QPushButton("Right Rear")
+        self.gridLayout_6.addWidget(self.btnRightDoor2, 2, 1, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout_6)
+        self.btnCreateDoor = QPushButton("Create Door")
+        self.verticalLayout.addWidget(self.btnCreateDoor)
+        self.btnDoorCleanUp = QPushButton("Clean Up")
+        self.verticalLayout.addWidget(self.btnDoorCleanUp)
+        self.line_4 = QFrame()
+        self.line_4.setFrameShape(QFrame.HLine)
+        self.line_4.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_4)
+        self.btnConnection = QPushButton("Joint Connection")
+        self.verticalLayout.addWidget(self.btnConnection)
+        self.btnDisconnection = QPushButton("Disconnection")
+        self.verticalLayout.addWidget(self.btnDisconnection)
+        self.line_5 = QFrame()
+        self.line_5.setFrameShape(QFrame.HLine)
+        self.line_5.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_5)
+        self.btnClose = QPushButton("Close")
+        self.verticalLayout.addWidget(self.btnClose)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalLayout.addItem(self.verticalSpacer)
+        # Buttons Links
+        self.buttonsLink()
 
 
-    def createJoints(self):
-        # CleanUp first
+    def buttonsLink(self):
+        self.fldCarName.returnPressed.connect(self.createGroups)
+        self.btnCarGrp.clicked.connect(self.createGroups)
+        self.btnTempJnt.clicked.connect(self.createJoints)
+        self.btnLtoR.clicked.connect(self.buildSymmetry)
+        self.btnRtoL.clicked.connect(self.buildSymmetry)
+        self.btnBuild.clicked.connect(self.build)
+        self.btnCleanUp.clicked.connect(self.cleanUp)
+        self.btnLeftFront.clicked.connect(self.setWheelName)
+        self.btnRightFront.clicked.connect(self.setWheelName)
+        self.btnLeftRear.clicked.connect(self.setWheelName)
+        self.btnRightRear.clicked.connect(self.setWheelName)
+        self.btnCreateWheel.clicked.connect(self.buildWheels)
+        self.btnSetExpr.clicked.connect(self.buildExpression)
+        self.btnDelExpr.clicked.connect(self.deleteExpression)
+        self.btnWheelCleanUp.clicked.connect(self.cleanUpWheel)
+        self.btnLeftDoor.clicked.connect(self.setDoorName)
+        self.btnRightDoor.clicked.connect(self.setDoorName)
+        self.btnLeftDoor2.clicked.connect(self.setDoorName)
+        self.btnRightDoor2.clicked.connect(self.setDoorName)
+        self.btnCreateDoor.clicked.connect(self.createDoor)
+        self.btnConnection.clicked.connect(self.jointConnect)
+        self.btnDisconnection.clicked.connect(self.jointDisconnect)
+        self.btnClose.clicked.connect(self.close)
+
+
+    def build(self):
+        """ Create a global controller and body controller. """
+        self.updateJointsPosition()
         self.cleanUp()
-        # Create joints
-        for jnt, pos in self.jntNameAndPos.items():
-            pm.select(cl=True)
-            pm.joint(p=pos, n=jnt)
-        # Set hierarchy
-        for parents, childList in self.hierarchy.items():
-            for children in childList:
-                parentHierarchically(children)
-                pm.makeIdentity(children, a=1, t=1, r=1, s=1, jo=1)
-                pm.parent(children[0], parents)
+        self.createGroups()
+        self.createJoints()
+        self.createFbxJoints()
+        self.createCtrls()
 
 
-    def createSizeController(self):
-        self.sizeRatio = getBoundingBoxSize(self.rootJoint)
-        pm.circle(nr=(0,1,0), ch=0, n=self.sizeCtrl, r=self.sizeRatio)
-        pm.parent(self.rootJoint, self.sizeCtrl)
+    def buildSymmetry(self):
+        """ Make the left and right joints the same. """
+        button = self.sender()
+        buttonName = button.text()
+        buttonName = buttonName.replace(" ", "")
+        self.updateJointsPosition()
+        self.updateSameSide(buttonName)
+        self.cleanUp()
+        self.createJoints()
 
 
-    def cleanUp(self):
-        delGroups = [self.sizeCtrl, self.assetName]
-        joints = list(self.jntNameAndPos.keys())
-        grpNames = list(RigGroups().groupNames.keys())[1:]
-        grpNames += getFlattenList(list(RigGroups().groupNames.values())[1:])
-        ctrls = list(self.ctrlNames.values())
-        delGroups += joints + grpNames + ctrls
-        for i in delGroups:
+    def buildWheels(self):
+        """ Create a wheel controller only.
+        There is no expression for turning the wheel.
+         """
+        ctrl = self.fldSelectWheel.text()
+        obj = selectObjectOnly()
+        if not ctrl:
+            pm.warning("Input your Controller's name.")
+            return
+        if not obj:
+            pm.warning("Select the polygonal mesh of the wheel.")
+            return
+        if pm.objExists(f"{ctrl}_main"):
+            pm.warning(f"{ctrl}_main ctrl aleady exists.")
+            return
+        self.createWheelCtrl(ctrl, obj)
+
+
+    def buildExpression(self):
+        """ Add an expression to the wheel controller.
+        Rotate the locator by calculating the moving distance 
+        of the offset group.
+         """
+        ctrl = self.fldSelectWheel.text()
+        if not ctrl:
+            pm.warning("Input your Controller's name.")
+            return
+        grpNames = [
+            f"{ctrl}_grp", 
+            f"{ctrl}_offset", 
+            f"{ctrl}_offsetNull", 
+            f"{ctrl}_offsetPrevious", 
+            f"{ctrl}_offsetOrient"
+            ]
+        if True in [pm.objExists(i) for i in grpNames]:
+            pm.warning("Expression groups already exist. Clean up first.")
+            return
+        ctrlTopGrp = f"{ctrl}_upDownMain_grp"
+        if not pm.objExists(ctrlTopGrp):
+            pm.warning("The upDownMain_grp does not exist.")
+            return
+        exprGrps = self.createWheelGroups(ctrl)
+        locator = self.createRotationLocator(ctrl)
+        self.createExpression(ctrl, locator, exprGrps)
+        pm.parent(ctrlTopGrp, w=True)
+        pm.delete(ctrlTopGrp, cn=True)
+        pm.parent(ctrlTopGrp, exprGrps[1])
+
+
+    def updateJointsPosition(self):
+        for jnt in self.jntNameAndPos.keys():
             try:
-                pm.delete(i)
+                pos = getPosition(jnt)
+                self.jntNameAndPos[jnt] = pos
             except:
                 continue
 
 
-    def updatePosition(self):
-        for jnt in self.jntNameAndPos.keys():
-            pos = pm.xform(jnt, q=True, t=True, ws=True)
-            self.jntNameAndPos[jnt] = tuple(pos)
-
-
-    def sameBothSide(self, side: str="LeftToRight"):
+    def updateSameSide(self, side: str="LeftToRight"):
         """ The default change is from left to right. 
         But the opposite is also possible.
-        >>> sameBothSide()
-        >>> sameBothSide("RightToLeft")
+        >>> updateSameSide()
+        >>> updateSameSide("RightToLeft")
          """
-        # Update first
-        self.updatePosition()
-        # Split both side
         A, B = side.split("To")
         aSide = []
         bSide = []
@@ -99,223 +292,322 @@ class Car:
                 bSide.append(jntName)
             else:
                 continue
-        # Update opposite
         for idx, aJoint in enumerate(aSide):
             x, y, z = pm.xform(aJoint, q=True, t=True, ws=True)
             bJoint = bSide[idx]
             self.jntNameAndPos[bJoint] = (-1*x, y, z)
-        # Create joints again
-        self.createJoints()
 
 
-    def build(self):
-        # Update first
-        self.updatePosition()
-        self.createJoints()
-        # create rig groups
-        self.createRigGroups()
-        self.createBasicCtrls()
-        # createWheelCtrls
+    def cleanUp(self):
+        """ Clean up the joint groups. """
+        listDelete = [
+            self.topGroup, 
+            self.rootJnt, 
+            self.rootFbx, 
+            self.mainCtrl + "_grp", 
+            ]
+        for i in listDelete:
+            try:
+                pm.delete(i)
+            except:
+                continue
 
 
-    def createRigGroups(self):
-        fullPath = pm.Env().sceneName()
-        if not fullPath:
-            self.assetName = "assetName"
+    def cleanUpWheel(self):
+        """ Clean up the wheel controllers. """
+        ctrl = self.fldSelectWheel.text()
+        if not ctrl:
+            pm.warning("The ctrl's name field is empty.")
+            return
+        ctrlGrp = f"{ctrl}_grp"
+        ctrlTopGrp = f"{ctrl}_upDownMain_grp"
+        for i in [ctrlGrp, ctrlTopGrp]:
+            try:
+                pm.delete(i)
+            except:
+                pass
+
+
+    def createGroups(self):
+        """ Create an entire car group. """
+        carName = self.fldCarName.text()
+        if self.topGroup == carName:
+            grpName = carName
+        elif self.topGroup != "" and carName == "":
+            grpName = self.topGroup
         else:
-            sceneName = os.path.basename(fullPath)
-            self.assetName = sceneName.split("_")[1]
-        rigGrp = RigGroups()
-        rigGrp.createRigGroups(self.assetName)
+            grpName = carName
+            self.topGroup = carName
+        rg = RigGroups()
+        rg.createRigGroups(grpName)
+        self.fldCarName.setText(grpName)
+        self.fldCarName.clearFocus()
 
 
-    def createBasicCtrls(self):
-        # create controllers
-        ctrl = Controllers()
-        ctrls = ctrl.createControllers(**self.ctrlNames)
-        ccBody, ccSub, ccMain = ctrls
-        # match position
-        pm.matchTransform(ccBody, "jnt_body", pos=True)
-        # grouping
-        ccBodyGrp, ccSubGrp, ccMainGrp = groupingWithOwnPivot(*ctrls)
-        rootJntGrp = groupingWithOwnPivot(self.rootJoint)
-        # relationship
-        pm.parent(ccSubGrp, ccMain)
-        pm.parentConstraint(ccSub, ccBodyGrp, mo=True, w=1)
-        pm.scaleConstraint(ccSub, ccBodyGrp, mo=True, w=1)
+    def createJoints(self):
+        for jnt, pos in self.jntNameAndPos.items():
+            if pm.objExists(jnt):
+                continue
+            else:
+                pm.select(cl=True)
+                pm.joint(p=pos, n=jnt)
+        for parents, childList in self.hierarchy.items():
+            for children in childList:
+                parentHierarchically(*children)
+                pm.makeIdentity(children, a=1, t=1, r=1, s=1, jo=1)
+                pm.parent(children[0], parents)
+        self.tryParent(self.rootJnt, "bindBones")
+
+
+    def createFbxJoints(self):
+        fbx = pm.duplicate(self.rootJnt, rr=True, n=self.rootFbx)
+        fbx = fbx[0]
+        pm.select(cl=True)
+        pm.select(fbx, hi=True)
+        for i in pm.ls(sl=True):
+            new = i.replace("jnt_", "fbx_")
+            pm.rename(i, new)
+        self.tryParent(self.rootFbx, "rigBones")
+
+
+    def createCtrls(self):
+        """ Create a global and body controller. """
+        cc = Controllers()
+        cc.createControllers(**self.ctrlNames)
+        ctrl = list(self.ctrlNames.values())
+        grps = []
+        for i in ctrl:
+            if self.mainCtrl == i:
+                pm.scale(i, (20, 20, 20))
+                pm.makeIdentity(i, a=1, t=0, r=0, s=1, n=0, pn=1)
+            grp = groupingWithOwnPivot(i)[0]
+            grps.append(grp)
+        for child, parents in zip(grps[:2], ctrl[1:]):
+            pm.parent(child, parents)
+        pm.matchTransform(grps[0], "jnt_body", pos=True)
+        self.tryParent(self.mainCtrl + "_grp", "controllers")
+        
+
+    def tryParent(self, child: str, parents: str):
         try:
-            pm.parent(ccMainGrp, "controllers")
-            pm.parent(ccBodyGrp, "controllers")
-            pm.parent(rootJntGrp, "rigBones")
+            pm.parent(child, parents)
         except:
-            pm.warning("There are no basic rigging groups.")
+            pass
+
+
+    def setWheelName(self):
+        """ Remove spaces from wheel names. """
+        button = self.sender()
+        buttonName = button.text()
+        ctrlName = "cc_wheel%s" % buttonName.replace(" ", "")
+        self.fldSelectWheel.setText(ctrlName)
+        self.fldSelectWheel.clearFocus()
+
+
+    def setDoorName(self):
+        """ Remove spaces from door names. """
+        button = self.sender()
+        buttonName = button.text()
+        ctrlName = "cc_door%s" % buttonName.replace(" ", "")
+        self.fldSelectDoor.setText(ctrlName)
+        self.fldSelectDoor.clearFocus()
+
+
+    def createWheelGroups(self, ctrl):
+        """ Create groups for the expression. """
+        grpNames = [
+            f"{ctrl}_grp", 
+            f"{ctrl}_offset", 
+            f"{ctrl}_offsetNull", 
+            f"{ctrl}_offsetPrevious", 
+            f"{ctrl}_offsetOrient"
+            ]
+        result = [pm.group(n=i, em=True) for i in grpNames]
+        grp, offset, offsetNull, offsetPrevious, offsetOrient = result
+        pm.parent(offset, grp)
+        pm.parent(offsetNull, offset)
+        pm.parent(offsetPrevious, grp)
+        pm.parent(offsetOrient, offsetPrevious)
+        offsetOrient.translate.set([-0.001, -0.001, -0.001])
+        pm.aimConstraint(offset, offsetPrevious, mo=False)
+        pm.orientConstraint(offsetNull, offsetOrient, mo=False)
+        for i in ['X', 'Y', 'Z']:
+            pm.addAttr(offset, ln=f'PreviousPosition{i}', at='double', dv=0)
+            pm.setAttr(f'{offset}.PreviousPosition{i}', e=True, k=True)
+        return result
+
+
+    def createWheelCtrl(self, ccName, obj) -> str:
+        """ Make controllers according to the wheel size. """
+        cc = [
+            f"{ccName}_upDownMain", 
+            f"{ccName}_upDownSub", 
+            f"{ccName}_main", 
+            f"{ccName}_sub"
+        ]
+        sizeRatio = [14, 18, 9, 11]
+        ctrl = Controllers()
+        rad = getBoundingBoxSize(obj)
+        for ccName, sr in zip(cc[:2], sizeRatio[:2]):
+            cuv = ctrl.createControllers(square=ccName)[0]
+            pm.scale(cuv, (rad/(sr*2), rad/sr, rad/sr))
+            pm.matchTransform(cuv, obj, pos=True)
+            pm.setAttr(f"{cuv}.translateY", 0)
+        for ccName, sr in zip(cc[2:], sizeRatio[2:]):
+            cuv = ctrl.createControllers(circle=ccName)[0]
+            pm.scale(cuv, (rad/sr, rad/sr, rad/sr))
+            pm.rotate(cuv, (0, 0, 90))
+            pm.matchTransform(cuv, obj, pos=True)
+        ccGrp = groupingWithOwnPivot2(*cc, null=True)
+        parentHierarchically(*ccGrp)
+        pm.makeIdentity(ccGrp, a=1, t=1, r=1, s=1, n=0, pn=1)
+        ccMain = cc[2]
+        attrRad = "Radius"
+        pm.addAttr(ccMain, ln=attrRad, at='double', min=0.0001, dv=1)
+        pm.setAttr(f'{ccMain}.{attrRad}', e=True, k=True)
+        pm.setAttr(f"{ccMain}.Radius", rad)
+
+
+    def createRotationLocator(self, ctrl):
+        ctrlSub = f"{ctrl}_sub"
+        if "cc_" in ctrl:
+            locName = ctrl.replace("cc_", "loc_")
+        else:
+            locName = f"{ctrl}_%s" % "exprLocator"
+        if pm.objExists(locName):
+            return locName
+        else:
+            locator = pm.spaceLocator(n=locName)
+            pm.matchTransform(locator, ctrlSub, pos=True)
+            pm.parent(locator, ctrlSub)
+            pm.makeIdentity(locator, a=1, t=1, r=0, s=0, n=0, pn=1)
+            return locator
+
+
+    def createExpression(self, ctrl: str, locator: str, names: list) -> None:
+        """ Rotate the locator by the moving distance of offset_grp. """
+        ctrlMain = f"{ctrl}_main"
+        if not pm.attributeQuery("AutoRoll", node=ctrlMain, ex=True):
+            attrAuto = 'AutoRoll'
+            pm.addAttr(ctrlMain, ln=attrAuto, at='long', min=0, max=1, dv=1)
+            pm.setAttr(f'{ctrlMain}.{attrAuto}', e=True, k=True)
+        br = '\n'
+        offset = names[1]
+        previous, orient = names[3:]
+        # expression1
+        expr1 = f'float $rad = {ctrlMain}.Radius;{br}'
+        expr1 += f'float $auto = {ctrlMain}.AutoRoll;{br}'
+        expr1 += f'float $locator = {locator}.rotateX;{br}'
+        expr1 += f'float $circleLength = 2 * 3.141 * $rad;{br}'
+        expr1 += f'float $orientRotY = {orient}.rotateY;{br}'
+        expr1 += f'float $offsetScale = {offset}.scaleY;{br}'
+        expr1 += f'float $pointX1 = {offset}.PreviousPositionX;{br}'
+        expr1 += f'float $pointY1 = {offset}.PreviousPositionY;{br}'
+        expr1 += f'float $pointZ1 = {offset}.PreviousPositionZ;{br}'
+        expr1 += f'{previous}.translateX = $pointX1;{br}'
+        expr1 += f'{previous}.translateY = $pointY1;{br}'
+        expr1 += f'{previous}.translateZ = $pointZ1;{br}'
+        expr1 += f'float $pointX2 = {offset}.translateX;{br}'
+        expr1 += f'float $pointY2 = {offset}.translateY;{br}'
+        expr1 += f'float $pointZ2 = {offset}.translateZ;{br*2}'
+        # expression2
+        pointsGap = '$pointX2-$pointX1, $pointY2-$pointY1, $pointZ2-$pointZ1'
+        expr2 = f'float $distance = `mag<<{pointsGap}>>`;{br*2}'
+        # expression3
+        expr3 = f'{locator}.rotateX = $locator'
+        expr3 += ' + ($distance/$circleLength) * 360'
+        expr3 += ' * $auto'
+        expr3 += ' * 1'
+        expr3 += ' * sin(deg_to_rad($orientRotY))'
+        expr3 += f' / $offsetScale;{br*2}'
+        # expression4
+        expr4 = f'{offset}.PreviousPositionX = $pointX2;{br}'
+        expr4 += f'{offset}.PreviousPositionY = $pointY2;{br}'
+        expr4 += f'{offset}.PreviousPositionZ = $pointZ2;{br}'
+        # final expression
+        expr = expr1 + expr2 + expr3 + expr4
+        pm.expression(s=expr, o='', ae=1, uc='all')
+
+
+    def deleteExpression(self):
+        """ Deletes the expression applied to the wheel controller. """
+        ctrl = self.fldSelectWheel.text()
+        if not ctrl:
+            pm.warning("The ctrl's name field is empty.")
+            return
+        ctrlTopGrp = f"{ctrl}_upDownMain_grp"
+        exprTopGrp = f"{ctrl}_grp"
+        ctrlMain = f"{ctrl}_main"
+        exprList = pm.listConnections(ctrlMain, type="expression", d=True)
+        try:
+            pm.delete(exprList)
+            pm.parent(ctrlTopGrp, w=True)
+            pm.delete(exprTopGrp)
+        except:
+            pass
+        if pm.attributeQuery("AutoRoll", node=ctrlMain, ex=True):
+            pm.deleteAttr(f"{ctrlMain}.AutoRoll")
+
+
+    def jointConnect(self):
+        """ Connect the bind joints and the rig joints. """
+        jntNames = self.jntNameAndPos.keys()
+        for jnt in jntNames:
+            fbx = jnt.replace("jnt_", "fbx_")
+            try:
+                pm.connectAttr(f"{fbx}.translate", f"{jnt}.translate", f=True)
+                pm.connectAttr(f"{fbx}.rotate", f"{jnt}.rotate", f=True)
+                pm.connectAttr(f"{fbx}.scale", f"{jnt}.scale", f=True)
+                pm.connectAttr(f"{fbx}.visibility", f"{jnt}.visibility", f=True)
+            except:
+                continue
+
+
+    def jointDisconnect(self):
+        """ Disconnect the bind joints and rig joints. """
+        jntNames = self.jntNameAndPos.keys()
+        for jnt in jntNames:
+            fbx = jnt.replace("jnt_", "fbx_")
+            try:
+                pm.disconnectAttr(f"{fbx}.translate", f"{jnt}.translate")
+                pm.disconnectAttr(f"{fbx}.rotate", f"{jnt}.rotate")
+                pm.disconnectAttr(f"{fbx}.scale", f"{jnt}.scale")
+                pm.disconnectAttr(f"{fbx}.visibility", f"{jnt}.visibility")
+            except:
+                continue
+
+
+    def createDoor(self):
+        """ Create a door controller to rotate the mirror. """
+        obj = self.fldSelectDoor.text()
+        _R = "_R" in obj
+        Ri = "Right" in obj
+        ri = "right" in obj
+        if any([_R, Ri, ri]):
+            factor = -1
+        else:
+            factor = 1
+        _B = "_Bk" in obj
+        Ba = "Back" in obj
+        ba = "back" in obj
+        Re = "Rear" in obj
+        re = "rear" in obj
+        if any([_B, Ba, ba, Re, re]):
+            doorType = "door2"
+        else:
+            doorType = "door"
         
-        
-    def createWheelCtrls(self):
-        pass
+        ctrl = Controllers()
+        cc = ctrl.createControllers(**{doorType: obj})
 
 
-# class Wheel:
-#     def __init__(self, arg=None):
-#         self.sel = self.checkParam(arg)
-#         self.main()
-
-
-#     def main(self):
-#         for obj in self.sel:
-#             ctrl = self.createWheelCtrl(obj)
-#             off = self.createOffsetGrp(ctrl)
-#             loc = self.createCtrlLocator(ctrl)
-#             null, prev, orient = self.createGroupNames(off)
-#             self.createCtrlChannel(ctrl)
-#             self.createOffsetChannel(off)
-#             self.createCtrlGroup(off, null, prev, orient)
-#             self.createExpression(ctrl, off, loc, orient, prev)
-
-
-#     def checkParam(self, obj):
-#         """ Checks if there is an argument 
-#         and creates the argument as PyNode.
-#          """
-#         if obj and isinstance(obj, list):
-#             for j, k in enumerate(obj):
-#                 if isinstance(k, pm.PyNode):
-#                     continue
-#                 else:
-#                     obj[j] = pm.PyNode(k)
-#             result = obj
-#         else:
-#             result = pm.ls(sl=True)
-#         return result
-
-
-#     def createWheelCtrl(self, obj, sizeUp=1.2):
-#         """ Create a controller 1.2 times larger than 
-#         the boundingBox size of the selected object.
-#          """
-#         bb = pm.xform(obj, q=True, bb=True, ws=True)
-#         xMin, yMin, zMin, xMax, yMax, zMax = bb
-#         x = (xMax - xMin) / 2
-#         y = (yMax - yMin) / 2
-#         z = (zMax - zMin) / 2
-#         rad = max(x, y, z)
-#         rad = round(rad, 3) * sizeUp
-#         cuv = pm.circle(nr=(1, 0, 0), r=rad, n=f"cc_{obj}", ch=False)
-#         cuv = cuv[0]
-#         pm.matchTransform(cuv, obj, pos=True)
-#         return cuv
-
-
-#     def createOffsetGrp(self, obj):
-#         """ Create a parent group for the controller. """
-#         result = pm.group(obj, n=f"{obj}_offset")
-#         pm.xform(result, os=True, piv=(0,0,0))
-#         return result
-
-
-#     def createCtrlLocator(self, ctrl):
-#         """ Place the locator under the controller. """
-#         loc = pm.spaceLocator(n='loc_' + ctrl)
-#         pm.matchTransform(loc, ctrl, pos=True)
-#         pm.parent(loc, ctrl)
-#         return loc
-
-
-#     def createGroupNames(self, offset):
-#         """ Create another group name. """
-#         null = offset + '_null_grp'
-#         prev = offset + '_prev_grp'
-#         orient = offset + '_orient_grp'
-#         return null, prev, orient
-
-
-#     def createCtrlChannel(self, ctrl):
-#         """ Creates a Radius channel and AutoRoll channel. """
-#         attrRad = "Radius"
-#         pm.addAttr(ctrl, ln=attrRad, at='double', min=0.0001, dv=1)
-#         pm.setAttr(f'{ctrl}.{attrRad}', e=True, k=True)
-#         attrAuto = 'AutoRoll'
-#         pm.addAttr(ctrl, ln=attrAuto, at='long', min=0, max=1, dv=1)
-#         pm.setAttr(f'{ctrl}.{attrAuto}', e=True, k=True)
-
-
-#     def createOffsetChannel(self, offset):
-#         """ Create a PrePos channel in the offset group. """
-#         for i in ['X', 'Y', 'Z']:
-#             pm.addAttr(offset, ln=f'PrevPos{i}', at='double', dv=0)
-#             pm.setAttr(f'{offset}.PrevPos{i}', e=True, k=True)
-
-
-#     def createCtrlGroup(self, offset, null, prev, orient):
-#         """ Determine group relationships. """
-#         if offset.getParent():
-#             pm.parent(offset, offset.getParent())
-#         else:
-#             tempGrp = pm.group(em=True)
-#             pm.parent(offset, tempGrp)
-#         pm.group(n=null, em=True, p=offset)
-#         pm.group(n=prev, em=True, p=offset.getParent())
-#         ort = pm.group(n=orient, em=True, p=prev)
-#         pos = [-0.001, -0.001, -0.001]
-#         ort.translate.set(pos)
-#         pm.aimConstraint(offset, prev, mo=False)
-#         pm.orientConstraint(null, orient, mo=False)
-
-
-#     def createExpression(self, ctrl, offset, loc, orient, prev):
-#         """ Create an expression. """
-#         br = '\n'
-#         # expression1
-#         expr1 = f'float $R = {ctrl}.Radius;{br}'
-#         expr1 += f'float $A = {ctrl}.AutoRoll;{br}'
-#         expr1 += f'float $J = {loc}.rotateX;{br}'
-#         expr1 += f'float $C = 2 * 3.141 * $R;{br}'
-#         expr1 += f'float $O = {orient}.rotateY;{br}'
-#         expr1 += f'float $S = {offset}.scaleY;{br}'
-#         expr1 += f'float $pX = {offset}.PrevPosX;{br}'
-#         expr1 += f'float $pY = {offset}.PrevPosY;{br}'
-#         expr1 += f'float $pZ = {offset}.PrevPosZ;{br}'
-#         expr1 += f'{prev}.translateX = $pX;{br}'
-#         expr1 += f'{prev}.translateY = $pY;{br}'
-#         expr1 += f'{prev}.translateZ = $pZ;{br}'
-#         expr1 += f'float $nX = {offset}.translateX;{br}'
-#         expr1 += f'float $nY = {offset}.translateY;{br}'
-#         expr1 += f'float $nZ = {offset}.translateZ;{br*2}'
-#         # expression2
-#         expr2 = f'float $D = `mag<<$nX-$pX, $nY-$pY, $nZ-$pZ>>`;{br*2}'
-#         # expression3
-#         expr3 = f'{loc}.rotateX = $J'
-#         expr3 += ' + ($D/$C) * 360'
-#         expr3 += ' * $A'
-#         expr3 += ' * 1'
-#         expr3 += ' * sin(deg_to_rad($O))'
-#         expr3 += f' / $S;{br*2}'
-#         # expression4
-#         expr4 = f'{offset}.PrevPosX = $nX;{br}'
-#         expr4 += f'{offset}.PrevPosY = $nY;{br}'
-#         expr4 += f'{offset}.PrevPosZ = $nZ;{br}'
-#         # final
-#         expr = expr1 + expr2 + expr3 + expr4
-#         pm.expression(s=expr, o='', ae=1, uc='all')
-
-
-# wh = Wheel()
-# def createWheelCtrl(**kwargs):
-    # """ kwargs = {"wheelName1": (0, 0, 0), "wheelName2": (0, 0, 0), } """
-    # ctrl = Controllers()
-    # for wheelName, pos in kwargs.items():
-    #     ccWheel = ctrl.createControllers(circle=wheelName)
-    #     pm.rotate(ccWheel, (0, 0, 90))
-    #     pm.makeIdentity(ccWheel, a=1, t=1, r=1, s=1, jo=0)
-    #     print(pos)
-    #     pm.move(ccWheel, (0, 5, 0))
-
-
-# car = Car()
-# car.cleanUp()
-# car.createJoints()
-# car.sameBothSide()
-# car.build()
-# car.createRigGroups()
+# if __name__ == "__main__":
+#     try:
+#         qrCar.close()
+#         qrCar.deleteLater()
+#     except:
+#         pass
+#     qrCar = Car()
+#     qrCar.show()
 
 

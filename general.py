@@ -768,6 +768,14 @@ class Controllers:
                 (0, 7, -7), (-5, 7, -5), (-7, 7, 0), (7, 7, 0), 
                 (7, -7, 0), (-7, -7, 0), (-7, 7, 0)
                 ], 
+            "door": [
+                (0, 8, 0), (0, 58, -48), (0, 61, -100), (0, 8, -97), 
+                (0, -45, -97), (0, -45, 0), (0, -16, 2), (0, 8, 0)
+                ], 
+            "door2": [
+                (0, 8, 0), (0, 58, -5), (0, 61, -73), (0, -4, -82), 
+                (0, -45, -46), (0, -45, -2), (0, 8, 0)
+                ], 
             "foot": [
                 (-4, 0, -4), (-4, 0, -7), (-3, 0, -11), (-1, 0, -12), 
                 (0, 0, -12), (1, 0, -12), (3, 0, -11), (4, 0, -7), 
@@ -862,6 +870,7 @@ class Controllers:
         - "arrow", "arrow2", "arrow3", "arrow4", "arrow5", "arrow6", 
         - "cap", "car", "car2", "circle", "cone", "cone2", 
         - "cross", "cube", "cylinder", 
+        - "door", "door2", 
         - "foot", "foot2", 
         - "hat", "head", "hoof", "hoof2", 
         - "pipe", "pointer", 
@@ -882,18 +891,4 @@ class Controllers:
             cuv = pm.curve(p=pos, d=1, n=cuvName)
             result.append(cuv)
         return result
-
-
-# sel = pm.ls(sl=True)
-# for cc in sel:
-#     jnt = cc.replace("cc_", "fbx_")
-#     pm.parentConstraint(cc, jnt, mo=True, w=1.0)
-#     pm.scaleConstraint(cc, jnt, mo=True, w=1.0)
-# selectJointOnly()
-# sel = pm.ls(sl=True)
-# for fbx in sel:
-#     jnt = fbx.replace("fbx_", "jnt_")
-#     pm.connectAttr(f"{fbx}.translate", f"{jnt}.translate", f=True)
-#     pm.connectAttr(f"{fbx}.rotate", f"{jnt}.rotate", f=True)
-#     pm.connectAttr(f"{fbx}.scale", f"{jnt}.scale", f=True)
 
