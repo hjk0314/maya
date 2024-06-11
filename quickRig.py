@@ -247,7 +247,7 @@ class Car(QWidget):
             return
         grpNames = [
             f"{ctrl}_grp", 
-            # f"{ctrl}_offset", 
+            f"{ctrl}_offset", 
             f"{ctrl}_offsetNull", 
             f"{ctrl}_offsetPrevious", 
             f"{ctrl}_offsetOrient"
@@ -264,7 +264,7 @@ class Car(QWidget):
         self.createExpression(ctrl, locator, exprGrps)
         pm.parent(ctrlTopGrp, w=True)
         pm.delete(ctrlTopGrp, cn=True)
-        pm.parent(ctrlTopGrp, f"{ctrl}_offset")
+        pm.parent(ctrlTopGrp, exprGrps[1])
 
 
     def updateJointsPosition(self):
@@ -301,7 +301,7 @@ class Car(QWidget):
     def cleanUp(self):
         """ Clean up the joint groups. """
         listDelete = [
-            # self.topGroup, 
+            self.topGroup, 
             self.rootJnt, 
             self.rootFbx, 
             self.mainCtrl + "_grp", 
@@ -395,20 +395,6 @@ class Car(QWidget):
             pass
 
 
-    def tryConstraintParent(self, parents: str, child: str):
-        try:
-            pm.parentConstraint(parents, child, mo=True)
-        except:
-            pass
-
-
-    def tryScaleParent(self, parents: str, child: str):
-        try:
-            pm.scaleConstraint(parents, child, mo=True)
-        except:
-            pass
-
-
     def setWheelName(self):
         """ Remove spaces from wheel names. """
         button = self.sender()
@@ -436,22 +422,18 @@ class Car(QWidget):
             f"{ctrl}_offsetPrevious", 
             f"{ctrl}_offsetOrient"
             ]
-        result = []
-        for i in grpNames:
-            if not pm.objExists(i):
-                pm.group(n=i, em=True)
-            result.append(i)
+        result = [pm.group(n=i, em=True) for i in grpNames]
         grp, offset, offsetNull, offsetPrevious, offsetOrient = result
         pm.parent(offset, grp)
         pm.parent(offsetNull, offset)
         pm.parent(offsetPrevious, grp)
         pm.parent(offsetOrient, offsetPrevious)
-        pm.setAttr(f"{offsetOrient}.translate", [-0.001, -0.001, -0.001])
+        offsetOrient.translate.set([-0.001, -0.001, -0.001])
         pm.aimConstraint(offset, offsetPrevious, mo=False)
         pm.orientConstraint(offsetNull, offsetOrient, mo=False)
-        for j in ['X', 'Y', 'Z']:
-            pm.addAttr(offset, ln=f'PreviousPosition{j}', at='double', dv=0)
-            pm.setAttr(f'{offset}.PreviousPosition{j}', e=True, k=True)
+        for i in ['X', 'Y', 'Z']:
+            pm.addAttr(offset, ln=f'PreviousPosition{i}', at='double', dv=0)
+            pm.setAttr(f'{offset}.PreviousPosition{i}', e=True, k=True)
         return result
 
 
@@ -466,21 +448,19 @@ class Car(QWidget):
         sizeRatio = [14, 18, 9, 11]
         ctrl = Controllers()
         rad = getBoundingBoxSize(obj)
-        for ud, sr in zip(cc[:2], sizeRatio[:2]):
-            cuv = ctrl.createControllers(square=ud)[0]
+        for ccName, sr in zip(cc[:2], sizeRatio[:2]):
+            cuv = ctrl.createControllers(square=ccName)[0]
             pm.scale(cuv, (rad/(sr*2), rad/sr, rad/sr))
             pm.matchTransform(cuv, obj, pos=True)
             pm.setAttr(f"{cuv}.translateY", 0)
-        for ms, sr in zip(cc[2:], sizeRatio[2:]):
-            cuv = ctrl.createControllers(circle=ms)[0]
+        for ccName, sr in zip(cc[2:], sizeRatio[2:]):
+            cuv = ctrl.createControllers(circle=ccName)[0]
             pm.scale(cuv, (rad/sr, rad/sr, rad/sr))
             pm.rotate(cuv, (0, 0, 90))
             pm.matchTransform(cuv, obj, pos=True)
         ccGrp = groupingWithOwnPivot2(*cc, null=True)
         parentHierarchically(*ccGrp)
         pm.makeIdentity(ccGrp, a=1, t=1, r=1, s=1, n=0, pn=1)
-        self.createRotationLocator(ccName)
-        pm.group(ccGrp[0], n=f"{ccName}_offset", w=True)
         ccMain = cc[2]
         attrRad = "Radius"
         pm.addAttr(ccMain, ln=attrRad, at='double', min=0.0001, dv=1)
@@ -555,8 +535,7 @@ class Car(QWidget):
         if not ctrl:
             pm.warning("The ctrl's name field is empty.")
             return
-        ctrlTopGrp = f"{ctrl}_offset"
-        ctrlNullGrp = f"{ctrl}_offsetNull"
+        ctrlTopGrp = f"{ctrl}_upDownMain_grp"
         exprTopGrp = f"{ctrl}_grp"
         ctrlMain = f"{ctrl}_main"
         exprList = pm.listConnections(ctrlMain, type="expression", d=True)
@@ -564,29 +543,10 @@ class Car(QWidget):
             pm.delete(exprList)
             pm.parent(ctrlTopGrp, w=True)
             pm.delete(exprTopGrp)
-            pm.delete(ctrlNullGrp)
         except:
             pass
         if pm.attributeQuery("AutoRoll", node=ctrlMain, ex=True):
             pm.deleteAttr(f"{ctrlMain}.AutoRoll")
-
-
-    def parentAll(self):
-        """ 
-        - Connect the <loc_wheel*> and <fbx_wheel*> with constraint parent. 
-        - Connect the <cc_body> and <fbx_body> with constraint parent.
-        - Connect the <cc_sub> and <fbx_root> with constraint parent.
-        - Connect the <cc_sub> and <wheel offset group> 
-        with constraint parent and scale. """
-        ccSub = "cc_sub"
-        allSide = ["LeftFront", "RightFront", "LeftRear", "RightRear"]
-        for i in allSide:
-            self.tryConstraintParent(f"loc_wheel{i}", f"fbx_wheel{i}")
-            self.tryConstraintParent(ccSub, f"cc_wheel{i}_offset")
-            self.tryScaleParent(ccSub, f"cc_wheel{i}_offset")
-        self.tryConstraintParent(ccSub, "fbx_root")
-        self.tryScaleParent(ccSub, "skeletons")
-        self.tryConstraintParent("cc_body", "fbx_body")
 
 
     def jointConnect(self):
@@ -641,13 +601,13 @@ class Car(QWidget):
         cc = ctrl.createControllers(**{doorType: obj})
 
 
-if __name__ == "__main__":
-    try:
-        qrCar.close()
-        qrCar.deleteLater()
-    except:
-        pass
-    qrCar = Car()
-    qrCar.show()
+# if __name__ == "__main__":
+#     try:
+#         qrCar.close()
+#         qrCar.deleteLater()
+#     except:
+#         pass
+#     qrCar = Car()
+#     qrCar.show()
 
 
