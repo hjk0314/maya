@@ -420,25 +420,25 @@ def replaceLeftRight(objName: str) -> str:
     >>> 'Right'
     >>> replaceLeftRight('Right')
     >>> 'Left'
-    >>> replaceLeftRight('L_')
-    >>> 'R_'
-    >>> replaceLeftRight('R_')
-    >>> 'L_'
+    >>> replaceLeftRight('_L')
+    >>> '_R'
+    >>> replaceLeftRight('_R')
+    >>> '_L'
      """
     if not objName or not isinstance(objName, str):
         return
     elif "Left" in objName:
         sideA = "Left"
         sideB = "Right"
-    elif "L_" in objName:
-        sideA = "L_"
-        sideB = "R_"
+    elif "_L" in objName:
+        sideA = "_L"
+        sideB = "_R"
     elif "Right" in objName:
         sideA = "Right"
         sideB = "Left"
-    elif "R_" in objName:
-        sideA = "R_"
-        sideB = "L_"
+    elif "_R" in objName:
+        sideA = "_R"
+        sideB = "_L"
     else:
         return
     result = objName.replace(sideA, sideB)

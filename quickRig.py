@@ -234,6 +234,7 @@ class Car(QWidget):
             pm.warning(f"{ctrl}_main ctrl aleady exists.")
             return
         self.createWheelCtrl(ctrl, obj)
+        self.createRotationLocator(ctrl)
 
 
     def buildExpression(self):
@@ -601,13 +602,13 @@ class Car(QWidget):
         cc = ctrl.createControllers(**{doorType: obj})
 
 
-# if __name__ == "__main__":
-#     try:
-#         qrCar.close()
-#         qrCar.deleteLater()
-#     except:
-#         pass
-#     qrCar = Car()
-#     qrCar.show()
+if __name__ == "__main__":
+    try:
+        qrCar.close()
+        qrCar.deleteLater()
+    except:
+        pass
+    qrCar = Car()
+    qrCar.show()
 
 
