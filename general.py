@@ -308,27 +308,24 @@ def groupingWithOwnPivot2(*args, **kwargs) -> list:
         objName = options["n"]
         objName = objName if objName else i
         topGroup = pm.listRelatives(i, p=True)
-        temp = []
+        result = []
         if True == options["null"]:
             grpName = [f"{objName}_grp", f"{objName}_null"]
             for name in grpName:
                 grp = pm.group(em=True, n=name)
                 pm.matchTransform(grp, i, pos=True, rot=True)
-                temp.append(grp)
+                result.append(grp)
         else:
             grpName = f"{objName}_grp"
             grp = pm.group(em=True, n=grpName)
             pm.matchTransform(grp, i, pos=True, rot=True)
-            temp.append(grp)
-        for j in temp:
-            result.append(j)
-            try:
-                pm.parent(j, topGroup)
-            except:
-                continue
-        temp.append(objName)
-        result.append(objName)
-        parentHierarchically(*temp)
+            result.append(grp)
+        try:
+            pm.parent(result[0], topGroup)
+        except:
+            pass
+        result.append(i)
+        parentHierarchically(*result)
     return result
 
 
