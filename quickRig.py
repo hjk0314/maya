@@ -459,7 +459,7 @@ class Car(QWidget):
             pm.scale(cuv, (rad/sr, rad/sr, rad/sr))
             pm.rotate(cuv, (0, 0, 90))
             pm.matchTransform(cuv, obj, pos=True)
-        ccGrp = groupingWithOwnPivot2(*cc, null=True)
+        ccGrp = groupOwnPivot(*cc, null=True)
         parentHierarchically(*ccGrp)
         pm.makeIdentity(ccGrp, a=1, t=1, r=1, s=1, n=0, pn=1)
         ccMain = cc[2]
@@ -602,13 +602,13 @@ class Car(QWidget):
         cc = ctrl.createControllers(**{doorType: obj})
 
 
-if __name__ == "__main__":
-    try:
-        qrCar.close()
-        qrCar.deleteLater()
-    except:
-        pass
-    qrCar = Car()
-    qrCar.show()
+# if __name__ == "__main__":
+#     try:
+#         qrCar.close()
+#         qrCar.deleteLater()
+#     except:
+#         pass
+#     qrCar = Car()
+#     qrCar.show()
 
 
