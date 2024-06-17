@@ -100,7 +100,7 @@ class Car(QWidget):
         self.fldSelectWheel = QLineEdit()
         self.fldSelectWheel.setClearButtonEnabled(True)
         self.fldSelectWheel.setEnabled(True)
-        self.fldSelectWheel.setPlaceholderText("Wheel Name")
+        self.fldSelectWheel.setPlaceholderText("Click Wheel Name")
         self.fldSelectWheel.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
         self.verticalLayout.addWidget(self.fldSelectWheel)
         self.gridLayout_4 = QGridLayout()
@@ -121,8 +121,10 @@ class Car(QWidget):
         self.btnDelExpr = QPushButton("Del Expression")
         self.gridLayout_5.addWidget(self.btnDelExpr, 0, 1, 1, 1)
         self.btnSetPressure = QPushButton("Set Pressure")
+        self.btnSetPressure.setEnabled(False)
         self.gridLayout_5.addWidget(self.btnSetPressure, 2, 0, 1, 1)
         self.btnDelPressure = QPushButton("Del Pressure")
+        self.btnDelPressure.setEnabled(False)
         self.gridLayout_5.addWidget(self.btnDelPressure, 2, 1, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout_5)
         self.btnWheelCleanUp = QPushButton("Clean Up")
@@ -134,17 +136,19 @@ class Car(QWidget):
         self.fldSelectDoor = QLineEdit()
         self.fldSelectDoor.setClearButtonEnabled(True)
         self.fldSelectDoor.setEnabled(True)
-        self.fldSelectDoor.setPlaceholderText("Door Name")
+        self.fldSelectDoor.setPlaceholderText("Click Door Name")
         self.fldSelectDoor.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
         self.verticalLayout.addWidget(self.fldSelectDoor)
         self.gridLayout_6 = QGridLayout()
         self.btnLeftDoor = QPushButton("Left Front")
         self.gridLayout_6.addWidget(self.btnLeftDoor, 0, 0, 1, 1)
         self.btnRightDoor = QPushButton("Right Front")
+        self.btnRightDoor.setEnabled(False)
         self.gridLayout_6.addWidget(self.btnRightDoor, 0, 1, 1, 1)
         self.btnLeftDoor2 = QPushButton("Left Rear")
         self.gridLayout_6.addWidget(self.btnLeftDoor2, 2, 0, 1, 1)
         self.btnRightDoor2 = QPushButton("Right Rear")
+        self.btnRightDoor2.setEnabled(False)
         self.gridLayout_6.addWidget(self.btnRightDoor2, 2, 1, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout_6)
         self.btnCreateDoor = QPushButton("Create Door")
@@ -155,7 +159,12 @@ class Car(QWidget):
         self.line_4.setFrameShape(QFrame.HLine)
         self.line_4.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_4)
+        self.btnConnectAll = QPushButton("Connect All")
+        self.verticalLayout.addWidget(self.btnConnectAll)
+        self.btnSetColor = QPushButton("Set Color")
+        self.verticalLayout.addWidget(self.btnSetColor)
         self.btnConnection = QPushButton("Joint Connection")
+        self.btnConnection.setEnabled(False)
         self.verticalLayout.addWidget(self.btnConnection)
         self.btnDisconnection = QPushButton("Disconnection")
         self.verticalLayout.addWidget(self.btnDisconnection)
@@ -192,6 +201,8 @@ class Car(QWidget):
         self.btnLeftDoor2.clicked.connect(self.setDoorName)
         self.btnRightDoor2.clicked.connect(self.setDoorName)
         self.btnCreateDoor.clicked.connect(self.createDoor)
+        self.btnConnectAll.clicked.connect(self.connectAll)
+        self.btnSetColor.clicked.connect(self.setColor)
         self.btnConnection.clicked.connect(self.jointConnect)
         self.btnDisconnection.clicked.connect(self.jointDisconnect)
         self.btnClose.clicked.connect(self.close)
@@ -460,6 +471,7 @@ class Car(QWidget):
             pm.rotate(cuv, (0, 0, 90))
             pm.matchTransform(cuv, obj, pos=True)
         ccGrp = groupOwnPivot(*cc, null=True)
+        print(ccGrp)
         parentHierarchically(*ccGrp)
         pm.makeIdentity(ccGrp, a=1, t=1, r=1, s=1, n=0, pn=1)
         ccMain = cc[2]
@@ -579,15 +591,17 @@ class Car(QWidget):
 
 
     def createDoor(self):
-        """ Create a door controller to rotate the mirror. """
+        """ Create a door controller to rotate the mirror.
+        The door on the right is created automatically. 
+        The shapes of the front and back doors are different.
+        Select the Pivot Object, First.
+         """
+        sel = pm.ls(sl=True)
+        if not sel:
+            pm.warning("Nothing Selected.")
+            return
         obj = self.fldSelectDoor.text()
-        _R = "_R" in obj
-        Ri = "Right" in obj
-        ri = "right" in obj
-        if any([_R, Ri, ri]):
-            factor = -1
-        else:
-            factor = 1
+        sel = sel[0]
         _B = "_Bk" in obj
         Ba = "Back" in obj
         ba = "back" in obj
@@ -597,18 +611,126 @@ class Car(QWidget):
             doorType = "door2"
         else:
             doorType = "door"
-        
         ctrl = Controllers()
-        cc = ctrl.createControllers(**{doorType: obj})
+        cc = ctrl.createControllers(**{doorType: obj})[0]
+        pm.matchTransform(cc, sel, pos=True, rot=True)
+        doorSideA = groupOwnPivot(cc, null=True)[2]
+        doorSideB = mirrorCopy(cc)[2]
+        for i in [doorSideA, doorSideB]:
+            pm.transformLimits(i, ry=(-60, 0), ery=(False, True))
 
 
-# if __name__ == "__main__":
-#     try:
-#         qrCar.close()
-#         qrCar.deleteLater()
-#     except:
-#         pass
-#     qrCar = Car()
-#     qrCar.show()
+    def connectAll(self):
+        """ Most connections for rough cars. 
+        Expression is for the left front wheel only.
+        Most connections are as bellows
+
+        - Locator1 <---> Locator2, 3, 4
+        - Locators ---> fbx Joints
+        - cc_sub ---> skeletons
+        - cc_sub ---> wheelCtrl
+        - cc_sub ---> fbx_root
+        - cc_body ---> fbx_body
+
+        Joints and modeling must be connected directly.
+        - cc_sub ---> modeling top group
+        - jnt_body ---> upper modeling group
+        - jnt_wheel ---> wheel group
+         """
+        # Connect most all
+        lrfb = ["LeftFront", "RightFront", "LeftRear", "RightRear"]
+        locs = [f"loc_wheel{i}" for i in lrfb]
+        fbxWheels = [f"fbx_wheel{i}" for i in lrfb]
+        wheelGrps = [
+            "cc_wheelLeftFront_offset", 
+            "cc_wheelRightFront_upDownMain_grp", 
+            "cc_wheelLeftRear_upDownMain_grp", 
+            "cc_wheelRightRear_upDownMain_grp"
+            ]
+        rotX = "rotateX"
+        ccSub = "cc_sub"
+        for i in range(1, 4):
+            pm.connectAttr(f"{locs[0]}.{rotX}", f"{locs[i]}.{rotX}", f=True)
+        for l, w in zip(locs, fbxWheels):
+            pm.parentConstraint(l, w, mo=True, w=1.0)
+        for i in wheelGrps:
+            pm.parentConstraint(ccSub, i, mo=True, w=1.0)
+            pm.scaleConstraint(ccSub, i, mo=True, w=1.0)
+        pm.scaleConstraint(ccSub, "skeletons", mo=True, w=1.0)
+        pm.parentConstraint(ccSub, "fbx_root", mo=True, w=1.0)
+        pm.parentConstraint("cc_body", "fbx_body", mo=True, w=1.0)
+        # Visibility off
+        for i in locs:
+            pm.setAttr(f"{i}.visibility", 0)
+        pm.setAttr(f"skeletons.visibility", 0)
+        pm.setAttr(f"rigBones.visibility", 0)
+        # Connect joints and fbx_joints
+        self.jointConnect()
+
+
+    def setColor(self):
+        colorList = {
+            "yellow": [
+                "cc_main", 
+                "cc_body", 
+                "cc_wheelLeftFront_upDownMain", 
+                "cc_wheelRightFront_upDownMain", 
+                "cc_wheelLeftRear_upDownMain", 
+                "cc_wheelRightRear_upDownMain"
+                ], 
+            "pink": [
+                "cc_sub", 
+                "cc_wheelLeftFront_upDownSub", 
+                "cc_wheelRightFront_upDownSub", 
+                "cc_wheelLeftRear_upDownSub", 
+                "cc_wheelRightRear_upDownSub"
+                ], 
+            "red": [
+                "cc_wheelLeftFront_main", 
+                "cc_wheelLeftRear_main"
+                ], 
+            "red2": [
+                "cc_wheelLeftFront_sub", 
+                "cc_wheelLeftRear_sub"
+                ], 
+            "blue": [
+                "cc_wheelRightFront_main", 
+                "cc_wheelRightRear_main"
+                ], 
+            "blue2": [
+                "cc_wheelRightFront_sub", 
+                "cc_wheelRightRear_sub"
+                ]
+            }
+        colorIndex = {
+            "blue": 6, 
+            "blue2": 18, 
+            "pink": 9, 
+            "red": 13, 
+            "red2": 21, 
+            "green": 14, 
+            "green2": 23, 
+            "yellow": 17
+            }
+        for color, objList in colorList.items():
+            idx = colorIndex[color]
+            for obj in objList:
+                try:
+                    obj = pm.PyNode(obj)
+                    shp = obj.getShape()
+                    pm.setAttr(f"{shp}.overrideEnabled", 1)
+                    pm.setAttr(f"{shp}.overrideColor", idx)
+                except:
+                    continue
+
+
+if __name__ == "__main__":
+    try:
+        qrCar.close()
+        qrCar.deleteLater()
+    except:
+        pass
+    qrCar = Car()
+    qrCar.show()
 
 

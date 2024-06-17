@@ -308,7 +308,6 @@ def groupOwnPivot(*args, **kwargs) -> list:
         objName = options["n"]
         objName = objName if objName else i
         topGroup = pm.listRelatives(i, p=True)
-        result = []
         if True == options["null"]:
             grpName = [f"{objName}_grp", f"{objName}_null"]
             for name in grpName:
@@ -411,7 +410,7 @@ def softSelection():
     pm.select(cluster[1], r=True)
 
 
-def replaceLeftRight(objName: str) -> str:
+def replaceLeftRight(obj: str) -> str:
     """ Confinedly, used.
     >>> replaceLeftRight('Left')
     >>> 'Right'
@@ -422,37 +421,41 @@ def replaceLeftRight(objName: str) -> str:
     >>> replaceLeftRight('_R')
     >>> '_L'
      """
-    if not objName or not isinstance(objName, str):
+    obj = obj.name() if isinstance(obj, pm.PyNode) else obj
+    if not obj:
         return
-    elif "Left" in objName:
+    elif "Left" in obj:
         sideA = "Left"
         sideB = "Right"
-    elif "_L" in objName:
+    elif "_L" in obj:
         sideA = "_L"
         sideB = "_R"
-    elif "Right" in objName:
+    elif "Right" in obj:
         sideA = "Right"
         sideB = "Left"
-    elif "_R" in objName:
+    elif "_R" in obj:
         sideA = "_R"
         sideB = "_L"
     else:
         return
-    result = objName.replace(sideA, sideB)
+    result = obj.replace(sideA, sideB)
     return result
 
 
 def getLeftOrRight(*args):
+    """ Finds the number of 'left' and 'right' in a word 
+    and returns the 'left' or 'right' that contain the most.
+     """
     jntSide = []
     for i in args:
         jnt = i.name() if isinstance(i, pm.PyNode) else i
         if "Left" in jnt:
             jntSide.append("Left")
-        elif "L_" in jnt:
+        elif "_L" in jnt:
             jntSide.append("Left")
         elif "Right" in jnt:
             jntSide.append("Right")
-        elif "R_" in jnt:
+        elif "_R" in jnt:
             jntSide.append("Right")
         else:
             jntSide.append("")
