@@ -54,7 +54,6 @@ class Car(QWidget):
                 ], 
             }
         super(Car, self).__init__()
-        self.sortCount = 0
         self.setParent(mayaMainWindow())
         self.setWindowFlags(Qt.Window)
         self.setupUI()
@@ -201,6 +200,7 @@ class Car(QWidget):
         self.btnLeftDoor2.clicked.connect(self.setDoorName)
         self.btnRightDoor2.clicked.connect(self.setDoorName)
         self.btnCreateDoor.clicked.connect(self.createDoor)
+        self.btnDoorCleanUp.clicked.connect(self.cleanUpDoor)
         self.btnConnectAll.clicked.connect(self.connectAll)
         self.btnSetColor.clicked.connect(self.setColor)
         self.btnConnection.clicked.connect(self.jointConnect)
@@ -338,6 +338,28 @@ class Car(QWidget):
                 pm.delete(i)
             except:
                 pass
+
+
+    def cleanUpDoor(self):
+        listDelete = [
+            "cc_doorLeftFront_grp", 
+            "cc_doorLeftRear_grp", 
+            "cc_doorRightFront_grp", 
+            "cc_doorRightRear_grp", 
+            "jnt_doorLeftFront", 
+            "jnt_doorLeftRear", 
+            "jnt_doorRightFront", 
+            "jnt_doorRightRear", 
+            "fbx_doorLeftFront", 
+            "fbx_doorLeftRear", 
+            "fbx_doorRightFront", 
+            "fbx_doorRightRear"
+            ]
+        for i in listDelete:
+            try:
+                pm.delete(i)
+            except:
+                continue
 
 
     def createGroups(self):
@@ -618,6 +640,22 @@ class Car(QWidget):
         doorSideB = mirrorCopy(cc)[2]
         for i in [doorSideA, doorSideB]:
             pm.transformLimits(i, ry=(-60, 0), ery=(False, True))
+        self.createDoorJoint(obj)
+
+
+    def createDoorJoint(self, ctrlName):
+        jntName = ctrlName.replace("cc_", "jnt_")
+        jnt = pm.joint(p=(0,0,0), n=jntName)
+        pm.matchTransform(jnt, ctrlName, pos=True)
+        pm.connectJoint(jnt, "jnt_body", pm=True)
+        jntList = pm.mirrorJoint(jnt, myz=True, mb=True, sr=("Left", "Right"))
+        jntList.insert(0, jnt)
+        if pm.objExists("fbx_body"):
+            for i in jntList:
+                fbx = i.replace("jnt_", "fbx_")
+                copied = pm.duplicate(i, rr=True, n=fbx)
+                pm.parent(copied, w=True)
+                pm.connectJoint(copied, "fbx_body", pm=True)
 
 
     def connectAll(self):

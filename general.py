@@ -296,35 +296,47 @@ def groupingWithOwnPivot(*arg) -> list:
 
 
 def groupOwnPivot(*args, **kwargs) -> list:
+    """ Create a group with the same pivot.
+    - groupOwnPivot() \\
+    >>> ["selection_grp", "selection"]
+    - groupOwnPivot("pCube1", "pCube2") \\
+    >>> ["pCube1_grp", "pCube1", "pCube2_grp", "pCube2"]
+    - groupOwnPivot(*list) \\
+    >>> ["element1_grp", "element1", "element2_grp", "element2", ...]
+    - groupOwnPivot("pCube1", null=True) \\
+    >>> ["pCube1_grp", "pCube1_null", "pCube1"]
+    - groupOwnPivot("pCube1", null=True, n="newName") \\
+    >>> ["newName_grp", "newName_null", "pCube1"]
+     """
     selections = args if args else pm.ls(sl=True)
-    options = {"null": False, "n": ""}
+    flags = {"null": False, "n": ""}
     for key, value in kwargs.items():
-        if key in options:
-            options[key] = value
+        if key in flags:
+            flags[key] = value
         else:
             continue
     result = []
     for i in selections:
-        objName = options["n"]
+        objName = flags["n"]
         objName = objName if objName else i
         topGroup = pm.listRelatives(i, p=True)
-        if True == options["null"]:
+        temp = []
+        if True == flags["null"]:
             grpName = [f"{objName}_grp", f"{objName}_null"]
             for name in grpName:
                 grp = pm.group(em=True, n=name)
                 pm.matchTransform(grp, i, pos=True, rot=True)
-                result.append(grp)
+                temp.append(grp)
         else:
             grpName = f"{objName}_grp"
             grp = pm.group(em=True, n=grpName)
             pm.matchTransform(grp, i, pos=True, rot=True)
-            result.append(grp)
-        try:
-            pm.parent(result[0], topGroup)
-        except:
-            pass
-        result.append(i)
-        parentHierarchically(*result)
+            temp.append(grp)
+        temp.append(i)
+        parentHierarchically(*temp)
+        try:    pm.parent(temp[0], topGroup)
+        except: pass
+        result += temp
     return result
 
 
@@ -953,4 +965,5 @@ class Controllers:
             cuv = pm.curve(p=pos, d=1, n=cuvName)
             result.append(cuv)
         return result
+
 
