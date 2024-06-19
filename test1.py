@@ -29,14 +29,8 @@ class Car(QWidget):
         self.bodyFbx = "fbx_body"
         self.mainCtrl = "cc_main"
         self.subCtrl = "cc_sub"
-        self.wheelLF = ""
-        self.wheelRF = ""
-        self.wheelLB = ""
-        self.wheelRB = ""
-        self.doorLF = ""
-        self.doorRF = ""
-        self.dorrLB = ""
-        self.dorrRB = ""
+        self.doorCtrls = []
+        self.doorJoints = []
         self.jntNameAndPos = {
             "jnt_root": (0, 15, 0), 
             "jnt_body": (0, 45, 0), 
@@ -169,7 +163,7 @@ class Car(QWidget):
         self.btnSetColor = QPushButton("Set Color")
         self.verticalLayout.addWidget(self.btnSetColor)
         self.btnConnection = QPushButton("Joint Connection")
-        self.btnConnection.setEnabled(False)
+        # self.btnConnection.setEnabled(False)
         self.verticalLayout.addWidget(self.btnConnection)
         self.btnDisconnection = QPushButton("Disconnection")
         self.verticalLayout.addWidget(self.btnDisconnection)
@@ -205,7 +199,7 @@ class Car(QWidget):
         self.btnRightDoor.clicked.connect(self.setDoorNameField)
         self.btnLeftDoor2.clicked.connect(self.setDoorNameField)
         self.btnRightDoor2.clicked.connect(self.setDoorNameField)
-        self.btncreateDoorCtrl.clicked.connect(self.createDoorCtrl)
+        self.btncreateDoorCtrl.clicked.connect(self.build_doors)
         self.btnDoorCleanUp.clicked.connect(self.cleanUp_door)
         self.btnConnectAll.clicked.connect(self.connectAll)
         self.btnSetColor.clicked.connect(self.setColor)
@@ -286,9 +280,21 @@ class Car(QWidget):
 
 
     def build_doors(self):
-        ccName = self.createDoorCtrl()
-        jnt, fbx = self.createDoorJoint(ccName)
-
+        sel = pm.ls(sl=True)
+        if not sel:
+            pm.warning("Nothing Selected.")
+            return
+        doorName = self.fldSelectDoor.text()
+        if not doorName:
+            pm.warning("Door Name Field is empty.")
+            return
+        if pm.objExists(doorName):
+            pm.warning("%s is aleady exists." % doorName)
+            return
+        self.doorCtrls += self.createDoorCtrl(sel[0], doorName)
+        self.doorCtrls = list(set(self.doorCtrls))
+        self.doorJoints += self.createDoorJoint(doorName)
+        self.doorJoints = list(set(self.doorJoints))
 
 
     def updateJointsPosition(self):
@@ -353,26 +359,13 @@ class Car(QWidget):
 
 
     def cleanUp_door(self):
-        listDelete = [
-            "cc_doorLeftFront_grp", 
-            "cc_doorLeftBack_grp", 
-            "cc_doorRightFront_grp", 
-            "cc_doorRightBack_grp", 
-            "jnt_doorLeftFront", 
-            "jnt_doorLeftBack", 
-            "jnt_doorRightFront", 
-            "jnt_doorRightBack", 
-            "fbx_doorLeftFront", 
-            "fbx_doorLeftBack", 
-            "fbx_doorRightFront", 
-            "fbx_doorRightBack"
-            ]
-        for i in listDelete:
-            try:
-                pm.delete(i)
-            except:
-                continue
-
+        listDelete = self.doorCtrls + self.doorJoints
+        if not listDelete:
+            pm.warning("Nothing to delete.")
+            return
+        self.doorCtrls = []
+        self.doorJoints = []
+        
 
     def createCarGroup(self):
         """ Create an entire car group. """
@@ -632,33 +625,27 @@ class Car(QWidget):
                 continue
 
 
-    def createDoorCtrl(self) -> str:
+    def createDoorCtrl(self, selection, doorName) -> list:
         """ Create a door controller to rotate the mirror.
         The door on the right is created automatically. 
         The shapes of the front and back doors are different.
-        Select the Pivot Object, First.
          """
-        sel = pm.ls(sl=True)
-        if not sel:
-            pm.warning("Nothing Selected.")
-            return
-        obj = self.fldSelectDoor.text()
-        sel = sel[0]
-        _B = "_Bk" in obj
-        Ba = "Back" in obj
-        ba = "back" in obj
+        _B = "_Bk" in doorName
+        Ba = "Back" in doorName
+        ba = "back" in doorName
         if any([_B, Ba, ba]):
             doorType = "door2"
         else:
             doorType = "door"
         ctrl = Controllers()
-        cc = ctrl.createControllers(**{doorType: obj})[0]
-        pm.matchTransform(cc, sel, pos=True, rot=True)
-        doorSideA = groupOwnPivot(cc, null=True)[2]
-        doorSideB = mirrorCopy(cc)[2]
-        for i in [doorSideA, doorSideB]:
+        cc = ctrl.createControllers(**{doorType: doorName})[0]
+        pm.matchTransform(cc, selection, pos=True, rot=True)
+        doorAGrp, doorA = groupOwnPivot(cc, null=True)[::2]
+        doorBGrp, doorB = mirrorCopy(cc)[::2]
+        result = [doorAGrp, doorBGrp]
+        for i in [doorA, doorB]:
             pm.transformLimits(i, ry=(-60, 0), ery=(False, True))
-        return obj
+        return result
 
 
     def createDoorJoint(self, ctrlName) -> list:
@@ -683,7 +670,7 @@ class Car(QWidget):
                 pm.parent(copied, w=True)
                 pm.connectJoint(copied, self.bodyFbx, pm=True)
                 fbxList.append(copied)
-        return jntList, fbxList
+        return jntList + fbxList
 
 
     def connectAll(self):
@@ -730,8 +717,6 @@ class Car(QWidget):
             pm.setAttr(f"{i}.visibility", 0)
         pm.setAttr(f"skeletons.visibility", 0)
         pm.setAttr(f"rigBones.visibility", 0)
-        # Connect joints and fbx_joints
-        self.jointConnect()
 
 
     def setColor(self):
