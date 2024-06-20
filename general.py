@@ -218,10 +218,11 @@ def selectConstraintOnly() -> list:
     return result
 
 
-def selectJointOnly() -> list:
-    transformNodes = pm.ls(sl=True, dag=True, type=['transform'])
+def selectJointOnly(*args) -> list:
+    if args:    sel = pm.ls(args, dag=True, type=['transform'])
+    else:       sel = pm.ls(sl=True, dag=True, type=['transform'])
     result = []
-    for i in transformNodes:
+    for i in sel:
         iType = pm.objectType(i)
         if iType == 'joint':
             result.append(i)

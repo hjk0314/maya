@@ -361,11 +361,16 @@ class Car(QWidget):
     def cleanUp_door(self):
         listDelete = self.doorCtrls + self.doorJoints
         if not listDelete:
-            pm.warning("Nothing to delete.")
+            pm.warning("There is no door to delete.")
             return
+        for i in listDelete:
+            try:
+                pm.delete(i)
+            except:
+                continue
         self.doorCtrls = []
         self.doorJoints = []
-        
+
 
     def createCarGroup(self):
         """ Create an entire car group. """
@@ -599,7 +604,8 @@ class Car(QWidget):
 
     def jointConnect(self):
         """ Connect the bind joints and the rig joints. """
-        jntNames = self.jntNameAndPos.keys()
+        jntNames = selectJointOnly("bindBones")
+        # jntNames = self.jntNameAndPos.keys()
         for jnt in jntNames:
             fbx = jnt.replace("jnt_", "fbx_")
             try:
@@ -613,7 +619,8 @@ class Car(QWidget):
 
     def jointDisconnect(self):
         """ Disconnect the bind joints and rig joints. """
-        jntNames = self.jntNameAndPos.keys()
+        jntNames = selectJointOnly("bindBones")
+        # jntNames = self.jntNameAndPos.keys()
         for jnt in jntNames:
             fbx = jnt.replace("jnt_", "fbx_")
             try:
@@ -658,6 +665,7 @@ class Car(QWidget):
         jnt = pm.joint(p=(0,0,0), n=jntName)
         pm.matchTransform(jnt, ctrlName, pos=True)
         pm.connectJoint(jnt, self.bodyJnt, pm=True)
+        pm.makeIdentity(jnt, a=1, t=1, r=1, s=1, jo=1)
         jntList = pm.mirrorJoint(jnt, myz=True, mb=True, sr=("Left", "Right"))
         jntList.insert(0, jnt)
         fbxList = []
@@ -775,13 +783,12 @@ class Car(QWidget):
                     continue
 
 
-if __name__ == "__main__":
-    try:
-        qrCar.close()
-        qrCar.deleteLater()
-    except:
-        pass
-    qrCar = Car()
-    qrCar.show()
-
+# if __name__ == "__main__":
+#     try:
+#         qrCar.close()
+#         qrCar.deleteLater()
+#     except:
+#         pass
+#     qrCar = Car()
+#     qrCar.show()
 
