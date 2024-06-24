@@ -3,6 +3,9 @@ import maya.cmds as cmds
 
 
 def standalone_template():
+    """ Batch Mode
+    mayapy.exe 'C:/Path/to/this/file.py' 
+     """
     # Start in batch mode
     maya.standalone.initialize(name='python')
     cmds.file("C:/Users/hjk03/Desktop/a.ma", f=True, o=True)
