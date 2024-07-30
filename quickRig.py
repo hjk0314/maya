@@ -693,7 +693,7 @@ class Car(QWidget):
         - cc_sub ---> fbx_root
         - cc_body ---> fbx_body
 
-        Joints and modeling must be connected directly.
+        You have to connect the joints and modeling manually.
         - cc_sub ---> modeling top group
         - jnt_body ---> upper modeling group
         - jnt_wheel ---> wheel group
