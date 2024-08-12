@@ -162,18 +162,27 @@ class VertexSelector(QWidget):
     def __init__(self):
         """ This is a UI that gives a name to the selected vertex group 
         and turns it into a button.
-        >>> import vertexSelector as vtxSel
-        >>> 
-        >>> 
-        >>> if __name__ == "__main__":
-        >>>     try:
-        >>>         vtx.close()
-        >>>         vtx.deleteLater()
-        >>>     except:
-        >>>         pass
-        >>>     vtx = vtxSel.VertexSelector()
-        >>>     vtx.show()
          """
+        # The end joint was removed from the entire joint.
+        self.jointName = [
+            "Hips", 
+            "Spine", "Spine1", "Spine2", 
+            "Neck", "Head", 
+            "LeftShoulder", "LeftArm", "LeftForeArm", "LeftHand", 
+            "LeftHandThumb1", "LeftHandThumb2", "LeftHandThumb3", 
+            "LeftHandIndex1", "LeftHandIndex2", "LeftHandIndex3", 
+            "LeftHandMiddle1", "LeftHandMiddle2", "LeftHandMiddle3", 
+            "LeftHandRing1", "LeftHandRing2", "LeftHandRing3", 
+            "LeftHandPinky1", "LeftHandPinky2", "LeftHandPinky3", 
+            "RightShoulder", "RightArm", "RightForeArm", "RightHand", 
+            "RightHandThumb1", "RightHandThumb2", "RightHandThumb3", 
+            "RightHandIndex1", "RightHandIndex2", "RightHandIndex3", 
+            "RightHandMiddle1", "RightHandMiddle2", "RightHandMiddle3", 
+            "RightHandRing1", "RightHandRing2", "RightHandRing3", 
+            "RightHandPinky1", "RightHandPinky2", "RightHandPinky3", 
+            "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase", 
+            "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase", 
+            ]
         super(VertexSelector, self).__init__()
         self.sortCount = 0
         self.setParent(mayaMainWindow())
@@ -189,10 +198,11 @@ class VertexSelector(QWidget):
     def setupUI(self):
         self.setWindowTitle("Vertex Selector")
         self.move(0, 0)
-        self.setMinimumWidth(200)
         self.verticalLayout = QVBoxLayout(self)
-        self.horizontalLayout = QHBoxLayout()
+        self.verticalLayout.setSpacing(3)
+        self.verticalLayout.setContentsMargins(10, 10, 10, 5)
         # Create button.
+        self.horizontalLayout = QHBoxLayout()
         self.lineEdit = QLineEdit()
         self.horizontalLayout.addWidget(self.lineEdit)
         self.btnCreate = QPushButton("Create")
@@ -223,15 +233,15 @@ class VertexSelector(QWidget):
         self.horizontalLayout_3 = QHBoxLayout()
         self.horizontalSpacer_3 = QSpacerItem(23, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(self.horizontalSpacer_3)
-        self.rdBtnAdd = QRadioButton("Add")
+        self.rdBtnAdd = QRadioButton("add")
         self.horizontalLayout_3.addWidget(self.rdBtnAdd)
         self.horizontalSpacer_4 = QSpacerItem(23, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(self.horizontalSpacer_4)
-        self.rdBtnToggle = QRadioButton("Toggle")
+        self.rdBtnToggle = QRadioButton("tgl")
         self.horizontalLayout_3.addWidget(self.rdBtnToggle)
         self.horizontalSpacer_5 = QSpacerItem(22, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(self.horizontalSpacer_5)
-        self.rdBtnSingle = QRadioButton("Single")
+        self.rdBtnSingle = QRadioButton("single")
         self.rdBtnSingle.setChecked(True)
         self.horizontalLayout_3.addWidget(self.rdBtnSingle)
         self.horizontalSpacer_2 = QSpacerItem(23, 17, QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -250,25 +260,43 @@ class VertexSelector(QWidget):
         self.line_2.setFrameShape(QFrame.HLine)
         self.line_2.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_2)
-        self.horizontalLayout_4 = QHBoxLayout()
-        # Sort
-        self.btnSort = QPushButton("Sort")
-        self.horizontalLayout_4.addWidget(self.btnSort)
-        # Clear
-        self.btnClear = QPushButton("Clear")
-        self.horizontalLayout_4.addWidget(self.btnClear)
-        # Close
-        self.btnClose = QPushButton("Close")
-        self.horizontalLayout_4.addWidget(self.btnClose)
-        self.verticalLayout.addLayout(self.horizontalLayout_4)
-        # Select All
-        self.horizontalLayout_5 = QHBoxLayout()
-        self.btnSelectAll = QPushButton("Select All")
-        self.horizontalLayout_5.addWidget(self.btnSelectAll)
+        # Select Object
+        self.horizontalLayout_selObj = QHBoxLayout()
+        self.lineEdit_selObj = QLineEdit()
+        self.horizontalLayout_selObj.addWidget(self.lineEdit_selObj)
+        self.btnSelObj = QPushButton("Select")
+        self.btnSelObj.setFixedSize(60, 23)
+        self.horizontalLayout_selObj.addWidget(self.btnSelObj)
+        self.verticalLayout.addLayout(self.horizontalLayout_selObj)
+        # Auto Creation
+        self.horizontalLayout_auto = QHBoxLayout()
+        self.btnAutoPaint = QPushButton("Auto Creation")
+        self.horizontalLayout_auto.addWidget(self.btnAutoPaint)
+        self.verticalLayout.addLayout(self.horizontalLayout_auto)
         # Paint weights to One
-        self.btnPaintWeights = QPushButton("Paint weights to 1.0")
-        self.horizontalLayout_5.addWidget(self.btnPaintWeights)
+        self.horizontalLayout_paintWeight = QHBoxLayout()
+        self.btnPaintWeights = QPushButton("Paint Weights to 1.0")
+        self.horizontalLayout_paintWeight.addWidget(self.btnPaintWeights)
+        self.verticalLayout.addLayout(self.horizontalLayout_paintWeight)
+        # Select All
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.btnSelectAll = QPushButton("Select all Vertices")
+        self.horizontalLayout_4.addWidget(self.btnSelectAll)
+        # Clear
+        self.btnClear = QPushButton("Clear Selections")
+        self.horizontalLayout_4.addWidget(self.btnClear)
+        self.verticalLayout.addLayout(self.horizontalLayout_4)
+        # Sort
+        self.horizontalLayout_sort = QHBoxLayout()
+        self.btnSort = QPushButton("Sort Buttons")
+        self.horizontalLayout_sort.addWidget(self.btnSort)
+        self.verticalLayout.addLayout(self.horizontalLayout_sort)
+        # Close
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.btnClose = QPushButton("Close")
+        self.horizontalLayout_5.addWidget(self.btnClose)
         self.verticalLayout.addLayout(self.horizontalLayout_5)
+        # Spacer
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.verticalLayout.addItem(self.verticalSpacer)
         # Buttons reload and links.
@@ -303,6 +331,8 @@ class VertexSelector(QWidget):
         self.btnClose.clicked.connect(self.close)
         self.btnSelectAll.clicked.connect(self.selectAllVertices)
         self.btnPaintWeights.clicked.connect(self.paintAllWeightsOne)
+        self.btnSelObj.clicked.connect(self.selectObject)
+        self.btnAutoPaint.clicked.connect(self.autoPaint)
     
 
     def createButtons(self, data: dict) -> list:
@@ -316,7 +346,7 @@ class VertexSelector(QWidget):
             button = QPushButton(buttonName, self)
             buttons.append(button)
             self.gridLayout.addWidget(button, row, column, 1, 1)
-        self.gridLayout.setSpacing(2)
+        self.gridLayout.setSpacing(3)
         return buttons
 
 
@@ -427,6 +457,36 @@ class VertexSelector(QWidget):
         return failed
 
 
+    def selectObject(self):
+        sel = pm.ls(sl=True)
+        if not sel:
+            pm.warning("Select an object to make skinCluster")
+            return
+        if not sel[-1].getShape():
+            pm.warning("Select an object that has a shape.")
+            return
+        self.lineEdit_selObj.setText(sel[-1].name())
+
+
+    def autoPaint(self):
+        topLevelJoint = self.jointName[0]
+        selObj = self.lineEdit_selObj.text()
+        isSkinCluster = pm.listHistory(selObj, type="skinCluster")
+        if isSkinCluster:
+            pm.warning("skinCluster aleady exists.")
+            return
+        else:
+            skinClt = pm.skinCluster(topLevelJoint, selObj, tsb=False, bm=0, sm=0, nw=1, wd=0, mi=1)
+            for i in self.jointName:
+                if not pm.objExists(i):
+                    continue
+                pm.select(cl=True)
+                pm.skinCluster(skinClt, e=True, siv=i)
+                self.createJsonFile(i)
+            pm.select(cl=True)
+            pm.skinCluster(selObj, e=True, mi=5)
+
+
     # def paintAllWeightsOne(self):
     #     # Load json data
     #     jsonPath = self.getJsonFilePath()
@@ -492,11 +552,11 @@ class VertexSelector(QWidget):
         return result
 
 
-    def createJsonFile(self):
+    def createJsonFile(self, arg: str=""):
         """ If the json file doesn't exist, create a new one, 
         but overwrite. 
          """
-        vertexName = self.lineEdit.text()
+        vertexName = arg if arg else self.lineEdit.text()
         vertexNumber = self.getListsOfVertexNumber()
         if not vertexName:
             pm.warning("Vertex name field is empty.")
@@ -785,14 +845,14 @@ class MoveToCameraKeysAndSequence(QWidget):
             pm.setAttr(imgShape[0] + ".frameOffset", frameOffset - value)
 
 
-# if __name__ == "__main__":
-#     try:
-#         vtxSel.close()
-#         vtxSel.deleteLater()
-#     except:
-#         pass
-#     vtxSel = VertexSelector()
-#     vtxSel.show()
+if __name__ == "__main__":
+    try:
+        vtxSel.close()
+        vtxSel.deleteLater()
+    except:
+        pass
+    vtxSel = VertexSelector()
+    vtxSel.show()
 
 
 # if __name__ == "__main__":
