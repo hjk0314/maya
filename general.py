@@ -544,28 +544,24 @@ def mirrorCopy(obj: str, mirrorPlane: str="YZ") -> list:
     return result
 
 
-class RigGroups:
-    def __init__(self):
-        self.groupNames = {
-            "assetName": ["rig", "MODEL"], 
-            "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
-            "skeletons": ["bindBones", "rigBones"]
-            }
-
-
-    def createRigGroups(self, assetName=""):
-        if assetName:
-            self.groupNames[assetName] = self.groupNames.pop("assetName")
-        for parents, children in self.groupNames.items():
-            if not pm.objExists(parents):
-                pm.group(em=True, n=parents)
-            for child in children:
-                if not pm.objExists(child):
-                    pm.group(em=True, n=child)
-                pm.parent(child, parents)
-        result = self.groupNames.keys()
-        result = list(result)
-        return result
+def createRigGroups(assetName: str = ""):
+    groupNames = {
+        "assetName": ["rig", "MODEL"], 
+        "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
+        "skeletons": ["bindBones", "rigBones"]
+        }
+    if assetName:
+        groupNames[assetName] = groupNames.pop("assetName")
+    for parents, children in groupNames.items():
+        if not pm.objExists(parents):
+            pm.group(em=True, n=parents)
+        for child in children:
+            if not pm.objExists(child):
+                pm.group(em=True, n=child)
+            pm.parent(child, parents)
+    result = groupNames.keys()
+    result = list(result)
+    return result
 
 
 class AlignObjects:

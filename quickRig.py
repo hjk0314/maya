@@ -382,8 +382,7 @@ class Car(QWidget):
         else:
             grpName = carName
             self.topGroup = carName
-        rg = RigGroups()
-        rg.createRigGroups(grpName)
+        createRigGroups(grpName)
         self.fldCarName.setText(grpName)
         self.fldCarName.clearFocus()
 
