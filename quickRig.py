@@ -1153,9 +1153,39 @@ class MixamoCharacter(QWidget):
                     pass
 
 
+    def connectAttributes(self, source: str, destination: str, \
+                        t=True, r=True, s=True, v=True) -> None:
+        attr = []
+        if t:   attr.append("translate")
+        if r:   attr.append("rotate")
+        if s:   attr.append("scale")
+        if v:   attr.append("visibility")
+        for i in attr:
+            try:
+                pm.connectAttr(f"{source}.{i}", f"{destination}.{i}", f=True)
+            except:
+                continue
+
+
+    def disConnectAttributes(self, source: str, destination: str, \
+                        t=True, r=True, s=True, v=True) -> None:
+        attr = []
+        if t:   attr.append("translate")
+        if r:   attr.append("rotate")
+        if s:   attr.append("scale")
+        if v:   attr.append("visibility")
+        for i in attr:
+            try:
+                pm.disconnectAttr(f"{source}.{i}", f"{destination}.{i}")
+            except:
+                continue
+
+
 # mc = MixamoCharacter()
 # mc.createBones()
 # mc.alignBonesCenter()
 # mc.alignBonesSameSide()
 # mc.createRig_All()
 # mc.createRig_IKFK()
+
+
