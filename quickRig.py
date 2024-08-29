@@ -1153,34 +1153,6 @@ class MixamoCharacter(QWidget):
                     pass
 
 
-    def connectAttributes(self, source: str, destination: str, \
-                        t=True, r=True, s=True, v=True) -> None:
-        attr = []
-        if t:   attr.append("translate")
-        if r:   attr.append("rotate")
-        if s:   attr.append("scale")
-        if v:   attr.append("visibility")
-        for i in attr:
-            try:
-                pm.connectAttr(f"{source}.{i}", f"{destination}.{i}", f=True)
-            except:
-                continue
-
-
-    def disConnectAttributes(self, source: str, destination: str, \
-                        t=True, r=True, s=True, v=True) -> None:
-        attr = []
-        if t:   attr.append("translate")
-        if r:   attr.append("rotate")
-        if s:   attr.append("scale")
-        if v:   attr.append("visibility")
-        for i in attr:
-            try:
-                pm.disconnectAttr(f"{source}.{i}", f"{destination}.{i}")
-            except:
-                continue
-
-
 # mc = MixamoCharacter()
 # mc.createBones()
 # mc.alignBonesCenter()
@@ -1189,3 +1161,223 @@ class MixamoCharacter(QWidget):
 # mc.createRig_IKFK()
 
 
+def connectAttributes(source: str, destination: str, \
+                    t=False, r=False, s=False, v=False) -> None:
+    attr = []
+    if t:   attr.append("translate")
+    if r:   attr.append("rotate")
+    if s:   attr.append("scale")
+    if v:   attr.append("visibility")
+    for i in attr:
+        try:
+            pm.connectAttr(f"{source}.{i}", f"{destination}.{i}", f=True)
+        except:
+            continue
+
+
+def disConnectAttributes(source: str, destination: str, \
+                    t=False, r=False, s=False, v=False) -> None:
+    attr = []
+    if t:   attr.append("translate")
+    if r:   attr.append("rotate")
+    if s:   attr.append("scale")
+    if v:   attr.append("visibility")
+    for i in attr:
+        try:
+            pm.disconnectAttr(f"{source}.{i}", f"{destination}.{i}")
+        except:
+            continue
+
+
+def connectBlendColorsNode(blender: str, objects: list=[], \
+                            t=False, r=False, s=False, v=False) -> None:
+    """ Create a blendColors node and 
+    connect FK to colors1 and IK to colors2.
+    
+    Args: 
+        blender: This is Switch.
+            "cc_IKFK.Spine_IK0FK1", 
+            "cc_IKFK.LArm_IK0FK1", 
+            "cc_IKFK.RArm_IK0FK1", 
+            "cc_IKFK.LLeg_IK0FK1", 
+            "cc_IKFK.RLeg_IK0FK1", 
+        objects: The list have destination, FK, and IK elements.
+            objects = ["destination", "FK", "IK"]
+
+    Options: 
+        -- t: translate, 
+        -- r: rotate, 
+        -- s: scale, 
+        -- v: visibility
+
+    Examples:
+        >>> connectBlendColorsNode("cc_IKFK.Spine_IK0FK1", t=1)
+        >>> connectBlendColorsNode("cc_IKFK.LArm_IK0FK1", r=1)
+        >>> connectBlendColorsNode("cc_IKFK.RArm_IK0FK1", s=1)
+        >>> connectBlendColorsNode("cc_IKFK.LLeg_IK0FK1", v=1)
+        >>> connectBlendColorsNode("cc_IKFK.RLeg_IK0FK1", t=1, v=1)
+     """
+    args = objects if objects else pm.ls(sl=True)
+    if len(args) % 3:
+        return
+    else:
+        quotient = len(args) // 3
+        destination = args[0 : quotient*1]
+        source1 = args[quotient : quotient*2]
+        source2 = args[quotient*2 : quotient*3]
+    attr = []
+    if t:   attr.append("translate")
+    if r:   attr.append("rotate")
+    if s:   attr.append("scale")
+    if v:   attr.append("visibility")
+    for i in attr:
+        for s1, s2, fin in zip(source1, source2, destination):
+            blColor = pm.shadingNode("blendColors", au=True)
+            pm.connectAttr(f"{s1}.{i}", f"{blColor}.color1", f=True)
+            pm.connectAttr(f"{s2}.{i}", f"{blColor}.color2", f=True)
+            pm.connectAttr(f"{blColor}.output", f"{fin}.{i}", f=True)
+            pm.connectAttr(blender, f"{blColor}.blender")
+
+
+def createIKHandle(*args, rp=False, sc=False, spl=False, spr=False):
+    """ Create a ikHandle and return names.
+
+    Args: 
+        startJoint = ["joint1", "joint2", ..., "joint27"][0]
+        endJoint = ["joint1", "joint2", ..., "joint27"][-1]
+
+    Options:
+        --rp: "ikRPsolver"
+        --sc: "ikSCsolver"
+        --spl: "ikSplineSolver"
+        --spr: "ikSpringSolver"
+    
+    Return: 
+        Created ikHandle name.
+    """
+    sel = args if args else pm.ls(sl=True)
+    if rp:
+        solver = "ikRPsolver"
+    elif sc:
+        solver = "ikSCsolver"
+    elif spl:
+        solver = "ikSplineSolver"
+    elif spr:
+        solver = "ikSpringSolver"
+    else:
+        return
+    try:
+        start = sel[0]
+        end = sel[-1]
+    except:
+        return
+    temp = start.split("_")
+    temp[0] = "ikH"
+    ikHandleName = "_".join(temp)
+    result = pm.ikHandle(sj=start, ee=end, sol=solver, n=ikHandleName)
+    return result
+
+
+def connectLegAttributes(*args: list):
+    """ Connect the leg's locators to the controller's attributes.
+
+    Args: 
+        The elements of the list are 
+        ctrl, locHeel, locToe, locBankIn, locBankOut, locBall, grpBall.
+        locators = [
+            "cc_LeftFoot_IK", 
+            "loc_LeftHeel_IK", 
+            "loc_LeftToe_End_IK", 
+            "loc_LeftBankIn_IK", 
+            "loc_LeftBankOut_IK", 
+            "loc_LeftToeBase_IK", 
+            "ikH_LeftToeBase_IK_null"
+            ]
+
+    Examples:
+        >>> connectLegAttributes(*locators)
+     """
+    sel = args if args else pm.ls(sl=True)
+    ctrl, locHeel, locToe, locBankIn, locBankOut, locBall, grpBall = sel
+    rx, ry, rz = ["rotateX", "rotateY", "rotateZ"]
+    pm.connectAttr(f"{ctrl}.heelUp", f"{locHeel}.{rx}", f=True)
+    pm.connectAttr(f"{ctrl}.heelTwist", f"{locHeel}.{ry}", f=True)
+    pm.connectAttr(f"{ctrl}.toeUp", f"{locToe}.{rx}", f=True)
+    pm.connectAttr(f"{ctrl}.toeTwist", f"{locToe}.{ry}", f=True)
+    pm.connectAttr(f"{ctrl}.ballUp", f"{locBall}.{rx}", f=True)
+    pm.connectAttr(f"{ctrl}.ballDown", f"{grpBall}.{rx}", f=True)
+    clampNode = pm.shadingNode("clamp", au=True)
+    pm.setAttr(f"{clampNode}.minR", -180)
+    pm.setAttr(f"{clampNode}.maxG", 180)
+    output1 = "outputR" if "Left" in locBankOut else "outputG"
+    output2 = "outputG" if "Left" in locBankIn else "outputR"
+    pm.connectAttr(f"{clampNode}.{output1}", f"{locBankOut}.{rz}", f=True)
+    pm.connectAttr(f"{clampNode}.{output2}", f"{locBankIn}.{rz}", f=True)
+    pm.connectAttr(f"{ctrl}.bank", f"{clampNode}.inputR", f=True)
+    pm.connectAttr(f"{ctrl}.bank", f"{clampNode}.inputG", f=True)
+
+
+def connectFKControllers(*args):
+    fkJoints = args if args else pm.ls(sl=True)
+    for jnt in fkJoints:
+        ctrl = jnt.replace("rig_", "cc_")
+        if pm.objExists(ctrl) and pm.objExists(jnt):
+            pm.parentConstraint(ctrl, jnt, mo=True, w=1.0)
+        else:
+            continue
+
+# ==============================================================================
+# joints = [
+#     'rig_RightUpLeg', 
+#     'rig_RightLeg', 
+#     'rig_RightFoot', 
+#     'rig_RightToeBase', 
+#     'rig_RightToe_End', 
+#     'rig_RightUpLeg_FK', 
+#     'rig_RightLeg_FK', 
+#     'rig_RightFoot_FK', 
+#     'rig_RightToeBase_FK', 
+#     'rig_RightToe_End_FK', 
+#     'rig_RightUpLeg_IK', 
+#     'rig_RightLeg_IK', 
+#     'rig_RightFoot_IK', 
+#     'rig_RightToeBase_IK', 
+#     'rig_RightToe_End_IK'
+#     ]
+# connectBlendColorsNode("cc_IKFK.RArm_IK0FK1", t=1, r=1)
+
+
+# ==============================================================================
+# createIKHandle(rp=True)
+
+
+# ==============================================================================
+# locators = [
+#     "cc_LeftFoot_IK", 
+#     "loc_LeftHeel_IK", 
+#     "loc_LeftToe_End_IK", 
+#     "loc_LeftBankIn_IK", 
+#     "loc_LeftBankOut_IK", 
+#     "loc_LeftToeBase_IK", 
+#     "ikH_LeftToeBase_IK_null"
+#     ]
+# connectLegAttributes()
+
+
+# ==============================================================================
+# createPolevectorJoint()
+
+
+# ==============================================================================
+# fkJoints = [
+#     'rig_LeftUpLeg_FK', 
+#     'rig_LeftLeg_FK', 
+#     'rig_LeftFoot_FK', 
+#     'rig_LeftToeBase_FK', 
+#     'rig_LeftToe_End_FK'
+#     ]
+# connectFKControllers()
+
+# groupOwnPivot()
+# sel = pm.ls(sl=True)
+# print([i.name() for i in sel])
