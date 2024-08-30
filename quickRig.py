@@ -3,6 +3,7 @@ from PySide2.QtCore import Qt
 # from PySide2.QtGui import QIntValidator
 from shiboken2 import wrapInstance
 from general import *
+# import maya.cmds as cmds
 import pymel.core as pm
 import maya.OpenMayaUI as omui
 
@@ -1317,7 +1318,9 @@ def connectLegAttributes(*args: list):
     pm.connectAttr(f"{ctrl}.bank", f"{clampNode}.inputG", f=True)
 
 
-def connectFKControllers(*args):
+def constraintParent_asJointName(*args):
+    """ Make a constraint parent with the same controller name as the joint. 
+     """
     fkJoints = args if args else pm.ls(sl=True)
     for jnt in fkJoints:
         ctrl = jnt.replace("rig_", "cc_")
@@ -1325,6 +1328,63 @@ def connectFKControllers(*args):
             pm.parentConstraint(ctrl, jnt, mo=True, w=1.0)
         else:
             continue
+
+
+def connectSpaceEnum(ctrl: str, enumMenu: dict) -> None:
+    isAttr = pm.attributeQuery("Space", node=ctrl, exists=True)
+    if isAttr:
+        return
+    ctrlGrp = pm.listRelatives(ctrl, p=True)[0]
+    dropMenu = list(enumMenu.keys())
+    parents = list(enumMenu.values())
+    pm.addAttr(ctrl, ln="Space", at="enum", en=":".join(dropMenu))
+    pm.setAttr(f'{ctrl}.Space', e=True, k=True)
+    for idx, name in enumerate(dropMenu):
+        nodeName = f"{ctrl}_space{name}"
+        animCurve = pm.shadingNode("animCurveTL", au=True, n=nodeName)
+        for i in range(len(dropMenu)):
+            num = 1 if idx==i else 0
+            pm.setKeyframe(animCurve, time=i, value=num)
+        pm.keyTangent(animCurve, ott="step")
+        parentConstraintName = pm.parentConstraint(parents[idx], ctrlGrp, \
+                                             mo=True, w=1.0)
+        scaleConstraintName = pm.scaleConstraint(parents[idx], ctrlGrp, \
+                                             mo=True, w=1.0)
+        pm.connectAttr(f"{ctrl}.Space", f"{animCurve}.input", f=True)
+        pm.connectAttr(f"{animCurve}.output", \
+                       f"{parentConstraintName}.{parents[idx]}W{idx}", f=True)
+        pm.connectAttr(f"{animCurve}.output", \
+                       f"{scaleConstraintName}.{parents[idx]}W{idx}", f=True)
+
+
+def connectSpaceFloat(ctrl: str, floatMenu: dict) -> None:
+    menuName = list(floatMenu.keys())
+    if len(menuName) != 2:
+        return
+    attr = "_".join(menuName)
+    isAttr = pm.attributeQuery(attr, node=ctrl, exists=True)
+    if isAttr:
+        return
+    pm.addAttr(ctrl, ln=attr, at="double", min=0, max=1, dv=0)
+    pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
+    ctrlGrp = pm.listRelatives(ctrl, p=True)[0]
+    parents = list(floatMenu.values())
+    for idx, name in enumerate(parents):
+        pConstName = pm.parentConstraint(name, ctrlGrp, mo=True, w=1.0)
+        sConstName = pm.scaleConstraint(name, ctrlGrp, mo=True, w=1.0)
+        if idx == 0:
+            reverseNode = pm.shadingNode("reverse", au=True)
+            pm.connectAttr(f"{ctrl}.{attr}", f"{reverseNode}.inputX", f=1)
+            pm.connectAttr(f"{reverseNode}.outputX", \
+                           f"{pConstName}.{name}W{idx}", f=True)
+            pm.connectAttr(f"{reverseNode}.outputX", \
+                           f"{sConstName}.{name}W{idx}", f=True)
+        else:
+            pm.connectAttr(f"{ctrl}.{attr}", \
+                           f"{pConstName}.{name}W{idx}", f=True)
+            pm.connectAttr(f"{reverseNode}.outputX", \
+                           f"{sConstName}.{name}W{idx}", f=True)
+
 
 # ==============================================================================
 # joints = [
@@ -1376,8 +1436,114 @@ def connectFKControllers(*args):
 #     'rig_LeftToeBase_FK', 
 #     'rig_LeftToe_End_FK'
 #     ]
-# connectFKControllers()
+# constraintParent_asJointName()
 
+
+# ==============================================================================
+# ctrl = "cc_RightLegPoleVector"
+# enumMenu = {
+#     "World": "null_worldSpace", 
+#     "Root": "null_rootSpace", 
+#     "Hip": "null_rightPelvisSpace", 
+#     "Foot": "null_rightFootSpace"
+#     }
+# ctrl = "cc_RightForeArmPoleVector"
+# enumMenu = {
+#     "World": "null_worldSpace", 
+#     "Root": "null_rootSpace", 
+#     "Chest": "rig_Spine2", 
+#     "Arm": "null_rightArmSpace", 
+#     "Hand": "null_rightHandSpace"
+#     }
+# connectSpaceEnum(ctrl, enumMenu)
+
+
+# ==============================================================================
+# ctrl = "cc_RightFoot_IK"
+# floatMenu = {
+#     "world0": "null_worldSpace", 
+#     "root1": "null_rootSpace"
+#     }
+# connectSpaceFloat(ctrl, floatMenu)
+
+
+# ==============================================================================
+# constraintList = {
+#     "null_worldSpace": ["skeletons", "cc_HipsMain_grp"], 
+#     "null_rootSpace": [
+#         "cc_LeftUpLeg_IK_grp", 
+#         "cc_LeftUpLeg_FK_grp", 
+#         "cc_RightUpLeg_IK_grp", 
+#         "cc_RightUpLeg_FK_grp", 
+#         "rig_Hips", 
+#         "cc_Spine_IK_grp", 
+#         "cc_Spine_FK_grp"
+#         ], 
+#     "rig_Spine2": [
+#         "cc_LeftShoulder_grp", 
+#         "cc_RightShoulder_grp", 
+#         "cc_Neck_grp"
+#         ], 
+#     "null_leftShoulderSpace": ["cc_LeftArm_IK_grp", "cc_LeftArm_FK_grp"], 
+#     "null_rightShoulderSpace": ["cc_RightArm_IK_grp", "cc_RightArm_FK_grp"], 
+#     "rig_LeftHand": ["cc_LeftHandFingers_grp"], 
+#     "rig_RightHand": ["cc_RightHandFingers_grp"], 
+#     }
+# for parents, child in constraintList.items():
+#     for i in child:
+#         if i != "skeletons":
+#             pm.parentConstraint(parents, i, mo=True, w=1.0)
+#         pm.scaleConstraint(parents, i, mo=True, w=1.0)
+
+
+# ==============================================================================
+# showHide = {
+#     "cc_IKFK.Spine_IK0FK1": [
+#         'cc_Spine_FK_grp', 
+#         'cc_Spine_IK_grp', 
+#         ], 
+#     "cc_IKFK.LArm_IK0FK1": [
+#         'cc_LeftArm_FK_grp', 
+#         'cc_LeftArm_IK_grp', 
+#         'cc_LeftForeArmPoleVector_grp', 
+#         'cc_LeftHand_IK_grp', 
+#         ], 
+#     "cc_IKFK.RArm_IK0FK1": [
+#         'cc_RightArm_FK_grp', 
+#         'cc_RightArm_IK_grp', 
+#         'cc_RightForeArmPoleVector_grp', 
+#         'cc_RightHand_IK_grp', 
+#         ], 
+#     "cc_IKFK.LLeg_IK0FK1": [
+#         'cc_LeftUpLeg_FK_grp', 
+#         'cc_LeftUpLeg_IK_grp', 
+#         'cc_LeftLegPoleVector_grp', 
+#         'cc_LeftFoot_IK_grp', 
+#         ], 
+#     "cc_IKFK.RLeg_IK0FK1": [
+#         'cc_RightUpLeg_FK_grp', 
+#         'cc_RightUpLeg_IK_grp', 
+#         'cc_RightLegPoleVector_grp', 
+#         'cc_RightFoot_IK_grp', 
+#         ], 
+#     }
+# for switch, lst in showHide.items():
+#     pm.connectAttr(switch, f"{lst[0]}.visibility", f=True)
+#     reverseNodeName = pm.shadingNode("reverse", au=True)
+#     pm.connectAttr(switch, f"{reverseNodeName}.inputX", f=True)
+#     for i in lst[1:]:
+#         pm.connectAttr(f"{reverseNodeName}.outputX", f"{i}.visibility", f=True)
+        
+
+# ==============================================================================
+# for destination in mc.jointPosition.keys():
+#     source1 = f"rig_{destination}"
+#     connectAttributes(source1, destination, t=True, r=True)
+
+
+
+# ==============================================================================
 # groupOwnPivot()
 # sel = pm.ls(sl=True)
 # print([i.name() for i in sel])
+# selectConstraintOnly()
