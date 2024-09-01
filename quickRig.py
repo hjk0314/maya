@@ -1038,7 +1038,7 @@ class MixamoCharacter(QWidget):
         self.updateAllJointPositions()
         jntPos = {i: self.jointPosition[i] for i in joints}
         hiraky = {parents: [joints]}
-        for i in ["_IK", "_FK"]:
+        for i in ["_FK", "_IK"]:
             data = self.copyBonesForRig(jntPos, hiraky, "rig_", i)
             rigJntPos, temp = data
             rigHiraky = {k.rsplit("_", 1)[0]: v for k, v in temp.items()}
@@ -1333,7 +1333,7 @@ def constraintParent_asJointName(*args):
 def connectSpaceEnum(ctrl: str, enumMenu: dict) -> None:
     isAttr = pm.attributeQuery("Space", node=ctrl, exists=True)
     if isAttr:
-        return
+        pm.deleteAttr(ctrl, at="Space")
     ctrlGrp = pm.listRelatives(ctrl, p=True)[0]
     dropMenu = list(enumMenu.keys())
     parents = list(enumMenu.values())
@@ -1364,7 +1364,7 @@ def connectSpaceFloat(ctrl: str, floatMenu: dict) -> None:
     attr = "_".join(menuName)
     isAttr = pm.attributeQuery(attr, node=ctrl, exists=True)
     if isAttr:
-        return
+        pm.deleteAttr(ctrl, at=attr)
     pm.addAttr(ctrl, ln=attr, at="double", min=0, max=1, dv=0)
     pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
     ctrlGrp = pm.listRelatives(ctrl, p=True)[0]
@@ -1382,8 +1382,29 @@ def connectSpaceFloat(ctrl: str, floatMenu: dict) -> None:
         else:
             pm.connectAttr(f"{ctrl}.{attr}", \
                            f"{pConstName}.{name}W{idx}", f=True)
-            pm.connectAttr(f"{reverseNode}.outputX", \
+            pm.connectAttr(f"{ctrl}.{attr}", \
                            f"{sConstName}.{name}W{idx}", f=True)
+
+
+def setDirection_fingerCtrl(*args):
+    """ Select 4 or more joints. Joint names must be prefixed with "rig_". 
+    The parent group of the controller must already be created.
+     """
+    joints = args if args else pm.ls(sl=True)
+    if len(joints) < 4:
+        return
+    startJnt, endJnt = createPolevectorJoint(*joints[1:])
+    for idx, jnt in enumerate(joints):
+        if idx == len(joints) - 1:
+            continue
+        ctrlGrp = jnt.replace("rig_", "cc_") + "_grp"
+        pm.matchTransform(ctrlGrp, jnt, pos=True)
+        factor = -1 if "Right" in ctrlGrp else 1
+        aimNode = pm.aimConstraint(joints[idx+1], ctrlGrp, \
+                                   aim=(factor,0,0), u=(0,factor,0), \
+                                    wut="object", wuo=endJnt)
+        pm.delete(aimNode)
+    # pm.delete(startJnt)
 
 
 # ==============================================================================
@@ -1404,11 +1425,16 @@ def connectSpaceFloat(ctrl: str, floatMenu: dict) -> None:
 #     'rig_RightToeBase_IK', 
 #     'rig_RightToe_End_IK'
 #     ]
+# connectBlendColorsNode("cc_IKFK.Spine_IK0FK1", t=1, r=1)
+# connectBlendColorsNode("cc_IKFK.LArm_IK0FK1", t=1, r=1)
 # connectBlendColorsNode("cc_IKFK.RArm_IK0FK1", t=1, r=1)
+# connectBlendColorsNode("cc_IKFK.LLeg_IK0FK1", t=1, r=1)
+# connectBlendColorsNode("cc_IKFK.RLeg_IK0FK1", t=1, r=1)
 
 
 # ==============================================================================
 # createIKHandle(rp=True)
+# createIKHandle(sc=True)
 
 
 # ==============================================================================
@@ -1421,7 +1447,16 @@ def connectSpaceFloat(ctrl: str, floatMenu: dict) -> None:
 #     "loc_LeftToeBase_IK", 
 #     "ikH_LeftToeBase_IK_null"
 #     ]
-# connectLegAttributes()
+# locators = [
+#     "cc_RightFoot_IK", 
+#     "loc_RightHeel_IK", 
+#     "loc_RightToe_End_IK", 
+#     "loc_RightBankIn_IK", 
+#     "loc_RightBankOut_IK", 
+#     "loc_RightToeBase_IK", 
+#     "ikH_RightToeBase_IK_null"
+#     ]
+# connectLegAttributes(*locators)
 
 
 # ==============================================================================
@@ -1440,12 +1475,27 @@ def connectSpaceFloat(ctrl: str, floatMenu: dict) -> None:
 
 
 # ==============================================================================
+# ctrl = "cc_LeftLegPoleVector"
+# enumMenu = {
+#     "World": "null_worldSpace", 
+#     "Root": "null_rootSpace", 
+#     "Hip": "null_leftPelvisSpace", 
+#     "Foot": "null_leftFootSpace"
+#     }
 # ctrl = "cc_RightLegPoleVector"
 # enumMenu = {
 #     "World": "null_worldSpace", 
 #     "Root": "null_rootSpace", 
 #     "Hip": "null_rightPelvisSpace", 
 #     "Foot": "null_rightFootSpace"
+#     }
+# ctrl = "cc_LeftForeArmPoleVector"
+# enumMenu = {
+#     "World": "null_worldSpace", 
+#     "Root": "null_rootSpace", 
+#     "Chest": "rig_Spine2", 
+#     "Arm": "null_leftArmSpace", 
+#     "Hand": "null_leftHandSpace"
 #     }
 # ctrl = "cc_RightForeArmPoleVector"
 # enumMenu = {
@@ -1459,10 +1509,25 @@ def connectSpaceFloat(ctrl: str, floatMenu: dict) -> None:
 
 
 # ==============================================================================
+# ctrl = "cc_LeftFoot_IK"
+# floatMenu = {
+#     "world0": "null_worldSpace", 
+#     "root1": "null_rootSpace"
+#     }
 # ctrl = "cc_RightFoot_IK"
 # floatMenu = {
 #     "world0": "null_worldSpace", 
 #     "root1": "null_rootSpace"
+#     }
+# ctrl = "cc_LeftHand_IK"
+# floatMenu = {
+#     "world0": "null_worldSpace", 
+#     "shoulder1": "null_rightShoulderSpace"
+#     }
+# ctrl = "cc_RightHand_IK"
+# floatMenu = {
+#     "world0": "null_worldSpace", 
+#     "shoulder1": "null_rightShoulderSpace"
 #     }
 # connectSpaceFloat(ctrl, floatMenu)
 
@@ -1536,10 +1601,14 @@ def connectSpaceFloat(ctrl: str, floatMenu: dict) -> None:
         
 
 # ==============================================================================
+# connect rigJoints to bindJoints
 # for destination in mc.jointPosition.keys():
 #     source1 = f"rig_{destination}"
 #     connectAttributes(source1, destination, t=True, r=True)
 
+
+# ==============================================================================
+# setDirection_fingerCtrl()
 
 
 # ==============================================================================
@@ -1547,3 +1616,5 @@ def connectSpaceFloat(ctrl: str, floatMenu: dict) -> None:
 # sel = pm.ls(sl=True)
 # print([i.name() for i in sel])
 # selectConstraintOnly()
+
+
