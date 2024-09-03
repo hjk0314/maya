@@ -1529,6 +1529,11 @@ def setDirection_fingerCtrl(*args):
 #     "world0": "null_worldSpace", 
 #     "shoulder1": "null_rightShoulderSpace"
 #     }
+# ctrl = "cc_Eyes"
+# floatMenu = {
+#     "world0": "null_worldSpace", 
+#     "head1": "null_headSpace"
+#     }
 # connectSpaceFloat(ctrl, floatMenu)
 
 
@@ -1613,8 +1618,12 @@ def setDirection_fingerCtrl(*args):
 
 # ==============================================================================
 # groupOwnPivot()
-# sel = pm.ls(sl=True)
+sel = pm.ls(sl=True, fl=True)
 # print([i.name() for i in sel])
 # selectConstraintOnly()
-
-
+# ctrl = Controllers()
+# ctrl.createControllers()
+for i in sel:
+    x, y, z = pm.pointPosition(i)
+    print((round(x, 3), round(y, 3), round(z, 3)))
+    
