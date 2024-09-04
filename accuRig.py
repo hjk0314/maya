@@ -236,7 +236,7 @@ class RawData:
                 exists = pm.getAttr(f"{jnt}.jointOrient{i}")
                 pm.setAttr(f"{jnt}.jointOrient{i}", r + exists)
                 pm.setAttr(f"{jnt}.rotate{i}", 0)
-                
+
 
     def unitChange(self):
         """ accuRig exports to fbx at 60fps. Fix to 
@@ -251,6 +251,19 @@ class RawData:
         if unitLength != "cm":
             pm.currentUnit(l="cm")
         pm.playbackOptions(min=0, max=120)
+
+
+    def symmetryJoints(self):
+        for i in self.bindJnt:
+            if "_L" in i:
+                x, y, z = pm.xform(i, q=True, ws=True, rp=True)
+                rJnt = i.replace("_L", "_R")
+                try:
+                    pm.move(rJnt, [-x, y, z])
+                except:
+                    continue
+            else:
+                continue
 
 
 class CopyRigJoints:
@@ -1211,7 +1224,7 @@ class Finish:
 
 # rd = RawData()
 # rd.cleanUp()
-
+# rd.symmetryJoints()
 
 # crj = CopyRigJoints()
 # crj.createGroup()
@@ -1227,11 +1240,11 @@ class Finish:
 # ra.rigScapula()
 
 
-rl = RigLegs()
-rl.cleanUp()
-rl.createLocators()
-rl.rigLegsIK()
-rl.rigLegsFK()
+# rl = RigLegs()
+# rl.cleanUp()
+# rl.createLocators()
+# rl.rigLegsIK()
+# rl.rigLegsFK()
 
 
 # rf = RigFingers()

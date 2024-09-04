@@ -69,34 +69,15 @@ class Car(QWidget):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.fldCarName = QLineEdit()
         self.fldCarName.setClearButtonEnabled(True)
-        self.fldCarName.setPlaceholderText("Input your car name")
+        self.fldCarName.setPlaceholderText("Group Name")
         self.verticalLayout.addWidget(self.fldCarName)
-        self.btnCarGrp = QPushButton("Car group")
+        self.btnCarGrp = QPushButton("Create Group")
         self.verticalLayout.addWidget(self.btnCarGrp)
         self.line = QFrame()
         self.line.setFrameShape(QFrame.HLine)
         self.line.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line)
-        self.btnTempJnt = QPushButton("Create temp joints")
-        self.verticalLayout.addWidget(self.btnTempJnt)
-        self.horizontalLayout = QHBoxLayout()
-        self.btnLtoR = QPushButton("Left To Right")
-        self.horizontalLayout.addWidget(self.btnLtoR)
-        self.btnRtoL = QPushButton("Right To Left")
-        self.horizontalLayout.addWidget(self.btnRtoL)
-        self.verticalLayout.addLayout(self.horizontalLayout)
-        self.line_2 = QFrame()
-        self.line_2.setFrameShape(QFrame.HLine)
-        self.line_2.setFrameShadow(QFrame.Sunken)
-        self.verticalLayout.addWidget(self.line_2)
-        self.btnBuild = QPushButton("Build")
-        self.verticalLayout.addWidget(self.btnBuild)
-        self.btnCleanUp = QPushButton("Clean Up")
-        self.verticalLayout.addWidget(self.btnCleanUp)
-        self.line_5 = QFrame()
-        self.line_5.setFrameShape(QFrame.HLine)
-        self.line_5.setFrameShadow(QFrame.Sunken)
-        self.verticalLayout.addWidget(self.line_5)
+
         self.fldSelectWheel = QLineEdit()
         self.fldSelectWheel.setClearButtonEnabled(True)
         self.fldSelectWheel.setEnabled(True)
@@ -109,9 +90,9 @@ class Car(QWidget):
         self.btnRightFront = QPushButton("Right Front")
         self.gridLayout_4.addWidget(self.btnRightFront, 0, 1, 1, 1)
         self.btnLeftBack = QPushButton("Left Back")
-        self.gridLayout_4.addWidget(self.btnLeftBack, 2, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.btnLeftBack, 1, 0, 1, 1)
         self.btnRightBack = QPushButton("Right Back")
-        self.gridLayout_4.addWidget(self.btnRightBack, 2, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.btnRightBack, 1, 1, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout_4)
         self.btnCreateWheel = QPushButton("Create Wheel")
         self.verticalLayout.addWidget(self.btnCreateWheel)
@@ -129,6 +110,7 @@ class Car(QWidget):
         self.verticalLayout.addLayout(self.gridLayout_5)
         self.btnWheelCleanUp = QPushButton("Clean Up")
         self.verticalLayout.addWidget(self.btnWheelCleanUp)
+
         self.line_3 = QFrame()
         self.line_3.setFrameShape(QFrame.HLine)
         self.line_3.setFrameShadow(QFrame.Sunken)
@@ -151,10 +133,33 @@ class Car(QWidget):
         self.btnRightDoor2.setEnabled(False)
         self.gridLayout_6.addWidget(self.btnRightDoor2, 2, 1, 1, 1)
         self.verticalLayout.addLayout(self.gridLayout_6)
-        self.btncreateDoorCtrl = QPushButton("Create Door")
-        self.verticalLayout.addWidget(self.btncreateDoorCtrl)
+        self.btnCreateDoorCtrl = QPushButton("Create Door")
+        self.verticalLayout.addWidget(self.btnCreateDoorCtrl)
         self.btnDoorCleanUp = QPushButton("Clean Up")
         self.verticalLayout.addWidget(self.btnDoorCleanUp)
+
+        self.line_5 = QFrame()
+        self.line_5.setFrameShape(QFrame.HLine)
+        self.line_5.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_5)
+
+        self.line_2 = QFrame()
+        self.line_2.setFrameShape(QFrame.HLine)
+        self.line_2.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line_2)
+
+        self.btnTempJnt = QPushButton("Create Temp Joints")
+        self.verticalLayout.addWidget(self.btnTempJnt)
+        self.horizontalLayout = QHBoxLayout()
+        self.btnLtoR = QPushButton("Left to Right")
+        self.horizontalLayout.addWidget(self.btnLtoR)
+        self.btnRtoL = QPushButton("Right to Left")
+        self.horizontalLayout.addWidget(self.btnRtoL)
+        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.btnBuild = QPushButton("Build")
+        self.verticalLayout.addWidget(self.btnBuild)
+        self.btnCleanUp = QPushButton("Clean Up")
+        self.verticalLayout.addWidget(self.btnCleanUp)
         self.line_4 = QFrame()
         self.line_4.setFrameShape(QFrame.HLine)
         self.line_4.setFrameShadow(QFrame.Sunken)
@@ -197,10 +202,10 @@ class Car(QWidget):
         self.btnDelExpr.clicked.connect(self.deleteExpression)
         self.btnWheelCleanUp.clicked.connect(self.cleanUp_wheel)
         self.btnLeftDoor.clicked.connect(self.setDoorNameField)
-        self.btnRightDoor.clicked.connect(self.setDoorNameField)
+        # self.btnRightDoor.clicked.connect(self.setDoorNameField)
         self.btnLeftDoor2.clicked.connect(self.setDoorNameField)
         self.btnRightDoor2.clicked.connect(self.setDoorNameField)
-        self.btncreateDoorCtrl.clicked.connect(self.build_doors)
+        self.btnCreateDoorCtrl.clicked.connect(self.build_doors)
         self.btnDoorCleanUp.clicked.connect(self.cleanUp_door)
         self.btnConnectAll.clicked.connect(self.connectAll)
         self.btnSetColor.clicked.connect(self.setColor)
@@ -294,8 +299,8 @@ class Car(QWidget):
             return
         self.doorCtrls += self.createDoorCtrl(sel[0], doorName)
         self.doorCtrls = list(set(self.doorCtrls))
-        self.doorJoints += self.createDoorJoint(doorName)
-        self.doorJoints = list(set(self.doorJoints))
+        # self.doorJoints += self.createDoorJoint(doorName)
+        # self.doorJoints = list(set(self.doorJoints))
 
 
     def updateJointsPosition(self):
@@ -655,30 +660,30 @@ class Car(QWidget):
         return result
 
 
-    def createDoorJoint(self, ctrlName) -> list:
-        """ Create a door joint, 
-        and if there is an fbx joint, copy it to fbx as well.
-         """
-        if not ctrlName:
-            return
-        jntName = ctrlName.replace("cc_", "jnt_")
-        jnt = pm.joint(p=(0,0,0), n=jntName)
-        pm.matchTransform(jnt, ctrlName, pos=True)
-        pm.connectJoint(jnt, self.bodyJnt, pm=True)
-        pm.makeIdentity(jnt, a=1, t=1, r=1, s=1, jo=1)
-        jntList = pm.mirrorJoint(jnt, myz=True, mb=True, sr=("Left", "Right"))
-        jntList.insert(0, jnt)
-        fbxList = []
-        if not pm.objExists(self.bodyFbx):
-            pass
-        else:
-            for i in jntList:
-                fbx = i.replace("jnt_", "fbx_")
-                copied = pm.duplicate(i, rr=True, n=fbx)[0]
-                pm.parent(copied, w=True)
-                pm.connectJoint(copied, self.bodyFbx, pm=True)
-                fbxList.append(copied)
-        return jntList + fbxList
+    # def createDoorJoint(self, ctrlName) -> list:
+    #     """ Create a door joint, 
+    #     and if there is an fbx joint, copy it to fbx as well.
+    #      """
+    #     if not ctrlName:
+    #         return
+    #     jntName = ctrlName.replace("cc_", "jnt_")
+    #     jnt = pm.joint(p=(0,0,0), n=jntName)
+    #     pm.matchTransform(jnt, ctrlName, pos=True)
+    #     pm.connectJoint(jnt, self.bodyJnt, pm=True)
+    #     pm.makeIdentity(jnt, a=1, t=1, r=1, s=1, jo=1)
+    #     jntList = pm.mirrorJoint(jnt, myz=True, mb=True, sr=("Left", "Right"))
+    #     jntList.insert(0, jnt)
+    #     fbxList = []
+    #     if not pm.objExists(self.bodyFbx):
+    #         pass
+    #     else:
+    #         for i in jntList:
+    #             fbx = i.replace("jnt_", "fbx_")
+    #             copied = pm.duplicate(i, rr=True, n=fbx)[0]
+    #             pm.parent(copied, w=True)
+    #             pm.connectJoint(copied, self.bodyFbx, pm=True)
+    #             fbxList.append(copied)
+    #     return jntList + fbxList
 
 
     def connectAll(self):
@@ -746,7 +751,9 @@ class Car(QWidget):
                 ], 
             "red": [
                 "cc_wheelLeftFront_main", 
-                "cc_wheelLeftBack_main"
+                "cc_wheelLeftBack_main", 
+                "cc_doorLeftFront", 
+                "cc_doorLeftBack"
                 ], 
             "red2": [
                 "cc_wheelLeftFront_sub", 
@@ -754,7 +761,9 @@ class Car(QWidget):
                 ], 
             "blue": [
                 "cc_wheelRightFront_main", 
-                "cc_wheelRightBack_main"
+                "cc_wheelRightBack_main", 
+                "cc_doorRightFront", 
+                "cc_doorLeftBack"
                 ], 
             "blue2": [
                 "cc_wheelRightFront_sub", 
@@ -783,14 +792,14 @@ class Car(QWidget):
                     continue
 
 
-# if __name__ == "__main__":
-#     try:
-#         qrCar.close()
-#         qrCar.deleteLater()
-#     except:
-#         pass
-#     qrCar = Car()
-#     qrCar.show()
+if __name__ == "__main__":
+    try:
+        qrCar.close()
+        qrCar.deleteLater()
+    except:
+        pass
+    qrCar = Car()
+    qrCar.show()
 
 
 class MixamoCharacter(QWidget):
@@ -1618,12 +1627,12 @@ def setDirection_fingerCtrl(*args):
 
 # ==============================================================================
 # groupOwnPivot()
-sel = pm.ls(sl=True, fl=True)
+# sel = pm.ls(sl=True, fl=True)
 # print([i.name() for i in sel])
 # selectConstraintOnly()
 # ctrl = Controllers()
 # ctrl.createControllers()
-for i in sel:
-    x, y, z = pm.pointPosition(i)
-    print((round(x, 3), round(y, 3), round(z, 3)))
+# for i in sel:
+#     x, y, z = pm.pointPosition(i)
+#     print((round(x, 3), round(y, 3), round(z, 3)))
     
