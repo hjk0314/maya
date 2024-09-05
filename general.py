@@ -981,5 +981,3 @@ class Controllers:
             result.append(cuv)
         return result
 
-
-Controllers().createControllers(IKFK="")

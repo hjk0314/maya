@@ -251,7 +251,25 @@ class Car(QWidget):
             pm.warning(f"{ctrl}_main ctrl aleady exists.")
             return
         self.createWheelCtrl(ctrl, obj)
-        self.createWheelRotationLocator(ctrl)
+        locator = self.createWheelRotationLocator(ctrl)
+        self.updateNewJoint(ctrl, locator)
+
+
+    def updateNewJoint(self, ctrlName, object):
+        if "cc_" in ctrlName:
+            jnt = ctrlName.replace("cc_", "jnt_")
+        else:
+            jnt = f"jnt_{ctrlName}"
+        jntEnd = f"{jnt}End"
+        jntPosition = getPosition(object)
+        x, y, z = jntPosition
+        jntEndPosition = (x+15, y, z)
+        self.jntNameAndPos[jnt] = jntPosition
+        self.jntNameAndPos[jntEnd] = jntEndPosition
+        temp = self.hierarchy["jnt_root"]
+        if not [jnt, jntEnd] in temp:
+            temp.append([jnt, jntEnd])
+            self.hierarchy["jnt_root"] = temp
 
 
     def build_expression(self):
