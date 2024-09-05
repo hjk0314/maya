@@ -845,14 +845,14 @@ class MoveToCameraKeysAndSequence(QWidget):
             pm.setAttr(imgShape[0] + ".frameOffset", frameOffset - value)
 
 
-if __name__ == "__main__":
-    try:
-        vtxSel.close()
-        vtxSel.deleteLater()
-    except:
-        pass
-    vtxSel = VertexSelector()
-    vtxSel.show()
+# if __name__ == "__main__":
+#     try:
+#         vtxSel.close()
+#         vtxSel.deleteLater()
+#     except:
+#         pass
+#     vtxSel = VertexSelector()
+#     vtxSel.show()
 
 
 # if __name__ == "__main__":
