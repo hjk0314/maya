@@ -810,14 +810,14 @@ class Car(QWidget):
                     continue
 
 
-# if __name__ == "__main__":
-#     try:
-#         qrCar.close()
-#         qrCar.deleteLater()
-#     except:
-#         pass
-#     qrCar = Car()
-#     qrCar.show()
+if __name__ == "__main__":
+    try:
+        qrCar.close()
+        qrCar.deleteLater()
+    except:
+        pass
+    qrCar = Car()
+    qrCar.show()
 
 
 class MixamoCharacter(QWidget):
@@ -1653,4 +1653,3 @@ def setDirection_fingerCtrl(*args):
 # for i in sel:
 #     x, y, z = pm.pointPosition(i)
 #     print((round(x, 3), round(y, 3), round(z, 3)))
-    
