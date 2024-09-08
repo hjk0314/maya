@@ -270,6 +270,29 @@ class Car(QWidget):
         if not [jnt, jntEnd] in temp:
             temp.append([jnt, jntEnd])
             self.hierarchy["jnt_root"] = temp
+    
+    # def addWheelJoint(self, jointName, positionalObject):
+    #     if "cc_" in jointName:
+    #         jnt = jointName.replace("cc_", "jnt_")
+    #     elif "loc_" in jointName:
+    #         jnt = jointName.replace("loc_", "jnt_")
+    #     elif "jnt_" in jointName:
+    #         jnt = jointName
+    #     else:
+    #         jnt = f"jnt_{jointName}"
+    #     jntEnd = f"{jnt}End"
+    #     jntPosition = getPosition(positionalObject)
+    #     x, y, z = jntPosition
+    #     if "Left" in jointName or "left" in jointName or "_L" in jointName:
+    #         jntEndPosition = (x + 15, y, z)
+    #     else:
+    #         jntEndPosition = (x - 15, y, z)
+    #     self.jntNameAndPos[jointName] = jntPosition
+    #     self.jntNameAndPos[jntEnd] = jntEndPosition
+    #     temp = self.hierarchy["jnt_root"]
+    #     if not [jnt, jntEnd] in temp:
+    #         temp.append([jnt, jntEnd])
+    #         self.hierarchy["jnt_root"] = temp
 
 
     def build_expression(self):

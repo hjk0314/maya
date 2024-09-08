@@ -25,35 +25,25 @@ class Car(QWidget):
          """
         self.topGroup = ""
         self.objGroup = ""
-        self.bodyGroup = ""
-        self.rootJnt = "jnt_root"
-        self.rootFbx = "fbx_root"
-        self.bodyJnt = "jnt_body"
-        self.bodyFbx = "fbx_body"
-        self.mainCtrl = "cc_main"
-        self.subCtrl = "cc_sub"
-        self.doorCtrls = []
-        self.doorJoints = []
+        self.bodyPosition = []
+        self.wheelPosition = []
+        self.doorPosition = []
+        # self.rootJnt = "jnt_root"
+        # self.rootFbx = "fbx_root"
+        # self.bodyJnt = "jnt_body"
+        # self.bodyFbx = "fbx_body"
+        # self.mainCtrl = "cc_main"
+        # self.subCtrl = "cc_sub"
+        # self.doorCtrls = []
+        # self.doorJoints = []
         self.jntNameAndPos = {
             "jnt_root": (0, 15, 0), 
             "jnt_body": (0, 45, 0), 
             "jnt_bodyEnd": (0, 145, 0), 
-            "jnt_wheelLeftFront": (70, 30, 140), 
-            "jnt_wheelLeftFrontEnd": (85, 30, 140), 
-            "jnt_wheelRightFront": (-70, 30, 140), 
-            "jnt_wheelRightFrontEnd": (-85, 30, 140), 
-            "jnt_wheelLeftBack": (70, 30, -140), 
-            "jnt_wheelLeftBackEnd": (85, 30, -140), 
-            "jnt_wheelRightBack": (-70, 30, -140), 
-            "jnt_wheelRightBackEnd": (-85, 30, -140), 
             }
         self.hierarchy = {
             "jnt_root": [
                 [f"jnt_body{i}" for i in ["", "End"]], 
-                [f"jnt_wheelLeftFront{i}" for i in ["", "End"]], 
-                [f"jnt_wheelRightFront{i}" for i in ["", "End"]], 
-                [f"jnt_wheelLeftBack{i}" for i in ["", "End"]], 
-                [f"jnt_wheelRightBack{i}" for i in ["", "End"]], 
                 ], 
             }
         super(Car, self).__init__()
@@ -120,8 +110,10 @@ class Car(QWidget):
         self.btnDelExpr = QPushButton("Del Expression")
         self.gridLayout_expression.addWidget(self.btnDelExpr, 0, 1, 1, 1)
         self.btnSetPressure = QPushButton("Set Pressure")
+        self.btnSetPressure.setEnabled(False)
         self.gridLayout_expression.addWidget(self.btnSetPressure, 1, 0, 1, 1)
         self.btnDelPressure = QPushButton("Del Pressure")
+        self.btnDelPressure.setEnabled(False)
         self.gridLayout_expression.addWidget(self.btnDelPressure, 1, 1, 1, 1)
         self.verticalLayout_wheel.addLayout(self.gridLayout_expression)
         self.btnDelWheel = QPushButton("Delete Wheel")
@@ -137,9 +129,9 @@ class Car(QWidget):
         self.lineDoorName.setPlaceholderText("Typing Name")
         self.verticalLayout_door.addWidget(self.lineDoorName)
         self.gridLayout_doorName = QGridLayout()
-        self.btnFrontDoor = QPushButton("Front Door")
+        self.btnFrontDoor = QPushButton("Left Front")
         self.gridLayout_doorName.addWidget(self.btnFrontDoor, 0, 0, 1, 1)
-        self.btnBackDoor = QPushButton("Back Door")
+        self.btnBackDoor = QPushButton("Left Back")
         self.gridLayout_doorName.addWidget(self.btnBackDoor, 0, 1, 1, 1)
         self.verticalLayout_door.addLayout(self.gridLayout_doorName)
         self.btnCreateDoor = QPushButton("Create Door")
@@ -194,7 +186,284 @@ class Car(QWidget):
         self.btnSelObj.clicked.connect(self.selectObjectGroup)
         self.btnCreateGrp.clicked.connect(self.createTopGroup)
         self.btnSelBody.clicked.connect(self.selectBodyGroup)
+
+        self.btnLeftFront.clicked.connect(self.setWheelName)
+        self.btnLeftBack.clicked.connect(self.setWheelName)
+        self.btnRightFront.clicked.connect(self.setWheelName)
+        self.btnRightBack.clicked.connect(self.setWheelName)
+        self.btnCreateWheel.clicked.connect(self.build_wheels)
+        self.btnSetExpr.clicked.connect(self.build_expression)
+        self.btnDelExpr.clicked.connect(self.delete_expression)
+        self.btnDelWheel.clicked.connect(self.delete_wheel)
+
+        self.btnFrontDoor.clicked.connect(self.setDoorName)
+        self.btnBackDoor.clicked.connect(self.setDoorName)
+        self.btnCreateDoor.clicked.connect(self.build_doors)
+        self.btnDelDoor.clicked.connect(self.delete_door)
+
         self.btnClose.clicked.connect(self.close)
+
+
+    def build_wheels(self):
+        """ Create a wheel controller only.
+        There is no expression for turning the wheel.
+         """
+        ctrlName = self.lineWheelName.text()
+        obj = selectObjectOnly()
+        if not ctrlName:
+            pm.warning("Input your Controller's name.")
+            return
+        if not obj:
+            pm.warning("Select the polygon of the wheel.")
+            return
+        if pm.objExists(f"{ctrlName}_main"):
+            pm.warning(f"{ctrlName}_main ctrl aleady exists.")
+            return
+        self.createWheelCtrl(ctrlName, obj)
+        locator = self.createWheelRotationLocator(ctrlName)
+        self.insertPositionList(self.wheelPosition, locator)
+
+
+    def build_expression(self):
+        """ Add an expression to the wheel controller.
+        Rotate the locator by calculating the moving distance 
+        of the offset group.
+         """
+        ctrl = self.lineWheelName.text()
+        if not ctrl:
+            pm.warning("Input your Controller's name.")
+            return
+        grpNames = [
+            f"{ctrl}_grp", 
+            f"{ctrl}_offset", 
+            f"{ctrl}_offsetNull", 
+            f"{ctrl}_offsetPrevious", 
+            f"{ctrl}_offsetOrient"
+            ]
+        if True in [pm.objExists(i) for i in grpNames]:
+            pm.warning("Expression groups already exist. Clean up first.")
+            return
+        ctrlTopGrp = f"{ctrl}_upDownMain_grp"
+        if not pm.objExists(ctrlTopGrp):
+            pm.warning("The upDownMain_grp does not exist.")
+            return
+        exprGrps = self.createWheelGroups(ctrl)
+        locator = self.createWheelRotationLocator(ctrl)
+        self.createExpression(ctrl, locator, exprGrps)
+        pm.parent(ctrlTopGrp, w=True)
+        pm.delete(ctrlTopGrp, cn=True)
+        pm.parent(ctrlTopGrp, exprGrps[1])
+
+
+    def build_doors(self):
+        sel = pm.ls(sl=True)
+        if not sel:
+            pm.warning("Nothing Selected.")
+            return
+        doorName = self.lineDoorName.text()
+        if not doorName:
+            pm.warning("Door Name Field is empty.")
+            return
+        if pm.objExists(doorName):
+            pm.warning("%s is aleady exists." % doorName)
+            return
+        doorCtrlGroup = self.createDoorCtrl(sel[0], doorName)
+        for i in doorCtrlGroup:
+            self.insertPositionList(self.doorPosition, i)
+
+
+    def createDoorCtrl(self, selection, doorName) -> list:
+        """ Create a door controller to rotate the mirror.
+        The door on the right is created automatically. 
+        The shapes of the front and back doors are different.
+         """
+        Back = "Back" in doorName
+        back = "back" in doorName
+        if any([Back, back]):
+            doorType = "door2"
+        else:
+            doorType = "door"
+        ctrl = Controllers()
+        cc = ctrl.createControllers(**{doorType: doorName})[0]
+        defaultScale = 58
+        size = getBoundingBoxSize(selection) / defaultScale
+        pm.scale(cc, [size, size, size])
+        pm.makeIdentity(cc, a=1, t=1, r=1, s=1, n=0, pn=1)
+        pm.matchTransform(cc, selection, pos=True, rot=True)
+        doorAGrp, doorA = groupOwnPivot(cc, null=True)[::2]
+        doorBGrp, doorB = mirrorCopy(cc)[::2]
+        result = [doorAGrp, doorBGrp]
+        for i in [doorA, doorB]:
+            pm.transformLimits(i, ry=(-60, 0), ery=(False, True))
+        return result
+
+
+    def createWheelGroups(self, ctrl):
+        """ Create groups for the expression. """
+        grpNames = [
+            f"{ctrl}_grp", 
+            f"{ctrl}_offset", 
+            f"{ctrl}_offsetNull", 
+            f"{ctrl}_offsetPrevious", 
+            f"{ctrl}_offsetOrient"
+            ]
+        result = [pm.group(n=i, em=True) for i in grpNames]
+        grp, offset, offsetNull, offsetPrevious, offsetOrient = result
+        pm.parent(offset, grp)
+        pm.parent(offsetNull, offset)
+        pm.parent(offsetPrevious, grp)
+        pm.parent(offsetOrient, offsetPrevious)
+        offsetOrient.translate.set([-0.001, -0.001, -0.001])
+        pm.aimConstraint(offset, offsetPrevious, mo=False)
+        pm.orientConstraint(offsetNull, offsetOrient, mo=False)
+        for i in ['X', 'Y', 'Z']:
+            pm.addAttr(offset, ln=f'PreviousPosition{i}', at='double', dv=0)
+            pm.setAttr(f'{offset}.PreviousPosition{i}', e=True, k=True)
+        return result
+
+
+    def createExpression(self, ctrl: str, locator: str, names: list) -> None:
+        """ Rotate the locator by the moving distance of offset_grp. """
+        ctrlMain = f"{ctrl}_main"
+        if not pm.attributeQuery("AutoRoll", node=ctrlMain, ex=True):
+            attrAuto = 'AutoRoll'
+            pm.addAttr(ctrlMain, ln=attrAuto, at='long', min=0, max=1, dv=1)
+            pm.setAttr(f'{ctrlMain}.{attrAuto}', e=True, k=True)
+        br = '\n'
+        offset = names[1]
+        previous, orient = names[3:]
+        # expression1
+        expr1 = f'float $rad = {ctrlMain}.Radius;{br}'
+        expr1 += f'float $auto = {ctrlMain}.AutoRoll;{br}'
+        expr1 += f'float $locator = {locator}.rotateX;{br}'
+        expr1 += f'float $circleLength = 2 * 3.141 * $rad;{br}'
+        expr1 += f'float $orientRotY = {orient}.rotateY;{br}'
+        expr1 += f'float $offsetScale = {offset}.scaleY;{br}'
+        expr1 += f'float $pointX1 = {offset}.PreviousPositionX;{br}'
+        expr1 += f'float $pointY1 = {offset}.PreviousPositionY;{br}'
+        expr1 += f'float $pointZ1 = {offset}.PreviousPositionZ;{br}'
+        expr1 += f'{previous}.translateX = $pointX1;{br}'
+        expr1 += f'{previous}.translateY = $pointY1;{br}'
+        expr1 += f'{previous}.translateZ = $pointZ1;{br}'
+        expr1 += f'float $pointX2 = {offset}.translateX;{br}'
+        expr1 += f'float $pointY2 = {offset}.translateY;{br}'
+        expr1 += f'float $pointZ2 = {offset}.translateZ;{br*2}'
+        # expression2
+        pointsGap = '$pointX2-$pointX1, $pointY2-$pointY1, $pointZ2-$pointZ1'
+        expr2 = f'float $distance = `mag<<{pointsGap}>>`;{br*2}'
+        # expression3
+        expr3 = f'{locator}.rotateX = $locator'
+        expr3 += ' + ($distance/$circleLength) * 360'
+        expr3 += ' * $auto'
+        expr3 += ' * 1'
+        expr3 += ' * sin(deg_to_rad($orientRotY))'
+        expr3 += f' / $offsetScale;{br*2}'
+        # expression4
+        expr4 = f'{offset}.PreviousPositionX = $pointX2;{br}'
+        expr4 += f'{offset}.PreviousPositionY = $pointY2;{br}'
+        expr4 += f'{offset}.PreviousPositionZ = $pointZ2;{br}'
+        # final expression
+        expr = expr1 + expr2 + expr3 + expr4
+        pm.expression(s=expr, o='', ae=1, uc='all')
+
+
+    def delete_expression(self):
+        """ Deletes the expression applied to the wheel controller. """
+        ctrl = self.lineWheelName.text()
+        if not ctrl:
+            pm.warning("The ctrl's name field is empty.")
+            return
+        ctrlTopGrp = f"{ctrl}_upDownMain_grp"
+        exprTopGrp = f"{ctrl}_grp"
+        ctrlMain = f"{ctrl}_main"
+        exprList = pm.listConnections(ctrlMain, type="expression", d=True)
+        try:
+            pm.delete(exprList)
+            pm.parent(ctrlTopGrp, w=True)
+            pm.delete(exprTopGrp)
+        except:
+            pass
+        if pm.attributeQuery("AutoRoll", node=ctrlMain, ex=True):
+            pm.deleteAttr(f"{ctrlMain}.AutoRoll")
+
+
+    def delete_wheel(self):
+        """ Clean up the wheel controllers. """
+        ctrl = self.lineWheelName.text()
+        if not ctrl:
+            pm.warning("The ctrl's name field is empty.")
+            return
+        ctrlGrp = f"{ctrl}_grp"
+        ctrlTopGrp = f"{ctrl}_upDownMain_grp"
+        for i in [ctrlGrp, ctrlTopGrp]:
+            try:
+                pm.delete(i)
+            except:
+                pass
+        if "cc_" in ctrl:
+            locName = ctrl.replace("cc_", "loc_")
+        else:
+            locName = f"{ctrl}_%s" % "exprLocator"
+        try:
+            self.wheelPosition.remove(locName)
+        except:
+            pass
+
+
+    def delete_door(self):
+        for i in self.doorPosition:
+            try:
+                pm.delete(i)
+            except:
+                continue
+        self.doorPosition = []
+
+
+    def createWheelCtrl(self, ccName, obj) -> str:
+        """ Make controllers according to the wheel size. """
+        cc = [
+            f"{ccName}_upDownMain", 
+            f"{ccName}_upDownSub", 
+            f"{ccName}_main", 
+            f"{ccName}_sub"
+        ]
+        sizeRatio = [14, 18, 9, 11]
+        ctrl = Controllers()
+        rad = getBoundingBoxSize(obj)
+        for ccName, sr in zip(cc[:2], sizeRatio[:2]):
+            cuv = ctrl.createControllers(square=ccName)[0]
+            pm.scale(cuv, (rad/(sr*2), rad/sr, rad/sr))
+            pm.matchTransform(cuv, obj, pos=True)
+            pm.setAttr(f"{cuv}.translateY", 0)
+        for ccName, sr in zip(cc[2:], sizeRatio[2:]):
+            cuv = ctrl.createControllers(circle=ccName)[0]
+            pm.scale(cuv, (rad/sr, rad/sr, rad/sr))
+            pm.rotate(cuv, (0, 0, 90))
+            pm.matchTransform(cuv, obj, pos=True)
+        ccGrp = groupOwnPivot(*cc, null=True)
+        parentHierarchically(*ccGrp)
+        pm.makeIdentity(ccGrp, a=1, t=1, r=1, s=1, n=0, pn=1)
+        ccMain = cc[2]
+        attrRad = "Radius"
+        pm.addAttr(ccMain, ln=attrRad, at='double', min=0.0001, dv=1)
+        pm.setAttr(f'{ccMain}.{attrRad}', e=True, k=True)
+        pm.setAttr(f"{ccMain}.Radius", rad)
+
+
+    def createWheelRotationLocator(self, ctrl):
+        ctrlSub = f"{ctrl}_sub"
+        if "cc_" in ctrl:
+            locName = ctrl.replace("cc_", "loc_")
+        else:
+            locName = f"{ctrl}_%s" % "exprLocator"
+        if pm.objExists(locName):
+            return locName
+        else:
+            locator = pm.spaceLocator(n=locName)
+            pm.matchTransform(locator, ctrlSub, pos=True)
+            pm.parent(locator, ctrlSub)
+            pm.makeIdentity(locator, a=1, t=1, r=0, s=0, n=0, pn=1)
+            return locator
 
 
     def selectObjectGroup(self):
@@ -209,15 +478,29 @@ class Car(QWidget):
 
 
     def selectBodyGroup(self):
+        print(self.bodyPosition)
+        print(self.wheelPosition)
+        print(self.doorPosition)
         sel = selectGroupOnly()
         if sel:
             txt = sel[0].name()
             self.bodyGroup = txt
             self.lineSelBody.setText(txt)
+            self.insertPositionList(self.bodyPosition, txt)
             return txt
         else:
             return
 
+
+    def insertPositionList(self, positionGroup: list, element: str):
+        if isinstance(element, pm.PyNode):
+            element = element.name()
+        if element in positionGroup:
+            return
+        else:
+            positionGroup.append(element)
+            return element
+    
 
     def createTopGroup(self) -> str:
         txt = self.lineCreateGrp.text()
@@ -233,9 +516,29 @@ class Car(QWidget):
         self.topGroup = grpName
         self.lineCreateGrp.setText(grpName)
         self.lineCreateGrp.clearFocus()
+        try:
+            pm.parent(self.objGroup, "MODEL")
+        except:
+            pass
         return grpName
 
 
+    def setWheelName(self):
+        """ Remove spaces from wheel names. """
+        button = self.sender()
+        buttonName = button.text()
+        ctrlName = "cc_wheel%s" % buttonName.replace(" ", "")
+        self.lineWheelName.setText(ctrlName)
+        self.lineWheelName.clearFocus()
+
+
+    def setDoorName(self):
+        """ Remove spaces from door names. """
+        button = self.sender()
+        buttonName = button.text()
+        ctrlName = "cc_door%s" % buttonName.replace(" ", "")
+        self.lineDoorName.setText(ctrlName)
+        self.lineDoorName.clearFocus()
 
 
 if __name__ == "__main__":
