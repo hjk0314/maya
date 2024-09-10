@@ -182,6 +182,8 @@ class VertexSelector(QWidget):
             "RightHandPinky1", "RightHandPinky2", "RightHandPinky3", 
             "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase", 
             "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase", 
+            "LeftFlipper", "LeftFlipper1", "LeftFlipper2", 
+            "RightFlipper", "RightFlipper1", "RightFlipper2", 
             ]
         super(VertexSelector, self).__init__()
         self.sortCount = 0
@@ -476,7 +478,8 @@ class VertexSelector(QWidget):
             pm.warning("skinCluster aleady exists.")
             return
         else:
-            skinClt = pm.skinCluster(topLevelJoint, selObj, tsb=False, bm=0, sm=0, nw=1, wd=0, mi=1)
+            skinClt = pm.skinCluster(topLevelJoint, selObj, \
+                                     tsb=False, bm=0, sm=0, nw=1, wd=0, mi=1)
             for i in self.jointName:
                 if not pm.objExists(i):
                     continue
@@ -845,14 +848,14 @@ class MoveToCameraKeysAndSequence(QWidget):
             pm.setAttr(imgShape[0] + ".frameOffset", frameOffset - value)
 
 
-if __name__ == "__main__":
-    try:
-        vtxSel.close()
-        vtxSel.deleteLater()
-    except:
-        pass
-    vtxSel = VertexSelector()
-    vtxSel.show()
+# if __name__ == "__main__":
+#     try:
+#         vtxSel.close()
+#         vtxSel.deleteLater()
+#     except:
+#         pass
+#     vtxSel = VertexSelector()
+#     vtxSel.show()
 
 
 # if __name__ == "__main__":
