@@ -833,14 +833,14 @@ class Car(QWidget):
                     continue
 
 
-if __name__ == "__main__":
-    try:
-        qrCar.close()
-        qrCar.deleteLater()
-    except:
-        pass
-    qrCar = Car()
-    qrCar.show()
+# if __name__ == "__main__":
+#     try:
+#         qrCar.close()
+#         qrCar.deleteLater()
+#     except:
+#         pass
+#     qrCar = Car()
+#     qrCar.show()
 
 
 class MixamoCharacter(QWidget):
@@ -1443,7 +1443,7 @@ def setDirection_fingerCtrl(*args):
     joints = args if args else pm.ls(sl=True)
     if len(joints) < 4:
         return
-    startJnt, endJnt = createPolevectorJoint(*joints[1:])
+    startJnt, endJnt = createPolevectorJoint(*joints[:3])
     for idx, jnt in enumerate(joints):
         if idx == len(joints) - 1:
             continue
@@ -1572,7 +1572,7 @@ def setDirection_fingerCtrl(*args):
 # ctrl = "cc_LeftHand_IK"
 # floatMenu = {
 #     "world0": "null_worldSpace", 
-#     "shoulder1": "null_rightShoulderSpace"
+#     "shoulder1": "null_leftShoulderSpace"
 #     }
 # ctrl = "cc_RightHand_IK"
 # floatMenu = {
@@ -1667,12 +1667,14 @@ def setDirection_fingerCtrl(*args):
 
 
 # ==============================================================================
-# groupOwnPivot()
+# groupOwnPivot(null=True)
 # sel = pm.ls(sl=True, fl=True)
 # print([i.name() for i in sel])
 # selectConstraintOnly()
 # ctrl = Controllers()
-# ctrl.createControllers()
+# ctrl.createControllers(sphere="")
 # for i in sel:
 #     x, y, z = pm.pointPosition(i)
 #     print((round(x, 3), round(y, 3), round(z, 3)))
+for i in range(3, 25):
+    pm.connectAttr("plusMinusAverage3.output1D", f"AirTankHose{i}.scaleX", f=True)

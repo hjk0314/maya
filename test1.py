@@ -201,7 +201,21 @@ class Car(QWidget):
         self.btnCreateDoor.clicked.connect(self.build_doors)
         self.btnDelDoor.clicked.connect(self.delete_door)
 
+        self.btnCreateJnt.clicked.connect(self.build_joints)
+
         self.btnClose.clicked.connect(self.close)
+
+
+    def build_joints(self):
+        print(self.bodyPosition)
+        print(self.wheelPosition)
+        print(self.doorPosition)
+        # self.updateJointsPosition()
+        # self.cleanUp()
+        # self.createCarGroup()
+        # self.createJoints()
+        # self.createFbxJoints()
+        # self.createMainCtrl()
 
 
     def build_wheels(self):
