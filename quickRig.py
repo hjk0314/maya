@@ -1204,7 +1204,7 @@ class MixamoCharacter(QWidget):
                     pass
 
 
-# mc = MixamoCharacter()
+mc = MixamoCharacter()
 # mc.createBones()
 # mc.alignBonesCenter()
 # mc.alignBonesSameSide()
@@ -1667,6 +1667,7 @@ def setDirection_fingerCtrl(*args):
 
 
 # ==============================================================================
+# createRigGroups("seungJu")
 # groupOwnPivot(null=True)
 # sel = pm.ls(sl=True, fl=True)
 # print([i.name() for i in sel])
@@ -1676,5 +1677,5 @@ def setDirection_fingerCtrl(*args):
 # for i in sel:
 #     x, y, z = pm.pointPosition(i)
 #     print((round(x, 3), round(y, 3), round(z, 3)))
-for i in range(3, 25):
-    pm.connectAttr("plusMinusAverage3.output1D", f"AirTankHose{i}.scaleX", f=True)
+# for i in range(3, 25):
+#     pm.connectAttr("plusMinusAverage3.output1D", f"AirTankHose{i}.scaleX", f=True)

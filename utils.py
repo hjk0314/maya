@@ -182,8 +182,8 @@ class VertexSelector(QWidget):
             "RightHandPinky1", "RightHandPinky2", "RightHandPinky3", 
             "LeftUpLeg", "LeftLeg", "LeftFoot", "LeftToeBase", 
             "RightUpLeg", "RightLeg", "RightFoot", "RightToeBase", 
-            "LeftFlipper", "LeftFlipper1", "LeftFlipper2", 
-            "RightFlipper", "RightFlipper1", "RightFlipper2", 
+            # "LeftFlipper", "LeftFlipper1", "LeftFlipper2", 
+            # "RightFlipper", "RightFlipper1", "RightFlipper2", 
             ]
         super(VertexSelector, self).__init__()
         self.sortCount = 0
