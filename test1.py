@@ -28,8 +28,8 @@ class Car(QWidget):
         self.bodyPosition = []
         self.wheelPosition = []
         self.doorPosition = []
-        # self.rootJnt = "jnt_root"
-        # self.rootFbx = "fbx_root"
+        self.rootJnt = "jnt_root"
+        self.rootFbx = "fbx_root"
         # self.bodyJnt = "jnt_body"
         # self.bodyFbx = "fbx_body"
         # self.mainCtrl = "cc_main"
@@ -42,9 +42,7 @@ class Car(QWidget):
             "jnt_bodyEnd": (0, 145, 0), 
             }
         self.hierarchy = {
-            "jnt_root": [
-                [f"jnt_body{i}" for i in ["", "End"]], 
-                ], 
+            "jnt_root": [["jnt_body", "jnt_bodyEnd"], ], 
             }
         super(Car, self).__init__()
         self.setParent(mayaMainWindow())
@@ -207,15 +205,79 @@ class Car(QWidget):
 
 
     def build_joints(self):
-        print(self.bodyPosition)
+        # print(self.topGroup)
+        # print(self.objGroup)
+        # print(self.bodyPosition)
         print(self.wheelPosition)
-        print(self.doorPosition)
+        # print(self.doorPosition)
+
+        self.deleteJoints()
+        self.setBodyJointPosition()
+        self.setWheelJointPosition()
+        self.createJoints()
+
         # self.updateJointsPosition()
-        # self.cleanUp()
         # self.createCarGroup()
-        # self.createJoints()
         # self.createFbxJoints()
         # self.createMainCtrl()
+
+
+    def deleteJoints(self):
+        """ Clean up the joint groups. """
+        listDelete = [
+            self.rootJnt, 
+            self.rootFbx, 
+            ]
+        for i in listDelete:
+            try:
+                pm.delete(i)
+            except:
+                continue
+
+
+    def setBodyJointPosition(self):
+        if not self.wheelPosition:
+            return
+        wheelHeights = [getPosition(i)[1] for i in self.wheelPosition]
+        heightsAverage = sum(wheelHeights) / len(wheelHeights)
+        halfHeights = heightsAverage / 2.0
+        jnt_root = (0, heightsAverage - halfHeights, 0)
+        jnt_body = (0, heightsAverage + halfHeights, 0)
+        jnt_bodyEnd = (0, heightsAverage + halfHeights + 100, 0)
+        self.jntNameAndPos["jnt_root"] = jnt_root
+        self.jntNameAndPos["jnt_body"] = jnt_body
+        self.jntNameAndPos["jnt_bodyEnd"] = jnt_bodyEnd
+
+
+    def setWheelJointPosition(self):
+        if not self.wheelPosition:
+            return
+        temp = []
+        for i in self.wheelPosition:
+            x, y, z = getPosition(i)
+            jnt = i.replace("loc_", "jnt_")
+            self.jntNameAndPos[jnt] = (x, y, z)
+            if "right" in jnt or "Right" in jnt or "_R" in jnt:
+                self.jntNameAndPos[f"{jnt}End"] = (x - 15, y, z)
+            else:
+                self.jntNameAndPos[f"{jnt}End"] = (x + 15, y, z)
+            temp.append([jnt, f"{jnt}End"])
+        result = self.hierarchy["jnt_root"] + temp
+        self.hierarchy["jnt_root"] = result
+
+
+    def createJoints(self):
+        for jnt, pos in self.jntNameAndPos.items():
+            if pm.objExists(jnt):
+                pm.delete(jnt)
+            else:
+                pm.select(cl=True)
+                pm.joint(p=pos, n=jnt)
+        for parents, childList in self.hierarchy.items():
+            for children in childList:
+                parentHierarchically(*children)
+                pm.makeIdentity(children, a=1, t=1, r=1, s=1, jo=1)
+                pm.parent(children[0], parents)
 
 
     def build_wheels(self):
