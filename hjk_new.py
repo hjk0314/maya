@@ -1306,7 +1306,12 @@ class QuickRig_Mixamo:
 # jnt.setJointsStyleNone()
 
 # ren = Rename()
-# ren.changeWords("_Left", "_Right")
+# ren.changeWords("_ext", "")
+# ren.changeWords("_int", "")
+# ren.changeWords("_door", "")
+# ren.changeWords("_body", "_door")
+# ren.changeWords("_body", "_etc")
+# ren.changeWords("_etc", "")
 
 
 # ctrl = Controllers()
