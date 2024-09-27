@@ -1364,7 +1364,7 @@ def createJnt_MotionPath(*arg: int) -> None:
         pm.cutKey(tmp, cl=True, at='u')
         pm.setAttr(f"{tmp}.uValue", val)
 
-createJnt_MotionPath(25)
+
 def ctrl(*args: dict, **kwargs):
     """ Create a controller,
     "cub": cub, 
@@ -2141,3 +2141,4 @@ def parentParty(n: int):
 # VertexSeletor()
 # selectVerts_influenced()
 # MirrorCopy(x=True)
+
