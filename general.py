@@ -981,3 +981,14 @@ class Controllers:
             result.append(cuv)
         return result
 
+
+# channel = ["translate", "rotate", "scale", "visibility"]
+# sel = pm.ls(sl=True)
+# for rig in sel:
+#     jnt = rig.replace("rig_", "jnt_")
+#     for i in channel:
+#         pm.connectAttr(f"{rig}.{i}", f"{jnt}.{i}", f=True)
+
+# Controllers().createControllers(sphere="")
+# groupOwnPivot(null=True)
+# mirrorCopy("cc_gill_L")
