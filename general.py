@@ -989,6 +989,8 @@ class Controllers:
 #     for i in channel:
 #         pm.connectAttr(f"{rig}.{i}", f"{jnt}.{i}", f=True)
 
-# Controllers().createControllers(sphere="")
-# groupOwnPivot(null=True)
-# mirrorCopy("cc_gill_L")
+# Controllers().createControllers(square="")
+# groupOwnPivot()
+# mirrorCopy("loc_noseGear_L")
+# createCurveAimingPoint()
+# createRigGroups("boeing737")
