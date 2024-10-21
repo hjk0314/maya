@@ -9,12 +9,13 @@ def getDistance(obj1, obj2):
 
 obj = pm.ls(sl=True)
 allVertices = obj.vtx[:]
-sourceVertices = {}
+sourceVertices = []
+mirrorVertices = []
 for vtx in allVertices:
     pos = vtx.getPosition(space="world")
     if pos[0] <= 0:
-        sourceVertices[vtx] = pos
+        mirrorVertices.append(vtx)
     else:
-        continue
+        sourceVertices.append(vtx)
 
 
