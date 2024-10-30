@@ -994,3 +994,23 @@ class Controllers:
 # mirrorCopy("loc_noseGear_L")
 # createCurveAimingPoint()
 # createRigGroups("boeing737")
+
+# def constraintBoth(parents, child):
+#     pm.parentConstraint(parents, child, mo=True, w=1.0)
+#     pm.scaleConstraint(parents, child, mo=True, w=1.0)
+
+
+# for i in range(1, 11):
+#     jnt = f"train_{i}"
+#     mainGrp = f"cc_train_{i}_main_grp"
+#     sub = f"cc_train_{i}_sub"
+#     body = f"cc_train_{i}_body_grp"
+#     bodyCtrl = f"cc_train_{i}_body"
+#     mdlBody = f"vhcl_mugunghwaTrainA_mdl_v9999:mugunghwaTrainA_{chr(64 + i)}_body_grp"
+#     mdlBt = f"vhcl_mugunghwaTrainA_mdl_v9999:mugunghwaTrainA_{chr(64 + i)}_Bt_grp"
+#     mdlWheel = f"vhcl_mugunghwaTrainA_mdl_v9999:mugunghwaTrainA_{chr(64 + i)}_wheel_grp"
+#     constraintBoth(jnt, mainGrp)
+#     constraintBoth(sub, body)
+#     constraintBoth(bodyCtrl, mdlBody)
+#     constraintBoth(sub, mdlBt)
+#     constraintBoth(sub, mdlWheel)
