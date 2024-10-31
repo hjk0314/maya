@@ -989,11 +989,11 @@ class Controllers:
 #     for i in channel:
 #         pm.connectAttr(f"{rig}.{i}", f"{jnt}.{i}", f=True)
 
-# Controllers().createControllers(square="")
+# Controllers().createControllers(circle="", cylinder="")
 # groupOwnPivot()
 # mirrorCopy("loc_noseGear_L")
 # createCurveAimingPoint()
-# createRigGroups("boeing737")
+# createRigGroups("pomfretFishD")
 
 # def constraintBoth(parents, child):
 #     pm.parentConstraint(parents, child, mo=True, w=1.0)
@@ -1014,3 +1014,19 @@ class Controllers:
 #     constraintBoth(bodyCtrl, mdlBody)
 #     constraintBoth(sub, mdlBt)
 #     constraintBoth(sub, mdlWheel)
+#     pm.connectAttr("txt_connect_c.Connect", f"{mainGrp}_parentConstraint1.{jnt}W0", f=True)
+#     pm.connectAttr("txt_connect_c.Connect", f"{mainGrp}_scaleConstraint1.{jnt}W0", f=True)
+
+# src = "vhcl_mugunghwaTrainA_mdl_v9999:mugunghwaTrainA_A_wheel_Ft_L_1_grp"
+# sel = pm.ls(sl=True)
+# for i in sel:
+#     pm.connectAttr(f"{src}.rotateX", f"{i}.rotateX", f=True)
+
+
+# sel = pm.ls(sl=True)
+# for i in sel:
+#     jnt = f"jnt_{i}"
+    # pm.connectAttr(f"{jnt}.translate", f"{i}.translate", f=True)
+    # pm.connectAttr(f"{jnt}.rotate", f"{i}.rotate", f=True)
+    # pm.connectAttr(f"{jnt}.scale", f"{i}.scale", f=True)
+    # pm.scaleConstraint(jnt, i, mo=True, w=1.0)
