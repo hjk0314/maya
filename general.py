@@ -993,7 +993,7 @@ class Controllers:
 # groupOwnPivot()
 # mirrorCopy("loc_noseGear_L")
 # createCurveAimingPoint()
-# createRigGroups("pomfretFishD")
+# createRigGroups("jackFishA")
 
 # def constraintBoth(parents, child):
 #     pm.parentConstraint(parents, child, mo=True, w=1.0)
@@ -1026,7 +1026,14 @@ class Controllers:
 # sel = pm.ls(sl=True)
 # for i in sel:
 #     jnt = f"jnt_{i}"
-    # pm.connectAttr(f"{jnt}.translate", f"{i}.translate", f=True)
-    # pm.connectAttr(f"{jnt}.rotate", f"{i}.rotate", f=True)
-    # pm.connectAttr(f"{jnt}.scale", f"{i}.scale", f=True)
+#     pm.connectAttr(f"{jnt}.translate", f"{i}.translate", f=True)
+#     pm.connectAttr(f"{jnt}.rotate", f"{i}.rotate", f=True)
+#     pm.connectAttr(f"{jnt}.scale", f"{i}.scale", f=True)
     # pm.scaleConstraint(jnt, i, mo=True, w=1.0)
+
+
+# sel = pm.ls(sl=True)
+# for i in sel:
+#     jnt = i.replace("cc_", "jnt_")
+#     pm.parentConstraint(i, jnt, mo=True, w=1.0)
+#     pm.scaleConstraint(i, jnt, mo=True, w=1.0)
