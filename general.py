@@ -989,11 +989,11 @@ class Controllers:
 #     for i in channel:
 #         pm.connectAttr(f"{rig}.{i}", f"{jnt}.{i}", f=True)
 
-# Controllers().createControllers(circle="", cylinder="")
-# groupOwnPivot()
+# Controllers().createControllers(pipe="")
+# groupOwnPivot(null=True)
 # mirrorCopy("loc_noseGear_L")
 # createCurveAimingPoint()
-# createRigGroups("jackFishA")
+# createRigGroups("needleA")
 
 # def constraintBoth(parents, child):
 #     pm.parentConstraint(parents, child, mo=True, w=1.0)
