@@ -989,7 +989,7 @@ class Controllers:
 #     for i in channel:
 #         pm.connectAttr(f"{rig}.{i}", f"{jnt}.{i}", f=True)
 
-# Controllers().createControllers(pipe="")
+# Controllers().createControllers()
 # groupOwnPivot(null=True)
 # mirrorCopy("loc_noseGear_L")
 # createCurveAimingPoint()
