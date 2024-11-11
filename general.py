@@ -989,7 +989,7 @@ class Controllers:
 #     for i in channel:
 #         pm.connectAttr(f"{rig}.{i}", f"{jnt}.{i}", f=True)
 
-# Controllers().createControllers()
+# Controllers().createControllers(sphere="")
 # groupOwnPivot(null=True)
 # mirrorCopy("loc_noseGear_L")
 # createCurveAimingPoint()
@@ -1033,7 +1033,31 @@ class Controllers:
 
 
 # sel = pm.ls(sl=True)
+# for j, k in enumerate(sel):
+#     num = k.split("_")[-1]
+#     jntName = f"AirHose_{num}"
+#     pm.select(cl=True)
+#     jnt = pm.joint(p=(0,0,0), n=jntName)
+#     grp = groupingWithOwnPivot()
+#     pm.matchTransform(grp, k, pos=True, rot=True)
+#     pm.parentConstraint(k, grp, mo=True, w=1.0)
+    
+# pm.select(["AirHose_%02d" % (i+1) for i in range(37)])
+# parentHierarchically()
+
+#     if j % 9 == 0:
+#         sph = pm.sphere()
+#         pm.matchTransform(sph, k, pos=True, rot=True)
+
 # for i in sel:
 #     jnt = i.replace("cc_", "jnt_")
 #     pm.parentConstraint(i, jnt, mo=True, w=1.0)
 #     pm.scaleConstraint(i, jnt, mo=True, w=1.0)
+
+
+# for i in sel:
+    # jntGrp = f"AirHose{j+1}_grp"
+    # pm.matchTransform(jntGrp, k, pos=True, rot=True)
+    # pm.parentConstraint(k, jntGrp, mo=True, w=1.0)
+
+
