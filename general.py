@@ -989,7 +989,7 @@ class Controllers:
 #     for i in channel:
 #         pm.connectAttr(f"{rig}.{i}", f"{jnt}.{i}", f=True)
 
-# Controllers().createControllers(sphere="")
+# Controllers().createControllers(pipe="")
 # groupOwnPivot(null=True)
 # mirrorCopy("loc_noseGear_L")
 # createCurveAimingPoint()
@@ -1061,3 +1061,5 @@ class Controllers:
     # pm.parentConstraint(k, jntGrp, mo=True, w=1.0)
 
 
+# for i in pm.ls(sl=True):
+#     pm.connectAttr("multiplyDivide1.outputX", f"{i}.scaleZ", f=True)
