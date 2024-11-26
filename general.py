@@ -59,9 +59,9 @@ def getBoundingBoxSize(vertexOrObject) -> list:
     x = (xMax - xMin) / 2
     y = (yMax - yMin) / 2
     z = (zMax - zMin) / 2
-    boundingBoxSize = max(x, y, z)
-    boundingBoxSize = round(boundingBoxSize, 3)
-    return boundingBoxSize
+    boundingBoxSize = [x, y, z]
+    result = [round(i, 5) for i in boundingBoxSize]
+    return result
 
 
 def orientJoints(joints=[], primaryAxis='yzx', secondaryAxis='zup'):
