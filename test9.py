@@ -99,5 +99,5 @@ class CreateProxyFile:
 
 
 cpf = CreateProxyFile()
-cpf.main()
+print(dir(cpf))
 # cpf.replaceReference()
