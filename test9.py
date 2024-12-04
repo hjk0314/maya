@@ -4,6 +4,10 @@ import os
 
 class CreateProxyFile:
     def __init__(self):
+        """ The modeling files and rig files are located in specific paths. 
+        The names of the files follow specific rules. 
+        It is a function that applies to a simple constraint parent.
+         """
         pass
 
 
@@ -17,6 +21,11 @@ class CreateProxyFile:
 
 
     def reConnect(self, originalConstraintNode: str) -> str:
+        """ Replace the original reference with _proxy,
+        the Original Constraint Nodes will remain in fosterParent.
+        The parent Node is found from the Original Constraint Nodes,
+        and it is reconnected to _proxy Objects.
+         """
         if not pm.nodeType(originalConstraintNode).endswith("Constraint"):
             return
         nameSlice = originalConstraintNode.rsplit('_', 1)
@@ -64,6 +73,12 @@ class CreateProxyFile:
 
 
     def replaceReference(self):
+        """This File must be a Rig File.
+        Find the modeling path from the Rig file path.
+        Find the _proxy file in the modeling path.
+        Replace the modeling reference with the _proxy file.
+        Parent _proxy group to the MODEL group.
+         """
         rigFile = pm.Env().sceneName()
         if not rigFile:
             return
