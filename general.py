@@ -564,6 +564,36 @@ def createRigGroups(assetName: str = ""):
     return result
 
 
+def createJointOnMotionPath(numberOfJoints: int) -> None:
+    """ Create a number of joints and 
+    apply a motionPath on the curve.
+     """
+    mod = 1/(numberOfJoints-1) if numberOfJoints > 1 else 0
+    sel = pm.selected()
+    if sel:
+        cuv = sel[0]
+    else:
+        return
+    result = []
+    for i in range(numberOfJoints):
+        pm.select(cl=True)
+        jnt = pm.joint(p=(0,0,0))
+        uValue = i * mod
+        motionPath = pm.pathAnimation(jnt, \
+            c=cuv, 
+            fractionMode=True, 
+            follow=True, 
+            followAxis='x', 
+            upAxis='y', 
+            worldUpType='vector', 
+            worldUpVector=(0,1,0)
+            )
+        pm.cutKey(motionPath, cl=True, at='u')
+        pm.setAttr(f"{motionPath}.uValue", uValue)
+        result.append(jnt)
+    return result
+
+
 class AlignObjects:
     def __init__(self):
         """ This class arranges some objects in a straight line in space. """
