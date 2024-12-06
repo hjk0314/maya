@@ -112,7 +112,7 @@ def createCurvePassingThrough(objects=[]) -> str:
     curve = pm.curve(ep=positions, d=3)
     return curve
 
-
+createCurvePassingThrough()
 def createClosedCurve(objects=[]) -> str:
     """ The closedCurve means that 
     the start and end points of a curve are connected.
@@ -579,15 +579,10 @@ def createJointOnMotionPath(numberOfJoints: int) -> None:
         pm.select(cl=True)
         jnt = pm.joint(p=(0,0,0))
         uValue = i * mod
-        motionPath = pm.pathAnimation(jnt, \
-            c=cuv, 
-            fractionMode=True, 
-            follow=True, 
-            followAxis='x', 
-            upAxis='y', 
-            worldUpType='vector', 
-            worldUpVector=(0,1,0)
-            )
+        motionPath = pm.pathAnimation(jnt, c=cuv, fractionMode=True, \
+                                      follow=True, followAxis='x', \
+                                      upAxis='y', worldUpType='vector', \
+                                      worldUpVector=(0,1,0))
         pm.cutKey(motionPath, cl=True, at='u')
         pm.setAttr(f"{motionPath}.uValue", uValue)
         result.append(jnt)

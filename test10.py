@@ -2,47 +2,35 @@ import pymel.core as pm
 from general import *
 
 
-def connectNodeToNode(srcNode, joint, endJnt, directionList):
-    for i in directionList:
-        pm.connectAttr(f"{srcNode}.outputX", f"{joint}.scale{i}", f=True)
-    subJnt = pm.listRelatives(joint, c=True, type="joint")
-    if subJnt and not (endJnt in subJnt):
-        connectNodeToNode(srcNode, subJnt[0], endJnt, directionList)
-    else:
-        return
-
-
-def createJointOnMotionPath(numberOfJoints: int) -> None:
-    """ Create a number of joints and 
-    apply a motionPath on the curve.
+def connectNodeToNode(multiplyDivideNode: str, \
+                      startJoint: str, endJoint: str, directionList: list):
+    """ Connect the outputX of the multiplyDivide to the scale of the joint. 
+    If there are subjoints of the joint, it works as a recursive function.
      """
-    mod = 1/(numberOfJoints-1) if numberOfJoints > 1 else 0
-    sel = pm.selected()
-    if sel:
-        cuv = sel[0]
+    for i in directionList:
+        pm.connectAttr(f"{multiplyDivideNode}.outputX", f"{startJoint}.scale{i}", f=True)
+    subJnt = pm.listRelatives(startJoint, c=True, type="joint")
+    if subJnt and not (endJoint in subJnt):
+        connectNodeToNode(multiplyDivideNode, subJnt[0], endJoint, directionList)
     else:
         return
-    result = []
-    for i in range(numberOfJoints):
-        pm.select(cl=True)
-        jnt = pm.joint(p=(0,0,0))
-        uValue = i * mod
-        motionPath = pm.pathAnimation(jnt, \
-            c=cuv, 
-            fractionMode=True, 
-            follow=True, 
-            followAxis='x', 
-            upAxis='y', 
-            worldUpType='vector', 
-            worldUpVector=(0,1,0)
-            )
-        pm.cutKey(motionPath, cl=True, at='u')
-        pm.setAttr(f"{motionPath}.uValue", uValue)
-        result.append(jnt)
-    return result
 
 
-def ConnectStretchNodeToJointScale(*args, **kwargs):
+def connectStretchNodeToJointScale(*args, **kwargs):
+    """ As the length of the curve increases, 
+    the length of the joint also increases.
+    Select at least 3 or more.
+
+    Usage: 
+     - Select the start joint
+     - Select the end joint
+     - Select the curve
+
+    Example: 
+    >>> connectStretchNodeToJointScale()
+    >>> connectStretchNodeToJointScale("startJnt", "endJnt", "curve1", x=True)
+    >>> connectStretchNodeToJointScale(*["startJnt", "endJnt", "curve1"])
+     """
     sel = args if args else pm.selected()
     if len(sel) < 3:
         return
@@ -70,7 +58,8 @@ def ConnectStretchNodeToJointScale(*args, **kwargs):
     connectNodeToNode(muldvd, startJnt, endJnt, directionList)
 
 
-def createJointOnCurveSameIntervals():
+def createJointOnCurveSameSpacing():
+    """ Create joints with Same Spacing on the curve. """
     joints = createJointOnMotionPath(10)
     newJoints = []
     for i in joints:
@@ -85,5 +74,5 @@ def createJointOnCurveSameIntervals():
 
 
 # ConnectStretchNodeToJointScale()
-
+createRigGroups("shipShinanA")
 
