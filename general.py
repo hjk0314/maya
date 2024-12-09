@@ -112,7 +112,7 @@ def createCurvePassingThrough(objects=[]) -> str:
     curve = pm.curve(ep=positions, d=3)
     return curve
 
-createCurvePassingThrough()
+
 def createClosedCurve(objects=[]) -> str:
     """ The closedCurve means that 
     the start and end points of a curve are connected.
@@ -1088,3 +1088,7 @@ class Controllers:
 
 # for i in pm.ls(sl=True):
 #     pm.connectAttr("multiplyDivide1.outputX", f"{i}.scaleZ", f=True)
+
+
+# cc = Controllers().createControllers(cylinder="")
+# groupOwnPivot()
