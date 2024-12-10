@@ -1090,5 +1090,17 @@ class Controllers:
 #     pm.connectAttr("multiplyDivide1.outputX", f"{i}.scaleZ", f=True)
 
 
-# cc = Controllers().createControllers(cylinder="")
+# cc = Controllers().createControllers(cube="")
 # groupOwnPivot()
+
+
+# sel = pm.selected()
+# for jnt in sel:
+    # rig = jnt.replace("jnt_", "rig_")
+    # cc = jnt.replace("rig_", "cc_")
+    # pm.connectAttr(f"{rig}.translate", f"{jnt}.translate", f=True)
+    # pm.connectAttr(f"{rig}.rotate", f"{jnt}.rotate", f=True)
+    # pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+
+
+# createJointOnMotionPath(1)
