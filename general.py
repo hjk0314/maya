@@ -577,7 +577,8 @@ def createJointOnMotionPath(numberOfJoints: int) -> None:
     result = []
     for i in range(numberOfJoints):
         pm.select(cl=True)
-        jnt = pm.joint(p=(0,0,0))
+        # jnt = pm.joint(p=(0,0,0))
+        jnt = f"cc_foremastSub6_copied{i+1}_grp"
         uValue = i * mod
         motionPath = pm.pathAnimation(jnt, c=cuv, fractionMode=True, \
                                       follow=True, followAxis='x', \
@@ -1090,8 +1091,9 @@ class Controllers:
 #     pm.connectAttr("multiplyDivide1.outputX", f"{i}.scaleZ", f=True)
 
 
-# cc = Controllers().createControllers(cube="")
+# cc = Controllers().createControllers(sphere="")
 # groupOwnPivot()
+# groupOwnPivot(null=True)
 
 
 # sel = pm.selected()
@@ -1103,4 +1105,4 @@ class Controllers:
     # pm.parentConstraint(cc, jnt, mo=True, w=1.0)
 
 
-# createJointOnMotionPath(1)
+# createJointOnMotionPath(5)

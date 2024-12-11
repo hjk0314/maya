@@ -73,6 +73,9 @@ def createJointOnCurveSameSpacing():
     pm.delete(joints)
 
 
-# ConnectStretchNodeToJointScale()
-createRigGroups("shipShinanA")
+# connectStretchNodeToJointScale()
+# createRigGroups("shipShinanA")
 
+# sel = pm.selected()
+# for i in sel:
+#     pm.connectAttr("multiplyDivide21.outputX", f"{i}.scaleX", f=True)
