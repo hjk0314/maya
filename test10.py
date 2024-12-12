@@ -16,7 +16,7 @@ def connectNodeToNode(multiplyDivideNode: str, \
         return
 
 
-def connectStretchNodeToJointScale(*args, **kwargs):
+def connectStretchNodeToJointScale(*args, **kwargs) -> str:
     """ As the length of the curve increases, 
     the length of the joint also increases.
     Select at least 3 or more.
@@ -56,26 +56,5 @@ def connectStretchNodeToJointScale(*args, **kwargs):
     pm.setAttr(f"{muldvd}.input2X", cuvLen)
     pm.connectAttr(f"{cuvInf}.arcLength", f"{muldvd}.input1X", f=True)
     connectNodeToNode(muldvd, startJnt, endJnt, directionList)
+    return muldvd
 
-
-def createJointOnCurveSameSpacing():
-    """ Create joints with Same Spacing on the curve. """
-    joints = createJointOnMotionPath(10)
-    newJoints = []
-    for i in joints:
-        pm.select(cl=True)
-        jnt = pm.joint(p=(0,0,0))
-        pm.matchTransform(jnt, i, pos=True, rot=True, scl=True)
-        newJoints.append(jnt)
-    parentHierarchically(*newJoints)
-    pm.makeIdentity(newJoints, t=1, r=1, s=1, n=0, pn=1, jo=1, a=1)
-    orientJoints(newJoints, "xyz", "yup")
-    pm.delete(joints)
-
-
-# connectStretchNodeToJointScale()
-# createRigGroups("shipShinanA")
-
-# sel = pm.selected()
-# for i in sel:
-#     pm.connectAttr("multiplyDivide21.outputX", f"{i}.scaleX", f=True)

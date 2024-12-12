@@ -564,9 +564,8 @@ def createRigGroups(assetName: str = ""):
     return result
 
 
-def createJointOnMotionPath(numberOfJoints: int) -> None:
-    """ Create a number of joints and 
-    apply a motionPath on the curve.
+def createJointOnMotionPath(numberOfJoints: int, *arg) -> None:
+    """ Create a number of joints and apply a motionPath on the curve.
      """
     mod = 1/(numberOfJoints-1) if numberOfJoints > 1 else 0
     sel = pm.selected()
@@ -576,18 +575,36 @@ def createJointOnMotionPath(numberOfJoints: int) -> None:
         return
     result = []
     for i in range(numberOfJoints):
-        pm.select(cl=True)
-        # jnt = pm.joint(p=(0,0,0))
-        jnt = f"cc_foremastSub6_copied{i+1}_grp"
+        if arg:
+            obj = arg[i]
+        else:
+            pm.select(cl=True)
+            obj = pm.joint(p=(0,0,0))
         uValue = i * mod
-        motionPath = pm.pathAnimation(jnt, c=cuv, fractionMode=True, \
+        motionPath = pm.pathAnimation(obj, c=cuv, fractionMode=True, \
                                       follow=True, followAxis='x', \
                                       upAxis='y', worldUpType='vector', \
                                       worldUpVector=(0,1,0))
         pm.cutKey(motionPath, cl=True, at='u')
         pm.setAttr(f"{motionPath}.uValue", uValue)
-        result.append(jnt)
+        result.append(obj)
     return result
+
+
+def createJointOnCurveSameSpacing(numberOfJoints: int) -> list:
+    """ Create joints with Same Spacing on the curve. """
+    joints = createJointOnMotionPath(numberOfJoints)
+    newJoints = []
+    for i in joints:
+        pm.select(cl=True)
+        jnt = pm.joint(p=(0,0,0))
+        pm.matchTransform(jnt, i, pos=True, rot=True, scl=True)
+        newJoints.append(jnt)
+    parentHierarchically(*newJoints)
+    pm.makeIdentity(newJoints, t=1, r=1, s=1, n=0, pn=1, jo=1, a=1)
+    orientJoints(newJoints, "xyz", "yup")
+    pm.delete(joints)
+    return newJoints
 
 
 class AlignObjects:
