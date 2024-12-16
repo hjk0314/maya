@@ -1156,6 +1156,7 @@ class MixamoCharacter(QWidget):
             return
         else:
             bbSize = getBoundingBoxSize(rootJnt)
+            bbSize = max(bbSize)
             pm.circle(nr=(0, 1, 0), n=self.mainCurve, ch=0, r=bbSize)
             pm.parent(rootJnt, self.mainCurve)
 
