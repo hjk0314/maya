@@ -117,6 +117,65 @@ def orientJoints(*args, **kwargs) -> dict:
     return result
 
 
+def createPolevectorJoint(*args) -> list:
+    """ Select three joints.
+    Put the pole vector at 90 degrees to the direction 
+    of the first and last joints.
+
+    Examples: 
+    >>> createPolevectorJoint("joint1", "joint2", "joint3")
+    >>> [polevectorJoint1, polevectorJoint2]
+     """
+    sel = args if args else pm.selected()
+    if len(sel) != 3:
+        pm.warning("Three joints needed.")
+        return
+    jntPosition = [getPosition(i) for i in sel]
+    middleJnt, endJnt = sel[1:3]
+    result = []
+    pm.select(cl=True)
+    result = [pm.joint(p=pos) for pos in jntPosition[::2]]
+    newJnt = result[0]
+    orientJoints(*result, d=True)
+    pm.aimConstraint(endJnt, newJnt, o=(0,0,90), wut='object', wuo=middleJnt)
+    pm.delete(newJnt, cn=True)
+    pm.matchTransform(newJnt, middleJnt, pos=True)
+    return result
+
+
+def setJointsStyle(*args, **kwargs) -> None:
+    """ Change the drawing style of a joint. 
+    
+    Kewords: 
+     - 0: Bone
+     - 1: Multi-child as Box
+     - 2: None
+
+    Examples: 
+    >>> setJointsStyle(b=True)
+    >>> setJointsStyle("joint1", n=True)
+     """
+    sel = args if args else pm.selected()
+    flag = {
+        "bone": 0, "b": 0, 
+        "multiChild": 1, "mc": 1, 
+        "none": 2, "n": 2
+        }
+    if kwargs:
+        key = next(iter(kwargs))
+        if key in flag and kwargs[key]:
+            drawStyle = flag[key]
+        else:
+            drawStyle = 0
+    else:
+        drawStyle = 0
+    for i in sel:
+        try:
+            pm.setAttr(f"{i}.drawStyle", drawStyle)
+        except:
+            continue
+
+
 def createCurveFollowingObject(startFrame: int, endFrame: int, *args) -> list:
     """ This is a function that creates a curve 
     for moving objects or points.
@@ -347,34 +406,39 @@ def selectNurbsCurveOnly(*args) -> list:
     return result
 
 
-def parentHierarchically(*args) -> None:
+def parentHierarchically(*args) -> list:
     """ Hierarchically parent.
     >>> parentHierarchically(*lst)
     >>> parentHierarchically(parents, child)
      """
     sel = [pm.PyNode(i) for i in args] if args else pm.selected()
+    if not sel:
+        return
     for idx, parents in enumerate(sel):
         try:
             child = sel[idx + 1]
             pm.parent(child, parents)
         except:
             continue
+    return sel
 
 
 def groupOwnPivot(*args, **kwargs) -> list:
     """ Create a group with the same pivot.
-    - groupOwnPivot() \\
+
+    Examples: 
+    >>> groupOwnPivot()
     >>> ["selection_grp", "selection"]
-    - groupOwnPivot("pCube1", "pCube2") \\
+    >>> groupOwnPivot("pCube1", "pCube2")
     >>> ["pCube1_grp", "pCube1", "pCube2_grp", "pCube2"]
-    - groupOwnPivot(*list) \\
-    >>> ["element1_grp", "element1", "element2_grp", "element2", ...]
-    - groupOwnPivot("pCube1", null=True) \\
+    >>> groupOwnPivot(*list)
+    >>> ["obj1_grp", "obj1", "obj2_grp", "obj2", ...]
+    >>> groupOwnPivot("pCube1", null=True)
     >>> ["pCube1_grp", "pCube1_null", "pCube1"]
-    - groupOwnPivot("pCube1", null=True, n="newName") \\
+    >>> groupOwnPivot("pCube1", null=True, n="newName")
     >>> ["newName_grp", "newName_null", "pCube1"]
      """
-    selections = args if args else pm.ls(sl=True)
+    sel = args if args else pm.selected()
     flags = {"null": False, "n": ""}
     for key, value in kwargs.items():
         if key in flags:
@@ -382,7 +446,7 @@ def groupOwnPivot(*args, **kwargs) -> list:
         else:
             continue
     result = []
-    for i in selections:
+    for i in sel:
         objName = flags["n"]
         objName = objName if objName else i
         topGroup = pm.listRelatives(i, p=True)
@@ -404,4 +468,33 @@ def groupOwnPivot(*args, **kwargs) -> list:
         except: pass
         result += temp
     return result
+
+
+def softSelection() -> list:
+    """ Make the selected soft selection area into a cluster. """
+    selection = om.MSelectionList()
+    softSelection = om.MRichSelection()
+    om.MGlobal.getRichSelection(softSelection)
+    softSelection.getSelection(selection)
+    dagPath = om.MDagPath()
+    component = om.MObject()
+    iter = om.MItSelectionList(selection, om.MFn.kMeshVertComponent)
+    elements = []
+    while not iter.isDone(): 
+        iter.getDagPath(dagPath, component)
+        dagPath.pop()
+        node = dagPath.fullPathName()
+        fnComp = om.MFnSingleIndexedComponent(component)   
+        for i in range(fnComp.elementCount()):
+            elem = fnComp.element(i)
+            infl = fnComp.weight(i).influence()
+            elements.append([node, elem, infl])
+        iter.next()
+    sel = ["%s.vtx[%d]" % (el[0], el[1]) for el in elements] 
+    pm.select(sel, r=True)
+    cluster = pm.cluster(relative=True)
+    for i in range(len(elements)):
+        pm.percent(cluster[0], sel[i], v=elements[i][2])
+    pm.select(cluster[1], r=True)
+    return cluster
 
