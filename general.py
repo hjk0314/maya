@@ -608,7 +608,7 @@ def createJointOnCurveSameSpacing(numberOfJoints: int) -> list:
     return newJoints
 
 
-def getDistance(xyz1, xyz2):
+def getDistance(xyz1: tuple, xyz2: tuple) -> float:
     """ Both arguments are coordinates. 
     Returns the distance between the two coordinates.
     
@@ -620,7 +620,7 @@ def getDistance(xyz1, xyz2):
     return result
 
 
-def moveNearbyPoint(source: str, *arg):
+def moveNearbyPoint(sourceObject: str, *arg) -> None:
     """ The selected point moves to the closest point 
     on the source object. This function only works for points on -X.
     The Selected Points move to the closest points possible, 
@@ -631,8 +631,8 @@ def moveNearbyPoint(source: str, *arg):
         >>> moveNearbyPoint("pSphere1")
      """
     sel = arg if arg else pm.selected(fl=True)
-    if not isinstance(source, pm.PyNode):
-        src = pm.PyNode(source)
+    if not isinstance(sourceObject, pm.PyNode):
+        src = pm.PyNode(sourceObject)
     sourceVertices = {i.name(): pm.pointPosition(i) for i in src.vtx[:]}
     for i in sel:
         if not isinstance(i, pm.MeshVertex):
@@ -655,7 +655,7 @@ class AlignObjects:
         """ This class arranges some objects in a straight line in space. """
         pass
 
-    
+
     def lineUp(self, *arg):
         """ The three selected objects create a surface in space.
         And the remaining points are placed on this surface.
@@ -735,7 +735,7 @@ class AlignCurvePoints:
         pass
 
 
-    def lineUp(self):
+    def lineUpCurvePointsInSpace(self):
         """ Arrange the points in a straight line.
         Use the equation of a straight line in space 
         to make a curved line a straight line.
@@ -758,7 +758,7 @@ class AlignCurvePoints:
             pm.move(i, finalPos)
 
 
-    def copyCurve(self, vertices: list):
+    def copyCurve(self, vertices: list) -> str:
         originalCurve = pm.ls(vertices, o=True)
         copiedCurve = pm.duplicate(originalCurve, rr=True)
         copiedCurve = copiedCurve[0]
@@ -812,6 +812,7 @@ class AlignCurvePoints:
 
 class Controllers:
     def __init__(self):
+        """ Create Curve Controllers for rig """
         self.controllerShapes = {
             "arrow": [
                 (0, 0, 8), (8, 0, 4), (4, 0, 4), (4, 0, -8), 
@@ -1034,13 +1035,8 @@ class Controllers:
     def createControllers(self, **kwargs):
         """ If there are no **kwargs, all controllers will be created.
         However, it is usually used as follows.
-        >>> createCurveControllers()
-        >>> return [all controllers]
-        >>> createCurveControllers(cube="newCubeName", cone="newConeName")
-        >>> return ["newCubeName", "newConeName"]
-        >>> createCurveControllers(**{"cube": "cubeName", "cone": "coneName"})
-        >>> return ["cubeName", "coneName"]
 
+        Args: 
         - "arrow", "arrow2", "arrow3", "arrow4", "arrow5", "arrow6", 
         - "cap", "car", "car2", "circle", "cone", "cone2", 
         - "cross", "cube", "cylinder", 
@@ -1050,6 +1046,14 @@ class Controllers:
         - "IKFK", 
         - "pipe", "pointer", 
         - "scapula", "sphere", "spine", "square", 
+
+        Examples: 
+        >>> createCurveControllers()
+        >>> ["ctrl1", "ctrl2", "ctrl3", ...]
+        >>> createCurveControllers(cube="newCubeName", cone="newConeName")
+        >>> ["newCubeName", "newConeName"]
+        >>> createCurveControllers(**{"cube": "cubeName", "cone": "coneName"})
+        >>> ["cubeName", "coneName"]
          """
         allShp = self.controllerShapes.keys()
         result = []

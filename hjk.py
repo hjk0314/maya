@@ -57,6 +57,18 @@ def getBoundingBoxSize(vertexOrObject) -> list:
     return result
 
 
+def getDistance(xyz1: tuple, xyz2: tuple) -> float:
+    """ Both arguments are coordinates. 
+    Returns the distance between the two coordinates.
+    
+    Args: 
+        >>> getDistance((0,0,0), (1,2,3))
+        >>> getDistance([0,0,0], [1,2,3])
+     """
+    result = math.sqrt(sum((a - b)**2 for a, b in zip(xyz1, xyz2)))
+    return result
+
+
 def orientJoints(*args, **kwargs) -> dict:
     """ Orient Joints
 
@@ -156,15 +168,15 @@ def setJointsStyle(*args, **kwargs) -> None:
     >>> setJointsStyle("joint1", n=True)
      """
     sel = args if args else pm.selected()
-    flag = {
+    flags = {
         "bone": 0, "b": 0, 
         "multiChild": 1, "mc": 1, 
         "none": 2, "n": 2
         }
     if kwargs:
         key = next(iter(kwargs))
-        if key in flag and kwargs[key]:
-            drawStyle = flag[key]
+        if key in flags and kwargs[key]:
+            drawStyle = flags[key]
         else:
             drawStyle = 0
     else:
@@ -174,6 +186,104 @@ def setJointsStyle(*args, **kwargs) -> None:
             pm.setAttr(f"{i}.drawStyle", drawStyle)
         except:
             continue
+
+
+def createJointOnMotionPath(*args, **kwargs) -> list:
+    """ Create a number of joints and apply a motionPath on the curve.
+
+    Examples: 
+    >>> createJointOnMotionPath(num=3, cuv="curve1")
+    >>> ['joint1', 'joint2', 'joint3']
+    >>> createJointOnMotionPath("obj1", "obj2", "obj3", num=3, cuv="curve1")
+    >>> ['obj1', 'obj2', 'obj3']
+     """
+    # Selections or arguments
+    sel = args if args else pm.selected()
+    # Number of Joints
+    if "numberOfJoints" in kwargs and isinstance(kwargs["numberOfJoints"], int):
+        numOfJnt = kwargs["numberOfJoints"]
+    elif "num" in kwargs and isinstance(kwargs["num"], int):
+        numOfJnt = kwargs["num"]
+    else:
+        pm.warning("NumberOfJoints flag is not an integer or invalid.")
+        return
+    mod = 1/(numOfJnt-1) if numOfJnt > 1 else 0
+    # Curve name
+    if "curve" in kwargs and pm.objExists(kwargs["curve"]):
+        cuv = kwargs["curve"]
+    elif "cuv" in kwargs and pm.objExists(kwargs["curve"]):
+        cuv = kwargs["cuv"]
+    else:
+        pm.warning("Curve flag is not not exists or invalid.")
+        return
+    # Main
+    result = []
+    for i in range(numOfJnt):
+        if not sel:
+            pm.select(cl=True)
+            obj = pm.joint(p=(0,0,0))
+        elif len(sel) >= numOfJnt:
+            obj = sel[i]
+        elif len(sel) < numOfJnt:
+            pm.warning("The input number and selection do not match.")
+            continue
+        else:
+            continue
+        uValue = i * mod
+        motionPath = pm.pathAnimation(obj, c=cuv, fractionMode=True, \
+                                      follow=True, followAxis='x', \
+                                      upAxis='y', worldUpType='vector', \
+                                      worldUpVector=(0,1,0))
+        pm.cutKey(motionPath, cl=True, at='u')
+        pm.setAttr(f"{motionPath}.uValue", uValue)
+        result.append(obj)
+    return result
+
+
+def createJointOnCurveSameSpacing(**kwargs) -> list:
+    """ Create joints with Same Spacing on the curve.
+    Input a Curve or Select one.
+
+    Examples:
+    >>> createJointOnCurveSameSpacing(num=3)
+    >>> ["joint1", "joint2", "joint3"]
+    >>> createJointOnCurveSameSpacing(num=3, cuv="curve1")
+    >>> ["joint1", "joint2", "joint3"]
+     """
+    # Number of Joints
+    if "numberOfJoints" in kwargs:
+        numOfJnt = kwargs["numberOfJoints"]
+    elif "num" in kwargs:
+        numOfJnt = kwargs["num"]
+    else:
+        return
+    # Curve name
+    if "curve" in kwargs:
+        cuv = kwargs["curve"]
+    elif "cuv" in kwargs:
+        cuv = kwargs["cuv"]
+    else:
+        sel = pm.selected(dag=True, type=['nurbsCurve'])
+        if sel:
+            cuv = sel[0].getParent()
+        else:
+            return
+    # Main
+    pm.select(cl=True)
+    joints = createJointOnMotionPath(num=numOfJnt, curve=cuv)
+    if not joints:
+        return
+    result = []
+    for i in joints:
+        pm.select(cl=True)
+        jnt = pm.joint(p=(0,0,0))
+        pm.matchTransform(jnt, i, pos=True, rot=True, scl=True)
+        result.append(jnt)
+    parentHierarchically(*result)
+    pm.makeIdentity(result, t=1, r=1, s=1, n=0, pn=1, jo=1, a=1)
+    orientJoints(*result)
+    pm.delete(joints)
+    return result
 
 
 def createCurveFollowingObject(startFrame: int, endFrame: int, *args) -> list:
@@ -497,4 +607,550 @@ def softSelection() -> list:
         pm.percent(cluster[0], sel[i], v=elements[i][2])
     pm.select(cluster[1], r=True)
     return cluster
+
+
+def changeLeftToRight(inputs: str) -> str:
+    """ If you input the "left", it returns the "right".
+
+    Examples: 
+    >>> changeLeftToRight('Left')
+    >>> 'Right'
+    >>> changeLeftToRight('Right')
+    >>> 'Left'
+    >>> changeLeftToRight('left')
+    >>> 'right'
+    >>> changeLeftToRight('right')
+    >>> 'left'
+    >>> changeLeftToRight('_L')
+    >>> '_R'
+    >>> changeLeftToRight('_R')
+    >>> '_L'
+     """
+    inputs = inputs.name() if isinstance(inputs, pm.PyNode) else inputs
+    if not inputs:
+        return
+    elif "Left" in inputs:
+        sideA = "Left"
+        sideB = "Right"
+    elif "left" in inputs:
+        sideA = "left"
+        sideB = "right"
+    elif "_L" in inputs:
+        sideA = "_L"
+        sideB = "_R"
+    elif "Right" in inputs:
+        sideA = "Right"
+        sideB = "Left"
+    elif "right" in inputs:
+        sideA = "right"
+        sideB = "left"
+    elif "_R" in inputs:
+        sideA = "_R"
+        sideB = "_L"
+    else:
+        return
+    result = inputs.replace(sideA, sideB)
+    return result
+
+
+def mirrorCopy(obj: str, mirrorPlane: str="YZ") -> list:
+    """ Mirror copy based on 'YZ' or 'XY'. Default mirrorPlane is "YZ".
+    This function is shown below.
+    - First, Check Selection.
+    - Duplicate and Grouping own Pivot.
+    - Move Groups to Other Side.
+    - Creates a Mirror Shape.
+    - Finish and Clean up. 
+
+    Examples: 
+    >>> mirrorCopy()
+    >>> Error
+    >>> mirrorCopy('pCube1')
+    >>> ['pCube1_grp', 'pCube1_null', 'pCube2']
+    >>> mirrorCopy('cc_doorLeftFront')
+    >>> ['cc_doorRight_grp', 'cc_doorRight_null', 'cc_doorRight']
+    >>> mirrorCopy('lever_R', 'XY')
+    >>> ['lever_L_grp', 'lever_L_null', 'lever_L']
+     """
+    # Check Selection
+    if not obj:
+        pm.warning("Nothing Selected.")
+        return
+    # Duplicate and Grouping own Pivot
+    replaced = changeLeftToRight(obj)
+    copied = pm.duplicate(obj, rr=True, n=replaced)[0]
+    pm.parent(copied, w=True)
+    result = groupOwnPivot(copied, null=True, n=replaced)
+    topGrp, nullGrp, copied = result
+    pm.parent(copied, w=True)
+    # Move Groups to Other Side.
+    pos = pm.getAttr(f'{topGrp}.translate')
+    rot = pm.getAttr(f'{topGrp}.rotate')
+    tx, ty, tz = pos
+    rx, ry, rz = rot
+    if mirrorPlane == "XY":
+        tz *= -1
+        rz += (180 if rz < 0 else -180)
+    elif mirrorPlane == "YZ":
+        tx *= -1
+        rx += (180 if rx < 0 else -180)
+        ry *= -1
+        rz *= -1
+    else:
+        return
+    attr = {'tx': tx, 'ty': ty, 'tz': tz, 'rx': rx, 'ry': ry, 'rz': rz}
+    for key, value in attr.items():
+        pm.setAttr(f'{topGrp}.{key}', value)
+    # Creates a Mirror Shape.
+    tempGrp = pm.group(em=True)
+    pm.parent(copied, tempGrp)
+    if mirrorPlane == "XY":
+        direction = [1, 1, -1]
+    elif mirrorPlane == "YZ":
+        direction = [-1, 1, 1]
+    else:
+        return
+    pm.scale(tempGrp, direction, r=True)
+    # Finish and Clean up.
+    pm.parent(copied, nullGrp)
+    pm.makeIdentity(copied, a=True, t=1, r=1, s=1, n=0, pn=1)
+    pm.delete(tempGrp)
+    return result
+
+
+def createRigGroups(assetName: str="") -> list:
+    """ Create a Group Tree used by Madman Company. """
+    groupNames = {
+        "assetName": ["rig", "MODEL"], 
+        "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
+        "skeletons": ["bindBones", "rigBones"]
+        }
+    if assetName:
+        groupNames[assetName] = groupNames.pop("assetName")
+    for parents, children in groupNames.items():
+        if not pm.objExists(parents):
+            pm.group(em=True, n=parents)
+        for child in children:
+            if not pm.objExists(child):
+                pm.group(em=True, n=child)
+            pm.parent(child, parents)
+    result = groupNames.keys()
+    result = list(result)
+    return result
+
+
+def moveNearbyPoint(sourceObject: str, *arg) -> None:
+    """ The selected point moves to the closest point 
+    on the source object. This function only works for points on -X.
+    The Selected Points move to the closest points possible, 
+    the objects should overlap as much as possible.
+    
+    Examples:
+        >>> moveNearbyPoint("pSphere1", "pSphere2.vtx[:23]")
+        >>> moveNearbyPoint("pSphere1")
+     """
+    sel = arg if arg else pm.selected(fl=True)
+    if not isinstance(sourceObject, pm.PyNode):
+        src = pm.PyNode(sourceObject)
+    sourceVertices = {i.name(): pm.pointPosition(i) for i in src.vtx[:]}
+    for i in sel:
+        if not isinstance(i, pm.MeshVertex):
+            pm.warning("Please, Select a Vertices.")
+            continue
+        temp = {}
+        iPos = pm.pointPosition(i)
+        x = iPos[0]
+        if x >= 0:
+            continue
+        else:
+            for srcVtx, srcVtxPos in sourceVertices.items():
+                distance = math.sqrt(sum((a - b)**2 \
+                                         for a, b in zip(iPos, srcVtxPos)))
+                temp[srcVtx] = distance
+        minimumKey = min(temp, key=temp.get)
+        pm.move(i, sourceVertices[minimumKey])
+
+
+def lineUpCurvePointsToStraightLine(*args) -> list:
+    """ Arrange the points in a straight line.
+    Use the equation of a straight line in space 
+    to make a curved line a straight line.
+
+    Examples: 
+    >>> LineUpCurvePointsToStraightLine()
+    >>> ["curve2"]
+    >>> LineUpCurvePointsToStraightLine("curve1", "curve2")
+    >>> ["curve3", "curve4"]
+    """
+    sel = args if args else pm.selected()
+    if not sel:
+        pm.warning("Please, Select a Curve.")
+        return
+    result = []
+    for cuv in sel:
+        curveVertices = pm.ls(f"{cuv}.cv[*]", fl=True)
+        if len(curveVertices) < 2:
+            pm.warning("Please, Select Curve Points.")
+            continue
+        startPoint = curveVertices[0]
+        lastPoint = curveVertices[-1]
+        x1, y1, z1 = startPoint.getPosition(space="world")
+        x2, y2, z2 = lastPoint.getPosition(space="world")
+        A, B, C = (x2 - x1), (y2 - y1), (z2 - z1)
+        x, y, z = sympy.symbols('x y z')
+        expr1 = sympy.Eq(B*x - A*y, B*x1 - A*y1)
+        expr2 = sympy.Eq(C*y - B*z, C*y1 - B*z1)
+        expr3 = sympy.Eq(A*z - C*x, A*z1 - C*x1)
+        biggestGap = max([abs(i) for i in [A, B, C]])
+        if abs(A) == biggestGap:
+            idx = 0
+            biggestGapAxis = x
+            variables = [y, z]
+            expr = [expr1, expr3]
+        elif abs(B) == biggestGap:
+            idx = 1
+            biggestGapAxis = y
+            variables = [x, z]
+            expr = [expr1, expr2]
+        elif abs(C) == biggestGap:
+            idx = 2
+            biggestGapAxis = z
+            variables = [x, y]
+            expr = [expr2, expr3]
+        else:
+            continue
+        originalCurve = pm.ls(curveVertices, o=True)
+        copiedCurve = pm.duplicate(originalCurve, rr=True)
+        copiedCurve = copiedCurve[0]
+        copiedCurveVertices = pm.ls(f"{copiedCurve}.cv[*]", fl=True)
+        for i in copiedCurveVertices:
+            pointPosition = i.getPosition(space="world")
+            idx, biggestGapAxis, variables, expr, [x, y, z]
+            value = pointPosition[idx]
+            fx = [i.subs(biggestGapAxis, value) for i in expr]
+            position = sympy.solve(fx, variables)
+            position[biggestGapAxis] = value
+            finalPosition = [round(float(position[i]), 4) for i in [x, y, z]]
+            pm.move(i, finalPosition)
+        result.append(copiedCurve)
+    return result
+
+
+def lineUpObjectsOnOnePlane(*arg) -> list:
+    """ The three selected objects create a surface in space.
+    And the last points are placed on this surface.
+    Select 4 or more objects for this function to be effective.
+    - Used to make the finger joints line up in space.
+    - Ball and toe joints can be placed in a straight line 
+    on the surface formed by the pelvis, knees, and ankles.
+
+    Examples: 
+    >>> lineUpObjectsOnOnePlane()
+    >>> ["obj4"]
+    >>> lineUpObjectsOnOnePlane("obj1", "obj2", "obj3", "obj4", "obj5")
+    >>> ["obj4", "obj5"]
+     """
+    sel = [pm.PyNode(i) for i in arg] if arg else pm.selected()
+    if len(sel) < 4:
+        pm.warning("Select 4 or more objects.")
+        return
+    parentsInfo = {i: i.getParent() for i in sel}
+    transformNodes = []
+    for child, parents in parentsInfo.items():
+        try:
+            pm.parent(child, w=True)
+            transformNode = child.getParent()
+            if transformNode:
+                transformNodes.append(transformNode)
+        except:
+            continue
+    mainDots = sel[:3]
+    lastDots = sel[3:]
+    mainDotsPos = [pm.xform(i, q=1, t=1, ws=1) for i in mainDots]
+    face = pm.polyCreateFacet(p=mainDotsPos)
+    info = pm.polyInfo(face, fn=True)
+    stripInfo = info[0].split(":")[-1].strip()
+    normalVector = [float(i) for i in stripInfo.split(" ")]
+    pm.delete(face)
+    planePoint = mainDotsPos[0]
+    for i in lastDots:
+        pointOfLine = pm.xform(i, q=True, t=True, ws=True)
+        planeNormal = np.array(normalVector)
+        planePoint = np.array(planePoint)
+        lineDirection = np.array(normalVector)
+        linePoint = np.array(pointOfLine)
+        delta1 = np.dot(planeNormal, (planePoint - linePoint)) 
+        delta2 = np.dot(planeNormal, lineDirection)
+        lean = delta1 / delta2
+        intersectionPoint = pointOfLine + (lean*lineDirection)
+        pm.move(i, intersectionPoint)
+    for child, parents in parentsInfo.items():
+        try:
+            pm.parent(child, parents)
+        except:
+            continue
+    pm.delete(transformNodes)
+    return lastDots
+
+
+class Controllers:
+    def __init__(self):
+        """ Create Curve Controllers for rig """
+        self.controllerShapes = {
+            "arrow": [
+                (0, 0, 8), (8, 0, 4), (4, 0, 4), (4, 0, -8), 
+                (-4, 0, -8), (-4, 0, 4), (-8, 0, 4), (0, 0, 8)
+                ], 
+            "arrow2": [
+                (0, 3, 12), (12, 3, 6), (6, 3, 6), (6, 3, -12), 
+                (-6, 3, -12), (-6, 3, 6), (-12, 3, 6), (0, 3, 12), 
+                (0, -3, 12), (12, -3, 6), (6, -3, 6), (6, -3, -12), 
+                (-6, -3, -12), (-6, -3, 6), (-12, -3, 6), (0, -3, 12), 
+                (12, -3, 6), (12, 3, 6), (6, 3, 6), (6, 3, -12), 
+                (6, -3, -12), (-6, -3, -12), (-6, 3, -12), (-6, 3, 6), 
+                (-12, 3, 6), (-12, -3, 6)
+                ], 
+            "arrow3": [
+                (14, 0, 0), (10, 0, -10), (0, 0, -14), (-10, 0, -10), 
+                (-14, 0, 0), (-10, 0, 10), (0, 0, 14), (10, 0, 10), 
+                (14, 0, 0), (10, 0, 4), (14, 0, 6), (14, 0, 0)
+                ], 
+            "arrow4": [
+                (0, 0, -23.1), (-6.3, 0, -16.8), (-4.2, 0, -16.8), 
+                (-4.2, 0, -12.6), (-10.5, 0, -10.5), (-12.6, 0, -4.2), 
+                (-16.8, 0, -4.2), (-16.8, 0, -6.3), (-23.1, 0, 0), 
+                (-16.8, 0, 6.3), (-16.8, 0, 4.2), (-12.6, 0, 4.2), 
+                (-10.5, 0, 10.5), (-4.2, 0, 12.6), (-4.2, 0, 16.8), 
+                (-6.3, 0, 16.8), (0, 0, 23.1), (6.3, 0, 16.8), 
+                (4.2, 0, 16.8), (4.2, 0, 12.6), (10.5, 0, 10.5), 
+                (12.6, 0, 4.2), (16.8, 0, 4.2), (16.8, 0, 6.3), 
+                (23.1, 0, 0), (16.8, 0, -6.3), (16.8, 0, -4.2), 
+                (12.6, 0, -4.2), (10.5, 0, -10.5), (4.2, 0, -12.6), 
+                (4.2, 0, -16.8), (6.3, 0, -16.8), (0, 0, -23.1)
+                ], 
+            "arrow5": [
+                (-8, 0, -4), (8, 0, -4), (8, 0, -8), (16, 0, 0), 
+                (8, 0, 8), (8, 0, 4), (-8, 0, 4), (-8, 0, 8), 
+                (-16, 0, 0), (-8, 0, -8), (-8, 0, -4)
+                ], 
+            "arrow6": [
+                (-0, 0, -12.6), (-0, 4, -13), (-0, 2, -10), 
+                (-0, 0, -12.6), (-0, 2, -12), (-0, 6, -10), 
+                (-0, 10, -6), (0, 12, 0), (0, 10, 6), (0, 6, 10), 
+                (0, 2, 12), (0, 0, 12.6), (0, 2, 10), (0, 4, 13), 
+                (0, 0, 12.6)
+                ], 
+            "cap": [
+                (0, 0, 12), (-9, 0, 9), (-6.667, 6.667, 6.667), 
+                (0, 9, 9), (6.667, 6.667, 6.667), (9, 0, 9), 
+                (0, 0, 12), (0, 9, 9), (0, 12, 0), 
+                (0, 9, -9), (0, 0, -12), (9, 0, -9), 
+                (6.667, 6.667, -6.667), (0, 9, -9), (-6.667, 6.667, -6.667), 
+                (-9, 0, -9), (0, 0, -12), (9, 0, -9), 
+                (12, 0, 0), (9, 0, 9), (6.667, 6.667, 6.667), 
+                (9, 9, 0), (6.667, 6.667, -6.667), (9, 0, -9), 
+                (12, 0, 0), (9, 9, 0), (0, 12, 0), 
+                (-9, 9, 0), (-6.667, 6.667, -6.667), (-9, 0, -9), 
+                (-12, 0, 0), (-9, 9, 0), (-6.667, 6.667, 6.667), 
+                (-9, 0, 9), (-12, 0, 0)
+                ], 
+            "car": [
+                (81, 70, 119), (89, 56, 251), (89, -12, 251), 
+                (89, -12, 117), (89, -12, -117), (89, -12, -229), 
+                (81, 70, -229), (81, 70, -159), (69, 111, -105), 
+                (69, 111, 63), (81, 70, 119), (-81, 70, 119), 
+                (-89, 56, 251), (-89, -12, 251), (-89, -12, 117), 
+                (-89, -12, -117), (-89, -12, -229), (-81, 70, -229), 
+                (-81, 70, -159), (-69, 111, -105), (69, 111, -105), 
+                (81, 70, -159), (-81, 70, -159), (-81, 70, -229), 
+                (81, 70, -229), (89, -12, -229), (-89, -12, -229), 
+                (-89, -12, -117), (-89, -12, 117), (-89, -12, 251), 
+                (89, -12, 251), (89, 56, 251), (-89, 56, 251), 
+                (-81, 70, 119), (-69, 111, 63), (-69, 111, -105), 
+                (69, 111, -105), (69, 111, 63), (-69, 111, 63)
+                ], 
+            "car2": [
+                (165, 0, -195), (0, 0, -276), (-165, 0, -195), (-97, 0, -0), 
+                (-165, -0, 195), (-0, -0, 276), (165, -0, 195), (97, -0, 0), 
+                (165, 0, -195)
+                ], 
+            "circle": [
+                (0, 0, -15), (-10, 0, -10), (-15, 0, 0), 
+                (-10, 0, 10), (0, 0, 15), (10, 0, 10), 
+                (15, 0, 0), (10, 0, -10), (0, 0, -15)
+                ], 
+            "cone": [
+                (0, 10, 0), (-4.35, 0, 0), (4.35, 0, 0), (0, 10, 0), 
+                (0, 0, 5), (-4.35, 0, 0), (4.35, 0, 0), (0, 0, 5)
+                ], 
+            "cone2": [
+                (-5, 0, 0), (0, 0, 5), (5, 0, 0), (0, 0, -5), 
+                (0, 10, 0), (-5, 0, 0), (0, 10, 0), (0, 0, 5), 
+                (5, 0, 0), (0, 0, -5), (0, 0, -5), (-5, 0, 0), 
+                (0, 0, 5), (5, 0, 0), (0, 10, 0)
+                ], 
+            "cube": [
+                (-5, 5, -5), (-5, 5, 5), (5, 5, 5), (5, 5, -5), 
+                (-5, 5, -5), (-5, -5, -5), (-5, -5, 5), (5, -5, 5), 
+                (5, -5, -5), (-5, -5, -5), (-5, -5, 5), (-5, 5, 5), 
+                (5, 5, 5), (5, -5, 5), (5, -5, -5), (5, 5, -5)
+                ], 
+            "cross": [
+                (-1, 5, 0), (1, 5, 0), (1, 1, 0), (5, 1, 0), 
+                (5, -1, 0), (1, -1, 0), (1, -5, 0), (-1, -5, 0), 
+                (-1, -1, 0), (-5, -1, 0), (-5, 1, 0), (-1, 1, 0), 
+                (-1, 5, 0)
+                ], 
+            "cylinder": [
+                (-7, 7, 0), (-5, 7, 5), (0, 7, 7), (5, 7, 5), (7, 7, 0), 
+                (5, 7, -5), (0, 7, -7), (0, 7, 7), (0, -7, 7), (-5, -7, 5), 
+                (-7, -7, 0), (-5, -7, -5), (0, -7, -7), (5, -7, -5), 
+                (7, -7, 0), (5, -7, 5), (0, -7, 7), (0, -7, -7), 
+                (0, 7, -7), (-5, 7, -5), (-7, 7, 0), (7, 7, 0), 
+                (7, -7, 0), (-7, -7, 0), (-7, 7, 0)
+                ], 
+            "door": [
+                (0, 8, 0), (0, 58, -48), (0, 61, -100), (0, 8, -97), 
+                (0, -45, -97), (0, -45, 0), (0, -16, 2), (0, 8, 0)
+                ], 
+            "door2": [
+                (0, 8, 0), (0, 58, -5), (0, 61, -73), (0, -4, -82), 
+                (0, -45, -46), (0, -45, -2), (0, 8, 0)
+                ], 
+            "foot": [
+                (-4, 0, -4), (-4, 0, -7), (-3, 0, -11), (-1, 0, -12), 
+                (0, 0, -12), (1, 0, -12), (3, 0, -11), (4, 0, -7), 
+                (4, 0, -4), (-4, 0, -4), (-5, 0, 1), (-5, 0, 6), 
+                (-4, 0, 12), (-2, 0, 15), (0, 0, 15.5), (2, 0, 15), 
+                (4, 0, 12), (5, 0, 6), (5, 0, 1), (4, 0, -4), (-4, 0, -4), 
+                (4, 0, -4)
+                ], 
+            "foot2": [
+                (-6, 12, -14), (-6, 12, 6), (6, 12, 6), (6, 12, -14), 
+                (-6, 12, -14), (-6, 0, -14), (-6, 0, 18), (6, 0, 18), 
+                (6, 0, -14), (-6, 0, -14), (-6, 0, 18), (-6, 12, 6), 
+                (6, 12, 6), (6, 0, 18), (6, 0, -14), (6, 12, -14)
+                ], 
+            "hat": [
+                (14, 9, 0), (0, 15, 0), (-14, 9, 0), (-7, -5, 0), 
+                (-16, -7, 0), (0, -7, 0), (16, -7, 0), (7, -5, 0), 
+                (14, 9, 0)
+                ], 
+            "head": [
+                (13, 15, -11), (0, 25, -15), (-13, 15, -11), (-14, 6, 0), 
+                (-13, 15, 11), (0, 25, 15), (13, 15, 11), (14, 6, 0), 
+                (13, 15, -11)
+                ], 
+            "hoof": [
+                (-6, 0, -5), (-6.5, 0, -1), (-6, 0, 3), (-5.2, 0, 5.5), 
+                (-3, 0, 7.5), (0, 0, 8.2), (3, 0, 7.5), (5.2, 0, 5.5), 
+                (6, 0, 3), (6.5, 0, -1), (6, 0, -5), (4, 0, -5), 
+                (4.5, 0, -1), (4, 0, 3), (3.5, 0, 4.5), (2, 0, 6), 
+                (0, 0, 6.5), (-2, 0, 6), (-3.5, 0, 4.5), (-4, 0, 3), 
+                (-4.5, 0, -1), (-4, 0, -5), (-6, 0, -5), (-5.5, 0, -6.5), 
+                (5.5, 0, -6.5), (4.5, 0, -10), (2.2, 0, -12.2), 
+                (0, 0, -12.2), (-2.2, 0, -12.2), (-4.5, 0, -10), 
+                (-5.5, 0, -6.5)
+                ], 
+            "hoof2": [
+                (6, 6, -12), (0, 8, -12), (-6, 6, -12), (-8, 3, -13), 
+                (-8, 0, -12), (-7, 0, -10), (-8, 0, -6), (-9, 0, -1), 
+                (-8, 0, 4), (-5, 0, 9), (0, 0, 10), (5, 0, 9), (8, 0, 4), 
+                (9, 0, -1), (8, 0, -6), (7, 0, -10), (8, 0, -12), 
+                (8, 3, -13), (6, 6, -12)
+                ], 
+            "IKFK": [
+                (-6.611, 0, 2), (-6.611, 0, -2), (-5.792, 0, -2), 
+                (-5.792, 0, 2), (-6.611, 0, 2), (-4.692, 0, 2), 
+                (-4.692, 0, -2), (-3.879, 0, -2), (-3.879, 0, -0.368), 
+                (-2.391, 0, -2), (-1.342, 0, -2), (-2.928, 0, -0.358), 
+                (-1.245, 0, 2), (-2.304, 0, 2), (-3.495, 0, 0.245), 
+                (-3.879, 0, 0.65), (-3.879, 0, 2), (-4.692, 0, 2), 
+                (-0.376, 0, 2), (-0.376, 0, -2), (2.401, 0, -2), 
+                (2.401, 0, -1.294), (0.442, 0, -1.294), (0.442, 0, -0.384), 
+                (2.156, 0, -0.384), (2.156, 0, 0.322), (0.442, 0, 0.322), 
+                (0.442, 0, 2), (-0.376, 0, 2), (3.164, 0, 2), 
+                (3.164, 0, -2), (3.977, 0, -2), (3.977, 0, -0.368), 
+                (5.465, 0, -2), (6.513, 0, -2), (4.928, 0, -0.358), 
+                (6.611, 0, 2), (5.552, 0, 2), (4.36, 0, 0.245), 
+                (3.977, 0, 0.65), (3.977, 0, 2), (3.164, 0, 2), 
+                (6.611, 0, 2)
+                ], 
+            "pipe": [
+                (0, 7, 7), (0, -7, 7), (4.9, -7, 4.9), (7, -7, 0), 
+                (7, 7, 0), (4.9, 7, -4.9), (0, 7, -7), (0, -7, -7), 
+                (-4.9, -7, -4.9), (-7, -7, 0), (-7, 7, 0), (-4.9, 7, 4.9), 
+                (0, 7, 7), (4.9, 7, 4.9), (7, 7, 0), (7, -7, 0), 
+                (4.9, -7, -4.9), (0, -7, -7), (0, 7, -7), (-4.9, 7, -4.9), 
+                (-7, 7, 0), (-7, -7, 0), (-4.9, -7, 4.9), (0, -7, 7)
+                ], 
+            "pointer": [
+                (0, 8, 4), (-2.8, 8, 2.8), (-4, 8, 0), (-2.8, 8, -2.8), 
+                (0, 8, -4), (2.8, 8, -2.8), (4, 8, -0), (2.8, 8, 2.8), 
+                (0, 8, 4), (0, 8, -0), (0, 0, -0)
+                ], 
+            "scapula": [
+                (2.4, 9.5, -15), (0, 0, -18), (-2.4, 9.5, -15), (-4, 17, 0), 
+                (-2.4, 9.5, 15), (0, 0, 18), (2.4, 9.5, 15), (4, 17, 0), 
+                (2.4, 9.5, -15)
+                ], 
+            "sphere": [
+                (0, 5, 0), (0, 3.5, 3.5), (0, 0, 5), (0, -3.5, 3.5), 
+                (0, -5, 0), (0, -3.5, -3.5), (0, 0, -5), (0, 3.5, -3.5), 
+                (0, 5, 0), (-3.5, 3.5, 0), (-5, 0, 0), (-3.5, 0, 3.5), 
+                (0, 0, 5), (3.5, 0, 3.5), (5, 0, 0), (3.5, 0, -3.5), 
+                (0, 0, -5), (-3.5, 0, -3.5), (-5, 0, 0), (-3.5, -3.5, 0), 
+                (0, -5, 0), (3.5, -3.5, 0), (5, 0, 0), (3.5, 3.5, 0), 
+                (0, 5, 0)
+                ], 
+            "spine": [
+                (-4, 0, 18), (4, 0, 18), (4, 12, 12.7), (4, 17, 0), 
+                (4, 12, -12.7), (4, 0, -18), (-4, 0, -18), (-4, 12, -12.7), 
+                (-4, 18, 0), (-4, 12, 12.7), (-4, 0, 18)
+                ], 
+            "square": [
+                (25, 0, 25), (25, 0, -25), (-25, 0, -25), 
+                (-25, 0, 25), (25, 0, 25)
+                ], 
+            }
+
+
+    def createControllers(self, **kwargs):
+        """ If there are no **kwargs, all controllers will be created.
+        However, it is usually used as follows.
+
+        Args: 
+        - "arrow", "arrow2", "arrow3", "arrow4", "arrow5", "arrow6", 
+        - "cap", "car", "car2", "circle", "cone", "cone2", 
+        - "cross", "cube", "cylinder", 
+        - "door", "door2", 
+        - "foot", "foot2", 
+        - "hat", "head", "hoof", "hoof2", 
+        - "IKFK", 
+        - "pipe", "pointer", 
+        - "scapula", "sphere", "spine", "square", 
+
+        Examples: 
+        >>> createCurveControllers()
+        >>> ["ctrl1", "ctrl2", "ctrl3", ...]
+        >>> createCurveControllers(cube="newCubeName", cone="newConeName")
+        >>> ["newCubeName", "newConeName"]
+        >>> createCurveControllers(**{"cube": "cubeName", "cone": "coneName"})
+        >>> ["cubeName", "coneName"]
+         """
+        allShp = self.controllerShapes.keys()
+        result = []
+        if kwargs.keys():
+            cuvToMake = [i for i in kwargs.keys() if i in allShp]
+        else:
+            cuvToMake = allShp
+        for shpName in cuvToMake:
+            pos = self.controllerShapes[shpName]
+            try:
+                cuvName = kwargs[shpName]
+            except:
+                cuvName = shpName
+            cuv = pm.curve(p=pos, d=1, n=cuvName)
+            result.append(cuv)
+        return result
 
