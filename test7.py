@@ -1,49 +1,70 @@
+import re
 import pymel.core as pm
-import math
 
 
-def getDistance(xyz1, xyz2):
-    """ Both arguments are coordinates. 
-    Returns the distance between the two coordinates.
-    
-    Args: 
-        >>> getDistance((0,0,0), (1,2,3))
-        >>> getDistance([0,0,0], [1,2,3])
+def getNumberIndex(name: str) -> dict:
+    """ If the name contains a number, 
+    it returns a dict with the number and index.
+
+    Examples: 
+    >>> getNumberIndex("vhcl_car123_rig_v0123")
+    # ['vhcl_car', '123', '_rig_v', '0123']
+    >>> {0: 'vhcl_car', 1: '123', 2: '_rig_v', 3: '0123'}
      """
-    result = math.sqrt(sum((a - b)**2 for a, b in zip(xyz1, xyz2)))
+    nameSlices = re.split(r'(\d+)', name)
+    nameSlices = [i for i in nameSlices if i]
+    result = {i: slice for i, slice in enumerate(nameSlices)}
     return result
 
 
-def moveNearbyPoint(source: str, *arg):
-    """ The selected point moves to the closest point 
-    on the source object. This function only works for points on -X.
-    The Selected Points move to the closest points possible, 
-    the objects should overlap as much as possible.
-    
-    Examples:
-        >>> moveNearbyPoint("pSphere1", "pSphere2.vtx[:23]")
-        >>> moveNearbyPoint("pSphere1")
-     """
-    sel = arg if arg else pm.selected(fl=True)
-    if not isinstance(source, pm.PyNode):
-        src = pm.PyNode(source)
-    sourceVertices = {i.name(): pm.pointPosition(i) for i in src.vtx[:]}
-    for i in sel:
-        if not isinstance(i, pm.MeshVertex):
-            pm.warning("Please, Select a Vertices.")
-            continue
-        temp = {}
-        iPos = pm.pointPosition(i)
-        x = iPos[0]
-        if x >= 0:
-            continue
+def reName(*args):
+    numberOfArgs = len(args)
+    result = []
+    if numberOfArgs == 0:
+        return
+    elif numberOfArgs == 1:
+        newName = args[0]
+        nameSlices = re.split(r'(\d+)', newName)
+        nameSlices = [i for i in nameSlices if i]
+        numberInfo = {j: k for j, k in enumerate(nameSlices) if k.isdigit()}
+        if numberInfo:
+            sel = pm.selected(fl=True)
+            idx = max(numberInfo)
+            nDigit = len(numberInfo[idx])
+            number = int(numberInfo[idx])
+            for i, obj in enumerate(sel):
+                increasedNumber = f"%0{nDigit}d" % (number + i)
+                nameSlices[idx] = increasedNumber
+                finalName = ''.join(nameSlices)
+                if pm.objExists(finalName):
+                    pm.warning(f"['{obj}' -> '{finalName}'] aleady exists.")
+                    continue
+                else:
+                    pm.rename(obj, finalName)
+                    result.append(finalName)
         else:
-            for srcVtx, srcVtxPos in sourceVertices.items():
-                temp[srcVtx] = getDistance(iPos, srcVtxPos)
-        minimumKey = min(temp, key=temp.get)
-        pm.move(i, sourceVertices[minimumKey])
-
-
-
-
+            sel = pm.selected(fl=True)
+            for i, obj in enumerate(sel):
+                finalName = ''.join(nameSlices) + str(i)
+                if pm.objExists(finalName):
+                    pm.warning(f"['{obj}' -> '{finalName}'] aleady exists.")
+                    continue
+                else:
+                    pm.rename(obj, finalName)
+                    result.append(finalName)
+    elif numberOfArgs == 2:
+        originalWord, wordToChange = args
+        sel = pm.selected(fl=True)
+        for i in sel:
+            obj = i.name()
+            finalName = obj.replace(originalWord, wordToChange)
+            if pm.objExists(finalName):
+                pm.warning(f"['{obj}' -> '{finalName}'] aleady exists.")
+                continue
+            else:
+                pm.rename(obj, finalName)
+                result.append(finalName)
+    else:
+        return
+    return result
 
