@@ -412,6 +412,20 @@ def selectGroupOnly(*args) -> list:
     return result
 
 
+def selectObjectOnly(*args) -> list:
+    """ Selects only the object. 
+    It also selects all objects under the selected.
+     """
+    if args:
+        sel = pm.ls(args, dag=True, type=['mesh', 'nurbsSurface'])
+    else:
+        sel = pm.selected(dag=True, type=['mesh', 'nurbsSurface'])
+    obj = {i.getParent() for i in sel}
+    result = list(obj)
+    pm.select(result)
+    return result
+
+
 def selectConstraintOnly(*args) -> list:
     """ If there is no shape and the type is not 
     'joint', 'ikEffector', 'ikHandle', and <not> 'Constraint', 
