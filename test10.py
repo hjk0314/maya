@@ -29,6 +29,7 @@ def connectStretchNodeToJointScale(*args, **kwargs) -> str:
     Example: 
     >>> connectStretchNodeToJointScale()
     >>> connectStretchNodeToJointScale("startJnt", "endJnt", "curve1", x=True)
+    >>> connectStretchNodeToJointScale(x=True, y=True)
     >>> connectStretchNodeToJointScale(*["startJnt", "endJnt", "curve1"])
      """
     sel = args if args else pm.selected()

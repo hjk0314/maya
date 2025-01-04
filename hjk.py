@@ -1038,7 +1038,7 @@ def createPaintWeightToOne(maxInfluence: int, *args) -> None:
             pm.warning("skinCluster aleady exists.")
             continue
         skinClt = pm.skinCluster(joints, obj, \
-                                 toSelectedBones=False, 
+                                 toSelectedBones=True, 
                                  bindMethod=0, 
                                  skinMethod=0, 
                                  normalizeWeights=1, wd=0, mi=1
