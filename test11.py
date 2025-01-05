@@ -66,7 +66,7 @@ def shipShinanRopeSetting(ropeMesh, cuv, mainCtrl):
     pm.parent(clt7Grp, "loc_moving")
 
 
-    mulDvd0 = connectStretchNodeToJointScale(startJnt, endJnt, cuv)
+    mulDvd0 = createJointScaleIncrease(startJnt, endJnt, cuv)
     mulDvd1 = pm.shadingNode("multiplyDivide", au=True)
     mulDvd2 = pm.shadingNode("multiplyDivide", au=True)
     pm.connectAttr(f"{sjGrp}.scale", f"{mulDvd1}.input2", f=True)
