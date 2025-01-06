@@ -546,7 +546,7 @@ class Car(QWidget):
         ]
         sizeRatio = [14, 18, 9, 11]
         ctrl = Controllers()
-        rad = getBoundingBoxSize(obj)
+        rad = max(getBoundingBoxSize(obj))
         for ccName, sr in zip(cc[:2], sizeRatio[:2]):
             cuv = ctrl.createControllers(square=ccName)[0]
             pm.scale(cuv, (rad/(sr*2), rad/sr, rad/sr))
@@ -833,14 +833,14 @@ class Car(QWidget):
                     continue
 
 
-# if __name__ == "__main__":
-#     try:
-#         qrCar.close()
-#         qrCar.deleteLater()
-#     except:
-#         pass
-#     qrCar = Car()
-#     qrCar.show()
+if __name__ == "__main__":
+    try:
+        qrCar.close()
+        qrCar.deleteLater()
+    except:
+        pass
+    qrCar = Car()
+    qrCar.show()
 
 
 class MixamoCharacter(QWidget):
