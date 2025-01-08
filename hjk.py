@@ -1185,6 +1185,19 @@ def colorize(*args, **kwargs):
             continue
 
 
+def deletePlugins() -> None:
+    """ Attempt to delete unused plugins. """
+    unknownList = pm.ls(type="unknown")
+    pm.delete(unknownList)
+    pluginList = pm.unknownPlugin(q=True, l=True)
+    if not pluginList:
+        print("There are no unknown plugins.")
+    else:
+        for j, k in enumerate(pluginList):
+            pm.unknownPlugin(k, r=True)
+            print(f"{j} : {k}")
+
+
 class Controllers:
     def __init__(self):
         """ Create Curve Controllers for rig """
