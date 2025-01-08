@@ -1141,6 +1141,50 @@ def createJointScaleIncrease(*args, **kwargs) -> str:
     return muldvd
 
 
+def colorize(*args, **kwargs):
+    """ Color an Object.
+
+    Args: 
+        "blue": 6, 
+        "blue2": 18, 
+        "pink": 9, 
+        "red": 13, 
+        "red2": 21, 
+        "green": 14, 
+        "green2": 23, 
+        "yellow": 17,
+    
+    Examples: 
+        >>> colorize(red=True)
+        >>> colorize("pCube1", red=True)
+        >>> colorize("pCube1", "pCube2", red=True)
+        >>> colorize(*["pCube1", "pCube2"], red=True)
+     """
+    sel = args if args else pm.selected()
+    if not sel or not kwargs:
+        return
+    colorBar = {
+        "blue": 6, 
+        "blue2": 18, 
+        "pink": 9, 
+        "red": 13, 
+        "red2": 21, 
+        "green": 14, 
+        "green2": 23, 
+        "yellow": 17
+        }
+    idx = [colorBar[j] for j, k in kwargs.items() if j in colorBar and k]
+    for obj in sel:
+        try:
+            obj = pm.PyNode(obj)
+            shp = obj.getShape()
+            pm.setAttr(f"{shp}.overrideEnabled", 1)
+            for i in idx:
+                pm.setAttr(f"{shp}.overrideColor", i)
+        except:
+            continue
+
+
 class Controllers:
     def __init__(self):
         """ Create Curve Controllers for rig """
@@ -1401,4 +1445,5 @@ class Controllers:
             cuv = pm.curve(p=pos, d=1, n=cuvName)
             result.append(cuv)
         return result
+
 
