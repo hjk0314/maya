@@ -201,7 +201,13 @@ class Car(QWidget):
 
         self.btnCreateJnt.clicked.connect(self.build_joints)
 
+        self.btnBuild.clicked.connect(self.build_joints)
+
         self.btnClose.clicked.connect(self.close)
+
+
+    def build(self):
+        print(self.doorPosition)
 
 
     def build_joints(self):
@@ -362,7 +368,7 @@ class Car(QWidget):
         ctrl = Controllers()
         cc = ctrl.createControllers(**{doorType: doorName})[0]
         defaultScale = 58
-        size = getBoundingBoxSize(selection) / defaultScale
+        size = max(getBoundingBoxSize(selection)) / defaultScale
         pm.scale(cc, [size, size, size])
         pm.makeIdentity(cc, a=1, t=1, r=1, s=1, n=0, pn=1)
         pm.matchTransform(cc, selection, pos=True, rot=True)
