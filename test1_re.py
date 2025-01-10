@@ -1,6 +1,20 @@
 from hjk import *
 
 
+jointAndPosition = {
+    "jnt_root": (0, 15, 0), 
+    "jnt_body": (0, 45, 0), 
+    "jnt_bodyEnd": (0, 145, 0)
+    }
+
+jointHierarchy = {
+    "jnt_root": [["jnt_body", "jnt_bodyEnd"], ], 
+    }
+
+
+
+
+
 def createWheelCtrl(ctrlName: str, obj: str) -> list:
     """ Create a wheel controller.
 
@@ -41,10 +55,10 @@ def createWheelLocator(ctrlName: str) -> str:
     """ Create a rotation locator that turns a wheel.
 
     Examples: 
-    >>> createWheelLocator("cc_wheelLeftFront")
-    >>> loc_wheelLeftFront
+    >>> createWheelLocator("cc_wheelLeftFront_sub")
+    >>> loc_wheelLeftFront_sub
      """
-    ctrlSub = f"{ctrlName}_sub"
+    ctrlName = ctrlName.name() if isinstance(ctrlName, pm.PyNode) else ctrlName
     if "cc_" in ctrlName:
         locName = ctrlName.replace("cc_", "loc_")
     else:
@@ -53,9 +67,9 @@ def createWheelLocator(ctrlName: str) -> str:
         return locName
     else:
         locator = pm.spaceLocator(n=locName)
-        pm.matchTransform(locator, ctrlSub, pos=True)
-        pm.parent(locator, ctrlSub)
-        pm.makeIdentity(locator, a=1, t=1, r=0, s=0, n=0, pn=1)
+        pm.matchTransform(locator, ctrlName, pos=True)
+        pm.parent(locator, ctrlName)
+        pm.makeIdentity(locator, a=1, t=1, r=1, s=1, n=0, pn=1)
         return locator
 
 
@@ -128,19 +142,6 @@ def createWheelExpression(ctrlName: str, locator: str, groupNames: list):
     pm.expression(s=expr, o='', ae=1, uc='all')
 
 
-def buildWheel():
-    ctrlName = "cc_wheelLeftFront"
-    sel = pm.selected()[0]
-    ctrls = createWheelCtrl(ctrlName, sel)
-    locator = createWheelLocator(ctrlName)
-    exprGroups = createWheelExpressionGroups(ctrlName)
-    createWheelExpression(ctrlName, locator, exprGroups)
-    pm.parent(ctrls[0], w=True)
-    pm.delete(ctrls[0], cn=True)
-    pm.parent(ctrls[0], exprGroups[1])
-    pm.parentConstraint(locator, sel, mo=True, w=1.0)
-
-
 def createDoorCtrl(doorName: str, obj: str) -> list:
     """ Create a door controller to rotate the mirror.
     The door on the right is created automatically. 
@@ -160,15 +161,58 @@ def createDoorCtrl(doorName: str, obj: str) -> list:
     pm.scale(ctrl, [doorSize, doorSize, doorSize])
     pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
     pm.matchTransform(ctrl, obj, pos=True, rot=True)
-    doorAGrp, doorA = groupOwnPivot(ctrl, null=True)[::2]
-    doorBGrp, doorB = mirrorCopy(ctrl)[::2]
-    result = [doorAGrp, doorA, doorBGrp, doorB]
-    for i in result[1::2]:
+    doorAGroups = groupOwnPivot(ctrl, null=True)
+    doorBGroups = mirrorCopy(ctrl)
+    result = doorAGroups + doorBGroups
+    for i in result[2::3]:
         pm.transformLimits(i, ry=(-60, 0), ery=(False, True))
     return result
 
 
-def builddoor():
+def setJointPosition(locator: str):
+    locator = locator.name() if isinstance(locator, pm.PyNode) else locator
+    if "loc_" in locator:
+        jnt = locator.replace("loc_", "jnt_")
+    elif "cc_" in locator:
+        jnt = locator.replace("cc_", "jnt_")
+    else:
+        jnt = f"jnt_{locator}"
+    jointAndPosition[jnt] = getPosition(locator)
+    if "jnt_body" in jointHierarchy:
+        tmp = jointHierarchy["jnt_body"]
+        tmp.append([jnt])
+        jointHierarchy[jnt] = tmp
+    else:
+        jointHierarchy["jnt_body"] = [jnt]
+    print(jointAndPosition)
+    print(jointHierarchy)
+
+
+def buildWheel():
+    ctrlName = "cc_wheelLeftFront"
+    sel = pm.selected()[0]
+    ctrls = createWheelCtrl(ctrlName, sel)
+    locator = createWheelLocator(ctrls[-1])
+    exprGroups = createWheelExpressionGroups(ctrlName)
+    createWheelExpression(ctrlName, locator, exprGroups)
+    pm.parent(ctrls[0], w=True)
+    pm.delete(ctrls[0], cn=True)
+    pm.parent(ctrls[0], exprGroups[1])
+    pm.parentConstraint(locator, sel, mo=True, w=1.0)
+
+
+def buildDoor():
     doorName = "cc_doorLeftFront"
     sel = pm.selected()[0]
-    createDoorCtrl(doorName, sel)
+    doors = createDoorCtrl(doorName, sel)
+    for i in doors[2::3]:
+        loc = createWheelLocator(i)
+        setJointPosition(loc)
+
+
+# buildWheel()
+# buildDoor()
+
+
+
+
