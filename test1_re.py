@@ -51,7 +51,7 @@ def createWheelCtrl(ctrlName: str, obj: str) -> list:
     return ccGrp
 
 
-def createWheelLocator(ctrlName: str) -> str:
+def createSubLocator(ctrlName: str) -> str:
     """ Create a rotation locator that turns a wheel.
 
     Examples: 
@@ -188,11 +188,27 @@ def setJointPosition(locator: str):
     print(jointHierarchy)
 
 
+def createBodyCtrl(*args):
+    sel = args if args else pm.selected()
+    if not sel:
+        return
+    obj = sel[0]
+    defaultScale = 240
+    bodySize = max(getBoundingBoxSize(obj)) / defaultScale
+    cc = Controllers()
+    ctrl = cc.createControllers(car="cc_body")
+    pm.scale(ctrl, [bodySize, bodySize, bodySize])
+    pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
+    pm.matchTransform(ctrl, obj, pos=True, rot=True)
+    
+
+
 def buildWheel():
     ctrlName = "cc_wheelLeftFront"
     sel = pm.selected()[0]
+    # Main process
     ctrls = createWheelCtrl(ctrlName, sel)
-    locator = createWheelLocator(ctrls[-1])
+    locator = createSubLocator(ctrls[-1])
     exprGroups = createWheelExpressionGroups(ctrlName)
     createWheelExpression(ctrlName, locator, exprGroups)
     pm.parent(ctrls[0], w=True)
@@ -204,15 +220,16 @@ def buildWheel():
 def buildDoor():
     doorName = "cc_doorLeftFront"
     sel = pm.selected()[0]
+    # Main process
     doors = createDoorCtrl(doorName, sel)
     for i in doors[2::3]:
-        loc = createWheelLocator(i)
+        loc = createSubLocator(i)
         setJointPosition(loc)
 
 
 # buildWheel()
 # buildDoor()
 
-
+# createBodyCtrl()
 
 
