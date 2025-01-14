@@ -188,11 +188,16 @@ def setJointPosition(locator: str):
     print(jointHierarchy)
 
 
-def createBodyCtrl(*args):
-    sel = args if args else pm.selected()
-    if not sel:
+def createBodyCtrl(obj: str) -> list:
+    """ Create the Body Controller. 
+
+    Examples: 
+    >>> createBodyCtrl("body")
+    >>> ['cc_body_grp', 'cc_body_null', 'cc_body', 'loc_body']
+     """
+    if pm.objExists("cc_body"):
+        pm.warning("cc_body Aleady exists.")
         return
-    obj = sel[0]
     defaultScale = 240
     bodySize = max(getBoundingBoxSize(obj)) / defaultScale
     cc = Controllers()
@@ -200,8 +205,11 @@ def createBodyCtrl(*args):
     pm.scale(ctrl, [bodySize, bodySize, bodySize])
     pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
     pm.matchTransform(ctrl, obj, pos=True, rot=True)
+    bodyGroups = groupOwnPivot(ctrl[0], null=True)
+    locator = createSubLocator(ctrl[0])
+    bodyGroups.append(locator)
+    return bodyGroups
     
-
 
 def buildWheel():
     ctrlName = "cc_wheelLeftFront"
@@ -229,7 +237,13 @@ def buildDoor():
 
 # buildWheel()
 # buildDoor()
-
 # createBodyCtrl()
+
+def createGlobalCtrl(obj: str=""):
+    cc = Controllers()
+    ccMain = cc.createControllers(circle="cc_main")
+    ccSub = cc.createControllers(car2="cc_sub")
+
+
 
 

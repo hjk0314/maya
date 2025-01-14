@@ -1089,7 +1089,7 @@ def createPaintWeightToOne(maxInfluence: int, *args) -> None:
             pm.setAttr(f"{j}.liw", onOff)
 
 
-def createJointScaleIncrease(*args, **kwargs) -> str:
+def createJointScaleExpression(*args, **kwargs) -> str:
     """ As the length of the curve increases, 
     the length of the joint also increases.
     Select at least 3 or more.
@@ -1100,10 +1100,10 @@ def createJointScaleIncrease(*args, **kwargs) -> str:
      - Select the curve
 
     Example: 
-    >>> createJointScaleIncrease()
-    >>> createJointScaleIncrease("startJnt", "endJnt", "curve1", x=True)
-    >>> createJointScaleIncrease(x=True, y=True)
-    >>> createJointScaleIncrease(*["startJnt", "endJnt", "curve1"])
+    >>> createJointScaleExpression()
+    >>> createJointScaleExpression("startJnt", "endJnt", "curve1", x=True)
+    >>> createJointScaleExpression(x=True, y=True)
+    >>> createJointScaleExpression(*["startJnt", "endJnt", "curve1"])
      """
     sel = args if args else pm.selected()
     if len(sel) < 3:
@@ -1275,8 +1275,8 @@ class Controllers:
                 (69, 111, -105), (69, 111, 63), (-69, 111, 63)
                 ], 
             "car2": [
-                (165, 0, -195), (0, 0, -276), (-165, 0, -195), (-97, 0, -0), 
-                (-165, -0, 195), (-0, -0, 276), (165, -0, 195), (97, -0, 0), 
+                (165, 0, -195), (0, 0, -276), (-165, 0, -195), (-165, 0, -0), 
+                (-165, -0, 195), (-0, -0, 276), (165, -0, 195), (165, -0, 0), 
                 (165, 0, -195)
                 ], 
             "circle": [
