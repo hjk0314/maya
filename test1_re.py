@@ -1,56 +1,7 @@
 from hjk import *
 
 
-jointAndPosition = {
-    "jnt_root": (0, 15, 0), 
-    "jnt_body": (0, 45, 0), 
-    "jnt_bodyEnd": (0, 145, 0)
-    }
-
-jointHierarchy = {
-    "jnt_root": [["jnt_body", "jnt_bodyEnd"], ], 
-    }
-
-
-
-
-
-def createWheelCtrl(ctrlName: str, obj: str) -> list:
-    """ Create a wheel controller.
-
-    Examples: 
-    >>> createWheelCtrl("cc_wheelLeftFront", "pCylinder")
-    >>> ['cc_wheelLeftFront_upDownMain_grp', ...]
-     """
-    ctrls = [
-        f"{ctrlName}_upDownMain", 
-        f"{ctrlName}_upDownSub", 
-        f"{ctrlName}_main", 
-        f"{ctrlName}_sub"
-    ]
-    sizeRatio = [14, 18, 9, 11]
-    cc = Controllers()
-    rad = max(getBoundingBoxSize(obj))
-    for ctrlName, sr in zip(ctrls[:2], sizeRatio[:2]):
-        cuv = cc.createControllers(square=ctrlName)[0]
-        pm.scale(cuv, (rad/(sr*2), rad/sr, rad/sr))
-        pm.matchTransform(cuv, obj, pos=True)
-        pm.setAttr(f"{cuv}.translateY", 0)
-    for ctrlName, sr in zip(ctrls[2:], sizeRatio[2:]):
-        cuv = cc.createControllers(circle=ctrlName)[0]
-        pm.scale(cuv, (rad/sr, rad/sr, rad/sr))
-        pm.rotate(cuv, (0, 0, 90))
-        pm.matchTransform(cuv, obj, pos=True)
-    ccGrp = groupOwnPivot(*ctrls, null=True)
-    parentHierarchically(*ccGrp)
-    pm.makeIdentity(ccGrp, a=1, t=1, r=1, s=1, n=0, pn=1)
-    ccMain = ctrls[2]
-    pm.addAttr(ccMain, ln="Radius", at="double", min=0.0001, dv=1)
-    pm.setAttr(f"{ccMain}.Radius", e=True, k=True)
-    pm.setAttr(f"{ccMain}.Radius", rad)
-    return ccGrp
-
-
+# Source
 def createSubLocator(ctrlName: str) -> str:
     """ Create a rotation locator that turns a wheel.
 
@@ -97,16 +48,78 @@ def createWheelExpressionGroups(ctrlName: str) -> list:
     return result
 
 
-def createWheelExpression(ctrlName: str, locator: str, groupNames: list):
-    """ Rotate the locator by the moving distance of offset_grp. """
-    ctrlMain = f"{ctrlName}_main"
+# Process
+def createWheelCtrl(ctrlName: str, obj: str) -> list:
+    """ Create a wheel controller.
+
+    Examples: 
+    >>> createWheelCtrl("cc_wheelLeftFront", "pCylinder")
+    >>> ['cc_wheelLeftFront_upDownMain_grp', ...]
+     """
+    ctrls = [
+        f"{ctrlName}_upDownMain", 
+        f"{ctrlName}_upDownSub", 
+        f"{ctrlName}_main", 
+        f"{ctrlName}_sub"
+    ]
+    sizeRatio = [14, 18, 9, 11]
+    cc = Controllers()
+    rad = max(getBoundingBoxSize(obj))
+    for ctrlName, sr in zip(ctrls[:2], sizeRatio[:2]):
+        cuv = cc.createControllers(square=ctrlName)[0]
+        pm.scale(cuv, (rad/(sr*2), rad/sr, rad/sr))
+        pm.matchTransform(cuv, obj, pos=True)
+        pm.setAttr(f"{cuv}.translateY", 0)
+    for ctrlName, sr in zip(ctrls[2:], sizeRatio[2:]):
+        cuv = cc.createControllers(circle=ctrlName)[0]
+        pm.scale(cuv, (rad/sr, rad/sr, rad/sr))
+        pm.rotate(cuv, (0, 0, 90))
+        pm.matchTransform(cuv, obj, pos=True)
+    ccGrp = groupOwnPivot(*ctrls, null=True)
+    parentHierarchically(*ccGrp)
+    pm.makeIdentity(ccGrp, a=1, t=1, r=1, s=1, n=0, pn=1)
+    ccMain = ctrls[2]
+    pm.addAttr(ccMain, ln="Radius", at="double", min=0.0001, dv=1)
+    pm.setAttr(f"{ccMain}.Radius", e=True, k=True)
+    pm.setAttr(f"{ccMain}.Radius", rad)
+    locator = createSubLocator(ctrls[-1])
+    ccGrp.append(locator)
+    return ccGrp
+
+
+def createWheelExpression(wheelGroups: list) -> list:
+    """ Rotate the locator by the moving distance of offset_grp.
+
+    Args: 
+    >>> wheelGroups = [
+        'cc_wheelLeftFront_upDownMain_grp', 
+        'cc_wheelLeftFront_upDownMain_null', 
+        'cc_wheelLeftFront_upDownMain', 
+        'cc_wheelLeftFront_upDownSub_grp', 
+        'cc_wheelLeftFront_upDownSub_null', 
+        'cc_wheelLeftFront_upDownSub', 
+        'cc_wheelLeftFront_main_grp', 
+        'cc_wheelLeftFront_main_null', 
+        'cc_wheelLeftFront_main', 
+        'cc_wheelLeftFront_sub_grp', 
+        'cc_wheelLeftFront_sub_null', 
+        'cc_wheelLeftFront_sub', 
+        'loc_wheelLeftFront_sub', 
+        ]
+     """
+    firstGroup = wheelGroups[0]
+    ctrlMain = wheelGroups[8]
+    ctrlName = ctrlMain.rsplit("_", 1)[0]
+    locator = wheelGroups[-1]
     if not pm.attributeQuery("AutoRoll", node=ctrlMain, ex=True):
         attrAuto = 'AutoRoll'
         pm.addAttr(ctrlMain, ln=attrAuto, at='long', min=0, max=1, dv=1)
         pm.setAttr(f'{ctrlMain}.{attrAuto}', e=True, k=True)
     br = '\n'
+    groupNames = createWheelExpressionGroups(ctrlName)
     offset = groupNames[1]
     previous, orient = groupNames[3:]
+    pm.parent(firstGroup, offset)
     # expression1
     expr1 = f'float $rad = {ctrlMain}.Radius;{br}'
     expr1 += f'float $auto = {ctrlMain}.AutoRoll;{br}'
@@ -140,12 +153,19 @@ def createWheelExpression(ctrlName: str, locator: str, groupNames: list):
     # final expression
     expr = expr1 + expr2 + expr3 + expr4
     pm.expression(s=expr, o='', ae=1, uc='all')
+    return groupNames
 
 
 def createDoorCtrl(doorName: str, obj: str) -> list:
     """ Create a door controller to rotate the mirror.
     The door on the right is created automatically. 
     The shapes of the front and back doors are different.
+
+    Examples: 
+    >>> createDoorCtrl("cc_doorLeftFront", "car_doorLeftFront_grp")
+    >>> ["cc_doorLeftFront_grp", ..., "cc_doorRightFront", "loc_doorLeftFront"]
+    >>> createDoorCtrl("cc_doorLeftBack", "car_doorLeftBack_grp")
+    >>> ["cc_doorLeftBack_grp", ..., "cc_doorRightBack", "loc_doorLeftBack"]
      """
     Back = "Back" in doorName
     back = "back" in doorName
@@ -163,33 +183,24 @@ def createDoorCtrl(doorName: str, obj: str) -> list:
     pm.matchTransform(ctrl, obj, pos=True, rot=True)
     doorAGroups = groupOwnPivot(ctrl, null=True)
     doorBGroups = mirrorCopy(ctrl)
+    locA = createSubLocator(doorAGroups[-1])
+    doorAGroups.append(locA)
+    locB = createSubLocator(doorBGroups[-1])
+    doorBGroups.append(locB)
     result = doorAGroups + doorBGroups
-    for i in result[2::3]:
+    for i in result[2::4]:
         pm.transformLimits(i, ry=(-60, 0), ery=(False, True))
+    try:
+        pm.parent(result[::4], "cc_door_grp")
+    except:
+        pm.group(result[::4], n="cc_door_grp")
     return result
-
-
-def setJointPosition(locator: str):
-    locator = locator.name() if isinstance(locator, pm.PyNode) else locator
-    if "loc_" in locator:
-        jnt = locator.replace("loc_", "jnt_")
-    elif "cc_" in locator:
-        jnt = locator.replace("cc_", "jnt_")
-    else:
-        jnt = f"jnt_{locator}"
-    jointAndPosition[jnt] = getPosition(locator)
-    if "jnt_body" in jointHierarchy:
-        tmp = jointHierarchy["jnt_body"]
-        tmp.append([jnt])
-        jointHierarchy[jnt] = tmp
-    else:
-        jointHierarchy["jnt_body"] = [jnt]
-    print(jointAndPosition)
-    print(jointHierarchy)
 
 
 def createBodyCtrl(obj: str) -> list:
     """ Create the Body Controller. 
+    Take the Arguments that can be used to estimate 
+    the overall size of the body.
 
     Examples: 
     >>> createBodyCtrl("body")
@@ -198,10 +209,11 @@ def createBodyCtrl(obj: str) -> list:
     if pm.objExists("cc_body"):
         pm.warning("cc_body Aleady exists.")
         return
+    ccBody = "cc_body"
     defaultScale = 240
     bodySize = max(getBoundingBoxSize(obj)) / defaultScale
     cc = Controllers()
-    ctrl = cc.createControllers(car="cc_body")
+    ctrl = cc.createControllers(car=ccBody)
     pm.scale(ctrl, [bodySize, bodySize, bodySize])
     pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
     pm.matchTransform(ctrl, obj, pos=True, rot=True)
@@ -211,39 +223,71 @@ def createBodyCtrl(obj: str) -> list:
     return bodyGroups
     
 
-def buildWheel():
-    ctrlName = "cc_wheelLeftFront"
-    sel = pm.selected()[0]
-    # Main process
-    ctrls = createWheelCtrl(ctrlName, sel)
-    locator = createSubLocator(ctrls[-1])
-    exprGroups = createWheelExpressionGroups(ctrlName)
-    createWheelExpression(ctrlName, locator, exprGroups)
-    pm.parent(ctrls[0], w=True)
-    pm.delete(ctrls[0], cn=True)
-    pm.parent(ctrls[0], exprGroups[1])
-    pm.parentConstraint(locator, sel, mo=True, w=1.0)
+def createGlobalCtrl(obj: str) -> list:
+    """ Create a global controller. 
+    Take the Arguments that can be used to estimate 
+    the overall size of the model.
 
-
-def buildDoor():
-    doorName = "cc_doorLeftFront"
-    sel = pm.selected()[0]
-    # Main process
-    doors = createDoorCtrl(doorName, sel)
-    for i in doors[2::3]:
-        loc = createSubLocator(i)
-        setJointPosition(loc)
-
-
-# buildWheel()
-# buildDoor()
-# createBodyCtrl()
-
-def createGlobalCtrl(obj: str=""):
+    Examples: 
+    >>> createGlobalCtrl("vhcl_bestaB_mdl_v9999:bestaB_body_grp")
+    >>> ["cc_main_grp", "cc_main", "cc_sub_grp", "cc_sub"]
+     """
+    ccMain = "cc_main"
+    ccSub = "cc_sub"
+    a, b, c = getBoundingBoxSize(obj)
+    x, y, z = 100, 100, 250
     cc = Controllers()
-    ccMain = cc.createControllers(circle="cc_main")
-    ccSub = cc.createControllers(car2="cc_sub")
+    ccs = cc.createControllers(car3=ccMain, car2=ccSub)
+    for i in ccs:
+        pm.scale(i, [a/x, b/y, c/z])
+        pm.makeIdentity(i, a=1, t=1, r=1, s=1, n=0, pn=1)
+    ccsGroup = groupOwnPivot(*ccs)
+    result = parentHierarchically(*ccsGroup)
+    return result
 
 
 
+ccDoorLeftFront = "cc_doorLeftFront"
+ccDoorLeftFrontGroup = "vhcl_bestaB_mdl_v9999:bestaB_body_door_Ft_L_grp"
+bodyGroup = "vhcl_bestaB_mdl_v9999:bestaB_body_grp"
+carGroup = "vhcl_bestaB_mdl_v9999:bestaB"
+ccs = [
+    "cc_wheelLeftFront", "cc_wheelLeftBack", 
+    "cc_wheelRightFront", "cc_wheelRightBack"
+    ]
+sel = [
+    'vhcl_bestaB_mdl_v9999:bestaB_wheel_Ft_L_03_tire', 
+    'vhcl_bestaB_mdl_v9999:bestaB_wheel_Bk_L_03_tire', 
+    'vhcl_bestaB_mdl_v9999:bestaB_wheel_Ft_R_03_tire', 
+    'vhcl_bestaB_mdl_v9999:bestaB_wheel_Bk_R_03_tire', 
+    ]
+bools = [True, False, False, False]
 
+
+# wheelCtrlGroup = []
+# locators = []
+# for cc, obj, chk in zip(ccs, sel, bools):
+#     wheelGroups = createWheelCtrl(cc, obj)
+#     if chk:
+#         tmp = createWheelExpression(wheelGroups)
+#         wheelCtrlGroup.append(tmp[0])
+#     else:
+#         wheelCtrlGroup.append(wheelGroups[0])
+#         continue
+#     locators.append(wheelGroups[-1])
+# try:
+#     pm.parent(wheelCtrlGroup, "cc_wheel_grp")
+# except:
+#     pm.group(wheelCtrlGroup, n="cc_wheel_grp")
+
+
+# createDoorCtrl(ccDoorLeftFront, ccDoorLeftFrontGroup)
+
+
+# createBodyCtrl(bodyGroup)
+
+
+# createGlobalCtrl(carGroup)
+
+
+# createRigGroups("bestaB")
