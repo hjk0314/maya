@@ -1,6 +1,60 @@
 from hjk import *
 
 
+topGroup = "vhcl_bestaB_mdl_v9999:bestaB"
+bodyGroup = "vhcl_bestaB_mdl_v9999:bestaB_body_grp"
+doorGroup = [
+    "vhcl_bestaB_mdl_v9999:bestaB_body_door_Ft_L_grp", 
+    "", 
+    "vhcl_bestaB_mdl_v9999:bestaB_body_door_Ft_R_grp", 
+    ""
+    ]
+doorName = [
+    "cc_doorLeftFront", 
+    "cc_doorLeftBack", 
+    "cc_doorRightFront", 
+    "cc_doorRightBack"
+    ]
+wheelGroup = [
+    "vhcl_bestaB_mdl_v9999:bestaB_wheel_Ft_L_grp", 
+    "vhcl_bestaB_mdl_v9999:bestaB_wheel_Bk_L_grp", 
+    "vhcl_bestaB_mdl_v9999:bestaB_wheel_Ft_R_grp", 
+    "vhcl_bestaB_mdl_v9999:bestaB_wheel_Bk_R_grp"
+    ]
+wheelName = [
+    "cc_wheelLeftFront", 
+    "cc_wheelLeftBack", 
+    "cc_wheelRightFront", 
+    "cc_wheelRightBack"
+    ]
+colorBar = {
+    "cc_main": "yellow", 
+    "cc_sub": "pink", 
+    "cc_body": "yellow", 
+    "cc_doorLeftFront": "red", 
+    "cc_doorLeftBack": "red", 
+    "cc_doorRightFront": "blue", 
+    "cc_doorRightBack": "blue", 
+    "cc_wheelLeftFront_upDownMain": "yellow", 
+    "cc_wheelLeftFront_upDownSub": "pink", 
+    "cc_wheelLeftFront_main": "red", 
+    "cc_wheelLeftFront_sub": "red2", 
+    "cc_wheelLeftBack_upDownMain": "yellow", 
+    "cc_wheelLeftBack_upDownSub": "pink", 
+    "cc_wheelLeftBack_main": "red", 
+    "cc_wheelLeftBack_sub": "red2", 
+    "cc_wheelRightFront_upDownMain": "yellow", 
+    "cc_wheelRightFront_upDownSub": "pink", 
+    "cc_wheelRightFront_main": "blue", 
+    "cc_wheelRightFront_sub": "blue2", 
+    "cc_wheelRightBack_upDownMain": "yellow", 
+    "cc_wheelRightBack_upDownSub": "pink", 
+    "cc_wheelRightBack_main": "blue", 
+    "cc_wheelRightBack_sub": "blue2", 
+    }
+locators = []
+
+
 # Source
 def createSubLocator(ctrlName: str) -> str:
     """ Create a rotation locator that turns a wheel.
@@ -46,6 +100,24 @@ def createWheelExpressionGroups(ctrlName: str) -> list:
         pm.addAttr(offset, ln=f'PreviousPosition{i}', at='double', dv=0)
         pm.setAttr(f'{offset}.PreviousPosition{i}', e=True, k=True)
     return result
+
+
+def getTopGroup(*args) -> str:
+    """ Get the top group containing arguments such as 'body' 
+    among the subgroups of the selected group.
+
+    Examples: 
+    >>> getTopGroup("wheel", "_L", "_Ft")
+    >>> "vhcl_bestaB_mdl_v9999:bestaB_wheel_Ft_L_grp"
+     """
+    sel = selectGroupOnly(topGroup)
+    pm.select(cl=True)
+    groups = [i for i in sel if all([arg in i.name() for arg in args])]
+    for grp in groups:
+        if not any(j in groups for j in grp.listRelatives(p=True)):
+            pm.select(grp)
+            return grp
+    return
 
 
 # Process
@@ -156,7 +228,7 @@ def createWheelExpression(wheelGroups: list) -> list:
     return groupNames
 
 
-def createDoorCtrl(doorName: str, obj: str) -> list:
+def createDoorCtrl(doorGroup, doorName) -> list:
     """ Create a door controller to rotate the mirror.
     The door on the right is created automatically. 
     The shapes of the front and back doors are different.
@@ -167,37 +239,104 @@ def createDoorCtrl(doorName: str, obj: str) -> list:
     >>> createDoorCtrl("cc_doorLeftBack", "car_doorLeftBack_grp")
     >>> ["cc_doorLeftBack_grp", ..., "cc_doorRightBack", "loc_doorLeftBack"]
      """
-    Back = "Back" in doorName
-    back = "back" in doorName
-    if any([Back, back]):
-        doorType = "door2"
-    else:
-        doorType = "door"
-    cc = Controllers()
-    ctrls = cc.createControllers(**{doorType: doorName})
-    ctrl = ctrls[0]
-    defaultScale = 58
-    doorSize = max(getBoundingBoxSize(obj)) / defaultScale
-    pm.scale(ctrl, [doorSize, doorSize, doorSize])
-    pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
-    pm.matchTransform(ctrl, obj, pos=True, rot=True)
-    doorAGroups = groupOwnPivot(ctrl, null=True)
-    doorBGroups = mirrorCopy(ctrl)
-    locA = createSubLocator(doorAGroups[-1])
-    doorAGroups.append(locA)
-    locB = createSubLocator(doorBGroups[-1])
-    doorBGroups.append(locB)
-    result = doorAGroups + doorBGroups
-    for i in result[2::4]:
-        pm.transformLimits(i, ry=(-60, 0), ery=(False, True))
-    try:
-        pm.parent(result[::4], "cc_door_grp")
-    except:
-        pm.group(result[::4], n="cc_door_grp")
+    result = []
+    for grp, dn in zip(doorGroup, doorName):
+        if not grp:
+            continue
+        cc = Controllers()
+        defaultScale = 58
+        if "cc_doorLeftFront" == dn:
+            ctrls = cc.createControllers(**{"door": dn})
+            ctrl = ctrls[0]
+            doorSize = max(getBoundingBoxSize(grp)) / defaultScale
+            pm.scale(ctrl, [doorSize, doorSize, doorSize])
+            pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
+            pm.matchTransform(ctrl, grp, pos=True, rot=True)
+            doorGroup = groupOwnPivot(ctrl, null=True)
+            loc = createSubLocator(doorGroup[-1])
+            doorGroup.append(loc)
+            result += doorGroup
+            pm.transformLimits(doorGroup[2], ry=(-60, 0), ery=(False, True))
+            pm.parentConstraint(loc, grp, mo=True, w=1.0)
+            pm.scaleConstraint(loc, grp, mo=True, w=1.0)
+        if "cc_doorLeftBack" == dn:
+            ctrls = cc.createControllers(**{"door2": dn})
+            ctrl = ctrls[0]
+            doorSize = max(getBoundingBoxSize(grp)) / defaultScale
+            pm.scale(ctrl, [doorSize, doorSize, doorSize])
+            pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
+            pm.matchTransform(ctrl, grp, pos=True, rot=True)
+            doorGroup = groupOwnPivot(ctrl, null=True)
+            loc = createSubLocator(doorGroup[-1])
+            doorGroup.append(loc)
+            result += doorGroup
+            pm.transformLimits(doorGroup[2], ry=(-60, 0), ery=(False, True))
+            pm.parentConstraint(loc, grp, mo=True, w=1.0)
+            pm.scaleConstraint(loc, grp, mo=True, w=1.0)
+        if "cc_doorRightFront" == dn:
+            ctrls = cc.createControllers(**{"door": dn})
+            ctrl = ctrls[0]
+            doorSize = max(getBoundingBoxSize(grp)) / defaultScale
+            pm.scale(ctrl, [doorSize, doorSize, doorSize])
+            # pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
+            pm.matchTransform(ctrl, grp, pos=True, rot=True)
+            doorGroup = groupOwnPivot(ctrl, null=True)
+            pm.setAttr(f"{ctrl}.rotateX", -180)
+            pm.setAttr(f"{doorGroup[0]}.rotateX", -180)
+            pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
+            loc = createSubLocator(doorGroup[-1])
+            doorGroup.append(loc)
+            result += doorGroup
+            pm.transformLimits(doorGroup[2], ry=(-60, 0), ery=(False, True))
+            pm.parentConstraint(loc, grp, mo=True, w=1.0)
+            pm.scaleConstraint(loc, grp, mo=True, w=1.0)
+        if "cc_doorRightBack" == dn:
+            ctrls = cc.createControllers(**{"door2": dn})
+            ctrl = ctrls[0]
+            doorSize = max(getBoundingBoxSize(grp)) / defaultScale
+            pm.scale(ctrl, [doorSize, doorSize, doorSize])
+            # pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
+            pm.matchTransform(ctrl, grp, pos=True, rot=True)
+            doorGroup = groupOwnPivot(ctrl, null=True)
+            pm.setAttr(f"{ctrl}.rotateX", -180)
+            pm.setAttr(f"{doorGroup[0]}.rotateX", -180)
+            pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
+            loc = createSubLocator(doorGroup[-1])
+            doorGroup.append(loc)
+            result += doorGroup
+            pm.transformLimits(doorGroup[2], ry=(-60, 0), ery=(False, True))
+            pm.parentConstraint(loc, grp, mo=True, w=1.0)
+            pm.scaleConstraint(loc, grp, mo=True, w=1.0)
     return result
 
 
-def createBodyCtrl(obj: str) -> list:
+    # Back = "Back" in doorName
+    # back = "back" in doorName
+    # if any([Back, back]):
+    #     doorType = "door2"
+    # else:
+    #     doorType = "door"
+    # cc = Controllers()
+    # ctrls = cc.createControllers(**{doorType: doorName})
+    # ctrl = ctrls[0]
+    # defaultScale = 58
+    # doorSize = max(getBoundingBoxSize(objectGroup)) / defaultScale
+    # pm.scale(ctrl, [doorSize, doorSize, doorSize])
+    # pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
+    # pm.matchTransform(ctrl, objectGroup, pos=True, rot=True)
+    # doorAGroups = groupOwnPivot(ctrl, null=True)
+    # doorBGroups = mirrorCopy(ctrl)
+    # locA = createSubLocator(doorAGroups[-1])
+    # doorAGroups.append(locA)
+    # locB = createSubLocator(doorBGroups[-1])
+    # doorBGroups.append(locB)
+    # result = doorAGroups + doorBGroups
+    # for i in result[2::4]:
+    #     pm.transformLimits(i, ry=(-60, 0), ery=(False, True))
+    # return result
+
+
+def createBodyCtrl(objectGroup: str) -> list:
     """ Create the Body Controller. 
     Take the Arguments that can be used to estimate 
     the overall size of the body.
@@ -206,24 +345,26 @@ def createBodyCtrl(obj: str) -> list:
     >>> createBodyCtrl("body")
     >>> ['cc_body_grp', 'cc_body_null', 'cc_body', 'loc_body']
      """
-    if pm.objExists("cc_body"):
-        pm.warning("cc_body Aleady exists.")
-        return
     ccBody = "cc_body"
+    if pm.objExists(ccBody):
+        pm.warning(f"{ccBody} Aleady exists.")
+        return
     defaultScale = 240
-    bodySize = max(getBoundingBoxSize(obj)) / defaultScale
+    bodySize = max(getBoundingBoxSize(objectGroup)) / defaultScale
     cc = Controllers()
     ctrl = cc.createControllers(car=ccBody)
     pm.scale(ctrl, [bodySize, bodySize, bodySize])
     pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
-    pm.matchTransform(ctrl, obj, pos=True, rot=True)
+    pm.matchTransform(ctrl, objectGroup, pos=True, rot=True)
     bodyGroups = groupOwnPivot(ctrl[0], null=True)
     locator = createSubLocator(ctrl[0])
     bodyGroups.append(locator)
+    pm.parentConstraint(locator, objectGroup, mo=True, w=1.0)
+    pm.scaleConstraint(locator, objectGroup, mo=True, w=1.0)
     return bodyGroups
     
 
-def createGlobalCtrl(obj: str) -> list:
+def createGlobalCtrl(objectGroup: str) -> list:
     """ Create a global controller. 
     Take the Arguments that can be used to estimate 
     the overall size of the model.
@@ -234,7 +375,10 @@ def createGlobalCtrl(obj: str) -> list:
      """
     ccMain = "cc_main"
     ccSub = "cc_sub"
-    a, b, c = getBoundingBoxSize(obj)
+    if pm.objExists(ccMain) or pm.objExists(ccSub):
+        pm.warning("Controllers Aleady exists.")
+        return
+    a, b, c = getBoundingBoxSize(objectGroup)
     x, y, z = 100, 100, 250
     cc = Controllers()
     ccs = cc.createControllers(car3=ccMain, car2=ccSub)
@@ -243,25 +387,10 @@ def createGlobalCtrl(obj: str) -> list:
         pm.makeIdentity(i, a=1, t=1, r=1, s=1, n=0, pn=1)
     ccsGroup = groupOwnPivot(*ccs)
     result = parentHierarchically(*ccsGroup)
+    pm.parentConstraint(ccSub, objectGroup, mo=True, w=1.0)
+    pm.scaleConstraint(ccSub, objectGroup, mo=True, w=1.0)
     return result
 
-
-
-ccDoorLeftFront = "cc_doorLeftFront"
-ccDoorLeftFrontGroup = "vhcl_bestaB_mdl_v9999:bestaB_body_door_Ft_L_grp"
-bodyGroup = "vhcl_bestaB_mdl_v9999:bestaB_body_grp"
-carGroup = "vhcl_bestaB_mdl_v9999:bestaB"
-ccs = [
-    "cc_wheelLeftFront", "cc_wheelLeftBack", 
-    "cc_wheelRightFront", "cc_wheelRightBack"
-    ]
-sel = [
-    'vhcl_bestaB_mdl_v9999:bestaB_wheel_Ft_L_03_tire', 
-    'vhcl_bestaB_mdl_v9999:bestaB_wheel_Bk_L_03_tire', 
-    'vhcl_bestaB_mdl_v9999:bestaB_wheel_Ft_R_03_tire', 
-    'vhcl_bestaB_mdl_v9999:bestaB_wheel_Bk_R_03_tire', 
-    ]
-bools = [True, False, False, False]
 
 
 # wheelCtrlGroup = []
@@ -281,13 +410,16 @@ bools = [True, False, False, False]
 #     pm.group(wheelCtrlGroup, n="cc_wheel_grp")
 
 
-# createDoorCtrl(ccDoorLeftFront, ccDoorLeftFrontGroup)
-
 
 # createBodyCtrl(bodyGroup)
 
 
-# createGlobalCtrl(carGroup)
+# createGlobalCtrl(topGroup)
+
+
+# createDoorCtrl(doorGroup, doorName)
 
 
 # createRigGroups("bestaB")
+
+
