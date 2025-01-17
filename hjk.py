@@ -437,6 +437,28 @@ def createCurveNormalDirection(*args) -> list:
     return result
 
 
+def createSubLocator(ctrl: str) -> str:
+    """ Create a locator that goes under the Controller.
+
+    Examples: 
+    >>> createWheelLocator("cc_wheelLeftFront_sub")
+    >>> loc_wheelLeftFront_sub
+    """
+    ctrl = ctrl.name() if isinstance(ctrl, pm.PyNode) else ctrl
+    if "cc_" in ctrl:
+        locName = ctrl.replace("cc_", "loc_")
+    else:
+        locName = f"{ctrl}_exprLocator"
+    if pm.objExists(locName):
+        return locName
+    else:
+        locator = pm.spaceLocator(n=locName)
+        pm.matchTransform(locator, ctrl, pos=True)
+        pm.parent(locator, ctrl)
+        pm.makeIdentity(locator, a=1, t=1, r=1, s=1, n=0, pn=1)
+        return locator
+
+
 def selectGroupOnly(*args) -> list:
     """ If there is no shape and the type is not 
     'joint', 'ikEffector', 'ikHandle' and 'Constraint', 
@@ -456,6 +478,34 @@ def selectGroupOnly(*args) -> list:
             result.append(i)
         else:
             continue
+    pm.select(result)
+    return result
+
+
+def selectTopGroup(objectGroup: str, *filter) -> str:
+    """ Get the top group containing arguments such as 'body' 
+    among the subgroups of the selected group.
+
+    Examples: 
+    >>> selectTopGroup("vhcl_bestaB_mdl_v9999:bestaB", "body")
+    >>> ["vhcl_bestaB_mdl_v9999:bestaB_body_grp"]
+    >>> selectTopGroup("vhcl_bestaB_mdl_v9999:bestaB", "door", "_L", "_Ft"])
+    >>> ["vhcl_bestaB_mdl_v9999:bestaB_body_door_Ft_L_grp"]
+    >>> selectTopGroup("vhcl_bestaB_mdl_v9999:bestaB", *["wheel", "_L", "_Ft"])
+    >>> ["vhcl_bestaB_mdl_v9999:bestaB_wheel_Ft_L_grp"]
+    """
+    result = []
+    if not objectGroup:
+        pm.warning("The argument is empty.")
+    elif not pm.objExists(objectGroup):
+        pm.warning(f"Object's Group <{objectGroup}> doesn't exist.")
+    else:
+        sel = selectGroupOnly(objectGroup)
+        pm.select(cl=True)
+        groups = [i for i in sel if all([f in i.name() for f in filter])]
+        for grp in groups:
+            if not any(j in groups for j in grp.listRelatives(p=True)):
+                result.append(grp)
     pm.select(result)
     return result
 
