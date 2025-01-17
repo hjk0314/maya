@@ -1,11 +1,21 @@
+import pymel.core as pm
+import maya.OpenMayaUI as omui
 from hjk import *
+from PySide2.QtWidgets import *
+from PySide2.QtCore import Qt, QCoreApplication
+from PySide2.QtGui import QFont
+from shiboken2 import wrapInstance
 
 
+def mayaMainWindow():
+    mainWindow_pointer = omui.MQtUtil.mainWindow()
+    return wrapInstance(int(mainWindow_pointer), QWidget)
 
-class QuickRig_Car:
+
+class QuickRig_Car(QWidget):
     def __init__(self):
-        self.topGroup = "vhcl_bestaB_mdl_v9999:bestaB"
-        self.bodyGroup = "vhcl_bestaB_mdl_v9999:bestaB_body_grp"
+        self.rootGroup = u"%s" % self.getRootGroup()
+        self.bodyGroup = u"%s" % selectTopGroup(self.rootGroup, "body")[0]
         self.doorGroup = [
             "vhcl_bestaB_mdl_v9999:bestaB_body_door_Ft_L_grp", 
             "", 
@@ -56,10 +66,278 @@ class QuickRig_Car:
             "cc_wheelRightBack_sub": "blue2", 
             }
         self.locators = []
+        super(QuickRig_Car, self).__init__()
+        self.setParent(mayaMainWindow())
+        self.setWindowFlags(Qt.Window)
+        self.setupUI()
+
+
+    def setupUI(self):
+        self.setWindowTitle(u"Quick Rig for Car")
+        self.move(0, 0)
+        self.resize(450, 410)
+        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.gridLayout = QGridLayout()
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setContentsMargins(10, -1, -1, -1)
+        self.lblRootGrp = QLabel()
+        self.lblRootGrp.setObjectName(u"lblRootGrp")
+        font = QFont()
+        font.setFamily(u"Courier New")
+        font.setPointSize(9)
+        font.setBold(False)
+        font.setWeight(50)
+        self.lblRootGrp.setFont(font)
+        self.lblRootGrp.setLayoutDirection(Qt.LeftToRight)
+        self.lblRootGrp.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.gridLayout.addWidget(self.lblRootGrp, 0, 0, 1, 1)
+        self.fldRootGrp = QLineEdit()
+        self.fldRootGrp.setObjectName(u"fldRootGrp")
+        self.fldRootGrp.setText(self.rootGroup)
+        self.gridLayout.addWidget(self.fldRootGrp, 0, 1, 1, 1)
+        self.btnRootGrp = QPushButton()
+        self.btnRootGrp.setObjectName(u"btnRootGrp")
+        self.btnRootGrp.setFont(font)
+        self.gridLayout.addWidget(self.btnRootGrp, 0, 2, 1, 2)
+        self.lblBodyGrp = QLabel()
+        self.lblBodyGrp.setObjectName(u"lblBodyGrp")
+        self.lblBodyGrp.setFont(font)
+        self.lblBodyGrp.setLayoutDirection(Qt.LeftToRight)
+        self.lblBodyGrp.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.gridLayout.addWidget(self.lblBodyGrp, 1, 0, 1, 1)
+        self.fldBodyGrp = QLineEdit()
+        self.fldBodyGrp.setObjectName(u"fldBodyGrp")
+        self.fldBodyGrp.setText(self.bodyGroup)
+        self.gridLayout.addWidget(self.fldBodyGrp, 1, 1, 1, 1)
+        self.btnBodyGrp = QPushButton()
+        self.btnBodyGrp.setObjectName(u"btnBodyGrp")
+        self.btnBodyGrp.setFont(font)
+        self.gridLayout.addWidget(self.btnBodyGrp, 1, 2, 1, 2)
+        self.lblDoorLF = QLabel()
+        self.lblDoorLF.setObjectName(u"lblDoorLF")
+        self.lblDoorLF.setFont(font)
+        self.lblDoorLF.setLayoutDirection(Qt.LeftToRight)
+        self.lblDoorLF.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.gridLayout.addWidget(self.lblDoorLF, 2, 0, 1, 1)
+        self.fldDoorLF = QLineEdit()
+        self.fldDoorLF.setObjectName(u"fldDoorLF")
+        self.gridLayout.addWidget(self.fldDoorLF, 2, 1, 1, 1)
+        self.btnDoorLF = QPushButton()
+        self.btnDoorLF.setObjectName(u"btnDoorLF")
+        self.btnDoorLF.setFont(font)
+        self.gridLayout.addWidget(self.btnDoorLF, 2, 2, 1, 2)
+        self.lblDoorLB = QLabel()
+        self.lblDoorLB.setObjectName(u"lblDoorLB")
+        self.lblDoorLB.setFont(font)
+        self.lblDoorLB.setLayoutDirection(Qt.LeftToRight)
+        self.lblDoorLB.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.gridLayout.addWidget(self.lblDoorLB, 3, 0, 1, 1)
+        self.fldDoorLB = QLineEdit()
+        self.fldDoorLB.setObjectName(u"fldDoorLB")
+        self.gridLayout.addWidget(self.fldDoorLB, 3, 1, 1, 1)
+        self.btnDoorLB = QPushButton()
+        self.btnDoorLB.setObjectName(u"btnDoorLB")
+        self.btnDoorLB.setFont(font)
+        self.gridLayout.addWidget(self.btnDoorLB, 3, 2, 1, 2)
+        self.lblDoorRF = QLabel()
+        self.lblDoorRF.setObjectName(u"lblDoorRF")
+        self.lblDoorRF.setFont(font)
+        self.lblDoorRF.setLayoutDirection(Qt.LeftToRight)
+        self.lblDoorRF.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.gridLayout.addWidget(self.lblDoorRF, 4, 0, 1, 1)
+        self.fldDoorRF = QLineEdit()
+        self.fldDoorRF.setObjectName(u"fldDoorRF")
+        self.gridLayout.addWidget(self.fldDoorRF, 4, 1, 1, 1)
+        self.btnDoorRF = QPushButton()
+        self.btnDoorRF.setObjectName(u"btnDoorRF")
+        self.btnDoorRF.setFont(font)
+        self.gridLayout.addWidget(self.btnDoorRF, 4, 2, 1, 2)
+        self.lblDoorRB = QLabel()
+        self.lblDoorRB.setObjectName(u"lblDoorRB")
+        self.lblDoorRB.setFont(font)
+        self.lblDoorRB.setLayoutDirection(Qt.LeftToRight)
+        self.lblDoorRB.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.gridLayout.addWidget(self.lblDoorRB, 5, 0, 1, 1)
+        self.fldDoorRB = QLineEdit()
+        self.fldDoorRB.setObjectName(u"fldDoorRB")
+        self.gridLayout.addWidget(self.fldDoorRB, 5, 1, 1, 1)
+        self.btnDoorRB = QPushButton()
+        self.btnDoorRB.setObjectName(u"btnDoorRB")
+        self.btnDoorRB.setFont(font)
+        self.gridLayout.addWidget(self.btnDoorRB, 5, 2, 1, 2)
+        self.lblWheelLF = QLabel()
+        self.lblWheelLF.setObjectName(u"lblWheelLF")
+        self.lblWheelLF.setFont(font)
+        self.lblWheelLF.setLayoutDirection(Qt.LeftToRight)
+        self.lblWheelLF.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.gridLayout.addWidget(self.lblWheelLF, 6, 0, 1, 1)
+        self.fldWheelLF = QLineEdit()
+        self.fldWheelLF.setObjectName(u"fldWheelLF")
+        self.gridLayout.addWidget(self.fldWheelLF, 6, 1, 1, 1)
+        self.chkWheelLF = QCheckBox()
+        self.chkWheelLF.setObjectName(u"chkWheelLF")
+        self.chkWheelLF.setFont(font)
+        self.gridLayout.addWidget(self.chkWheelLF, 6, 2, 1, 1)
+        self.btnWheelLF = QPushButton()
+        self.btnWheelLF.setObjectName(u"btnWheelLF")
+        self.btnWheelLF.setFont(font)
+        self.gridLayout.addWidget(self.btnWheelLF, 6, 3, 1, 1)
+        self.lblWheelLB = QLabel()
+        self.lblWheelLB.setObjectName(u"lblWheelLB")
+        self.lblWheelLB.setFont(font)
+        self.lblWheelLB.setLayoutDirection(Qt.LeftToRight)
+        self.lblWheelLB.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.gridLayout.addWidget(self.lblWheelLB, 7, 0, 1, 1)
+        self.fldWheelLB = QLineEdit()
+        self.fldWheelLB.setObjectName(u"fldWheelLB")
+        self.gridLayout.addWidget(self.fldWheelLB, 7, 1, 1, 1)
+        self.chkWheelLB = QCheckBox()
+        self.chkWheelLB.setObjectName(u"chkWheelLB")
+        self.chkWheelLB.setFont(font)
+        self.gridLayout.addWidget(self.chkWheelLB, 7, 2, 1, 1)
+        self.btnWheelLB = QPushButton()
+        self.btnWheelLB.setObjectName(u"btnWheelLB")
+        self.btnWheelLB.setFont(font)
+        self.gridLayout.addWidget(self.btnWheelLB, 7, 3, 1, 1)
+        self.lblWheelRF = QLabel()
+        self.lblWheelRF.setObjectName(u"lblWheelRF")
+        self.lblWheelRF.setFont(font)
+        self.lblWheelRF.setLayoutDirection(Qt.LeftToRight)
+        self.lblWheelRF.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.gridLayout.addWidget(self.lblWheelRF, 8, 0, 1, 1)
+        self.fldWheelRF = QLineEdit()
+        self.fldWheelRF.setObjectName(u"fldWheelRF")
+        self.gridLayout.addWidget(self.fldWheelRF, 8, 1, 1, 1)
+        self.chkWheelRF = QCheckBox()
+        self.chkWheelRF.setObjectName(u"chkWheelRF")
+        self.chkWheelRF.setFont(font)
+        self.gridLayout.addWidget(self.chkWheelRF, 8, 2, 1, 1)
+        self.btnWheelRF = QPushButton()
+        self.btnWheelRF.setObjectName(u"btnWheelRF")
+        self.btnWheelRF.setFont(font)
+        self.gridLayout.addWidget(self.btnWheelRF, 8, 3, 1, 1)
+        self.lblWheelRB = QLabel()
+        self.lblWheelRB.setObjectName(u"lblWheelRB")
+        self.lblWheelRB.setFont(font)
+        self.lblWheelRB.setLayoutDirection(Qt.LeftToRight)
+        self.lblWheelRB.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.gridLayout.addWidget(self.lblWheelRB, 9, 0, 1, 1)
+        self.fldWheelRB = QLineEdit()
+        self.fldWheelRB.setObjectName(u"fldWheelRB")
+        self.gridLayout.addWidget(self.fldWheelRB, 9, 1, 1, 1)
+        self.chkWheelRB = QCheckBox()
+        self.chkWheelRB.setObjectName(u"chkWheelRB")
+        self.chkWheelRB.setFont(font)
+        self.gridLayout.addWidget(self.chkWheelRB, 9, 2, 1, 1)
+        self.btnWheelRB = QPushButton()
+        self.btnWheelRB.setObjectName(u"btnWheelRB")
+        self.btnWheelRB.setFont(font)
+        self.gridLayout.addWidget(self.btnWheelRB, 9, 3, 1, 1)
+        self.verticalLayout.addLayout(self.gridLayout)
+
+
+        self.hLine1 = QFrame()
+        self.hLine1.setObjectName(u"hLine1")
+        self.hLine1.setFrameShape(QFrame.HLine)
+        self.hLine1.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.hLine1)
+
+
+        self.buttonLayout = QVBoxLayout()
+        self.buttonLayout.setObjectName(u"buttonLayout")
+        self.btnCreateCtrl = QPushButton()
+        self.btnCreateCtrl.setObjectName(u"btnCreateCtrl")
+        self.btnCreateCtrl.setFont(font)
+        self.buttonLayout.addWidget(self.btnCreateCtrl)
+        self.btnBuild = QPushButton()
+        self.btnBuild.setObjectName(u"btnBuild")
+        self.btnBuild.setFont(font)
+        self.buttonLayout.addWidget(self.btnBuild)
+        self.btnClose = QPushButton()
+        self.btnClose.setObjectName(u"btnClose")
+        self.btnClose.setFont(font)
+        self.buttonLayout.addWidget(self.btnClose)
+        self.verticalLayout.addLayout(self.buttonLayout)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.verticalLayout.addItem(self.verticalSpacer)
+
+
+        self.retranslateUi()
+        self.buttonsLink()
+
+
+    def retranslateUi(self):
+        self.lblRootGrp.setText(QCoreApplication.translate("Form", u"Root Grp : ", None))
+        self.btnRootGrp.setText(QCoreApplication.translate("Form", u"Select", None))
+        self.lblBodyGrp.setText(QCoreApplication.translate("Form", u"Body Grp : ", None))
+        self.btnBodyGrp.setText(QCoreApplication.translate("Form", u"Select", None))
+        self.lblDoorLF.setText(QCoreApplication.translate("Form", u"Door L F : ", None))
+        self.btnDoorLF.setText(QCoreApplication.translate("Form", u"Select", None))
+        self.lblDoorLB.setText(QCoreApplication.translate("Form", u"Door L B : ", None))
+        self.btnDoorLB.setText(QCoreApplication.translate("Form", u"Select", None))
+        self.lblDoorRF.setText(QCoreApplication.translate("Form", u"Door R F : ", None))
+        self.btnDoorRF.setText(QCoreApplication.translate("Form", u"Select", None))
+        self.lblDoorRB.setText(QCoreApplication.translate("Form", u"Door R B : ", None))
+        self.btnDoorRB.setText(QCoreApplication.translate("Form", u"Select", None))
+        self.lblWheelLF.setText(QCoreApplication.translate("Form", u"Wheel L F : ", None))
+        self.chkWheelLF.setText(QCoreApplication.translate("Form", u"expr", None))
+        self.btnWheelLF.setText(QCoreApplication.translate("Form", u"Select", None))
+        self.lblWheelLB.setText(QCoreApplication.translate("Form", u"Wheel L B : ", None))
+        self.chkWheelLB.setText(QCoreApplication.translate("Form", u"expr", None))
+        self.btnWheelLB.setText(QCoreApplication.translate("Form", u"Select", None))
+        self.lblWheelRF.setText(QCoreApplication.translate("Form", u"Wheel R F : ", None))
+        self.chkWheelRF.setText(QCoreApplication.translate("Form", u"expr", None))
+        self.btnWheelRF.setText(QCoreApplication.translate("Form", u"Select", None))
+        self.lblWheelRB.setText(QCoreApplication.translate("Form", u"Wheel R B : ", None))
+        self.chkWheelRB.setText(QCoreApplication.translate("Form", u"expr", None))
+        self.btnWheelRB.setText(QCoreApplication.translate("Form", u"Select", None))
+        self.btnCreateCtrl.setText(QCoreApplication.translate("Form", u"Create Controllers", None))
+        self.btnBuild.setText(QCoreApplication.translate("Form", u"Build", None))
+        self.btnClose.setText(QCoreApplication.translate("Form", u"Close", None))
+
+
+    def buttonsLink(self):
+        self.btnRootGrp.clicked.connect(self.clickSelectButton)
+        self.btnBodyGrp.clicked.connect(self.clickSelectButton)
+        self.btnClose.clicked.connect(self.close)
+
+
+    def getRootGroup(self):
+        references = pm.listReferences()
+        if not references:
+            result = ""
+        else:
+            ref = references[0]
+            result = ref.nodes()[0]
+        print(result)
+        return result
+
+
+    def clickSelectButton(self):
+        button = self.sender().objectName()
+        replaced = button.replace("btn", "fld")
+        temp = self.findChild(QLineEdit, replaced)
+        print(temp)
+        isEmpty = temp.text().strip() == ""
+        print(isEmpty)
+        if not isEmpty:
+            try:
+                pm.select(temp.text())
+            except:
+                pass
+        else:
+            sel = pm.selected()
+            if sel:
+                temp.setText(sel[0].name())
+            else:
+                pm.warning(f"{button.strip('btn')} Field is empty.")
+
+
 
 
     def run(self):
-        self.createGlobalCtrl(self.topGroup)
+        self.createGlobalCtrl(self.rootGroup)
         self.createBodyCtrl(self.bodyGroup)
         self.buildDoorCtrl()
 
@@ -304,4 +582,11 @@ class QuickRig_Car:
         return result
 
 
-
+# if __name__ == "__main__":
+#     try:
+#         qrc.close()
+#         qrc.deleteLater()
+#     except:
+#         pass
+#     qrc = QuickRig_Car()
+#     qrc.show()
