@@ -14,32 +14,37 @@ def mayaMainWindow():
 
 class QuickRig_Car(QWidget):
     def __init__(self):
-        self.rootGroup = u"%s" % self.getRootGroup()
-        self.bodyGroup = u"%s" % selectTopGroup(self.rootGroup, "body")[0]
-        self.doorGroup = [
-            "vhcl_bestaB_mdl_v9999:bestaB_body_door_Ft_L_grp", 
-            "", 
-            "vhcl_bestaB_mdl_v9999:bestaB_body_door_Ft_R_grp", 
-            ""
-            ]
-        self.doorName = [
-            "cc_doorLeftFront", 
-            "cc_doorLeftBack", 
-            "cc_doorRightFront", 
-            "cc_doorRightBack"
-            ]
-        self.wheelGroup = [
-            "vhcl_bestaB_mdl_v9999:bestaB_wheel_Ft_L_grp", 
-            "vhcl_bestaB_mdl_v9999:bestaB_wheel_Bk_L_grp", 
-            "vhcl_bestaB_mdl_v9999:bestaB_wheel_Ft_R_grp", 
-            "vhcl_bestaB_mdl_v9999:bestaB_wheel_Bk_R_grp"
-            ]
-        self.wheelName = [
-            "cc_wheelLeftFront", 
-            "cc_wheelLeftBack", 
-            "cc_wheelRightFront", 
-            "cc_wheelRightBack"
-            ]
+        # Root Field
+        tempRoot = getReferencedGroupList()
+        self.rootGroup = u"%s" % tempRoot[0] if tempRoot else ""
+        # Body Field
+        tempBody = selectTopGroup(self.rootGroup, "body")
+        self.bodyGroup = u"%s" % tempBody[0] if tempBody else ""
+        # Door Field
+        tempDoorLF = selectTopGroup(self.rootGroup, "door", "_L", "_Ft")
+        self.doorLF = u"%s" % tempDoorLF[0] if tempDoorLF else ""
+        tempDoorLB = selectTopGroup(self.rootGroup, "door", "_L", "_Bk")
+        self.doorLB = u"%s" % tempDoorLB[0] if tempDoorLB else ""
+        tempDoorRF = selectTopGroup(self.rootGroup, "door", "_R", "_Ft")
+        self.doorRF = u"%s" % tempDoorRF[0] if tempDoorRF else ""
+        tempDoorRB = selectTopGroup(self.rootGroup, "door", "_R", "_Bk")
+        self.doorRB = u"%s" % tempDoorRB[0] if tempDoorRB else ""
+        self.doorGroup = [self.doorLF, self.doorLB, self.doorRF, self.doorRB]
+        tempDoorName = ["LeftFront", "LeftBack", "RightFront", "RightBack"]
+        self.doorName = ["cc_door%s" % i for i in tempDoorName]
+        # Wheel Field
+        tempWheelLF = selectTopGroup(self.rootGroup, "wheel", "_L", "_Ft")
+        self.wheelLF = u"%s" % tempWheelLF[0] if tempWheelLF else ""
+        tempWheelLB = selectTopGroup(self.rootGroup, "wheel", "_L", "_Bk")
+        self.wheelLB = u"%s" % tempWheelLB[0] if tempWheelLB else ""
+        tempWheelRF = selectTopGroup(self.rootGroup, "wheel", "_R", "_Ft")
+        self.wheelRF = u"%s" % tempWheelRF[0] if tempWheelRF else ""
+        tempWheelRB = selectTopGroup(self.rootGroup, "wheel", "_R", "_Bk")
+        self.wheelRB = u"%s" % tempWheelRB[0] if tempWheelRB else ""
+        self.wheelGroup = [self.wheelLF, self.wheelLB, self.wheelRF, self.wheelRB]
+        tempWheelName = ["LeftFront", "LeftBack", "RightFront", "RightBack"]
+        self.wheelName = ["cc_wheel%s" % i for i in tempWheelName]
+        # ColorBar
         self.colorBar = {
             "cc_main": "yellow", 
             "cc_sub": "pink", 
@@ -65,7 +70,47 @@ class QuickRig_Car(QWidget):
             "cc_wheelRightBack_main": "blue", 
             "cc_wheelRightBack_sub": "blue2", 
             }
+        # Group Hierarchy
+        self.groupHierarchy = {
+            "controllers": [
+                "cc_main_grp", 
+                "cc_wheelLeftFront_grp", 
+                "cc_wheelLeftFront_upDownMain_grp", 
+                "cc_wheelLeftBack_grp", 
+                "cc_wheelLeftBack_upDownMain_grp", 
+                "cc_wheelRightFront_grp", 
+                "cc_wheelRightFront_upDownMain_grp", 
+                "cc_wheelRightBack_grp", 
+                "cc_wheelRightBack_upDownMain_grp", 
+                ], 
+            "cc_sub": ["cc_body_grp"], 
+            "cc_body": [
+                "cc_doorLeftFront_grp", 
+                "cc_doorLeftBack_grp", 
+                "cc_doorRightFront_grp", 
+                "cc_doorRightBack_grp", 
+                ], 
+            }
+        # Delete List
+        self.deleteName = [
+            "cc_main_grp", 
+            "cc_body_grp", 
+            "cc_doorLeftFront_grp", 
+            "cc_doorLeftBack_grp", 
+            "cc_doorRightFront_grp", 
+            "cc_doorRightBack_grp", 
+            "cc_wheelLeftFront_grp", 
+            "cc_wheelLeftFront_upDownMain_grp", 
+            "cc_wheelLeftBack_grp", 
+            "cc_wheelLeftBack_upDownMain_grp", 
+            "cc_wheelRightFront_grp", 
+            "cc_wheelRightFront_upDownMain_grp", 
+            "cc_wheelRightBack_grp", 
+            "cc_wheelRightBack_upDownMain_grp", 
+            ]
+        # Locators
         self.locators = []
+        # Set up User Interface
         super(QuickRig_Car, self).__init__()
         self.setParent(mayaMainWindow())
         self.setWindowFlags(Qt.Window)
@@ -122,6 +167,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblDoorLF, 2, 0, 1, 1)
         self.fldDoorLF = QLineEdit()
         self.fldDoorLF.setObjectName(u"fldDoorLF")
+        self.fldDoorLF.setText(self.doorLF)
         self.gridLayout.addWidget(self.fldDoorLF, 2, 1, 1, 1)
         self.btnDoorLF = QPushButton()
         self.btnDoorLF.setObjectName(u"btnDoorLF")
@@ -135,6 +181,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblDoorLB, 3, 0, 1, 1)
         self.fldDoorLB = QLineEdit()
         self.fldDoorLB.setObjectName(u"fldDoorLB")
+        self.fldDoorLB.setText(self.doorLB)
         self.gridLayout.addWidget(self.fldDoorLB, 3, 1, 1, 1)
         self.btnDoorLB = QPushButton()
         self.btnDoorLB.setObjectName(u"btnDoorLB")
@@ -148,6 +195,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblDoorRF, 4, 0, 1, 1)
         self.fldDoorRF = QLineEdit()
         self.fldDoorRF.setObjectName(u"fldDoorRF")
+        self.fldDoorRF.setText(self.doorRF)
         self.gridLayout.addWidget(self.fldDoorRF, 4, 1, 1, 1)
         self.btnDoorRF = QPushButton()
         self.btnDoorRF.setObjectName(u"btnDoorRF")
@@ -162,6 +210,7 @@ class QuickRig_Car(QWidget):
         self.fldDoorRB = QLineEdit()
         self.fldDoorRB.setObjectName(u"fldDoorRB")
         self.gridLayout.addWidget(self.fldDoorRB, 5, 1, 1, 1)
+        self.fldDoorRB.setText(self.doorRB)
         self.btnDoorRB = QPushButton()
         self.btnDoorRB.setObjectName(u"btnDoorRB")
         self.btnDoorRB.setFont(font)
@@ -174,6 +223,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblWheelLF, 6, 0, 1, 1)
         self.fldWheelLF = QLineEdit()
         self.fldWheelLF.setObjectName(u"fldWheelLF")
+        self.fldWheelLF.setText(self.wheelLF)
         self.gridLayout.addWidget(self.fldWheelLF, 6, 1, 1, 1)
         self.chkWheelLF = QCheckBox()
         self.chkWheelLF.setObjectName(u"chkWheelLF")
@@ -191,6 +241,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblWheelLB, 7, 0, 1, 1)
         self.fldWheelLB = QLineEdit()
         self.fldWheelLB.setObjectName(u"fldWheelLB")
+        self.fldWheelLB.setText(self.wheelLB)
         self.gridLayout.addWidget(self.fldWheelLB, 7, 1, 1, 1)
         self.chkWheelLB = QCheckBox()
         self.chkWheelLB.setObjectName(u"chkWheelLB")
@@ -208,6 +259,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblWheelRF, 8, 0, 1, 1)
         self.fldWheelRF = QLineEdit()
         self.fldWheelRF.setObjectName(u"fldWheelRF")
+        self.fldWheelRF.setText(self.wheelRF)
         self.gridLayout.addWidget(self.fldWheelRF, 8, 1, 1, 1)
         self.chkWheelRF = QCheckBox()
         self.chkWheelRF.setObjectName(u"chkWheelRF")
@@ -225,6 +277,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblWheelRB, 9, 0, 1, 1)
         self.fldWheelRB = QLineEdit()
         self.fldWheelRB.setObjectName(u"fldWheelRB")
+        self.fldWheelRB.setText(self.wheelRB)
         self.gridLayout.addWidget(self.fldWheelRB, 9, 1, 1, 1)
         self.chkWheelRB = QCheckBox()
         self.chkWheelRB.setObjectName(u"chkWheelRB")
@@ -250,6 +303,10 @@ class QuickRig_Car(QWidget):
         self.btnCreateCtrl.setObjectName(u"btnCreateCtrl")
         self.btnCreateCtrl.setFont(font)
         self.buttonLayout.addWidget(self.btnCreateCtrl)
+        self.btnDeleteCtrl = QPushButton()
+        self.btnDeleteCtrl.setObjectName(u"btnDeleteCtrl")
+        self.btnDeleteCtrl.setFont(font)
+        self.buttonLayout.addWidget(self.btnDeleteCtrl)
         self.btnBuild = QPushButton()
         self.btnBuild.setObjectName(u"btnBuild")
         self.btnBuild.setFont(font)
@@ -293,34 +350,32 @@ class QuickRig_Car(QWidget):
         self.chkWheelRB.setText(QCoreApplication.translate("Form", u"expr", None))
         self.btnWheelRB.setText(QCoreApplication.translate("Form", u"Select", None))
         self.btnCreateCtrl.setText(QCoreApplication.translate("Form", u"Create Controllers", None))
+        self.btnDeleteCtrl.setText(QCoreApplication.translate("Form", u"Delete Controllers", None))
         self.btnBuild.setText(QCoreApplication.translate("Form", u"Build", None))
         self.btnClose.setText(QCoreApplication.translate("Form", u"Close", None))
 
 
     def buttonsLink(self):
-        self.btnRootGrp.clicked.connect(self.clickSelectButton)
-        self.btnBodyGrp.clicked.connect(self.clickSelectButton)
+        self.btnRootGrp.clicked.connect(self.buttonEvent1)
+        self.btnBodyGrp.clicked.connect(self.buttonEvent1)
+        self.btnDoorLF.clicked.connect(self.buttonEvent1)
+        self.btnDoorLB.clicked.connect(self.buttonEvent1)
+        self.btnDoorRF.clicked.connect(self.buttonEvent1)
+        self.btnDoorRB.clicked.connect(self.buttonEvent1)
+        self.btnWheelLF.clicked.connect(self.buttonEvent1)
+        self.btnWheelLB.clicked.connect(self.buttonEvent1)
+        self.btnWheelRF.clicked.connect(self.buttonEvent1)
+        self.btnWheelRB.clicked.connect(self.buttonEvent1)
+        self.btnCreateCtrl.clicked.connect(self.run)
+        self.btnDeleteCtrl.clicked.connect(self.deleteCtrl)
         self.btnClose.clicked.connect(self.close)
 
 
-    def getRootGroup(self):
-        references = pm.listReferences()
-        if not references:
-            result = ""
-        else:
-            ref = references[0]
-            result = ref.nodes()[0]
-        print(result)
-        return result
-
-
-    def clickSelectButton(self):
+    def buttonEvent1(self):
         button = self.sender().objectName()
         replaced = button.replace("btn", "fld")
         temp = self.findChild(QLineEdit, replaced)
-        print(temp)
         isEmpty = temp.text().strip() == ""
-        print(isEmpty)
         if not isEmpty:
             try:
                 pm.select(temp.text())
@@ -334,12 +389,18 @@ class QuickRig_Car(QWidget):
                 pm.warning(f"{button.strip('btn')} Field is empty.")
 
 
+# ==========================================================================
 
 
     def run(self):
+        self.deleteCtrl()
         self.createGlobalCtrl(self.rootGroup)
         self.createBodyCtrl(self.bodyGroup)
         self.buildDoorCtrl()
+        self.buildWheelCtrl()
+        self.connectWheel()
+        self.regroup()
+        self.setColor()
 
 
     def createGlobalCtrl(self, objectGroup: str) -> list:
@@ -354,7 +415,6 @@ class QuickRig_Car(QWidget):
         ccMain = "cc_main"
         ccSub = "cc_sub"
         if pm.objExists(ccMain) or pm.objExists(ccSub):
-            pm.warning("Controllers Aleady exists.")
             return
         a, b, c = getBoundingBoxSize(objectGroup)
         x, y, z = 100, 100, 250
@@ -383,7 +443,6 @@ class QuickRig_Car(QWidget):
         """
         ccBody = "cc_body"
         if pm.objExists(ccBody):
-            pm.warning(f"{ccBody} Aleady exists.")
             return
         defaultScale = 240
         bodySize = max(getBoundingBoxSize(objectGroup)) / defaultScale
@@ -400,7 +459,7 @@ class QuickRig_Car(QWidget):
         return bodyGroups
 
 
-    def createDoorCtrl(self, objectGroup: str, doorName: str):
+    def createDoorCtrl(self, objectGroup: str, doorName: str) -> list:
         """ Create a door controller. 
         - When the doorName contains the word "Right", "right", "_R", 
             - set the group's rotateX to -180 in the YZ plane.
@@ -440,11 +499,11 @@ class QuickRig_Car(QWidget):
         return doorGroup
 
 
-    def createWheelCtrl(self, ctrlName: str, obj: str) -> list:
+    def createWheelCtrl(self, objectGroup: str, ctrlName: str) -> list:
         """ Create a wheel controller.
 
         Examples: 
-        >>> createWheelCtrl("cc_wheelLeftFront", "pCylinder")
+        >>> createWheelCtrl("pCylinder", "cc_wheelLeftFront")
         >>> ['cc_wheelLeftFront_upDownMain_grp', ...]
         """
         ctrls = [
@@ -453,19 +512,21 @@ class QuickRig_Car(QWidget):
             f"{ctrlName}_main", 
             f"{ctrlName}_sub"
         ]
+        if any([pm.objExists(i) for i in ctrls]):
+            return
         sizeRatio = [14, 18, 9, 11]
         cc = Controllers()
-        rad = max(getBoundingBoxSize(obj))
+        rad = max(getBoundingBoxSize(objectGroup))
         for ctrlName, sr in zip(ctrls[:2], sizeRatio[:2]):
             cuv = cc.createControllers(square=ctrlName)[0]
             pm.scale(cuv, (rad/(sr*2), rad/sr, rad/sr))
-            pm.matchTransform(cuv, obj, pos=True)
+            pm.matchTransform(cuv, objectGroup, pos=True)
             pm.setAttr(f"{cuv}.translateY", 0)
         for ctrlName, sr in zip(ctrls[2:], sizeRatio[2:]):
             cuv = cc.createControllers(circle=ctrlName)[0]
             pm.scale(cuv, (rad/sr, rad/sr, rad/sr))
             pm.rotate(cuv, (0, 0, 90))
-            pm.matchTransform(cuv, obj, pos=True)
+            pm.matchTransform(cuv, objectGroup, pos=True)
         ccGrp = groupOwnPivot(*ctrls, null=True)
         parentHierarchically(*ccGrp)
         pm.makeIdentity(ccGrp, a=1, t=1, r=1, s=1, n=0, pn=1)
@@ -475,11 +536,24 @@ class QuickRig_Car(QWidget):
         pm.setAttr(f"{ccMain}.Radius", rad)
         locator = createSubLocator(ctrls[-1])
         ccGrp.append(locator)
+        pm.parentConstraint(locator, objectGroup, mo=True, w=1.0)
+        pm.scaleConstraint(locator, objectGroup, mo=True, w=1.0)
         return ccGrp
 
 
     def createWheelExpressionGroups(self, ctrlName: str) -> list:
-        """ Create groups for the expression. """
+        """ Create groups for the expression. 
+
+        Examples: 
+        >>> createWheelExpressionGroups("cc_wheelLeftFront")
+        >>> grpNames = [
+            "cc_wheelLeftFront_grp", 
+            "cc_wheelLeftFront_offset", 
+            "cc_wheelLeftFront_offsetNull", 
+            "cc_wheelLeftFront_offsetPrevious", 
+            "cc_wheelLeftFront_offsetOrient", 
+            ]
+         """
         grpNames = [
             f"{ctrlName}_grp", 
             f"{ctrlName}_offset", 
@@ -502,11 +576,12 @@ class QuickRig_Car(QWidget):
         return result
 
 
-    def createWheelExpression(self, wheelGroups: list) -> list:
+    def createWheelExpression(self, wheelGrp: list, exprGrp: list) -> None:
         """ Rotate the locator by the moving distance of offset_grp.
 
         Args: 
-        >>> wheelGroups = [
+        -----
+        >>> wheelGrp = [
             'cc_wheelLeftFront_upDownMain_grp', 
             'cc_wheelLeftFront_upDownMain_null', 
             'cc_wheelLeftFront_upDownMain', 
@@ -521,19 +596,34 @@ class QuickRig_Car(QWidget):
             'cc_wheelLeftFront_sub', 
             'loc_wheelLeftFront_sub', 
             ]
+        >>> exprGrp = [
+            "cc_wheelLeftFront_grp", 
+            "cc_wheelLeftFront_offset", 
+            "cc_wheelLeftFront_offsetNull", 
+            "cc_wheelLeftFront_offsetPrevious", 
+            "cc_wheelLeftFront_offsetOrient", 
+            ]
+        
+        Return: 
+        -------
+        >>> exprGrp = [
+            "cc_wheelLeftFront_grp", 
+            "cc_wheelLeftFront_offset", 
+            "cc_wheelLeftFront_offsetNull", 
+            "cc_wheelLeftFront_offsetPrevious", 
+            "cc_wheelLeftFront_offsetOrient", 
+            ]
         """
-        firstGroup = wheelGroups[0]
-        ctrlMain = wheelGroups[8]
-        ctrlName = ctrlMain.rsplit("_", 1)[0]
-        locator = wheelGroups[-1]
+        firstGroup = wheelGrp[0]
+        ctrlMain = wheelGrp[8]
+        locator = wheelGrp[-1]
         if not pm.attributeQuery("AutoRoll", node=ctrlMain, ex=True):
             attrAuto = 'AutoRoll'
             pm.addAttr(ctrlMain, ln=attrAuto, at='long', min=0, max=1, dv=1)
             pm.setAttr(f'{ctrlMain}.{attrAuto}', e=True, k=True)
         br = '\n'
-        groupNames = self.createWheelExpressionGroups(ctrlName)
-        offset = groupNames[1]
-        previous, orient = groupNames[3:]
+        offset = exprGrp[1]
+        previous, orient = exprGrp[3:]
         pm.parent(firstGroup, offset)
         # expression1
         expr1 = f'float $rad = {ctrlMain}.Radius;{br}'
@@ -568,18 +658,95 @@ class QuickRig_Car(QWidget):
         # final expression
         expr = expr1 + expr2 + expr3 + expr4
         pm.expression(s=expr, o='', ae=1, uc='all')
-        return groupNames
 
 
-    def buildDoorCtrl(self) -> list:
+    def buildDoorCtrl(self):
         result = []
-        for grp, dn in zip(self.doorGroup, self.doorName):
+        doorGroup = [
+            self.fldDoorLF.text(), 
+            self.fldDoorLB.text(), 
+            self.fldDoorRF.text(), 
+            self.fldDoorRB.text(), 
+            ]
+        for grp, dn in zip(doorGroup, self.doorName):
             if not grp or pm.objExists(dn):
                 continue
             else:
                 doorGroup = self.createDoorCtrl(grp, dn)
-                result += doorGroup
+                result.append(doorGroup[0])
         return result
+
+
+    def buildWheelCtrl(self):
+        checkExpr = [
+            self.chkWheelLF.isChecked(), 
+            self.chkWheelLB.isChecked(), 
+            self.chkWheelRF.isChecked(), 
+            self.chkWheelRB.isChecked(), 
+            ]
+        wheelGroup = [
+            self.fldWheelLF.text(), 
+            self.fldWheelLB.text(), 
+            self.fldWheelRF.text(), 
+            self.fldWheelRB.text(), 
+            ]
+        temp = ["_upDownMain", "_upDownSub", "_main", "_sub"]
+        result = []
+        for grp, wn, chk in zip(wheelGroup, self.wheelName, checkExpr):
+            if not grp or any([pm.objExists(wn + i) for i in temp]):
+                continue
+            else:
+                createdWheelGrp = self.createWheelCtrl(grp, wn)
+                if chk:
+                    exprGroup = self.createWheelExpressionGroups(wn)
+                    self.createWheelExpression(createdWheelGrp, exprGroup)
+                    result.append(exprGroup[0])
+                else:
+                    result.append(createdWheelGrp[0])
+        return result
+
+
+    def connectWheel(self):
+        pass
+
+
+    def regroup(self):
+        """ Create the Rig Group. 
+        And try to parent what is in self.groupHierarchy
+         """
+        groupName = self.fldRootGrp.text().rsplit(":", 1)[-1]
+        createRigGroups(groupName)
+        if pm.objExists(self.fldRootGrp.text()):
+            parentHierarchically("MODEL", self.fldRootGrp.text())
+        for parents, children in self.groupHierarchy.items():
+            for child in children:
+                try:
+                    pm.parent(child, parents)
+                except:
+                    continue
+
+
+    def setColor(self):
+        """ Try to colorize what is in self.colorBar. """
+        for cc, color in self.colorBar.items():
+            try:
+                temp = {color: True}
+                colorize(cc, **temp)
+            except:
+                continue
+
+
+    def deleteCtrl(self):
+        """ Try to delete what is in self.deleteName. """
+        try:
+            pm.parent(self.fldRootGrp.text(), w=True)
+        except:
+            pass
+        for i in self.deleteName:
+            try:
+                pm.delete(i)
+            except:
+                continue
 
 
 # if __name__ == "__main__":

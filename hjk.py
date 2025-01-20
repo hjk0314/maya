@@ -23,20 +23,29 @@ def getPosition(selection: str) -> tuple:
     return result
 
 
-def getFlattenList(*args) -> list:
+def getFlattenList(data, seen=None) -> list:
     """ Flattens a list within a list. 
 
     Examples: 
     >>> getFlattenList(["ab", ["bc"], ["ef"]], [[["gh", ], "ij"], "jk"], ...)
     >>> ['ab', 'bc', 'ef', 'gh', 'ij', 'jk']
      """
+    if seen is None:
+        seen = set()
     result = []
-    for arg in args:
-        if not isinstance(arg, str) and isinstance(arg, Iterable):
-            for i in arg:
-                result.extend(getFlattenList(i))
-        else:
-            result.append(arg)
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if key not in seen:
+                seen.add(key)
+                result.append(key)
+            result.extend(getFlattenList(value, seen))
+    elif isinstance(data, list):
+        for item in data:
+            result.extend(getFlattenList(item, seen))
+    else:
+        if data not in seen:
+            seen.add(data)
+            result.append(data)
     return result
 
 
@@ -71,6 +80,21 @@ def getDistance(xyz1: tuple, xyz2: tuple) -> float:
         >>> getDistance([0,0,0], [1,2,3])
      """
     result = math.sqrt(sum((a - b)**2 for a, b in zip(xyz1, xyz2)))
+    return result
+
+
+def getReferencedGroupList() -> list:
+    """ Returns a list of groups of referenced. 
+    
+    Examples: 
+    >>> getReferencedGroupList()
+    >>> [nt.Transform('vhcl_bestaB_mdl_v9999:bestaB'), ...]
+     """
+    references = pm.listReferences()
+    if not references:
+        result = []
+    else:
+        result = [ref.nodes()[0] for ref in references if ref.nodes()]
     return result
 
 
@@ -448,7 +472,7 @@ def createSubLocator(ctrl: str) -> str:
     if "cc_" in ctrl:
         locName = ctrl.replace("cc_", "loc_")
     else:
-        locName = f"{ctrl}_exprLocator"
+        locName = f"loc_{ctrl}"
     if pm.objExists(locName):
         return locName
     else:
@@ -457,6 +481,26 @@ def createSubLocator(ctrl: str) -> str:
         pm.parent(locator, ctrl)
         pm.makeIdentity(locator, a=1, t=1, r=1, s=1, n=0, pn=1)
         return locator
+
+
+def createLocatorSameTargetsRotation(ctrl: str, target: str) -> str:
+    """ Create a locator with the same target's rotation. 
+    And goes under the controller, not target's under.
+
+    Notes: 
+    ------ 
+    - Create a locator.
+    - pm.parent(locator, target)
+    - Freeze the locator.
+    - pm.parent(locator, w=True)
+    - pm.parent(locator, ctrl)
+
+    Examples:  
+    --------
+    >>> createLocatorSameTargetsRotation("cc_neck", "jnt_neck")
+    >>> "loc_neck"
+     """
+    pass
 
 
 def selectGroupOnly(*args) -> list:
@@ -482,7 +526,7 @@ def selectGroupOnly(*args) -> list:
     return result
 
 
-def selectTopGroup(objectGroup: str, *filter) -> str:
+def selectTopGroup(objectGroup: str, *filter) -> list:
     """ Get the top group containing arguments such as 'body' 
     among the subgroups of the selected group.
 
@@ -835,25 +879,24 @@ def mirrorCopy(obj: str, mirrorPlane: str="YZ") -> list:
     return result
 
 
-def createRigGroups(assetName: str="") -> list:
+def createRigGroups(assetName: str="") -> dict:
     """ Create a Group Tree used by Madman Company. """
-    groupNames = {
+    grpNames = {
         "assetName": ["rig", "MODEL"], 
         "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
         "skeletons": ["bindBones", "rigBones"]
         }
     if assetName:
-        groupNames[assetName] = groupNames.pop("assetName")
-    for parents, children in groupNames.items():
+        grpNames[assetName] = grpNames.pop("assetName")
+        grpNames = {k: grpNames[k] for k in [assetName, "rig", "skeletons"]}
+    for parents, children in grpNames.items():
         if not pm.objExists(parents):
             pm.group(em=True, n=parents)
         for child in children:
             if not pm.objExists(child):
                 pm.group(em=True, n=child)
             pm.parent(child, parents)
-    result = groupNames.keys()
-    result = list(result)
-    return result
+    return grpNames
 
 
 def MovePointNearObject(sourceObject: str, *arg) -> None:
