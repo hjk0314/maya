@@ -879,8 +879,15 @@ def mirrorCopy(obj: str, mirrorPlane: str="YZ") -> list:
     return result
 
 
-def createRigGroups(assetName: str="") -> dict:
-    """ Create a Group Tree used by Madman Company. """
+def createRigGroups(assetName: str="") -> list:
+    """ Create a Group Tree used by Madman Company.
+
+    Return
+    ------
+    >>> ['assetName', 'rig', 'MODEL', 'controllers', 'skeletons', 
+    'geoForBind', 'extraNodes', 'bindBones', 'rigBones']
+
+     """
     grpNames = {
         "assetName": ["rig", "MODEL"], 
         "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
@@ -896,7 +903,8 @@ def createRigGroups(assetName: str="") -> dict:
             if not pm.objExists(child):
                 pm.group(em=True, n=child)
             pm.parent(child, parents)
-    return grpNames
+    result = getFlattenList(grpNames)
+    return result
 
 
 def MovePointNearObject(sourceObject: str, *arg) -> None:

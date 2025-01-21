@@ -75,13 +75,9 @@ class QuickRig_Car(QWidget):
             "controllers": [
                 "cc_main_grp", 
                 "cc_wheelLeftFront_grp", 
-                "cc_wheelLeftFront_upDownMain_grp", 
                 "cc_wheelLeftBack_grp", 
-                "cc_wheelLeftBack_upDownMain_grp", 
                 "cc_wheelRightFront_grp", 
-                "cc_wheelRightFront_upDownMain_grp", 
                 "cc_wheelRightBack_grp", 
-                "cc_wheelRightBack_upDownMain_grp", 
                 ], 
             "cc_sub": ["cc_body_grp"], 
             "cc_body": [
@@ -108,15 +104,13 @@ class QuickRig_Car(QWidget):
             "cc_wheelRightBack_grp", 
             "cc_wheelRightBack_upDownMain_grp", 
             ]
-        # Locators
-        self.locators = []
         # Set up User Interface
         super(QuickRig_Car, self).__init__()
         self.setParent(mayaMainWindow())
         self.setWindowFlags(Qt.Window)
         self.setupUI()
 
-
+    # UI
     def setupUI(self):
         self.setWindowTitle(u"Quick Rig for Car")
         self.move(0, 0)
@@ -307,10 +301,6 @@ class QuickRig_Car(QWidget):
         self.btnDeleteCtrl.setObjectName(u"btnDeleteCtrl")
         self.btnDeleteCtrl.setFont(font)
         self.buttonLayout.addWidget(self.btnDeleteCtrl)
-        self.btnBuild = QPushButton()
-        self.btnBuild.setObjectName(u"btnBuild")
-        self.btnBuild.setFont(font)
-        self.buttonLayout.addWidget(self.btnBuild)
         self.btnClose = QPushButton()
         self.btnClose.setObjectName(u"btnClose")
         self.btnClose.setFont(font)
@@ -323,7 +313,7 @@ class QuickRig_Car(QWidget):
         self.retranslateUi()
         self.buttonsLink()
 
-
+    # UI
     def retranslateUi(self):
         self.lblRootGrp.setText(QCoreApplication.translate("Form", u"Root Grp : ", None))
         self.btnRootGrp.setText(QCoreApplication.translate("Form", u"Select", None))
@@ -351,27 +341,26 @@ class QuickRig_Car(QWidget):
         self.btnWheelRB.setText(QCoreApplication.translate("Form", u"Select", None))
         self.btnCreateCtrl.setText(QCoreApplication.translate("Form", u"Create Controllers", None))
         self.btnDeleteCtrl.setText(QCoreApplication.translate("Form", u"Delete Controllers", None))
-        self.btnBuild.setText(QCoreApplication.translate("Form", u"Build", None))
         self.btnClose.setText(QCoreApplication.translate("Form", u"Close", None))
 
-
+    # UI
     def buttonsLink(self):
-        self.btnRootGrp.clicked.connect(self.buttonEvent1)
-        self.btnBodyGrp.clicked.connect(self.buttonEvent1)
-        self.btnDoorLF.clicked.connect(self.buttonEvent1)
-        self.btnDoorLB.clicked.connect(self.buttonEvent1)
-        self.btnDoorRF.clicked.connect(self.buttonEvent1)
-        self.btnDoorRB.clicked.connect(self.buttonEvent1)
-        self.btnWheelLF.clicked.connect(self.buttonEvent1)
-        self.btnWheelLB.clicked.connect(self.buttonEvent1)
-        self.btnWheelRF.clicked.connect(self.buttonEvent1)
-        self.btnWheelRB.clicked.connect(self.buttonEvent1)
+        self.btnRootGrp.clicked.connect(self.buttonSelect)
+        self.btnBodyGrp.clicked.connect(self.buttonSelect)
+        self.btnDoorLF.clicked.connect(self.buttonSelect)
+        self.btnDoorLB.clicked.connect(self.buttonSelect)
+        self.btnDoorRF.clicked.connect(self.buttonSelect)
+        self.btnDoorRB.clicked.connect(self.buttonSelect)
+        self.btnWheelLF.clicked.connect(self.buttonSelect)
+        self.btnWheelLB.clicked.connect(self.buttonSelect)
+        self.btnWheelRF.clicked.connect(self.buttonSelect)
+        self.btnWheelRB.clicked.connect(self.buttonSelect)
         self.btnCreateCtrl.clicked.connect(self.run)
         self.btnDeleteCtrl.clicked.connect(self.deleteCtrl)
         self.btnClose.clicked.connect(self.close)
 
-
-    def buttonEvent1(self):
+    # UI
+    def buttonSelect(self):
         button = self.sender().objectName()
         replaced = button.replace("btn", "fld")
         temp = self.findChild(QLineEdit, replaced)
@@ -388,77 +377,61 @@ class QuickRig_Car(QWidget):
             else:
                 pm.warning(f"{button.strip('btn')} Field is empty.")
 
-
-# ==========================================================================
-
-
+    # Main Process
     def run(self):
+        asset = self.rootGroup.rsplit(":", 1)[-1] if self.rootGroup else ""
+        createRigGroups(asset)
         self.deleteCtrl()
         self.createGlobalCtrl(self.rootGroup)
         self.createBodyCtrl(self.bodyGroup)
         self.buildDoorCtrl()
         self.buildWheelCtrl()
-        self.connectWheel()
-        self.regroup()
-        self.setColor()
+        self.finish()
 
-
-    def createGlobalCtrl(self, objectGroup: str) -> list:
-        """ Create a global controller. 
-        Take the Arguments that can be used to estimate 
-        the overall size of the model.
-
-        Examples: 
-        >>> createGlobalCtrl("vhcl_bestaB_mdl_v9999:bestaB_body_grp")
-        >>> ["cc_main_grp", "cc_main", "cc_sub_grp", "cc_sub"]
-        """
-        ccMain = "cc_main"
-        ccSub = "cc_sub"
-        if pm.objExists(ccMain) or pm.objExists(ccSub):
-            return
-        a, b, c = getBoundingBoxSize(objectGroup)
-        x, y, z = 100, 100, 250
-        cc = Controllers()
-        ccs = cc.createControllers(car3=ccMain, car2=ccSub)
-        for i in ccs:
-            pm.scale(i, [a/x, b/y, c/z])
-            pm.makeIdentity(i, a=1, t=1, r=1, s=1, n=0, pn=1)
-        ccsGroup = groupOwnPivot(*ccs)
-        result = parentHierarchically(*ccsGroup)
-        locator = createSubLocator(ccs[-1])
-        result.append(locator)
-        pm.parentConstraint(ccSub, objectGroup, mo=True, w=1.0)
-        pm.scaleConstraint(ccSub, objectGroup, mo=True, w=1.0)
+    # Sub Process - Door
+    def buildDoorCtrl(self):
+        result = []
+        doorGroup = [
+            self.fldDoorLF.text(), 
+            self.fldDoorLB.text(), 
+            self.fldDoorRF.text(), 
+            self.fldDoorRB.text(), 
+            ]
+        for grp, dn in zip(doorGroup, self.doorName):
+            if not grp or pm.objExists(dn):
+                continue
+            else:
+                doorGroup = self.createDoorCtrl(grp, dn)
+                result.append(doorGroup[0])
         return result
 
+    # Sub Process - Wheel
+    def buildWheelCtrl(self):
+        wheelLF = self.fldWheelLF.text()
+        wheelLB = self.fldWheelLB.text()
+        wheelRF = self.fldWheelRF.text()
+        wheelRB = self.fldWheelRB.text()
+        wheelGroup = [wheelLF, wheelLB, wheelRF, wheelRB]
+        chkLF = self.chkWheelLF.isChecked()
+        chkLB = self.chkWheelLB.isChecked()
+        chkRF = self.chkWheelRF.isChecked()
+        chkRB = self.chkWheelRB.isChecked()
+        checkExpr = [chkLF, chkLB, chkRF, chkRB]
+        temp = ["_upDownMain", "_upDownSub", "_main", "_sub"]
+        for grp, wn, chk in zip(wheelGroup, self.wheelName, checkExpr):
+            if not grp or any([pm.objExists(wn + i) for i in temp]):
+                continue
+            else:
+                createdWheelGrp = self.createWheelCtrl(grp, wn)
+                if chk:
+                    exprGroup = self.createWheelExpressionGroups(wn)
+                    self.createWheelExpression(createdWheelGrp, exprGroup)
+                    pm.parent(createdWheelGrp[0], exprGroup[1])
+                else:
+                    pm.parent(createdWheelGrp[0], "controllers")
+        self.connectWheels()
 
-    def createBodyCtrl(self, objectGroup: str) -> list:
-        """ Create the Body Controller. 
-        Take the Arguments that can be used to estimate 
-        the overall size of the body.
-
-        Examples: 
-        >>> createBodyCtrl("body")
-        >>> ['cc_body_grp', 'cc_body_null', 'cc_body', 'loc_body']
-        """
-        ccBody = "cc_body"
-        if pm.objExists(ccBody):
-            return
-        defaultScale = 240
-        bodySize = max(getBoundingBoxSize(objectGroup)) / defaultScale
-        cc = Controllers()
-        ctrl = cc.createControllers(car=ccBody)
-        pm.scale(ctrl, [bodySize, bodySize, bodySize])
-        pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
-        pm.matchTransform(ctrl, objectGroup, pos=True, rot=True)
-        bodyGroups = groupOwnPivot(ctrl[0], null=True)
-        locator = createSubLocator(ctrl[0])
-        bodyGroups.append(locator)
-        pm.parentConstraint(locator, objectGroup, mo=True, w=1.0)
-        pm.scaleConstraint(locator, objectGroup, mo=True, w=1.0)
-        return bodyGroups
-
-
+    # Door
     def createDoorCtrl(self, objectGroup: str, doorName: str) -> list:
         """ Create a door controller. 
         - When the doorName contains the word "Right", "right", "_R", 
@@ -498,7 +471,7 @@ class QuickRig_Car(QWidget):
         pm.scaleConstraint(loc, objectGroup, mo=True, w=1.0)
         return doorGroup
 
-
+    # Wheel
     def createWheelCtrl(self, objectGroup: str, ctrlName: str) -> list:
         """ Create a wheel controller.
 
@@ -540,7 +513,7 @@ class QuickRig_Car(QWidget):
         pm.scaleConstraint(locator, objectGroup, mo=True, w=1.0)
         return ccGrp
 
-
+    # Wheel2
     def createWheelExpressionGroups(self, ctrlName: str) -> list:
         """ Create groups for the expression. 
 
@@ -575,7 +548,7 @@ class QuickRig_Car(QWidget):
             pm.setAttr(f'{offset}.PreviousPosition{i}', e=True, k=True)
         return result
 
-
+    # Wheel3
     def createWheelExpression(self, wheelGrp: list, exprGrp: list) -> None:
         """ Rotate the locator by the moving distance of offset_grp.
 
@@ -659,71 +632,225 @@ class QuickRig_Car(QWidget):
         expr = expr1 + expr2 + expr3 + expr4
         pm.expression(s=expr, o='', ae=1, uc='all')
 
+    # Wheel4
+    def connectWheels(self):
+        """ Connect the rotateX of the wheels.
 
-    def buildDoorCtrl(self):
-        result = []
-        doorGroup = [
-            self.fldDoorLF.text(), 
-            self.fldDoorLB.text(), 
-            self.fldDoorRF.text(), 
-            self.fldDoorRB.text(), 
-            ]
-        for grp, dn in zip(doorGroup, self.doorName):
-            if not grp or pm.objExists(dn):
-                continue
-            else:
-                doorGroup = self.createDoorCtrl(grp, dn)
-                result.append(doorGroup[0])
-        return result
-
-
-    def buildWheelCtrl(self):
-        checkExpr = [
-            self.chkWheelLF.isChecked(), 
-            self.chkWheelLB.isChecked(), 
-            self.chkWheelRF.isChecked(), 
-            self.chkWheelRB.isChecked(), 
-            ]
-        wheelGroup = [
-            self.fldWheelLF.text(), 
-            self.fldWheelLB.text(), 
-            self.fldWheelRF.text(), 
-            self.fldWheelRB.text(), 
-            ]
-        temp = ["_upDownMain", "_upDownSub", "_main", "_sub"]
-        result = []
-        for grp, wn, chk in zip(wheelGroup, self.wheelName, checkExpr):
-            if not grp or any([pm.objExists(wn + i) for i in temp]):
-                continue
-            else:
-                createdWheelGrp = self.createWheelCtrl(grp, wn)
-                if chk:
-                    exprGroup = self.createWheelExpressionGroups(wn)
-                    self.createWheelExpression(createdWheelGrp, exprGroup)
-                    result.append(exprGroup[0])
-                else:
-                    result.append(createdWheelGrp[0])
-        return result
-
-
-    def connectWheel(self):
-        pass
-
-
-    def regroup(self):
-        """ Create the Rig Group. 
-        And try to parent what is in self.groupHierarchy
+        Descriptions
+        ------------
+        - When an expression is applied to one wheel,
+            - LF -> LB, RF, RB
+        - When an expression is applied to two wheels,
+            - LF -> RF / LB -> RB
+            - LF -> LB / RF -> RB
+            - LF -> RF / RB -> LB
+            - LB -> LF / RF -> RB
+            - LB -> LF / RB -> RF
+            - RF -> LF / RB -> LB
+        - When an expression is applied to three wheels,
+            - RF -> LF
+            - RB -> LB
+            - LF -> RF
+            - LB -> RB
          """
-        groupName = self.fldRootGrp.text().rsplit(":", 1)[-1]
-        createRigGroups(groupName)
-        if pm.objExists(self.fldRootGrp.text()):
-            parentHierarchically("MODEL", self.fldRootGrp.text())
+        chkLF = self.chkWheelLF.isChecked()
+        chkLB = self.chkWheelLB.isChecked()
+        chkRF = self.chkWheelRF.isChecked()
+        chkRB = self.chkWheelRB.isChecked()
+        checkExpr = [chkLF, chkLB, chkRF, chkRB]
+        locLF = "loc_wheelLeftFront_sub"
+        locLB = "loc_wheelLeftBack_sub"
+        locRF = "loc_wheelRightFront_sub"
+        locRB = "loc_wheelRightBack_sub"
+        locators = [locLF, locLB, locRF, locRB]
+        if checkExpr.count(True) == 0:
+            pass
+        elif checkExpr.count(True) == 1:
+            tmp = [loc for chk, loc in zip(checkExpr, locators) if not chk]
+            src = [loc for chk, loc in zip(checkExpr, locators) if chk][0]
+            for i in tmp:
+                pm.connectAttr(f"{src}.rotateX", f"{i}.rotateX", f=True)
+        elif checkExpr.count(True) == 2:
+            if chkLF and chkLB:
+                src = [locLF, locLB]
+                des = [locRF, locRB]
+            elif chkLF and chkRF:
+                src = [locLF, locRF]
+                des = [locLB, locRB]
+            elif chkLF and chkRB:
+                src = [locLF, locRB]
+                des = [locRF, locLB]
+            elif chkLB and chkRF:
+                src = [locLB, locRF]
+                des = [locLF, locRB]
+            elif chkLB and chkRB:
+                src = [locLB, locRB]
+                des = [locLF, locRF]
+            else:
+                src = [locRF, locRB]
+                des = [locLF, locLB]
+            for s, d in zip(src, des):
+                pm.connectAttr(f"{s}.rotateX", f"{d}.rotateX", f=True)
+        elif checkExpr.count(True) == 3:
+            if not chkLF:
+                src = locRF
+                des = locLF
+            elif not chkLB:
+                src = locRB
+                des = locLB
+            elif not chkRF:
+                src = locLF
+                des = locRF
+            else:
+                src = locLB
+                des = locRB
+            pm.connectAttr(f"{src}.rotateX", f"{des}.rotateX", f=True)
+        else:
+            pass
+
+
+    def deleteCtrl(self):
+        """ Try to delete what is in Delete list. 
+
+        Delete List
+        -----------
+        - "cc_main_grp", 
+        - "cc_body_grp", 
+        - "cc_doorLeftFront_grp", 
+        - "cc_doorLeftBack_grp", 
+        - "cc_doorRightFront_grp", 
+        - "cc_doorRightBack_grp", 
+        - "cc_wheelLeftFront_grp", 
+        - "cc_wheelLeftFront_upDownMain_grp", 
+        - "cc_wheelLeftBack_grp", 
+        - "cc_wheelLeftBack_upDownMain_grp", 
+        - "cc_wheelRightFront_grp", 
+        - "cc_wheelRightFront_upDownMain_grp", 
+        - "cc_wheelRightBack_grp", 
+        - "cc_wheelRightBack_upDownMain_grp", 
+         """
+        try:
+            pm.parent(self.fldRootGrp.text(), w=True)
+        except:
+            pass
+        for i in self.deleteName:
+            try:
+                pm.delete(i)
+            except:
+                continue
+
+
+    def createGlobalCtrl(self, objectGroup: str) -> list:
+        """ Create a global controller. 
+        Take the Arguments that can be used to estimate 
+        the overall size of the model.
+
+        Examples: 
+        >>> createGlobalCtrl("vhcl_bestaB_mdl_v9999:bestaB_body_grp")
+        >>> ["cc_main_grp", "cc_main", "cc_sub_grp", "cc_sub"]
+        """
+        ccMain = "cc_main"
+        ccSub = "cc_sub"
+        if pm.objExists(ccMain) or pm.objExists(ccSub):
+            return
+        a, b, c = getBoundingBoxSize(objectGroup)
+        x, y, z = 100, 100, 250
+        cc = Controllers()
+        ccs = cc.createControllers(car3=ccMain, car2=ccSub)
+        for i in ccs:
+            pm.scale(i, [a/x, b/y, c/z])
+            pm.makeIdentity(i, a=1, t=1, r=1, s=1, n=0, pn=1)
+        ccsGroup = groupOwnPivot(*ccs)
+        result = parentHierarchically(*ccsGroup)
+        locator = createSubLocator(ccs[-1])
+        result.append(locator)
+        pm.parentConstraint(ccSub, objectGroup, mo=True, w=1.0)
+        pm.scaleConstraint(ccSub, objectGroup, mo=True, w=1.0)
+        return result
+
+
+    def createBodyCtrl(self, objectGroup: str) -> list:
+        """ Create the Body Controller. 
+        Take the Arguments that can be used to estimate 
+        the overall size of the body.
+
+        Examples: 
+        >>> createBodyCtrl("body")
+        >>> ['cc_body_grp', 'cc_body_null', 'cc_body', 'loc_body']
+        """
+        ccBody = "cc_body"
+        if pm.objExists(ccBody):
+            return
+        defaultScale = 240
+        bodySize = max(getBoundingBoxSize(objectGroup)) / defaultScale
+        cc = Controllers()
+        ctrl = cc.createControllers(car=ccBody)
+        pm.scale(ctrl, [bodySize, bodySize, bodySize])
+        pm.makeIdentity(ctrl, a=1, t=1, r=1, s=1, n=0, pn=1)
+        pm.matchTransform(ctrl, objectGroup, pos=True, rot=True)
+        bodyGroups = groupOwnPivot(ctrl[0], null=True)
+        locator = createSubLocator(ctrl[0])
+        bodyGroups.append(locator)
+        pm.parentConstraint(locator, objectGroup, mo=True, w=1.0)
+        pm.scaleConstraint(locator, objectGroup, mo=True, w=1.0)
+        return bodyGroups
+
+
+    def finish(self):
+        """ Final work. 
+
+        Descriptions
+        ------------
+        - try to [Parent] what is in self.groupHierarchy list.
+            - MODEL <- referenced group
+            - controllers <- cc_main_grp
+            - controllers <- cc_wheelLeftFront_grp
+            - controllers <- cc_wheelLeftBack_grp
+            - controllers <- cc_wheelRightFront_grp
+            - controllers <- cc_wheelRightBack_grp
+            - cc_sub <- cc_body_grp
+            - cc_body <- cc_doorLeftFront_grp
+            - cc_body <- cc_doorLeftBack_grp
+            - cc_body <- cc_doorRightFront_grp
+            - cc_body <- cc_doorRightBack_grp
+        - try to [Constraint] what is in wheelGroups.
+            - cc_sub <- cc_wheelLeftFront_offset 
+            - cc_sub <- cc_wheelLeftFront_upDownMain_grp 
+            - cc_sub <- cc_wheelLeftBack_offset 
+            - cc_sub <- cc_wheelLeftBack_upDownMain_grp 
+            - cc_sub <- cc_wheelRightFront_offset 
+            - cc_sub <- cc_wheelRightFront_upDownMain_grp 
+            - cc_sub <- cc_wheelRightBack_offset 
+            - cc_sub <- cc_wheelRightBack_upDownMain_grp 
+         """
+        ccSub = "cc_sub"
+        wheelGroups = [
+            "cc_wheelLeftFront_offset", 
+            "cc_wheelLeftFront_upDownMain_grp", 
+            "cc_wheelLeftBack_offset", 
+            "cc_wheelLeftBack_upDownMain_grp", 
+            "cc_wheelRightFront_offset", 
+            "cc_wheelRightFront_upDownMain_grp", 
+            "cc_wheelRightBack_offset", 
+            "cc_wheelRightBack_upDownMain_grp", 
+            ]
+        try:
+            pm.parent(self.fldRootGrp.text(), "MODEL")
+        except:
+            pass
         for parents, children in self.groupHierarchy.items():
             for child in children:
                 try:
                     pm.parent(child, parents)
                 except:
                     continue
+        for i in wheelGroups:
+            try:
+                pm.parentConstraint(ccSub, i, mo=True, w=1.0)
+                pm.scaleConstraint(ccSub, i, mo=True, w=1.0)
+            except:
+                continue
+        self.setColor()
 
 
     def setColor(self):
@@ -736,24 +863,13 @@ class QuickRig_Car(QWidget):
                 continue
 
 
-    def deleteCtrl(self):
-        """ Try to delete what is in self.deleteName. """
-        try:
-            pm.parent(self.fldRootGrp.text(), w=True)
-        except:
-            pass
-        for i in self.deleteName:
-            try:
-                pm.delete(i)
-            except:
-                continue
+if __name__ == "__main__":
+    try:
+        qrc.close()
+        qrc.deleteLater()
+    except:
+        pass
+    qrc = QuickRig_Car()
+    qrc.show()
 
 
-# if __name__ == "__main__":
-#     try:
-#         qrc.close()
-#         qrc.deleteLater()
-#     except:
-#         pass
-#     qrc = QuickRig_Car()
-#     qrc.show()
