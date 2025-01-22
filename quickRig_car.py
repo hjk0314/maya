@@ -104,6 +104,19 @@ class QuickRig_Car(QWidget):
             "cc_wheelRightBack_grp", 
             "cc_wheelRightBack_upDownMain_grp", 
             ]
+        # Created Locators
+        self.locators = [
+            "loc_sub", 
+            "loc_body", 
+            "loc_doorLeftFront", 
+            "loc_doorLeftBack", 
+            "loc_doorRightFront", 
+            "loc_doorRightBack", 
+            "loc_wheelLeftFront_sub", 
+            "loc_wheelLeftBack_sub", 
+            "loc_wheelRightFront_sub", 
+            "loc_wheelRightBack_sub", 
+            ]
         # Set up User Interface
         super(QuickRig_Car, self).__init__()
         self.setParent(mayaMainWindow())
@@ -114,12 +127,12 @@ class QuickRig_Car(QWidget):
     def setupUI(self):
         self.setWindowTitle(u"Quick Rig for Car")
         self.move(0, 0)
-        self.resize(450, 410)
+        self.resize(300, 410)
         self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.gridLayout = QGridLayout()
         self.gridLayout.setObjectName(u"gridLayout")
-        self.gridLayout.setContentsMargins(10, -1, -1, -1)
+        self.gridLayout.setContentsMargins(-1, -1, -1, -1)
         self.lblRootGrp = QLabel()
         self.lblRootGrp.setObjectName(u"lblRootGrp")
         font = QFont()
@@ -133,6 +146,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblRootGrp, 0, 0, 1, 1)
         self.fldRootGrp = QLineEdit()
         self.fldRootGrp.setObjectName(u"fldRootGrp")
+        self.fldRootGrp.setClearButtonEnabled(True)
         self.fldRootGrp.setText(self.rootGroup)
         self.gridLayout.addWidget(self.fldRootGrp, 0, 1, 1, 1)
         self.btnRootGrp = QPushButton()
@@ -147,6 +161,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblBodyGrp, 1, 0, 1, 1)
         self.fldBodyGrp = QLineEdit()
         self.fldBodyGrp.setObjectName(u"fldBodyGrp")
+        self.fldBodyGrp.setClearButtonEnabled(True)
         self.fldBodyGrp.setText(self.bodyGroup)
         self.gridLayout.addWidget(self.fldBodyGrp, 1, 1, 1, 1)
         self.btnBodyGrp = QPushButton()
@@ -161,6 +176,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblDoorLF, 2, 0, 1, 1)
         self.fldDoorLF = QLineEdit()
         self.fldDoorLF.setObjectName(u"fldDoorLF")
+        self.fldDoorLF.setClearButtonEnabled(True)
         self.fldDoorLF.setText(self.doorLF)
         self.gridLayout.addWidget(self.fldDoorLF, 2, 1, 1, 1)
         self.btnDoorLF = QPushButton()
@@ -175,6 +191,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblDoorLB, 3, 0, 1, 1)
         self.fldDoorLB = QLineEdit()
         self.fldDoorLB.setObjectName(u"fldDoorLB")
+        self.fldDoorLB.setClearButtonEnabled(True)
         self.fldDoorLB.setText(self.doorLB)
         self.gridLayout.addWidget(self.fldDoorLB, 3, 1, 1, 1)
         self.btnDoorLB = QPushButton()
@@ -189,6 +206,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblDoorRF, 4, 0, 1, 1)
         self.fldDoorRF = QLineEdit()
         self.fldDoorRF.setObjectName(u"fldDoorRF")
+        self.fldDoorRF.setClearButtonEnabled(True)
         self.fldDoorRF.setText(self.doorRF)
         self.gridLayout.addWidget(self.fldDoorRF, 4, 1, 1, 1)
         self.btnDoorRF = QPushButton()
@@ -203,6 +221,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblDoorRB, 5, 0, 1, 1)
         self.fldDoorRB = QLineEdit()
         self.fldDoorRB.setObjectName(u"fldDoorRB")
+        self.fldDoorRB.setClearButtonEnabled(True)
         self.gridLayout.addWidget(self.fldDoorRB, 5, 1, 1, 1)
         self.fldDoorRB.setText(self.doorRB)
         self.btnDoorRB = QPushButton()
@@ -217,6 +236,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblWheelLF, 6, 0, 1, 1)
         self.fldWheelLF = QLineEdit()
         self.fldWheelLF.setObjectName(u"fldWheelLF")
+        self.fldWheelLF.setClearButtonEnabled(True)
         self.fldWheelLF.setText(self.wheelLF)
         self.gridLayout.addWidget(self.fldWheelLF, 6, 1, 1, 1)
         self.chkWheelLF = QCheckBox()
@@ -235,6 +255,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblWheelLB, 7, 0, 1, 1)
         self.fldWheelLB = QLineEdit()
         self.fldWheelLB.setObjectName(u"fldWheelLB")
+        self.fldWheelLB.setClearButtonEnabled(True)
         self.fldWheelLB.setText(self.wheelLB)
         self.gridLayout.addWidget(self.fldWheelLB, 7, 1, 1, 1)
         self.chkWheelLB = QCheckBox()
@@ -253,6 +274,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblWheelRF, 8, 0, 1, 1)
         self.fldWheelRF = QLineEdit()
         self.fldWheelRF.setObjectName(u"fldWheelRF")
+        self.fldWheelRF.setClearButtonEnabled(True)
         self.fldWheelRF.setText(self.wheelRF)
         self.gridLayout.addWidget(self.fldWheelRF, 8, 1, 1, 1)
         self.chkWheelRF = QCheckBox()
@@ -271,6 +293,7 @@ class QuickRig_Car(QWidget):
         self.gridLayout.addWidget(self.lblWheelRB, 9, 0, 1, 1)
         self.fldWheelRB = QLineEdit()
         self.fldWheelRB.setObjectName(u"fldWheelRB")
+        self.fldWheelRB.setClearButtonEnabled(True)
         self.fldWheelRB.setText(self.wheelRB)
         self.gridLayout.addWidget(self.fldWheelRB, 9, 1, 1, 1)
         self.chkWheelRB = QCheckBox()
@@ -328,16 +351,16 @@ class QuickRig_Car(QWidget):
         self.lblDoorRB.setText(QCoreApplication.translate("Form", u"Door R B : ", None))
         self.btnDoorRB.setText(QCoreApplication.translate("Form", u"Select", None))
         self.lblWheelLF.setText(QCoreApplication.translate("Form", u"Wheel L F : ", None))
-        self.chkWheelLF.setText(QCoreApplication.translate("Form", u"expr", None))
+        self.chkWheelLF.setText(QCoreApplication.translate("Form", u"Auto", None))
         self.btnWheelLF.setText(QCoreApplication.translate("Form", u"Select", None))
         self.lblWheelLB.setText(QCoreApplication.translate("Form", u"Wheel L B : ", None))
-        self.chkWheelLB.setText(QCoreApplication.translate("Form", u"expr", None))
+        self.chkWheelLB.setText(QCoreApplication.translate("Form", u"Auto", None))
         self.btnWheelLB.setText(QCoreApplication.translate("Form", u"Select", None))
         self.lblWheelRF.setText(QCoreApplication.translate("Form", u"Wheel R F : ", None))
-        self.chkWheelRF.setText(QCoreApplication.translate("Form", u"expr", None))
+        self.chkWheelRF.setText(QCoreApplication.translate("Form", u"Auto", None))
         self.btnWheelRF.setText(QCoreApplication.translate("Form", u"Select", None))
         self.lblWheelRB.setText(QCoreApplication.translate("Form", u"Wheel R B : ", None))
-        self.chkWheelRB.setText(QCoreApplication.translate("Form", u"expr", None))
+        self.chkWheelRB.setText(QCoreApplication.translate("Form", u"Auto", None))
         self.btnWheelRB.setText(QCoreApplication.translate("Form", u"Select", None))
         self.btnCreateCtrl.setText(QCoreApplication.translate("Form", u"Create Controllers", None))
         self.btnDeleteCtrl.setText(QCoreApplication.translate("Form", u"Delete Controllers", None))
@@ -386,7 +409,7 @@ class QuickRig_Car(QWidget):
         self.createBodyCtrl(self.bodyGroup)
         self.buildDoorCtrl()
         self.buildWheelCtrl()
-        self.finish()
+        self.finalTouch()
 
     # Sub Process - Door
     def buildDoorCtrl(self):
@@ -796,8 +819,8 @@ class QuickRig_Car(QWidget):
         return bodyGroups
 
 
-    def finish(self):
-        """ Final work. 
+    def finalTouch(self):
+        """ Final Touch. 
 
         Descriptions
         ------------
@@ -822,7 +845,21 @@ class QuickRig_Car(QWidget):
             - cc_sub <- cc_wheelRightFront_upDownMain_grp 
             - cc_sub <- cc_wheelRightBack_offset 
             - cc_sub <- cc_wheelRightBack_upDownMain_grp 
+        - Add Attributes and Connect
+            - cc_main -> cc_main.Geo -> MODEL.visibility
+        - Hide Locators
+            - loc_sub
+            - loc_body
+            - loc_doorLeftFront
+            - loc_doorLeftBack
+            - loc_doorRightFront
+            - loc_doorRightBack
+            - loc_wheelLeftFront_sub
+            - loc_wheelLeftBack_sub
+            - loc_wheelRightFront_sub
+            - loc_wheelRightBack_sub
          """
+        ccMain = "cc_main"
         ccSub = "cc_sub"
         wheelGroups = [
             "cc_wheelLeftFront_offset", 
@@ -834,6 +871,7 @@ class QuickRig_Car(QWidget):
             "cc_wheelRightBack_offset", 
             "cc_wheelRightBack_upDownMain_grp", 
             ]
+        # Try to parent
         try:
             pm.parent(self.fldRootGrp.text(), "MODEL")
         except:
@@ -844,6 +882,7 @@ class QuickRig_Car(QWidget):
                     pm.parent(child, parents)
                 except:
                     continue
+        # Try to constraint
         for i in wheelGroups:
             try:
                 pm.parentConstraint(ccSub, i, mo=True, w=1.0)
@@ -851,6 +890,17 @@ class QuickRig_Car(QWidget):
             except:
                 continue
         self.setColor()
+        # Add attributes to main controller.
+        geo = "Geo"
+        pm.addAttr(ccMain, ln=geo, at="bool", dv=1)
+        pm.setAttr(f'{ccMain}.{geo}', e=True, k=True)
+        pm.connectAttr(f"{ccMain}.{geo}", "MODEL.visibility", f=True)
+        # Hide Locators
+        for i in self.locators:
+            try:
+                pm.setAttr(f"{i}.visibility", 0)
+            except:
+                continue
 
 
     def setColor(self):
@@ -863,13 +913,12 @@ class QuickRig_Car(QWidget):
                 continue
 
 
-if __name__ == "__main__":
-    try:
-        qrc.close()
-        qrc.deleteLater()
-    except:
-        pass
-    qrc = QuickRig_Car()
-    qrc.show()
-
+# if __name__ == "__main__":
+#     try:
+#         qrc.close()
+#         qrc.deleteLater()
+#     except:
+#         pass
+#     qrc = QuickRig_Car()
+#     qrc.show()
 
