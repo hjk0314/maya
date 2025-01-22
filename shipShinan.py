@@ -1,6 +1,5 @@
 import pymel.core as pm
-from general import *
-from test10 import *
+from hjk import *
 
 
 def shipShinanRopeSetting(ropeMesh, cuv, mainCtrl):
@@ -21,8 +20,6 @@ def shipShinanRopeSetting(ropeMesh, cuv, mainCtrl):
     pm.parent(sjGrp, "bindBones")
     pm.scaleConstraint("loc_moving", sjGrp, mo=True, w=1.0)
     pm.skinCluster(startJnt, ropeMesh, tsb=False, bm=0, sm=0, nw=1, wd=0, mi=3)
-
-
     clt1 = pm.cluster(f"{cuv}.cv[0:1]")[1]
     clt2 = pm.cluster(f"{cuv}.cv[2]")[1]
     clt3 = pm.cluster(f"{cuv}.cv[3]")[1]
@@ -64,9 +61,7 @@ def shipShinanRopeSetting(ropeMesh, cuv, mainCtrl):
     clt7 = pm.cluster(f"{linearCurve}.cv[1]")[1]
     clt7Grp = groupOwnPivot(clt7)[0]
     pm.parent(clt7Grp, "loc_moving")
-
-
-    mulDvd0 = createJointScaleIncrease(startJnt, endJnt, cuv)
+    mulDvd0 = createJointScaleExpression(startJnt, endJnt, cuv, x=True)
     mulDvd1 = pm.shadingNode("multiplyDivide", au=True)
     mulDvd2 = pm.shadingNode("multiplyDivide", au=True)
     pm.connectAttr(f"{sjGrp}.scale", f"{mulDvd1}.input2", f=True)
@@ -84,7 +79,6 @@ def shipShinanRopeSetting(ropeMesh, cuv, mainCtrl):
 mesh = [f"mizzen_rope_{i}" for i in range(1, 5)]
 curves = [f"cuv_mizzenSub{i}_copied" for i in range(1, 5)]
 mainCtrl = "cc_mizzenMain"
-
-
 for obj, cuv in zip(mesh, curves):
     shipShinanRopeSetting(obj, cuv, mainCtrl)
+
