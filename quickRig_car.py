@@ -1,10 +1,10 @@
-import pymel.core as pm
-import maya.OpenMayaUI as omui
-from hjk import *
 from PySide2.QtWidgets import *
 from PySide2.QtCore import Qt, QCoreApplication
 from PySide2.QtGui import QFont
 from shiboken2 import wrapInstance
+from hjk import *
+import pymel.core as pm
+import maya.OpenMayaUI as omui
 
 
 def mayaMainWindow():

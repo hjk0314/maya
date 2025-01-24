@@ -16,8 +16,8 @@ def mayaMainWindow():
 class MixamoCharacter(QWidget):
     def __init__(self):
         self.mainCurve = "mainCurve"
+        self.hips = "Hips"
         self.spine = [
-            "Hips", 
             "Spine", 
             "Spine1", 
             "Spine2", 
@@ -179,7 +179,7 @@ class MixamoCharacter(QWidget):
             "RightToe_End": (-10.797, 0.0, 14.439), 
             }
         self.hierarchy = {
-            "Hips": [self.spine[1:], self.leftLegs, self.rightLegs], 
+            "Hips": [self.spine, self.leftLegs, self.rightLegs], 
             "Spine2": [self.leftArms, self.rightArms], 
             "LeftHand": [
                 self.leftThumb, 
@@ -244,11 +244,11 @@ class MixamoCharacter(QWidget):
 
 
     def createRig_IKFK(self):
-        self.createIKFK(self.spine[0], self.spine[1:4])
+        self.createIKFK(self.hips, self.spine[:3])
         self.createIKFK(self.leftArms[0], self.leftArms[1:])
         self.createIKFK(self.rightArms[0], self.rightArms[1:])
-        self.createIKFK(self.spine[0], self.leftLegs)
-        self.createIKFK(self.spine[0], self.rightLegs)
+        self.createIKFK(self.hips, self.leftLegs)
+        self.createIKFK(self.hips, self.rightLegs)
 
 
 # ==============================================================================
@@ -321,14 +321,13 @@ class MixamoCharacter(QWidget):
 
 
     def createMainCurve(self):
-        rootJnt = self.spine[0]
-        if not pm.objExists(rootJnt):
+        if not pm.objExists(self.hips):
             return
         else:
-            bbSize = getBoundingBoxSize(rootJnt)
+            bbSize = getBoundingBoxSize(self.hips)
             bbSize = max(bbSize)
             pm.circle(nr=(0, 1, 0), n=self.mainCurve, ch=0, r=bbSize)
-            pm.parent(rootJnt, self.mainCurve)
+            pm.parent(self.hips, self.mainCurve)
 
 
     def getPrimaryAndSecondaryAxis(self, jnt=[]):
