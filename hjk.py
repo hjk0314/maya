@@ -146,64 +146,63 @@ def getSubJoint(startJnt: str, endJoint: str) -> list:
     return result
 
 
-def orientJoints(*args, **kwargs) -> dict:
-    """ Orient Joints
+def orientJoints(*args, **kwargs) -> None:
+    """ Select joints and don't put anything in the argument, 
+    it will be oriented with the Maya default settings.
 
-    Args: 
-     - The Default Maya Settings is -> (default=True, d=True)
-        1. primaryAxis: "xyz"
-        2. secondaryAxis: "yup"
+    args
+    ----
+    - Args are joints or
+    - Selected joints
 
-     - Mixamo Settings is -> (mixamo=True, m=True)
-        1. primaryAxis: "yzx"
-        2. secondaryAxis: "zup"
+    kwargs
+    ------
+    - If there are no Args, Maya default settings ​​are used : 
+        1. primary: "xyz"
+        2. secondary: "yup"
+    - Mixamo Settings is : 
+        1. primary: "yzx"
+        2. secondary: "zup"
+    - Especially, If it's "Left hand" : 
+        1. primary: "yxz"
+        2. secondary: "zdown"
 
-    Examples: 
-        >>> orientJoints("joint1")
-        >>> {"joint1": ["joint2", "joint3", ...]}
-        >>> orientJoints("joint1", "joint4")
-        >>> {"joint1": ["joint2", "joint3"], "joint4": ["joint5"]}
-        >>> orientJoints("joint1", "joint2", m=True)
-        >>> {"joint1": ["joint2", "joint3"], "joint4": ["joint5"]}
-        >>> orientJoints()
-        >>> {"joint1": ["joint2", "joint3", ...]}
-        >>> orientJoints(m=True)
-        >>> {"joint1": ["joint2", "joint3"], "joint4": ["joint5"]}
+    Examples
+    --------
+    >>> orientJoints()
+    >>> orientJoints("joint1", "joint4")
+    >>> orientJoints("joint1", "joint2", primary="yzx", secondary="zup")
+    >>> orientJoints(*["joint1", "joint2"], p="yzx", s="zup")
      """
-    joints = args if args else pm.selected(type=["joint"])
-    if joints:
-        joints = [pm.PyNode(i) for i in joints]
-    else:
-        return
+    sel = [pm.PyNode(i) for i in args] if args else pm.selected(type=["joint"])
     flags = {
-        "default": ["xyz", "yup"], 
-        "d": ["xyz", "yup"], 
-        "mixamo": ["yzx", "zup"], 
-        "m": ["yzx", "zup"]
+        "primary": ["xyz", "yzx", "zxy", "zyx", "yxz", "xzy", "none"], 
+        "p": ["xyz", "yzx", "zxy", "zyx", "yxz", "xzy", "none"], 
+        "secondary": ["xup", "xdown", "yup", "ydown", "zup", "zdown", "none"], 
+        "s": ["xup", "xdown", "yup", "ydown", "zup", "zdown", "none"], 
         }
-    if kwargs:
-        key = next(iter(kwargs))
-        value = kwargs[key]
-        if key in flags.keys() and value:
-            primaryAxis, secondaryAxis = flags[key]
-        elif key in flags.keys() and not value:
-            return
+    primary = "xyz"
+    secondary = "yup"
+    for k, v in kwargs.items():
+        if ("primary"==k or "p"==k) and v in flags[k]:
+            primary = v
+        elif ("secondary"==k or "s"==k) and v in flags[k]:
+            secondary = v
         else:
-            pm.warning("Unrecognized keywords.")
-            return
-    else:
-        primaryAxis, secondaryAxis = ["xyz", "yup"]
-    result = {}
-    pm.makeIdentity(joints, a=True, jo=True, n=0)
-    for jnt in joints:
-        pm.joint(jnt, edit=True, children=True, zeroScaleOrient=True, \
-                orientJoint=primaryAxis, secondaryAxisOrient=secondaryAxis)
+            continue
+    pm.makeIdentity(sel, a=True, jo=True, n=0)
+    for jnt in sel:
+        pm.joint(jnt, 
+                 edit=True, 
+                 children=True, 
+                 zeroScaleOrient=True, 
+                 orientJoint=primary, 
+                 secondaryAxisOrient=secondary, 
+                 )
         allDescendents = pm.listRelatives(jnt, ad=True, type="joint")
-        endJoint = [i for i in allDescendents if not i.getChildren()]
-        for i in endJoint:
+        endJoints = [i for i in allDescendents if not i.getChildren()]
+        for i in endJoints:
             pm.joint(i, e=True, oj='none', ch=True, zso=True)
-        result[jnt] = allDescendents
-    return result
 
 
 def createPolevectorJoint(*args) -> list:

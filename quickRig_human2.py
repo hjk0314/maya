@@ -252,6 +252,7 @@ class Character(QWidget):
 
 
     def buttonsLink(self):
+        self.btnCreateTempJnt.clicked.connect(self.createTempJnt)
         self.btnClose.clicked.connect(self.close)
     
 
@@ -264,6 +265,11 @@ class Character(QWidget):
         for jnt, pos in self.tempJntPosition.items():
             pm.select(cl=True)
             pm.joint(p=pos, n=jnt)
+        # Set Hierarchy
+        self.setHierarchy(self.tempJntHierarchy)
+        # Create Main Curve
+        cuv = self.createMainCurve(self.hips)
+        pm.parent(self.hips, cuv)
 
 
     def alignCenterJnt(self):
@@ -292,30 +298,40 @@ class Character(QWidget):
                 except:
                     pass
 
-    # This function is not solved.
-    def setHierarchy(self, boneTree: dict):
+
+    def setHierarchy(self, boneTree: dict) -> None:
         for parents, jointGroup in boneTree.items():
             for joints in jointGroup:
-                isLeft = any(i in joints[0] for i in self.leftArms)
-                isRight = any(i in joints[0] for i in self.rightArms)
-                if isLeft:
+                isLeftArms = any(i in joints[0] for i in self.leftArms)
+                isRightArms = any(i in joints[0] for i in self.rightArms)
+                if isLeftArms:
                     primaryAxis = 'yxz'
                     secondaryAxis = 'zdown'
-                elif isRight:
+                elif isRightArms:
                     primaryAxis = 'yxz'
                     secondaryAxis = 'zup'
                 else:
                     primaryAxis = 'yzx'
                     secondaryAxis = 'zup'
                 parentHierarchically(*joints)
-                pm.makeIdentity(joints, a=True, jo=True, n=0)
-                for jnt in joints:
-                    pm.joint(jnt, edit=True, children=True, zeroScaleOrient=True, orientJoint=primaryAxis, secondaryAxisOrient=secondaryAxis)
-                    allDescendents = pm.listRelatives(jnt, ad=True, type="joint")
-                    endJoint = [i for i in allDescendents if not i.getChildren()]
-                    for i in endJoint:
-                        pm.joint(i, e=True, oj='none', ch=True, zso=True)
+                orientJoints(*joints, p=primaryAxis, s=secondaryAxis)
                 parentHierarchically(parents, joints[0])
+
+
+    def createMainCurve(self, object: str="") -> str:
+        """ Create a circle called "mainCurve". 
+        Make it the size of the input object.
+         """
+        if pm.objExists("mainCurve"):
+            return
+        else:
+            if not object:
+                bbSize = 1
+            else:
+                bbSize = getBoundingBoxSize(object)
+                bbSize = max(bbSize)
+            result = pm.circle(nr=(0, 1, 0), n="mainCurve", ch=0, r=bbSize)
+        return result[0]
 
 
 # if __name__ == "__main__":
