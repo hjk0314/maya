@@ -19,7 +19,8 @@ def getPosition(selection: str) -> tuple:
         position = pm.pointPosition(selection)
     except:
         position = pm.xform(selection, q=1, ws=1, rp=1)
-    result = tuple(position)
+    x, y, z = position
+    result = (round(x, 5), round(y, 5), round(z, 5))
     return result
 
 

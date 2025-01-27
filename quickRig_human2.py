@@ -110,7 +110,7 @@ class Character(QWidget):
             "RightHandPinky3", 
             "RightHandPinky4"
             ]
-        self.tempJntPosition = {
+        self.jntPosition = {
             "Hips": (0.0, 98.223, 1.464), 
             "Spine": (0.0, 107.814, 1.588), 
             "Spine1": (0.0, 117.134, 0.203), 
@@ -177,7 +177,7 @@ class Character(QWidget):
             "RightToeBase": (-10.797, 0.001, 5.7), 
             "RightToe_End": (-10.797, 0.0, 14.439), 
             }
-        self.tempJntHierarchy = {
+        self.jntHierarchy = {
             "Hips": [self.spine, self.leftLegs, self.rightLegs], 
             "Spine2": [self.leftArms, self.rightArms], 
             "LeftHand": [
@@ -253,27 +253,35 @@ class Character(QWidget):
 
     def buttonsLink(self):
         self.btnCreateTempJnt.clicked.connect(self.createTempJnt)
+        self.btnAlignCenterJnt.clicked.connect(self.alignCenterJnt)
         self.btnClose.clicked.connect(self.close)
     
 
     def createTempJnt(self):
+        """ Create temporary joints. """
         # CleanUp
-        temp = list(self.tempJntPosition.keys())
+        temp = list(self.jntPosition.keys())
         temp.append(self.mainCurve)
         self.cleanUp(*temp)
         # Create Joints
-        for jnt, pos in self.tempJntPosition.items():
+        for jnt, pos in self.jntPosition.items():
             pm.select(cl=True)
             pm.joint(p=pos, n=jnt)
         # Set Hierarchy
-        self.setHierarchy(self.tempJntHierarchy)
+        self.setHierarchy(self.jntHierarchy)
         # Create Main Curve
         cuv = self.createMainCurve(self.hips)
         pm.parent(self.hips, cuv)
 
 
-    def alignCenterJnt(self):
-        pass
+    def alignCenterJnt(self) -> None:
+        """ Align the spine line to the center of the grid. """
+        self.update()
+        temp = self.spine + [self.hips]
+        for jnt in temp:
+            x, y, z = getPosition(jnt)
+            self.jntPosition[jnt] = (0, y, z)
+        self.createTempJnt()
 
 
     def syncBothJnt(self):
@@ -282,6 +290,13 @@ class Character(QWidget):
 
     def run(self):
         pass
+
+
+    def update(self) -> None:
+        """ Update the joint position. """
+        result = {i: getPosition(i) for i in self.jntPosition.keys()}
+        self.jntPosition = result
+
 
 
     def cleanUp(self, *args):
@@ -300,6 +315,21 @@ class Character(QWidget):
 
 
     def setHierarchy(self, boneTree: dict) -> None:
+        """ Set the hierarchy.
+        
+        Args
+        ----
+        boneTree = {
+            "Hips": [["Spine", "Spine1"], ["LeftUpLeg", "LeftLeg"], ...], 
+            "Spine2": [["LeftShoulder", "LeftArm"], ["RightShoulder", ...]], 
+            }
+        
+        Descriptions
+        ------------
+        - The Left hand has primaryAxis as 'yxz' and secondaryAxis as 'zdown'.
+        - The Right hand has primaryAxis as 'yxz' and secondaryAxis as 'zup'.
+        - The Rest have primaryAxis as 'yzx' and secondaryAxis as 'zup'.
+         """
         for parents, jointGroup in boneTree.items():
             for joints in jointGroup:
                 isLeftArms = any(i in joints[0] for i in self.leftArms)
