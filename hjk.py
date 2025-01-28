@@ -814,6 +814,36 @@ def changeLeftToRight(inputs: str) -> str:
     return result
 
 
+def duplicateObj(obj: str, prefix: str="", suffix: str="") -> None:
+    """ Duplictate the joint and rename it to all descendents. 
+    
+    Args
+    ----
+    - obj : Source joint
+        - "Hips", "Spine", "LeftArm", ...
+    - prefix : Add a prefix to the source joint.
+        - "rig_Hips", "rig_Spine", "rig_LeftArm", ...
+    - suffix : Add a suffix to the source joint.
+        - "rig_Hips_FK", "rig_Spine_FK", "rig_LeftArm_FK", ...
+
+    Examples
+    --------
+    >>> duplicateObj("Hips", "", "")
+    >>> duplicateObj("Hips", "rig_", "")
+    >>> duplicateObj("Hips", "", "_FK")
+    >>> duplicateObj("Hips", "rig_", "_IK")
+        """
+    duplicated = f"{prefix}{obj}{suffix}"
+    duplicated = pm.duplicate(obj, rr=True, n=duplicated)[0]
+    for i in pm.listRelatives(duplicated, ad=True):
+        end = i.rsplit("|", 1)[-1]
+        new = i.replace(end, f"{prefix}{end}{suffix}")
+        try:
+            pm.rename(i, new)
+        except:
+            continue
+
+
 def mirrorCopy(obj: str, mirrorPlane: str="YZ") -> list:
     """ Mirror copy based on 'YZ' or 'XY'. Default mirrorPlane is "YZ".
     This function is shown below.

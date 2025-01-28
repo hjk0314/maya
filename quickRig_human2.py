@@ -254,10 +254,12 @@ class Character(QWidget):
     def buttonsLink(self):
         self.btnCreateTempJnt.clicked.connect(self.createTempJnt)
         self.btnAlignCenterJnt.clicked.connect(self.alignCenterJnt)
+        self.btnSynchronizeBothJnt.clicked.connect(self.syncBothJnt)
+        self.btnRig.clicked.connect(self.rig)
         self.btnClose.clicked.connect(self.close)
     
 
-    def createTempJnt(self):
+    def createTempJnt(self) -> None:
         """ Create temporary joints. """
         # CleanUp
         temp = list(self.jntPosition.keys())
@@ -284,12 +286,57 @@ class Character(QWidget):
         self.createTempJnt()
 
 
-    def syncBothJnt(self):
-        pass
+    def syncBothJnt(self) -> None:
+        """ The Right Joint has a mirror position to the left. """
+        self.update()
+        leftGroup = []
+        leftGroup += self.leftArms
+        leftGroup += self.leftLegs
+        leftGroup += self.leftIndex
+        leftGroup += self.leftMiddle
+        leftGroup += self.leftRing
+        leftGroup += self.leftPinky
+        leftGroup += self.leftThumb
+        for i in leftGroup:
+            x, y, z = getPosition(i)
+            right = changeLeftToRight(i)
+            self.jntPosition[right] = (x*-1, y, z)
+        self.createTempJnt()
 
 
-    def run(self):
-        pass
+    def rig(self):
+        self.createRigJnt()
+
+
+    def createRigJnt(self) -> None:
+        """ To create the rig joint by copying the original joint. """
+        # Duplicate All.
+        duplicateObj(self.hips, "rig_", "")
+        # Create IK, FK joints.
+        handle = ["_FK", "_IK"]
+        joints = [
+            "rig_LeftUpLeg", 
+            "rig_RightUpLeg", 
+            "rig_LeftArm", 
+            "rig_RightArm"
+            ]
+        for jnt in joints:
+            for h in handle:
+                duplicateObj(jnt, "", h)
+        # Delete useless joints.
+        useless = []
+        useless += self.leftIndex
+        useless += self.leftMiddle
+        useless += self.leftRing
+        useless += self.leftPinky
+        useless += self.leftThumb
+        useless += self.rightIndex
+        useless += self.rightMiddle
+        useless += self.rightRing
+        useless += self.rightPinky
+        useless += self.rightThumb
+        uselessGrp = [f"rig_{i}{h}" for h in handle for i in useless]
+        self.cleanUp(uselessGrp)
 
 
     def update(self) -> None:
@@ -298,8 +345,7 @@ class Character(QWidget):
         self.jntPosition = result
 
 
-
-    def cleanUp(self, *args):
+    def cleanUp(self, *args) -> None:
         """ Try to clear every argument. """
         for arg in args:
             isStr = isinstance(arg, str)
