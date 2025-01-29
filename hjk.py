@@ -490,9 +490,7 @@ def createLocatorSameTargetsRotation(ctrl: str, target: str) -> str:
     Notes: 
     ------ 
     - Create a locator.
-    - pm.parent(locator, target)
-    - Freeze the locator.
-    - pm.parent(locator, w=True)
+    - pm.matchTransform(locator, target, pos=True, rot=True)
     - pm.parent(locator, ctrl)
 
     Examples:  
@@ -500,7 +498,15 @@ def createLocatorSameTargetsRotation(ctrl: str, target: str) -> str:
     >>> createLocatorSameTargetsRotation("cc_neck", "jnt_neck")
     >>> "loc_neck"
      """
-    pass
+    if "cc_" in ctrl:
+        locName = ctrl.replace("cc_", "loc_")
+    else:
+        locName = f"loc_{ctrl}"
+    loc = pm.spaceLocator(p=(0, 0, 0), n=locName)
+    pm.matchTransform(loc, target, pos=True, rot=True)
+    pm.parent(loc, ctrl)
+    return loc
+
 
 
 def selectGroupOnly(*args) -> list:

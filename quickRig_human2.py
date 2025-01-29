@@ -312,6 +312,11 @@ class Character(QWidget):
 
     def createCharCtrl(self):
         self.createHipsCtrl()
+        self.createLegsCtrl()
+
+
+    def createLegsCtrl(self):
+        pass
 
 
     def createHipsCtrl(self):
@@ -333,10 +338,11 @@ class Character(QWidget):
         # Grouping
         grp = groupOwnPivot(*ccs)
         pm.makeIdentity(ccs[2], a=1, t=1, jo=0, n=0, pn=1)
-        # Structure
+        # Main
         ccGroups = parentHierarchically(*grp)
-        pm.parent(nullSpace, ccSub)
+        pm.parent(nullSpace, ccs[1])
         pm.matchTransform(ccGroups[0], self.hips, pos=True)
+        loc = createLocatorSameTargetsRotation(ccSub, self.hips)
         # Color
         colorize(ccMain, ccIKFK, yellow=True)
         colorize(ccSub, pink=True)
