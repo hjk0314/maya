@@ -311,7 +311,7 @@ class Character(QWidget):
 
 
     def createCharCtrl(self):
-        pass
+        self.createHipsCtrl()
 
 
     def createHipsCtrl(self):
@@ -353,77 +353,9 @@ class Character(QWidget):
             pm.setAttr(f'{ccIKFK}.{i}', e=True, k=True)
 
 
-    def connectBlendColor(self, ctrl: str, joints: list, \
-                      t=False, r=False, s=False, v=False) -> None:
-        """ Create a <blendColorNode>.
-        - Connect FK, IK to color1, color2 of the <blendColorNode>.
-        - Connect the output of the <blendColorNode> to the joint.
-        - Connect the controller to the blender. 
-        
-        Args
-        ----
-        - ctrl : str
-            - "cc_IKFK.Spine_IK0_FK1", 
-            - "cc_IKFK.Left_Arm_IK0_FK1", 
-            - "cc_IKFK.Right_Arm_IK0_FK1", 
-            - "cc_IKFK.Left_Leg_IK0_FK1", 
-            - "cc_IKFK.Right_Leg_IK0_FK1"
-        - joints : list
-            - sample = [
-                'rig_RightUpLeg', 
-                'rig_RightLeg', 
-                'rig_RightFoot', 
-                'rig_RightToeBase', 
-                'rig_RightToe_End', 
-                'rig_RightUpLeg_FK', 
-                'rig_RightLeg_FK', 
-                'rig_RightFoot_FK', 
-                'rig_RightToeBase_FK', 
-                'rig_RightToe_End_FK', 
-                'rig_RightUpLeg_IK', 
-                'rig_RightLeg_IK', 
-                'rig_RightFoot_IK', 
-                'rig_RightToeBase_IK', 
-                'rig_RightToe_End_IK', 
-                ]
-        - t : bool (translate)
-        - r : bool (rotate)
-        - s : bool (scale)
-        - v : bool (visibility)
-
-        Examples
-        --------
-        >>> connectBlendColor("cc_IKFK.Spine_IK0_FK1", t=1, r=1)
-        >>> connectBlendColor("cc_IKFK.Left_Arm_IK0_FK1", t=1, r=1)
-        >>> connectBlendColor("cc_IKFK.Right_Arm_IK0_FK1", t=1, r=1)
-        >>> connectBlendColor("cc_IKFK.Left_Leg_IK0_FK1", joints, t=1, r=1)
-        >>> connectBlendColor("cc_IKFK.Right_Leg_IK0_FK1", joints, t=1, r=1)
-         """
-        sel = joints if joints else pm.selected()
-        if len(sel) % 3:
-            return
-        else:
-            mod = len(sel) // 3
-            joint = sel[0 : mod*1]
-            jntFK = sel[mod : mod*2]
-            jntIK = sel[mod*2 : mod*3]
-        attr = []
-        if t:   attr.append("translate")
-        if r:   attr.append("rotate")
-        if s:   attr.append("scale")
-        if v:   attr.append("visibility")
-        for i in attr:
-            for fk, ik, jnt in zip(jntFK, jntIK, joint):
-                blColor = pm.shadingNode("blendColors", au=True)
-                pm.connectAttr(f"{fk}.{i}", f"{blColor}.color1", f=True)
-                pm.connectAttr(f"{ik}.{i}", f"{blColor}.color2", f=True)
-                pm.connectAttr(f"{blColor}.output", f"{jnt}.{i}", f=True)
-                pm.connectAttr(ctrl, f"{blColor}.blender")
-
-
     def createRigJnt(self) -> None:
         """ To create the rig joint by copying the original joint. """
-        if pm.objExists("rig_Hips"):
+        if not pm.objExists(self.hips) or pm.objExists("rig_Hips"):
             return
         # Duplicate All.
         duplicateObj(self.hips, "rig_", "")
