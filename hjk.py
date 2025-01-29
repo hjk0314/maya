@@ -158,7 +158,7 @@ def orientJoints(*args, **kwargs) -> None:
 
     kwargs
     ------
-    - If there are no Args, Maya default settings ​​are used : 
+    - If there are no Args, Maya default settings are used : 
         1. primary: "xyz"
         2. secondary: "yup"
     - Mixamo Settings is : 
@@ -832,7 +832,7 @@ def duplicateObj(obj: str, prefix: str="", suffix: str="") -> None:
     >>> duplicateObj("Hips", "rig_", "")
     >>> duplicateObj("Hips", "", "_FK")
     >>> duplicateObj("Hips", "rig_", "_IK")
-        """
+     """
     duplicated = f"{prefix}{obj}{suffix}"
     duplicated = pm.duplicate(obj, rr=True, n=duplicated)[0]
     for i in pm.listRelatives(duplicated, ad=True):
