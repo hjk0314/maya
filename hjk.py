@@ -508,7 +508,6 @@ def createLocatorSameTargetsRotation(ctrl: str, target: str) -> str:
     return loc
 
 
-
 def selectGroupOnly(*args) -> list:
     """ If there is no shape and the type is not 
     'joint', 'ikEffector', 'ikHandle' and 'Constraint', 
@@ -848,6 +847,46 @@ def duplicateObj(obj: str, prefix: str="", suffix: str="") -> None:
             pm.rename(i, new)
         except:
             continue
+
+
+def stringConcatenation(name: list=[], prefix: list=[], suffix: list=[]):
+    """ Naming Convention Modification.
+
+    Args
+    ----
+    - Prefixing : "rig_" -> "rig_name"
+    - Suffixing : "_FK" -> "name_FK"
+    - Affixation = prefix + suffix
+
+    Examples
+    --------
+    >>> stringConcatenation(["Hips"], ["rig_"], ["_FK", "_IK"])
+    >>> ['rig_Hips_FK', 'rig_Hips_IK']
+    >>> stringConcatenation(["Hips"], ["rig_"], [])
+    >>> ['rig_Hips']
+    >>> stringConcatenation(["Hips"], [], ["_FK", "_IK"])
+    >>> ['Hips_FK', 'Hips_IK']
+    >>> stringConcatenation(["Hips"])
+    >>> ['Hips']
+    >>> stringConcatenation()
+    >>> []
+     """
+    result = []
+    if name and prefix and suffix:
+        result = [f"{p}{n}{s}" for n in name for p in prefix for s in suffix]
+    elif name and prefix and not suffix:
+        result = [f"{p}{n}" for n in name for p in prefix]
+    elif name and not prefix and suffix:
+        result = [f"{n}{s}" for n in name for s in suffix]
+    elif not name and prefix and suffix:
+        result = [f"{p}{s}" for p in prefix for s in suffix]
+    elif not name and prefix and not suffix:
+        result = [f"{p}" for p in prefix]
+    elif not name and not prefix and suffix:
+        result = [f"{s}" for s in suffix]
+    else:
+        pass
+    return result
 
 
 def connectBlendColor(ctrl: str, joints: list=[], \

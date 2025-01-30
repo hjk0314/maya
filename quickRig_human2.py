@@ -316,7 +316,96 @@ class Character(QWidget):
 
 
     def createLegsCtrl(self):
-        pass
+        rigL = stringConcatenation(self.leftLegs, ["rig_"], [])
+        ccL_FK = stringConcatenation(self.leftLegs, ["cc_"], ["_FK"])
+        ccL_IK = stringConcatenation(self.leftLegs, ["cc_"], ["_IK"])
+        sizeFK = [13, 10, 9, 7, 1]
+        # Left FK
+        createdFK = []
+        for cc, rg, scl in zip(ccL_FK, rigL, sizeFK):
+            if "Toe_End" in cc:
+                continue
+            normalAxis = (0, 0, 1) if "ToeBase" in cc else (0, 1, 0)
+            cuv = pm.circle(nr=normalAxis, r=scl, n=cc, ch=False)[0]
+            pm.matchTransform(cc, rg, pos=True)
+            createdFK.append(cuv)
+        createdFK_grp = groupOwnPivot(*createdFK)
+        parentHierarchically(*createdFK_grp)
+        # Left IK
+        ctrl = Controllers()
+        ccs = ctrl.createControllers(scapula=ccL_IK[0], 
+                                     sphere=ccL_IK[1], foot2=ccL_IK[2])
+        # LeftUpLeg_IK
+        pm.rotate(ccs[0], (0, 0, -90))
+        pm.makeIdentity(ccs[0], a=1, r=1, pn=1)
+        pm.matchTransform(ccs[0], rigL[0], pos=True)
+        createdIK_grp1 = groupOwnPivot(ccs[0])
+        # LeftLeg_IK
+        jnt1, jnt2 = createPolevectorJoint(*rigL[:3])
+        pm.matchTransform(ccs[1], jnt2, pos=True)
+        createdIK_grp2 = groupOwnPivot(ccs[1])
+        pm.delete(jnt1)
+        # LeftFoot_IK
+        side = "Left"
+        locs = [
+            f"loc_{side}Heel_IK", 
+            f"loc_{side}Toe_End_IK", 
+            f"loc_{side}BankIn_IK", 
+            f"loc_{side}BankOut_IK", 
+            f"loc_{side}ToeBase_IK", 
+            f"loc_{side}Foot_IK", 
+            ]
+        for i in locs:
+            pm.spaceLocator(p=(0, 0, 0), n=i)
+        result = []
+        # ccs[2]
+        pm.matchTransform(ccs[2], rigL[2], pos=True)
+        pm.setAttr(f"{ccs[2]}.translateY", 0)
+        getPivot = pm.xform(rigL[2], q=True, ws=True, rp=True)
+        pm.xform(ccs[2], ws=True, piv=getPivot)
+        createdIK_grp3 = groupOwnPivot(ccs[2])
+        pm.makeIdentity(ccs[2], a=1, t=1, pn=1)
+        result.append(createdIK_grp3[-1])
+        # locs[0]
+        pm.matchTransform(locs[0], rigL[2], pos=True)
+        pm.setAttr(f"{locs[0]}.translateY", 0)
+        tmp = pm.getAttr(f"{locs[0]}.translateZ") - 8
+        pm.setAttr(f"{locs[0]}.translateZ", tmp)
+        result.append(locs[0])
+        # locs[1]
+        pm.matchTransform(locs[1], rigL[-1], pos=True)
+        pm.setAttr(f"{locs[1]}.translateY", 0)
+        result.append(locs[1])
+        # locs[2]
+        pm.matchTransform(locs[2], rigL[3], pos=True)
+        pm.setAttr(f"{locs[2]}.translateY", 0)
+        tmp = pm.getAttr(f"{locs[2]}.translateX") - 5
+        pm.setAttr(f"{locs[2]}.translateX", tmp)
+        result.append(locs[2])
+        # locs[3]
+        pm.matchTransform(locs[3], rigL[3], pos=True)
+        pm.setAttr(f"{locs[3]}.translateY", 0)
+        tmp = pm.getAttr(f"{locs[3]}.translateX") + 5
+        pm.setAttr(f"{locs[3]}.translateX", tmp)
+        result.append(locs[3])
+        # locs[4]
+        pm.matchTransform(locs[4], rigL[3], pos=True)
+        pm.aimConstraint(rigL[2], locs[4], aimVector=(0,0,-1), upVector=(0,1,0), worldUpType="vector", worldUpVector=(0,1, 0), mo=False, w=1.0)
+        pm.delete(locs[4], cn=True)
+        result += groupOwnPivot(locs[4])
+        # locs[5]
+        pm.matchTransform(locs[5], rigL[2], pos=True)
+        result.append(locs[5])
+        # Final Touch
+        parentHierarchically(*result)
+        temp = [
+            createdIK_grp1[0], 
+            createdIK_grp2[0], 
+            createdIK_grp3[0], 
+            createdFK_grp[0], 
+            ]
+        pm.group(temp, n=f"cc_{side}Leg_grp")
+
 
 
     def createHipsCtrl(self):
@@ -325,6 +414,9 @@ class Character(QWidget):
         ccSub = "cc_HipsSub"
         ccIKFK = "cc_IKFK"
         nullSpace = "null_rootSpace"
+        # Check
+        if pm.objExists(ccMain) or pm.objExists(ccSub):
+            return
         # Create Controllers
         ctrl = Controllers()
         ccs = ctrl.createControllers(cube=ccMain, arrow4=ccSub, IKFK=ccIKFK)
