@@ -312,41 +312,45 @@ class Character(QWidget):
 
     def createCharCtrl(self):
         self.createHipsCtrl()
-        self.createLegsCtrl()
+        self.createLegsCtrl(self.leftLegs)
+        self.createLegsCtrl(self.rightLegs)
 
 
-    def createLegsCtrl(self):
-        rigL = stringConcatenation(self.leftLegs, ["rig_"], [])
-        ccL_FK = stringConcatenation(self.leftLegs, ["cc_"], ["_FK"])
-        ccL_IK = stringConcatenation(self.leftLegs, ["cc_"], ["_IK"])
-        sizeFK = [13, 10, 9, 7, 1]
-        # Left FK
+    def createLegsCtrl(self, legJoint: list):
+        joint = stringConcatenation(legJoint, ["rig_"], [])
+        cc_FK = stringConcatenation(legJoint, ["cc_"], ["_FK"])
+        cc_IK = stringConcatenation(legJoint, ["cc_"], ["_IK"])
+        side = "Left" if "Left" in legJoint[0] else "Right"
+        size_FK = [13, 10, 9, 7, 1]
+        # Create FK
         createdFK = []
-        for cc, rg, scl in zip(ccL_FK, rigL, sizeFK):
+        for cc, rg, scl in zip(cc_FK, joint, size_FK):
             if "Toe_End" in cc:
                 continue
             normalAxis = (0, 0, 1) if "ToeBase" in cc else (0, 1, 0)
             cuv = pm.circle(nr=normalAxis, r=scl, n=cc, ch=False)[0]
+            if "Right" == side:
+                pm.rotate(cuv, (180, 0, 0))
             pm.matchTransform(cc, rg, pos=True)
             createdFK.append(cuv)
         createdFK_grp = groupOwnPivot(*createdFK)
         parentHierarchically(*createdFK_grp)
-        # Left IK
+        # Create IK
         ctrl = Controllers()
-        ccs = ctrl.createControllers(scapula=ccL_IK[0], 
-                                     sphere=ccL_IK[1], foot2=ccL_IK[2])
-        # LeftUpLeg_IK
-        pm.rotate(ccs[0], (0, 0, -90))
+        ccs = ctrl.createControllers(scapula=cc_IK[0], 
+                                     sphere=cc_IK[1], foot2=cc_IK[2])
+        # UpLeg_IK
+        rot = -90 if "Left" == side else 90
+        pm.rotate(ccs[0], (0, 0, rot))
         pm.makeIdentity(ccs[0], a=1, r=1, pn=1)
-        pm.matchTransform(ccs[0], rigL[0], pos=True)
+        pm.matchTransform(ccs[0], joint[0], pos=True)
         createdIK_grp1 = groupOwnPivot(ccs[0])
-        # LeftLeg_IK
-        jnt1, jnt2 = createPolevectorJoint(*rigL[:3])
+        # Leg_IK
+        jnt1, jnt2 = createPolevectorJoint(*joint[:3])
         pm.matchTransform(ccs[1], jnt2, pos=True)
         createdIK_grp2 = groupOwnPivot(ccs[1])
         pm.delete(jnt1)
-        # LeftFoot_IK
-        side = "Left"
+        # Foot_IK
         locs = [
             f"loc_{side}Heel_IK", 
             f"loc_{side}Toe_End_IK", 
@@ -357,55 +361,54 @@ class Character(QWidget):
             ]
         for i in locs:
             pm.spaceLocator(p=(0, 0, 0), n=i)
-        result = []
+        temp = []
         # ccs[2]
-        pm.matchTransform(ccs[2], rigL[2], pos=True)
+        pm.matchTransform(ccs[2], joint[2], pos=True)
         pm.setAttr(f"{ccs[2]}.translateY", 0)
-        getPivot = pm.xform(rigL[2], q=True, ws=True, rp=True)
+        getPivot = pm.xform(joint[2], q=True, ws=True, rp=True)
         pm.xform(ccs[2], ws=True, piv=getPivot)
         createdIK_grp3 = groupOwnPivot(ccs[2])
         pm.makeIdentity(ccs[2], a=1, t=1, pn=1)
-        result.append(createdIK_grp3[-1])
+        temp.append(createdIK_grp3[-1])
         # locs[0]
-        pm.matchTransform(locs[0], rigL[2], pos=True)
+        pm.matchTransform(locs[0], joint[2], pos=True)
         pm.setAttr(f"{locs[0]}.translateY", 0)
         tmp = pm.getAttr(f"{locs[0]}.translateZ") - 8
         pm.setAttr(f"{locs[0]}.translateZ", tmp)
-        result.append(locs[0])
+        temp.append(locs[0])
         # locs[1]
-        pm.matchTransform(locs[1], rigL[-1], pos=True)
+        pm.matchTransform(locs[1], joint[-1], pos=True)
         pm.setAttr(f"{locs[1]}.translateY", 0)
-        result.append(locs[1])
+        temp.append(locs[1])
         # locs[2]
-        pm.matchTransform(locs[2], rigL[3], pos=True)
+        pm.matchTransform(locs[2], joint[3], pos=True)
         pm.setAttr(f"{locs[2]}.translateY", 0)
         tmp = pm.getAttr(f"{locs[2]}.translateX") - 5
         pm.setAttr(f"{locs[2]}.translateX", tmp)
-        result.append(locs[2])
+        temp.append(locs[2])
         # locs[3]
-        pm.matchTransform(locs[3], rigL[3], pos=True)
+        pm.matchTransform(locs[3], joint[3], pos=True)
         pm.setAttr(f"{locs[3]}.translateY", 0)
         tmp = pm.getAttr(f"{locs[3]}.translateX") + 5
         pm.setAttr(f"{locs[3]}.translateX", tmp)
-        result.append(locs[3])
+        temp.append(locs[3])
         # locs[4]
-        pm.matchTransform(locs[4], rigL[3], pos=True)
-        pm.aimConstraint(rigL[2], locs[4], aimVector=(0,0,-1), upVector=(0,1,0), worldUpType="vector", worldUpVector=(0,1, 0), mo=False, w=1.0)
+        pm.matchTransform(locs[4], joint[3], pos=True)
+        pm.aimConstraint(joint[2], locs[4], aimVector=(0,0,-1), upVector=(0,1,0), worldUpType="vector", worldUpVector=(0,1, 0), mo=False, w=1.0)
         pm.delete(locs[4], cn=True)
-        result += groupOwnPivot(locs[4])
+        temp += groupOwnPivot(locs[4])
         # locs[5]
-        pm.matchTransform(locs[5], rigL[2], pos=True)
-        result.append(locs[5])
+        pm.matchTransform(locs[5], joint[2], pos=True)
+        temp.append(locs[5])
         # Final Touch
-        parentHierarchically(*result)
-        temp = [
+        parentHierarchically(*temp)
+        resultGroup = [
             createdIK_grp1[0], 
             createdIK_grp2[0], 
             createdIK_grp3[0], 
             createdFK_grp[0], 
             ]
-        pm.group(temp, n=f"cc_{side}Leg_grp")
-
+        pm.group(resultGroup, n=f"cc_{side}Leg_grp")
 
 
     def createHipsCtrl(self):
