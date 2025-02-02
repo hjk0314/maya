@@ -1385,24 +1385,30 @@ def createJointScaleExpression(*args, **kwargs) -> str:
     return muldvd
 
 
-def colorize(*args, **kwargs):
+def colorize(*args, **kwargs) -> None:
     """ Color an Object.
-
-    Args: 
-        "blue": 6, 
-        "blue2": 18, 
-        "pink": 9, 
-        "red": 13, 
-        "red2": 21, 
-        "green": 14, 
-        "green2": 23, 
-        "yellow": 17,
     
-    Examples: 
-        >>> colorize(red=True)
-        >>> colorize("pCube1", red=True)
-        >>> colorize("pCube1", "pCube2", red=True)
-        >>> colorize(*["pCube1", "pCube2"], red=True)
+    args
+    ----
+    - args if args else pm.selected()
+
+    kwargs
+    ------
+    - "blue": 6, 
+    - "blue2": 18, 
+    - "pink": 9, 
+    - "red": 13, 
+    - "red2": 21, 
+    - "green": 14, 
+    - "green2": 23, 
+    - "yellow": 17,
+    
+    Examples
+    --------
+    >>> colorize(red=True)
+    >>> colorize("pCube1", red=True)
+    >>> colorize("pCube1", "pCube2", red=True)
+    >>> colorize(*["pCube1", "pCube2"], red=True)
      """
     sel = args if args else pm.selected()
     if not sel or not kwargs:
