@@ -311,107 +311,27 @@ class Character(QWidget):
 
 
     def createCharCtrl(self):
+        self.createMainCtrl()
         self.createHipsCtrl()
         self.createLegsCtrl(self.leftLegs)
         self.createLegsCtrl(self.rightLegs)
 
 
-    def createLegsCtrl(self, legJoint: list):
-        joint = stringConcatenation(legJoint, ["rig_"], [])
-        cc_FK = stringConcatenation(legJoint, ["cc_"], ["_FK"])
-        cc_IK = stringConcatenation(legJoint, ["cc_"], ["_IK"])
-        side = "Left" if "Left" in legJoint[0] else "Right"
-        size_FK = [13, 10, 9, 7, 1]
-        # Create FK
-        createdFK = []
-        for cc, rg, scl in zip(cc_FK, joint, size_FK):
-            if "Toe_End" in cc:
-                continue
-            normalAxis = (0, 0, 1) if "ToeBase" in cc else (0, 1, 0)
-            cuv = pm.circle(nr=normalAxis, r=scl, n=cc, ch=False)[0]
-            if "Right" == side:
-                pm.rotate(cuv, (180, 0, 0))
-            pm.matchTransform(cc, rg, pos=True)
-            createdFK.append(cuv)
-        createdFK_grp = groupOwnPivot(*createdFK)
-        parentHierarchically(*createdFK_grp)
-        # Create IK
-        ctrl = Controllers()
-        ccs = ctrl.createControllers(scapula=cc_IK[0], 
-                                     sphere=cc_IK[1], foot2=cc_IK[2])
-        # UpLeg_IK
-        rot = -90 if "Left" == side else 90
-        pm.rotate(ccs[0], (0, 0, rot))
-        pm.makeIdentity(ccs[0], a=1, r=1, pn=1)
-        pm.matchTransform(ccs[0], joint[0], pos=True)
-        createdIK_grp1 = groupOwnPivot(ccs[0])
-        # Leg_IK
-        jnt1, jnt2 = createPolevectorJoint(*joint[:3])
-        pm.matchTransform(ccs[1], jnt2, pos=True)
-        createdIK_grp2 = groupOwnPivot(ccs[1])
-        pm.delete(jnt1)
-        # Foot_IK
-        locs = [
-            f"loc_{side}Heel_IK", 
-            f"loc_{side}Toe_End_IK", 
-            f"loc_{side}BankIn_IK", 
-            f"loc_{side}BankOut_IK", 
-            f"loc_{side}ToeBase_IK", 
-            f"loc_{side}Foot_IK", 
-            ]
-        for i in locs:
-            pm.spaceLocator(p=(0, 0, 0), n=i)
-        temp = []
-        # ccs[2]
-        pm.matchTransform(ccs[2], joint[2], pos=True)
-        pm.setAttr(f"{ccs[2]}.translateY", 0)
-        getPivot = pm.xform(joint[2], q=True, ws=True, rp=True)
-        pm.xform(ccs[2], ws=True, piv=getPivot)
-        createdIK_grp3 = groupOwnPivot(ccs[2])
-        pm.makeIdentity(ccs[2], a=1, t=1, pn=1)
-        temp.append(createdIK_grp3[-1])
-        # locs[0]
-        pm.matchTransform(locs[0], joint[2], pos=True)
-        pm.setAttr(f"{locs[0]}.translateY", 0)
-        tmp = pm.getAttr(f"{locs[0]}.translateZ") - 8
-        pm.setAttr(f"{locs[0]}.translateZ", tmp)
-        temp.append(locs[0])
-        # locs[1]
-        pm.matchTransform(locs[1], joint[-1], pos=True)
-        pm.setAttr(f"{locs[1]}.translateY", 0)
-        temp.append(locs[1])
-        # locs[2]
-        pm.matchTransform(locs[2], joint[3], pos=True)
-        pm.setAttr(f"{locs[2]}.translateY", 0)
-        tmp = pm.getAttr(f"{locs[2]}.translateX") - 5
-        pm.setAttr(f"{locs[2]}.translateX", tmp)
-        temp.append(locs[2])
-        # locs[3]
-        pm.matchTransform(locs[3], joint[3], pos=True)
-        pm.setAttr(f"{locs[3]}.translateY", 0)
-        tmp = pm.getAttr(f"{locs[3]}.translateX") + 5
-        pm.setAttr(f"{locs[3]}.translateX", tmp)
-        temp.append(locs[3])
-        # locs[4]
-        pm.matchTransform(locs[4], joint[3], pos=True)
-        pm.aimConstraint(joint[2], locs[4], aimVector=(0,0,-1), upVector=(0,1,0), worldUpType="vector", worldUpVector=(0,1, 0), mo=False, w=1.0)
-        pm.delete(locs[4], cn=True)
-        temp += groupOwnPivot(locs[4])
-        # locs[5]
-        pm.matchTransform(locs[5], joint[2], pos=True)
-        temp.append(locs[5])
-        # Final Touch
-        parentHierarchically(*temp)
-        resultGroup = [
-            createdIK_grp1[0], 
-            createdIK_grp2[0], 
-            createdIK_grp3[0], 
-            createdFK_grp[0], 
-            ]
-        pm.group(resultGroup, n=f"cc_{side}Leg_grp")
+    def createMainCtrl(self):
+        pass
 
 
     def createHipsCtrl(self):
+        """ Createe Hip's Controllers.
+
+        Process
+        -------
+        - Args
+        - Create Controllers
+        - Moving and Grouping
+        - Colorize
+        - Add Attributes
+         """
         # Args
         ccMain = "cc_HipsMain"
         ccSub = "cc_HipsSub"
@@ -452,6 +372,153 @@ class Character(QWidget):
         for i in attrName:
             pm.addAttr(ccIKFK, ln=i, at="double", min=0, max=1, dv=0)
             pm.setAttr(f'{ccIKFK}.{i}', e=True, k=True)
+
+
+    def createLegsCtrl(self, legJoint: list) -> None:
+        """ Creates a Leg's Controller.
+
+        Process
+        -------
+        - Create the names of the controllers.
+            - cc_jointName_FK, 
+            - cc_jointName_IK
+        - Create an FK controller. 
+            - If the "Right" joint, rotateX the controller 180 degrees.
+        - Create an IK controller.
+            - Create a pelvis controller,
+            - Create a poleVector controller.
+            - Create a foot controller.
+                - Create locators.
+                - Each locator is organized into its own hierarchy.
+        - Finally,
+            - Colorize.
+            - Add attributes
+            - Group the FK and IK together.
+         """
+        # Create Ctrl names
+        joint = stringConcatenation(legJoint, ["rig_"], [])
+        cc_FK = stringConcatenation(legJoint, ["cc_"], ["_FK"])
+        cc_IK = stringConcatenation(legJoint, ["cc_"], ["_IK"])
+        side = "Left" if "Left" in legJoint[0] else "Right"
+        size_FK = [13, 10, 9, 7, 1]
+        # Check
+        isFKExist = any([pm.objExists(i) for i in cc_FK])
+        isIKExist = any([pm.objExists(i) for i in cc_IK])
+        if isFKExist or isIKExist:
+            return
+        # Create FK
+        createdFK = []
+        for cc, rg, scl in zip(cc_FK, joint, size_FK):
+            if "Toe_End" in cc:
+                continue
+            normalAxis = (0, 0, 1) if "ToeBase" in cc else (0, 1, 0)
+            cuv = pm.circle(nr=normalAxis, r=scl, n=cc, ch=False)[0]
+            if "Right" == side:
+                pm.rotate(cuv, (180, 0, 0))
+            pm.matchTransform(cc, rg, pos=True)
+            createdFK.append(cuv)
+        createdFK_grp = groupOwnPivot(*createdFK)
+        parentHierarchically(*createdFK_grp)
+        # Create IK
+        ctrl = Controllers()
+        createdIK = ctrl.createControllers(scapula=cc_IK[0], 
+                                     sphere=cc_IK[1], foot2=cc_IK[2])
+        # UpLeg_IK
+        rot = -90 if "Left" == side else 90
+        pm.rotate(createdIK[0], (0, 0, rot))
+        pm.makeIdentity(createdIK[0], a=1, r=1, pn=1)
+        pm.matchTransform(createdIK[0], joint[0], pos=True)
+        createdIK_grp1 = groupOwnPivot(createdIK[0])
+        # Leg_IK
+        jnt1, jnt2 = createPolevectorJoint(*joint[:3])
+        pm.matchTransform(createdIK[1], jnt2, pos=True)
+        createdIK_grp2 = groupOwnPivot(createdIK[1])
+        pm.delete(jnt1)
+        # Foot_IK
+        locs = [
+            f"loc_{side}Heel_IK", 
+            f"loc_{side}Toe_End_IK", 
+            f"loc_{side}BankIn_IK", 
+            f"loc_{side}BankOut_IK", 
+            f"loc_{side}ToeBase_IK", 
+            f"loc_{side}Foot_IK", 
+            ]
+        for i in locs:
+            pm.spaceLocator(p=(0, 0, 0), n=i)
+        temp = []
+        # createdIK[2]
+        pm.matchTransform(createdIK[2], joint[2], pos=True)
+        pm.setAttr(f"{createdIK[2]}.translateY", 0)
+        getPivot = pm.xform(joint[2], q=True, ws=True, rp=True)
+        pm.xform(createdIK[2], ws=True, piv=getPivot)
+        createdIK_grp3 = groupOwnPivot(createdIK[2])
+        pm.makeIdentity(createdIK[2], a=1, t=1, pn=1)
+        temp.append(createdIK_grp3[-1])
+        # locs[0]
+        pm.matchTransform(locs[0], joint[2], pos=True)
+        pm.setAttr(f"{locs[0]}.translateY", 0)
+        tmp = pm.getAttr(f"{locs[0]}.translateZ") - 8
+        pm.setAttr(f"{locs[0]}.translateZ", tmp)
+        temp.append(locs[0])
+        # locs[1]
+        pm.matchTransform(locs[1], joint[-1], pos=True)
+        pm.setAttr(f"{locs[1]}.translateY", 0)
+        temp.append(locs[1])
+        # locs[2]
+        pm.matchTransform(locs[2], joint[3], pos=True)
+        pm.setAttr(f"{locs[2]}.translateY", 0)
+        tmp = pm.getAttr(f"{locs[2]}.translateX") - 5
+        pm.setAttr(f"{locs[2]}.translateX", tmp)
+        temp.append(locs[2])
+        # locs[3]
+        pm.matchTransform(locs[3], joint[3], pos=True)
+        pm.setAttr(f"{locs[3]}.translateY", 0)
+        tmp = pm.getAttr(f"{locs[3]}.translateX") + 5
+        pm.setAttr(f"{locs[3]}.translateX", tmp)
+        temp.append(locs[3])
+        # locs[4]
+        pm.matchTransform(locs[4], joint[3], pos=True)
+        pm.aimConstraint(joint[2], locs[4], 
+                         aimVector=(0,0,-1), 
+                         upVector=(0,1,0), 
+                         worldUpType="vector", 
+                         worldUpVector=(0,1, 0), 
+                         mo=False, w=1.0
+                         )
+        pm.delete(locs[4], cn=True)
+        temp += groupOwnPivot(locs[4])
+        # locs[5]
+        pm.matchTransform(locs[5], joint[2], pos=True)
+        temp.append(locs[5])
+        # Color
+        ctrls = createdFK + createdIK
+        colorBar = {"red": True} if "Left" == side else {"blue": True}
+        colorize(*ctrls, **colorBar)
+        # Add Attributes
+        attrLegIK = "World:Root:Hip:Foot"
+        pm.addAttr(createdIK[1], ln="Space", at="enum", en=attrLegIK)
+        pm.setAttr(f"{createdIK[1]}.Space", e=True, k=True)
+        attrFootIK = [
+            "Ball_Down", 
+            "Ball_Up", 
+            "Bank", 
+            "Heel_Twist", 
+            "Heel_Up", 
+            "Toe_Twist", 
+            "Toe_Up", 
+            ]
+        for i in attrFootIK:
+            pm.addAttr(createdIK[2], ln=i, at="double", dv=0)
+            pm.setAttr(f"{createdIK[2]}.{i}", e=True, k=True)
+        # Final Touch
+        parentHierarchically(*temp)
+        resultGroup = [
+            createdIK_grp1[0], 
+            createdIK_grp2[0], 
+            createdIK_grp3[0], 
+            createdFK_grp[0], 
+            ]
+        pm.group(resultGroup, n=f"cc_{side}Leg_grp")
 
 
     def createRigJnt(self) -> None:
