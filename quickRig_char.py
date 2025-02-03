@@ -15,6 +15,7 @@ def mayaMainWindow():
 
 class Character(QWidget):
     def __init__(self):
+        self.sr = 1 # sizeRatio
         self.mainCurve = "mainCurve"
         self.hips = "Hips"
         self.spine = [
@@ -318,11 +319,28 @@ class Character(QWidget):
 
 
     def createMainCtrl(self):
-        pass
+        """ Create Main Controllers. """
+        # Args
+        ccMain = "cc_main"
+        ccSub = "cc_sub"
+        ccSub2 = "cc_sub2"
+        nullSpace = "null_worldSpace"
+        ctrls = [ccMain, ccSub, ccSub2]
+        ccColor = ["yellow", "pink", "red2"]
+        ccSize = [70, 58, 50]
+        # Create and Colorize
+        for cc, col, scl in zip(ctrls, ccColor, ccSize):
+            cuv = pm.circle(nr=(0,1,0), r=scl*self.sr, n=cc, ch=False)[0]
+            colorize(cuv, **{col: True})
+        ctrlGrp = groupOwnPivot(*ctrls)
+        nullGrp = pm.group(em=True, n=nullSpace)
+        # Grouping
+        parentHierarchically(*ctrlGrp)
+        pm.parent(nullGrp, ctrlGrp[-1])
 
 
     def createHipsCtrl(self):
-        """ Createe Hip's Controllers.
+        """ Create Hip's Controllers.
 
         Process
         -------
@@ -345,11 +363,13 @@ class Character(QWidget):
         ccs = ctrl.createControllers(cube=ccMain, arrow4=ccSub, IKFK=ccIKFK)
         nullSpace = pm.group(em=True, n=nullSpace)
         # Move
-        pm.scale(ccs[0], (5, 0.4, 5))
+        pm.scale(ccs[0], (5*self.sr, 0.4*self.sr, 5*self.sr))
         pm.makeIdentity(ccs[0], a=1, s=1, jo=0, n=0, pn=1)
         pm.rotate(ccs[2], (90, 0, 0))
-        pm.move(ccs[2], (40, 0, 0))
-        pm.makeIdentity(ccs[2], a=1, r=1, jo=0, n=0, pn=1)
+        pm.move(ccs[2], (40*self.sr, 0, 0))
+        for i in ccs[1:]:
+            pm.scale(i, (self.sr, self.sr, self.sr))
+            pm.makeIdentity(i, a=1, t=1, r=1, s=1, jo=0, n=0, pn=1)
         # Grouping
         grp = groupOwnPivot(*ccs)
         pm.makeIdentity(ccs[2], a=1, t=1, jo=0, n=0, pn=1)
@@ -357,7 +377,6 @@ class Character(QWidget):
         ccGroups = parentHierarchically(*grp)
         pm.parent(nullSpace, ccs[1])
         pm.matchTransform(ccGroups[0], self.hips, pos=True)
-        loc = createLocatorSameTargetsRotation(ccSub, self.hips)
         # Color
         colorize(ccMain, ccIKFK, yellow=True)
         colorize(ccSub, pink=True)
@@ -412,6 +431,7 @@ class Character(QWidget):
             if "Toe_End" in cc:
                 continue
             normalAxis = (0, 0, 1) if "ToeBase" in cc else (0, 1, 0)
+            scl *= self.sr
             cuv = pm.circle(nr=normalAxis, r=scl, n=cc, ch=False)[0]
             if "Right" == side:
                 pm.rotate(cuv, (180, 0, 0))
@@ -423,6 +443,9 @@ class Character(QWidget):
         ctrl = Controllers()
         createdIK = ctrl.createControllers(scapula=cc_IK[0], 
                                      sphere=cc_IK[1], foot2=cc_IK[2])
+        for i in createdIK:
+            pm.scale(i, (self.sr, self.sr, self.sr))
+            pm.makeIdentity(i, a=1, s=1, jo=0, n=0, pn=1)
         # UpLeg_IK
         rot = -90 if "Left" == side else 90
         pm.rotate(createdIK[0], (0, 0, rot))
@@ -454,29 +477,29 @@ class Character(QWidget):
         createdIK_grp3 = groupOwnPivot(createdIK[2])
         pm.makeIdentity(createdIK[2], a=1, t=1, pn=1)
         temp.append(createdIK_grp3[-1])
-        # locs[0]
+        # locs[0] : heel
         pm.matchTransform(locs[0], joint[2], pos=True)
         pm.setAttr(f"{locs[0]}.translateY", 0)
-        tmp = pm.getAttr(f"{locs[0]}.translateZ") - 8
+        tmp = pm.getAttr(f"{locs[0]}.translateZ") - (8*self.sr)
         pm.setAttr(f"{locs[0]}.translateZ", tmp)
         temp.append(locs[0])
-        # locs[1]
+        # locs[1] : toe
         pm.matchTransform(locs[1], joint[-1], pos=True)
         pm.setAttr(f"{locs[1]}.translateY", 0)
         temp.append(locs[1])
-        # locs[2]
+        # locs[2] : bankIn
         pm.matchTransform(locs[2], joint[3], pos=True)
         pm.setAttr(f"{locs[2]}.translateY", 0)
-        tmp = pm.getAttr(f"{locs[2]}.translateX") - 5
+        tmp = pm.getAttr(f"{locs[2]}.translateX") - (5*self.sr)
         pm.setAttr(f"{locs[2]}.translateX", tmp)
         temp.append(locs[2])
-        # locs[3]
+        # locs[3] : bankOut
         pm.matchTransform(locs[3], joint[3], pos=True)
         pm.setAttr(f"{locs[3]}.translateY", 0)
-        tmp = pm.getAttr(f"{locs[3]}.translateX") + 5
+        tmp = pm.getAttr(f"{locs[3]}.translateX") + (5*self.sr)
         pm.setAttr(f"{locs[3]}.translateX", tmp)
         temp.append(locs[3])
-        # locs[4]
+        # locs[4] : ball
         pm.matchTransform(locs[4], joint[3], pos=True)
         pm.aimConstraint(joint[2], locs[4], 
                          aimVector=(0,0,-1), 
@@ -487,7 +510,7 @@ class Character(QWidget):
                          )
         pm.delete(locs[4], cn=True)
         temp += groupOwnPivot(locs[4])
-        # locs[5]
+        # locs[5] : ankle
         pm.matchTransform(locs[5], joint[2], pos=True)
         temp.append(locs[5])
         # Color
@@ -525,6 +548,9 @@ class Character(QWidget):
         """ To create the rig joint by copying the original joint. """
         if not pm.objExists(self.hips) or pm.objExists("rig_Hips"):
             return
+        # Reset
+        self.update()
+        self.createTempJnt()
         # Duplicate All.
         duplicateObj(self.hips, "rig_", "")
         # Create IK, FK joints.
@@ -621,6 +647,7 @@ class Character(QWidget):
             else:
                 bbSize = getBoundingBoxSize(object)
                 bbSize = max(bbSize)
+                self.sr = round(bbSize/90.4, 3)
             result = pm.circle(nr=(0, 1, 0), n="mainCurve", ch=0, r=bbSize)
         return result[0]
 
