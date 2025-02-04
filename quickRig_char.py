@@ -316,6 +316,50 @@ class Character(QWidget):
         self.createHipsCtrl()
         self.createLegsCtrl(self.leftLegs)
         self.createLegsCtrl(self.rightLegs)
+        self.createArmsCtrl(self.leftArms)
+
+
+    def createArmsCtrl(self, armJoint: list):
+        # Create Ctrl Name
+        joint = stringConcatenation(armJoint, ["rig_"], [])
+        shoulderJnt = joint[0]
+        rigJnt = joint[1:]
+        cc_FK = stringConcatenation(armJoint[1:], ["cc_"], ["_FK"])
+        cc_IK = stringConcatenation(armJoint[1:], ["cc_"], ["_IK"])
+        side = "Left" if "Left" in shoulderJnt else "Right"
+        size_FK = [9.3, 8, 6.8]
+        # Check
+        # Create FK
+        createdFK = []
+        for cc, rg, scl in zip(cc_FK, rigJnt, size_FK):
+            scl *= self.sr
+            cuv = pm.circle(nr=(1,0,0), r=scl, n=cc, ch=False)[0]
+            if "Right" == side:
+                pm.rotate(cuv, (-180, 0, 0))
+            pm.matchTransform(cuv, rg, pos=True)
+            createdFK.append(cuv)
+        for idx, cc in enumerate(createdFK):
+            if (idx+1) < len(createdFK):
+                pm.aimConstraint(createdFK[idx+1], cc, 
+                                 aimVector=(1,0,0), 
+                                 upVector=(0,1,0), 
+                                 worldUpType="vector", 
+                                 worldUpVector=(0,1,0), 
+                                 mo=False, w=1.0
+                                 )
+                pm.delete(cc, cn=True)
+            elif (idx+1) == len(createdFK):
+                pm.orientConstraint(createdFK[idx-1], cc, mo=False, w=1.0)
+                pm.delete(cc, cn=True)
+            else:
+                continue
+        createdFK_grp = groupOwnPivot(*createdFK)
+        parentHierarchically(*createdFK_grp)
+        # Create IK
+        # Colorize
+        # Add Attributes
+        # Final Touch
+
 
 
     def createMainCtrl(self):
@@ -328,6 +372,9 @@ class Character(QWidget):
         ctrls = [ccMain, ccSub, ccSub2]
         ccColor = ["yellow", "pink", "red2"]
         ccSize = [70, 58, 50]
+        # Check
+        if any([pm.objExists(i) for i in ctrls]):
+            return
         # Create and Colorize
         for cc, col, scl in zip(ctrls, ccColor, ccSize):
             cuv = pm.circle(nr=(0,1,0), r=scl*self.sr, n=cc, ch=False)[0]
@@ -435,7 +482,7 @@ class Character(QWidget):
             cuv = pm.circle(nr=normalAxis, r=scl, n=cc, ch=False)[0]
             if "Right" == side:
                 pm.rotate(cuv, (180, 0, 0))
-            pm.matchTransform(cc, rg, pos=True)
+            pm.matchTransform(cuv, rg, pos=True)
             createdFK.append(cuv)
         createdFK_grp = groupOwnPivot(*createdFK)
         parentHierarchically(*createdFK_grp)
@@ -505,7 +552,7 @@ class Character(QWidget):
                          aimVector=(0,0,-1), 
                          upVector=(0,1,0), 
                          worldUpType="vector", 
-                         worldUpVector=(0,1, 0), 
+                         worldUpVector=(0,1,0), 
                          mo=False, w=1.0
                          )
         pm.delete(locs[4], cn=True)
