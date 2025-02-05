@@ -215,22 +215,31 @@ class Character(QWidget):
         self.btnCreateTempJnt = QPushButton()
         self.btnCreateTempJnt.setObjectName(u"btnCreateTempJnt")
         self.verticalLayout.addWidget(self.btnCreateTempJnt)
-        self.line = QFrame()
-        self.line.setObjectName(u"line")
-        self.line.setFrameShape(QFrame.HLine)
-        self.line.setFrameShadow(QFrame.Sunken)
-        self.verticalLayout.addWidget(self.line)
         self.btnAlignCenterJnt = QPushButton()
         self.btnAlignCenterJnt.setObjectName(u"btnAlignCenterJnt")
         self.verticalLayout.addWidget(self.btnAlignCenterJnt)
         self.btnSynchronizeBothJnt = QPushButton()
         self.btnSynchronizeBothJnt.setObjectName(u"btnSynchronizeBothJnt")
         self.verticalLayout.addWidget(self.btnSynchronizeBothJnt)
+        self.btnConfirm = QPushButton()
+        self.btnConfirm.setObjectName(u"btnConfirm")
+        self.verticalLayout.addWidget(self.btnConfirm)
+        self.line = QFrame()
+        self.line.setObjectName(u"line")
+        self.line.setFrameShape(QFrame.HLine)
+        self.line.setFrameShadow(QFrame.Sunken)
+        self.verticalLayout.addWidget(self.line)
+        self.btnDuplicateRigJnt = QPushButton()
+        self.btnDuplicateRigJnt.setObjectName(u"btnDuplicateRigJnt")
+        self.verticalLayout.addWidget(self.btnDuplicateRigJnt)
         self.line_2 = QFrame()
         self.line_2.setObjectName(u"line_2")
         self.line_2.setFrameShape(QFrame.HLine)
         self.line_2.setFrameShadow(QFrame.Sunken)
         self.verticalLayout.addWidget(self.line_2)
+        self.btnCreateCtrls = QPushButton()
+        self.btnCreateCtrls.setObjectName(u"btnCreateCtrls")
+        self.verticalLayout.addWidget(self.btnCreateCtrls)
         self.btnRig = QPushButton()
         self.btnRig.setObjectName(u"btnRig")
         self.verticalLayout.addWidget(self.btnRig)
@@ -239,8 +248,6 @@ class Character(QWidget):
         self.verticalLayout.addWidget(self.btnClose)
         self.verticalSpacer = QSpacerItem(20, 0, QSizePolicy.Minimum, QSizePolicy.Expanding)
         self.verticalLayout.addItem(self.verticalSpacer)
-
-
         self.retranslateUi()
         self.buttonsLink()
 
@@ -249,6 +256,9 @@ class Character(QWidget):
         self.btnCreateTempJnt.setText(QCoreApplication.translate("Form", u"Create temp Joints", None))
         self.btnAlignCenterJnt.setText(QCoreApplication.translate("Form", u"Align the Center Joints", None))
         self.btnSynchronizeBothJnt.setText(QCoreApplication.translate("Form", u"Synchronize both Joints", None))
+        self.btnConfirm.setText(QCoreApplication.translate("Form", u"Confirm", None))
+        self.btnDuplicateRigJnt.setText(QCoreApplication.translate("Form", u"Duplicate Rig Joints", None))
+        self.btnCreateCtrls.setText(QCoreApplication.translate("Form", u"Create Controllers", None))
         self.btnRig.setText(QCoreApplication.translate("Form", u"Rig", None))
         self.btnClose.setText(QCoreApplication.translate("Form", u"Close", None))
 
@@ -257,6 +267,9 @@ class Character(QWidget):
         self.btnCreateTempJnt.clicked.connect(self.createTempJnt)
         self.btnAlignCenterJnt.clicked.connect(self.alignCenterJnt)
         self.btnSynchronizeBothJnt.clicked.connect(self.syncBothJnt)
+        self.btnConfirm.clicked.connect(self.confirm)
+        self.btnDuplicateRigJnt.clicked.connect(self.createRigJnt)
+        self.btnCreateCtrls.clicked.connect(self.createCharCtrl)
         self.btnRig.clicked.connect(self.rig)
         self.btnClose.clicked.connect(self.close)
     
@@ -306,29 +319,89 @@ class Character(QWidget):
         self.createTempJnt()
 
 
+    def confirm(self):
+        self.update()
+        self.createTempJnt()
+
+
+    def createRigJnt(self) -> None:
+        """ To create the rig joint by copying the original joint. """
+        if not pm.objExists(self.hips) or pm.objExists("rig_Hips"):
+            return
+        # Duplicate All.
+        result = duplicateObj(self.hips, "rig_", "")
+        # Create IK, FK joints.
+        handle = ["_FK", "_IK"]
+        joints = [
+            "rig_LeftUpLeg", 
+            "rig_RightUpLeg", 
+            "rig_LeftArm", 
+            "rig_RightArm"
+            ]
+        for jnt in joints:
+            for h in handle:
+                duplicateObj(jnt, "", h)
+        # Delete useless joints.
+        useless = []
+        useless += self.leftIndex
+        useless += self.leftMiddle
+        useless += self.leftRing
+        useless += self.leftPinky
+        useless += self.leftThumb
+        useless += self.rightIndex
+        useless += self.rightMiddle
+        useless += self.rightRing
+        useless += self.rightPinky
+        useless += self.rightThumb
+        uselessGrp = [f"rig_{i}{h}" for h in handle for i in useless]
+        self.cleanUp(uselessGrp)
+        try:
+            pm.parent(result, "rigBones")
+        except:
+            pass
+
+
     def rig(self):
-        self.createRigJnt()
-        self.createCharCtrl()
+        pass
 
 
     def createCharCtrl(self):
+        if not pm.objExists("rig_Hips"):
+            pm.warning("There is no \"rig_Hips\" joint.")
+            return
         self.createMainCtrl()
         self.createHipsCtrl()
         self.createLegsCtrl(self.leftLegs)
         self.createLegsCtrl(self.rightLegs)
         self.createArmsCtrl(self.leftArms)
+        self.createArmsCtrl(self.rightArms)
 
 
     def createArmsCtrl(self, armJoint: list):
         # Create Ctrl Name
         joint = stringConcatenation(armJoint, ["rig_"], [])
         shoulderJnt = joint[0]
+        ccShoulder = shoulderJnt.replace("rig_", "cc_")
         rigJnt = joint[1:]
         cc_FK = stringConcatenation(armJoint[1:], ["cc_"], ["_FK"])
         cc_IK = stringConcatenation(armJoint[1:], ["cc_"], ["_IK"])
         side = "Left" if "Left" in shoulderJnt else "Right"
         size_FK = [9.3, 8, 6.8]
+        ctrl = Controllers()
         # Check
+        # Create Shoulder Ctrl
+        ccShoulder = ctrl.createControllers(scapula=ccShoulder)[0]
+        pm.scale(ccShoulder, (self.sr, self.sr, self.sr))
+        rotZ = 135 if "Right" == side else -45
+        pm.rotate(ccShoulder, (0, 0, rotZ))
+        pm.makeIdentity(ccShoulder, a=1, r=1, s=1, pn=1)
+        if "Right" == side:
+            pm.rotate(ccShoulder, (180, 0, 0))
+        nullSpace = f"null_{side}ShoulderSpace"
+        nullSpace = pm.group(em=True, n=nullSpace)
+        pm.parent(nullSpace, ccShoulder)
+        pm.matchTransform(ccShoulder, shoulderJnt, pos=True)
+        groupOwnPivot(ccShoulder)
         # Create FK
         createdFK = []
         for cc, rg, scl in zip(cc_FK, rigJnt, size_FK):
@@ -339,10 +412,11 @@ class Character(QWidget):
             pm.matchTransform(cuv, rg, pos=True)
             createdFK.append(cuv)
         for idx, cc in enumerate(createdFK):
+            flipFactor = -1 if "Right" == side else 1
             if (idx+1) < len(createdFK):
                 pm.aimConstraint(createdFK[idx+1], cc, 
-                                 aimVector=(1,0,0), 
-                                 upVector=(0,1,0), 
+                                 aimVector=(flipFactor,0,0), 
+                                 upVector=(0,flipFactor,0), 
                                  worldUpType="vector", 
                                  worldUpVector=(0,1,0), 
                                  mo=False, w=1.0
@@ -356,6 +430,7 @@ class Character(QWidget):
         createdFK_grp = groupOwnPivot(*createdFK)
         parentHierarchically(*createdFK_grp)
         # Create IK
+
         # Colorize
         # Add Attributes
         # Final Touch
@@ -589,42 +664,6 @@ class Character(QWidget):
             createdFK_grp[0], 
             ]
         pm.group(resultGroup, n=f"cc_{side}Leg_grp")
-
-
-    def createRigJnt(self) -> None:
-        """ To create the rig joint by copying the original joint. """
-        if not pm.objExists(self.hips) or pm.objExists("rig_Hips"):
-            return
-        # Reset
-        self.update()
-        self.createTempJnt()
-        # Duplicate All.
-        duplicateObj(self.hips, "rig_", "")
-        # Create IK, FK joints.
-        handle = ["_FK", "_IK"]
-        joints = [
-            "rig_LeftUpLeg", 
-            "rig_RightUpLeg", 
-            "rig_LeftArm", 
-            "rig_RightArm"
-            ]
-        for jnt in joints:
-            for h in handle:
-                duplicateObj(jnt, "", h)
-        # Delete useless joints.
-        useless = []
-        useless += self.leftIndex
-        useless += self.leftMiddle
-        useless += self.leftRing
-        useless += self.leftPinky
-        useless += self.leftThumb
-        useless += self.rightIndex
-        useless += self.rightMiddle
-        useless += self.rightRing
-        useless += self.rightPinky
-        useless += self.rightThumb
-        uselessGrp = [f"rig_{i}{h}" for h in handle for i in useless]
-        self.cleanUp(uselessGrp)
 
 
     def update(self) -> None:
