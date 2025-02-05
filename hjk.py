@@ -819,7 +819,7 @@ def changeLeftToRight(inputs: str) -> str:
     return result
 
 
-def duplicateObj(obj: str, prefix: str="", suffix: str="") -> None:
+def duplicateObj(obj: str, prefix: str="", suffix: str="") -> str:
     """ Duplictate the joint and rename it to all descendents. 
     
     Args
@@ -847,6 +847,7 @@ def duplicateObj(obj: str, prefix: str="", suffix: str="") -> None:
             pm.rename(i, new)
         except:
             continue
+    return duplicated
 
 
 def stringConcatenation(name: list=[], prefix: list=[], suffix: list=[]):
