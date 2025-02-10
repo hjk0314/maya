@@ -430,7 +430,20 @@ class Character(QWidget):
         createdFK_grp = groupOwnPivot(*createdFK)
         parentHierarchically(*createdFK_grp)
         # Create IK
-
+        createdIK = ctrl.createControllers(circle=cc_IK[0], 
+                                           sphere=cc_IK[1], cube=cc_IK[2])
+        for i in createdIK:
+            pm.scale(i, (self.sr, self.sr, self.sr))
+            pm.makeIdentity(i, a=1, s=1, jo=0, n=0, pn=1)
+        # Arm_IK
+        pm.scale(createdIK[0], (0.75, 0.75, 0.75))
+        pm.rotate(createdIK[0], (0, 0, -90))
+        pm.makeIdentity(createdIK[0], a=1, r=1, s=1, pn=1)
+        nullSpace = f"null_{cc_IK[0]}Space"
+        nullSpace = pm.group(em=True, n=nullSpace)
+        pm.parent(nullSpace, createdIK[0])
+        pm.matchTransform(createdIK[0], rigJnt[0], pos=True)
+        groupOwnPivot(createdIK[0])
         # Colorize
         # Add Attributes
         # Final Touch
@@ -564,7 +577,7 @@ class Character(QWidget):
         # Create IK
         ctrl = Controllers()
         createdIK = ctrl.createControllers(scapula=cc_IK[0], 
-                                     sphere=cc_IK[1], foot2=cc_IK[2])
+                                           sphere=cc_IK[1], foot2=cc_IK[2])
         for i in createdIK:
             pm.scale(i, (self.sr, self.sr, self.sr))
             pm.makeIdentity(i, a=1, s=1, jo=0, n=0, pn=1)
