@@ -378,24 +378,29 @@ class Character(QWidget):
         self.createArmsCtrl(self.rightArms)
 
 
-    # def createShoulderCtrl(self):
-    #     jntShoulderL = self.leftArms[0]
-    #     jntShoulderR = self.rightArms[0]
-
-    #     ccShoulder = ""
-    #     ctrl = Controllers()
-    #     ccShoulder = ctrl.createControllers(scapula=ccShoulder)[0]
-    #     pm.scale(ccShoulder, (self.sr, self.sr, self.sr))
-    #     rotZ = 135 if "Right" == side else -45
-    #     pm.rotate(ccShoulder, (0, 0, rotZ))
-    #     pm.makeIdentity(ccShoulder, a=1, r=1, s=1, pn=1)
-    #     if "Right" == side:
-    #         pm.rotate(ccShoulder, (180, 0, 0))
-    #     nullShoulderSpace = f"null_{armJoint[0]}Space"
-    #     nullShoulderSpace = pm.group(em=True, n=nullShoulderSpace)
-    #     pm.parent(nullShoulderSpace, ccShoulder)
-    #     pm.matchTransform(ccShoulder, shoulderJnt, pos=True)
-    #     groupOwnPivot(ccShoulder)
+    def createShoulderCtrl(self):
+        jntShoulder_L = self.leftArms[0]
+        jntShoulder_R = self.rightArms[0]
+        ccShoulder_L = "cc_" + jntShoulder_L
+        ccShoulder_R = "cc_" + jntShoulder_R
+        if pm.objExists(ccShoulder_L) or pm.objExists(ccShoulder_R):
+            return
+        ctrl = Controllers()
+        jntShoulder = [jntShoulder_L, jntShoulder_R]
+        ccShoulder = [ccShoulder_L, ccShoulder_R]
+        for jnt, cc in zip(jntShoulder, ccShoulder):
+            cc = ctrl.createControllers(scapula=cc)[0]
+            pm.scale(cc, (self.sr, self.sr, self.sr))
+            rotZ = 135 if "Right" in jnt else -45
+            pm.rotate(cc, (0, 0, rotZ))
+            pm.makeIdentity(cc, a=1, r=1, s=1, pn=1)
+            if "Right" in jnt:
+                pm.rotate(cc, (180, 0, 0))
+            nullShoulderSpace = f"null_{jnt}Space"
+            nullShoulderSpace = pm.group(em=True, n=nullShoulderSpace)
+            pm.parent(nullShoulderSpace, cc)
+            pm.matchTransform(cc, jnt, pos=True)
+            groupOwnPivot(cc)
 
 
     def createArmsCtrl(self, armJoint: list):
@@ -419,33 +424,27 @@ class Character(QWidget):
             - Group the FK and IK together.
          """
         # Create Ctrl Name
-        joint = stringConcatenation(armJoint, ["rig_"], [])
-        shoulderJnt = joint[0]
-        ccShoulder = shoulderJnt.replace("rig_", "cc_")
-        rigJnt = joint[1:]
-        cc_FK = stringConcatenation(armJoint[1:], ["cc_"], ["_FK"])
-        cc_IK = stringConcatenation(armJoint[1:], ["cc_"], ["_IK"])
-        side = "Left" if "Left" in shoulderJnt else "Right"
-        size_FK = [9.3, 8, 6.8]
+        ccArmFK_L = stringConcatenation(self.leftArms[1:], ["cc_"], ["_FK"])
+        ccArmIK_L = stringConcatenation(self.leftArms[1:], ["cc_"], ["_IK"])
+        ccArmFK_R = stringConcatenation(self.rightArms[1:], ["cc_"], ["_FK"])
+        ccArmIK_R = stringConcatenation(self.rightArms[1:], ["cc_"], ["_IK"])
+        FKsize = [9.3, 8, 6.8]
         ctrl = Controllers()
-        # Check
-        isFKExist = any([pm.objExists(i) for i in cc_FK])
-        isIKExist = any([pm.objExists(i) for i in cc_IK])
+        isFKExist = any([pm.objExists(i) for i in ccArmFK_L + ccArmFK_R])
+        isIKExist = any([pm.objExists(i) for i in ccArmIK_L + ccArmIK_R])
         if isFKExist or isIKExist:
             return
-        # Create Shoulder Ctrl
-        ccShoulder = ctrl.createControllers(scapula=ccShoulder)[0]
-        pm.scale(ccShoulder, (self.sr, self.sr, self.sr))
-        rotZ = 135 if "Right" == side else -45
-        pm.rotate(ccShoulder, (0, 0, rotZ))
-        pm.makeIdentity(ccShoulder, a=1, r=1, s=1, pn=1)
-        if "Right" == side:
-            pm.rotate(ccShoulder, (180, 0, 0))
-        nullShoulderSpace = f"null_{armJoint[0]}Space"
-        nullShoulderSpace = pm.group(em=True, n=nullShoulderSpace)
-        pm.parent(nullShoulderSpace, ccShoulder)
-        pm.matchTransform(ccShoulder, shoulderJnt, pos=True)
-        groupOwnPivot(ccShoulder)
+        # Create Ctrl Name
+        # joint = stringConcatenation(armJoint, ["rig_"], [])
+        # shoulderJnt = joint[0]
+        # ccShoulder = shoulderJnt.replace("rig_", "cc_")
+        # rigJnt = joint[1:]
+        # cc_FK = stringConcatenation(armJoint[1:], ["cc_"], ["_FK"])
+        # cc_IK = stringConcatenation(armJoint[1:], ["cc_"], ["_IK"])
+        # side = "Left" if "Left" in shoulderJnt else "Right"
+        # size_FK = [9.3, 8, 6.8]
+        # ctrl = Controllers()
+        # Check
         # Create FK
         createdFK = []
         for cc, rg, scl in zip(cc_FK, rigJnt, size_FK):
@@ -819,12 +818,12 @@ class Character(QWidget):
         return result[0]
 
 
-# if __name__ == "__main__":
-#     try:
-#         char.close()
-#         char.deleteLater()
-#     except:
-#         pass
-#     char = Character()
-#     char.show()
+if __name__ == "__main__":
+    try:
+        char.close()
+        char.deleteLater()
+    except:
+        pass
+    char = Character()
+    char.show()
 
