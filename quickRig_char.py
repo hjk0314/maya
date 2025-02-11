@@ -373,11 +373,51 @@ class Character(QWidget):
         self.createHipsCtrl()
         self.createLegsCtrl(self.leftLegs)
         self.createLegsCtrl(self.rightLegs)
+        self.createShoulderCtrl()
         self.createArmsCtrl(self.leftArms)
         self.createArmsCtrl(self.rightArms)
 
 
+    # def createShoulderCtrl(self):
+    #     jntShoulderL = self.leftArms[0]
+    #     jntShoulderR = self.rightArms[0]
+
+    #     ccShoulder = ""
+    #     ctrl = Controllers()
+    #     ccShoulder = ctrl.createControllers(scapula=ccShoulder)[0]
+    #     pm.scale(ccShoulder, (self.sr, self.sr, self.sr))
+    #     rotZ = 135 if "Right" == side else -45
+    #     pm.rotate(ccShoulder, (0, 0, rotZ))
+    #     pm.makeIdentity(ccShoulder, a=1, r=1, s=1, pn=1)
+    #     if "Right" == side:
+    #         pm.rotate(ccShoulder, (180, 0, 0))
+    #     nullShoulderSpace = f"null_{armJoint[0]}Space"
+    #     nullShoulderSpace = pm.group(em=True, n=nullShoulderSpace)
+    #     pm.parent(nullShoulderSpace, ccShoulder)
+    #     pm.matchTransform(ccShoulder, shoulderJnt, pos=True)
+    #     groupOwnPivot(ccShoulder)
+
+
     def createArmsCtrl(self, armJoint: list):
+        """ Creates a Arm's Controller.
+
+        Process
+        -------
+        - Create the names of the controllers.
+            - cc_shoulder
+            - cc_jointName_FK, 
+            - cc_jointName_IK
+        - Create an FK controller. 
+            - If the "Right" joint, rotateX the controller -180 degrees.
+        - Create an IK controller.
+            - Create a arm controller,
+            - Create a poleVector controller.
+            - Create a hand controller.
+        - Finally,
+            - Colorize.
+            - Add attributes
+            - Group the FK and IK together.
+         """
         # Create Ctrl Name
         joint = stringConcatenation(armJoint, ["rig_"], [])
         shoulderJnt = joint[0]
@@ -389,6 +429,10 @@ class Character(QWidget):
         size_FK = [9.3, 8, 6.8]
         ctrl = Controllers()
         # Check
+        isFKExist = any([pm.objExists(i) for i in cc_FK])
+        isIKExist = any([pm.objExists(i) for i in cc_IK])
+        if isFKExist or isIKExist:
+            return
         # Create Shoulder Ctrl
         ccShoulder = ctrl.createControllers(scapula=ccShoulder)[0]
         pm.scale(ccShoulder, (self.sr, self.sr, self.sr))
@@ -397,9 +441,9 @@ class Character(QWidget):
         pm.makeIdentity(ccShoulder, a=1, r=1, s=1, pn=1)
         if "Right" == side:
             pm.rotate(ccShoulder, (180, 0, 0))
-        nullSpace = f"null_{side}ShoulderSpace"
-        nullSpace = pm.group(em=True, n=nullSpace)
-        pm.parent(nullSpace, ccShoulder)
+        nullShoulderSpace = f"null_{armJoint[0]}Space"
+        nullShoulderSpace = pm.group(em=True, n=nullShoulderSpace)
+        pm.parent(nullShoulderSpace, ccShoulder)
         pm.matchTransform(ccShoulder, shoulderJnt, pos=True)
         groupOwnPivot(ccShoulder)
         # Create FK
@@ -439,15 +483,39 @@ class Character(QWidget):
         pm.scale(createdIK[0], (0.75, 0.75, 0.75))
         pm.rotate(createdIK[0], (0, 0, -90))
         pm.makeIdentity(createdIK[0], a=1, r=1, s=1, pn=1)
-        nullSpace = f"null_{cc_IK[0]}Space"
-        nullSpace = pm.group(em=True, n=nullSpace)
-        pm.parent(nullSpace, createdIK[0])
+        nullArmSpace = f"null_{armJoint[1]}Space"
+        nullArmSpace = pm.group(em=True, n=nullArmSpace)
+        pm.parent(nullArmSpace, createdIK[0])
         pm.matchTransform(createdIK[0], rigJnt[0], pos=True)
-        groupOwnPivot(createdIK[0])
+        createdIK_grp1 = groupOwnPivot(createdIK[0])
+        # ForeArm_IK
+        jnt1, jnt2 = createPolevectorJoint(*rigJnt)
+        pm.matchTransform(createdIK[1], jnt2, pos=True)
+        createdIK_grp2 = groupOwnPivot(createdIK[1])
+        pm.delete(jnt1)
+        # Hand_IK
+        nullHandSpace = f"null_{armJoint[3]}Space"
+        nullHandSpace = pm.group(em=True, n=nullHandSpace)
+        pm.parent(nullHandSpace, createdIK[2])
+        pm.matchTransform(createdIK[2], rigJnt[2], pos=True)
+        createdIK_grp3 = groupOwnPivot(createdIK[2])
         # Colorize
+        ctrls = createdFK + createdIK
+        ctrls.append(ccShoulder)
+        colorBar = {"red": True} if "Left" == side else {"blue": True}
+        colorize(*ctrls, **colorBar)
         # Add Attributes
+        attrLegIK = "World:Root:Chest:Arm:Hand"
+        pm.addAttr(createdIK[1], ln="Space", at="enum", en=attrLegIK)
+        pm.setAttr(f"{createdIK[1]}.Space", e=True, k=True)
         # Final Touch
-
+        resultGroup = [
+            createdIK_grp1[0], 
+            createdIK_grp2[0], 
+            createdIK_grp3[0], 
+            createdFK_grp[0], 
+            ]
+        pm.group(resultGroup, n=f"cc_{side}Arm_grp")
 
 
     def createMainCtrl(self):
