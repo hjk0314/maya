@@ -850,7 +850,7 @@ def duplicateObj(obj: str, prefix: str="", suffix: str="") -> str:
     return duplicated
 
 
-def stringConcatenation(name: list=[], prefix: list=[], suffix: list=[]):
+def addPrefix(name: list=[], prefix: list=[], suffix: list=[]):
     """ Naming Convention Modification.
 
     Args
@@ -1681,7 +1681,8 @@ class Controllers:
         """ If there are no **kwargs, all controllers will be created.
         However, it is usually used as follows.
 
-        Args: 
+        kwargs
+        ------
         - "arrow", "arrow2", "arrow3", "arrow4", "arrow5", "arrow6", 
         - "cap", "car", "car2", "circle", "cone", "cone2", 
         - "cross", "cube", "cylinder", 
@@ -1692,7 +1693,8 @@ class Controllers:
         - "pipe", "pointer", 
         - "scapula", "sphere", "spine", "square", 
 
-        Examples: 
+        Examples
+        --------
         >>> createCurveControllers()
         >>> ["ctrl1", "ctrl2", "ctrl3", ...]
         >>> createCurveControllers(cube="newCubeName", cone="newConeName")
