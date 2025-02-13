@@ -242,6 +242,9 @@ class Character(QWidget):
         self.btnCreateCtrls = QPushButton()
         self.btnCreateCtrls.setObjectName(u"btnCreateCtrls")
         self.verticalLayout.addWidget(self.btnCreateCtrls)
+        self.btnMirrorCopy = QPushButton()
+        self.btnMirrorCopy.setObjectName(u"btnMirrorCopy")
+        self.verticalLayout.addWidget(self.btnMirrorCopy)
         self.btnRig = QPushButton()
         self.btnRig.setObjectName(u"btnRig")
         self.verticalLayout.addWidget(self.btnRig)
@@ -260,6 +263,7 @@ class Character(QWidget):
         self.btnSynchronizeBothJnt.setText(QCoreApplication.translate("Form", u"Synchronize both Joints", None))
         self.btnCreateRigGrp.setText(QCoreApplication.translate("Form", u"Create Rig Group", None))
         self.btnCreateCtrls.setText(QCoreApplication.translate("Form", u"Create Controllers", None))
+        self.btnMirrorCopy.setText(QCoreApplication.translate("Form", u"Mirror Copy Foot Locators", None))
         self.btnRig.setText(QCoreApplication.translate("Form", u"Rig", None))
         self.btnClose.setText(QCoreApplication.translate("Form", u"Close", None))
 
@@ -269,7 +273,9 @@ class Character(QWidget):
         self.btnAlignCenterJnt.clicked.connect(self.alignCenterJnt)
         self.btnSynchronizeBothJnt.clicked.connect(self.syncBothJnt)
         self.btnCreateRigGrp.clicked.connect(self.createGroups)
+        self.fldCreateRigGrp.returnPressed.connect(self.createGroups)
         self.btnCreateCtrls.clicked.connect(self.createCharCtrl)
+        self.btnMirrorCopy.clicked.connect(self.mirrorCopyFootLocator)
         self.btnRig.clicked.connect(self.rig)
         self.btnClose.clicked.connect(self.close)
     
@@ -341,31 +347,38 @@ class Character(QWidget):
             return
         # Duplicate All.
         result = duplicateObj(self.hips, "rig_", "")
-        # Create IK, FK joints.
-        handle = ["_FK", "_IK"]
-        joints = [
-            "rig_LeftUpLeg", 
-            "rig_RightUpLeg", 
-            "rig_LeftArm", 
-            "rig_RightArm"
-            ]
-        for jnt in joints:
-            for h in handle:
-                duplicateObj(jnt, "", h)
-        # Delete useless joints.
-        useless = []
-        useless += self.leftIndex
-        useless += self.leftMiddle
-        useless += self.leftRing
-        useless += self.leftPinky
-        useless += self.leftThumb
-        useless += self.rightIndex
-        useless += self.rightMiddle
-        useless += self.rightRing
-        useless += self.rightPinky
-        useless += self.rightThumb
-        uselessGrp = [f"rig_{i}{h}" for h in handle for i in useless]
-        self.cleanUp(uselessGrp)
+        typ = ["_FK", "_IK"]
+        # Delete list after copying
+        uselessSpine = []
+        uselessSpine += self.spine[3:]
+        uselessSpine += self.leftArms[:1]
+        uselessSpine += self.rightArms[:1]
+        uselessLeftArm = []
+        uselessLeftArm += self.leftIndex
+        uselessLeftArm += self.leftMiddle
+        uselessLeftArm += self.leftRing
+        uselessLeftArm += self.leftPinky
+        uselessLeftArm += self.leftThumb
+        uselessRightArm = []
+        uselessRightArm += self.rightIndex
+        uselessRightArm += self.rightMiddle
+        uselessRightArm += self.rightRing
+        uselessRightArm += self.rightPinky
+        uselessRightArm += self.rightThumb
+        joints = {
+            "rig_Spine": uselessSpine, 
+            "rig_LeftUpLeg": [], 
+            "rig_RightUpLeg": [], 
+            "rig_LeftArm": uselessLeftArm, 
+            "rig_RightArm": uselessRightArm, 
+            }
+        # Main process
+        for jnt, usl in joints.items():
+            for k in typ:
+                duplicateObj(jnt, "", k)
+                useless = [f"rig_{i}{k}" for k in typ for i in usl]
+                self.cleanUp(useless)
+        # Final Touch
         try:
             pm.parent(result, "rigBones")
         except:
@@ -382,6 +395,21 @@ class Character(QWidget):
         self.createArmsCtrl()
         self.createLegsCtrl()
 
+
+    def mirrorCopyFootLocator(self):
+        locators_L = [
+            "loc_LeftHeel_IK", 
+            "loc_LeftToe_End_IK", 
+            "loc_LeftBankIn_IK", 
+            "loc_LeftBankOut_IK", 
+            "loc_LeftToeBase_IK_grp", 
+            "loc_LeftFoot_IK", 
+            ]
+        locators_R = [changeLeftToRight(i) for i in locators_L]
+        for l, r in zip(locators_L, locators_R):
+            x, y, z = pm.xform(l, q=1, ws=1, rp=1)
+            pm.move(r, (-1*x, y, z))
+        
 
     def rig(self):
         pass
@@ -466,7 +494,55 @@ class Character(QWidget):
 
 
     def createSpineCtrl(self):
-        pass
+        # Create a Spine Curve
+        cuvName = "cuv_Spine"
+        sp, sp1, sp2 = self.spine[:3]
+        spPos = self.jntPosition[sp]
+        sp1Pos = self.jntPosition[sp1]
+        sp2Pos = self.jntPosition[sp2]
+        cuv = pm.curve(d=3, ep=[spPos, sp1Pos, sp2Pos], n=cuvName)
+        ikH = pm.ikHandle(sj=sp, ee=sp2, 
+                          sol="ikSplineSolver", 
+                          name=f"ikH_{sp}", 
+                          curve=cuv, 
+                          createCurve=0, 
+                          parentCurve=0, 
+                          numSpans=3)[0]
+        # Create Clusters
+        clt1 = pm.cluster(f"{cuv}.cv[:1]", n=f"clt_{sp}")[1]
+        clt1Grp = groupOwnPivot(clt1)[0]
+        clt2 = pm.cluster(f"{cuv}.cv[2:]", n=f"clt_{sp2}")[1]
+        clt2Grp = groupOwnPivot(clt2)[0]
+        # Create IK Ctrls
+        ctrl = Controllers()
+        ccSp, ccSp2 = addPrefix([sp, sp2], ["cc_"], ["_IK"])
+        ccSp = ctrl.createControllers(circle=ccSp)[0]
+        pm.scale(ccSp, (1.3*self.sr, 1.3*self.sr, 1.3*self.sr))
+        pm.makeIdentity(ccSp, a=1, s=1, jo=0, n=0, pn=1)
+        pm.matchTransform(ccSp, sp, pos=True)
+        pm.parent(clt1Grp, ccSp)
+        ccSpGrp = groupOwnPivot(ccSp)
+        ccSp2 = ctrl.createControllers(circle=ccSp2)[0]
+        pm.scale(ccSp2, (1.5*self.sr, 1.5*self.sr, 1.5*self.sr))
+        pm.makeIdentity(ccSp2, a=1, s=1, jo=0, n=0, pn=1)
+        pm.matchTransform(ccSp2, clt2, pos=True)
+        pm.parent(clt2Grp, ccSp2)
+        ccSp2Grp = groupOwnPivot(ccSp2)
+        parentHierarchically(*ccSpGrp+ccSp2Grp)
+        try:
+            pm.parent([cuv, ikH], "extraNodes")
+        except:
+            pass
+        # Create FK Ctrls
+        FKSize = [17, 18.5, 21]
+        ccFKs = addPrefix(self.spine[:3], ["cc_"], ["_FK"])
+        createdFK = []
+        for ccName, jnt, scl in zip(ccFKs, self.spine[:3], FKSize):
+            cc = pm.circle(nr=(0,1,0), r=scl*self.sr, n=ccName, ch=0)[0]
+            pm.matchTransform(cc, jnt, pos=True)
+            createdFK.append(cc)
+        createdFKGrp = groupOwnPivot(*createdFK)
+        parentHierarchically(*createdFKGrp)
 
 
     def createShoulderCtrl(self):
