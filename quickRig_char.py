@@ -394,6 +394,7 @@ class Character(QWidget):
         self.createShoulderCtrl()
         self.createArmsCtrl()
         self.createLegsCtrl()
+        self.createFingerCtrl()
 
 
     def mirrorCopyFootLocator(self):
@@ -415,7 +416,7 @@ class Character(QWidget):
         pass
 
 
-    def createMainCtrl(self):
+    def createMainCtrl(self) -> None:
         """ Create Main Controllers. """
         # Args
         ccMain = "cc_main"
@@ -439,7 +440,7 @@ class Character(QWidget):
         pm.parent(nullGrp, ctrlGrp[-1])
 
 
-    def createHipsCtrl(self):
+    def createHipsCtrl(self) -> None:
         """ Create Hip's Controllers.
 
         Process
@@ -493,7 +494,22 @@ class Character(QWidget):
             pm.setAttr(f'{ccIKFK}.{i}', e=True, k=True)
 
 
-    def createSpineCtrl(self):
+    def createSpineCtrl(self) -> None:
+        """ Creates Spine, Neck, Head Controllers.
+
+        Process
+        -------
+        - Create a Spine Curve.
+            - cuv_Spine
+            - clusters
+            - ikHandle
+        - Create IK controllers.
+        - Create FK controllers. 
+        - Create Neck, Head controllers. 
+        - Finally,
+            - Colorize.
+            - Group the IK, FK and Neck together.
+         """
         # Create a Spine Curve
         cuvName = "cuv_Spine"
         sp, sp1, sp2 = self.spine[:3]
@@ -543,9 +559,32 @@ class Character(QWidget):
             createdFK.append(cc)
         createdFKGrp = groupOwnPivot(*createdFK)
         parentHierarchically(*createdFKGrp)
+        # Create Neck, Head Ctrls
+        ccNeck, ccHead = addPrefix(self.spine[3:5], ["cc_"], [])
+        ccNeck = pm.circle(nr=(0,1,0), r=10*self.sr, n=ccNeck, ch=0)[0]
+        ccHead = ctrl.createControllers(head=ccHead)[0]
+        pm.scale(ccHead, (self.sr, self.sr, self.sr))
+        pm.makeIdentity(ccHead, a=1, s=1, jo=0, n=0, pn=1)
+        pm.matchTransform(ccNeck, self.spine[3], pos=True)
+        pm.matchTransform(ccHead, self.spine[4], pos=True)
+        grpNeckHead = groupOwnPivot(ccNeck, ccHead)
+        parentHierarchically(*grpNeckHead)
+        # Color
+        colorize(ccSp, ccSp2, red2=True)
+        colorize(*createdFK, blue2=True)
+        colorize(ccNeck, ccHead, yellow=True)
+        # Grouping
+        grpName = "cc_Spine_grp"
+        if not pm.objExists("cc_Spine_grp"):
+            grpName = pm.group(em=True, n=grpName)
+        try:
+            for i in [ccSpGrp[0], createdFKGrp[0], grpNeckHead[0]]:
+                pm.parent(i, grpName)
+        except:
+            pass
 
 
-    def createShoulderCtrl(self):
+    def createShoulderCtrl(self) -> None:
         """ Creates a Scapula's Controller.
 
         Process
@@ -583,7 +622,7 @@ class Character(QWidget):
             colorize(cc, **colorBar)
 
 
-    def createArmsCtrl(self):
+    def createArmsCtrl(self) -> None:
         """ Creates a Arm's Controller.
 
         Process
@@ -844,6 +883,10 @@ class Character(QWidget):
                 grpCreatedFK[0], 
                 ]
             pm.group(result, n=f"cc_{side}Leg_grp")
+
+
+    def createFingerCtrl(self) -> None:
+        pass
 
 
     def update(self) -> None:
