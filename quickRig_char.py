@@ -413,7 +413,13 @@ class Character(QWidget):
         
 
     def rig(self):
-        pass
+        self.rigMainCtrl()
+        self.rigHipsCtrl()
+        self.rigSpineCtrl()
+        self.rigShoulderCtrl()
+        self.rigArmsCtrl()
+        self.rigLegsCtrl()
+        self.rigFingerCtrl()
 
 
     def createMainCtrl(self) -> None:
@@ -513,17 +519,23 @@ class Character(QWidget):
         # Create a Spine Curve
         cuvName = "cuv_Spine"
         sp, sp1, sp2 = self.spine[:3]
+        ccSp, ccSp2 = addPrefix([sp, sp2], ["cc_"], ["_IK"])
+        ccFKs = addPrefix(self.spine[:3], ["cc_"], ["_FK"])
+        isExist = [pm.objExists(i) for i in ccFKs + [cuvName, ccSp, ccSp2]]
+        if any(isExist):
+            return
+        # rsp, rsp1, rsp2 = addPrefix(self.spine[:3], ["rig_"], ["_IK"])
         spPos = self.jntPosition[sp]
         sp1Pos = self.jntPosition[sp1]
         sp2Pos = self.jntPosition[sp2]
         cuv = pm.curve(d=3, ep=[spPos, sp1Pos, sp2Pos], n=cuvName)
-        ikH = pm.ikHandle(sj=sp, ee=sp2, 
-                          sol="ikSplineSolver", 
-                          name=f"ikH_{sp}", 
-                          curve=cuv, 
-                          createCurve=0, 
-                          parentCurve=0, 
-                          numSpans=3)[0]
+        # ikH = pm.ikHandle(sj=rsp, ee=rsp2, 
+        #                   sol="ikSplineSolver", 
+        #                   name=f"ikH_{sp}", 
+        #                   curve=cuv, 
+        #                   createCurve=0, 
+        #                   parentCurve=0, 
+        #                   numSpans=3)[0]
         # Create Clusters
         clt1 = pm.cluster(f"{cuv}.cv[:1]", n=f"clt_{sp}")[1]
         clt1Grp = groupOwnPivot(clt1)[0]
@@ -531,7 +543,6 @@ class Character(QWidget):
         clt2Grp = groupOwnPivot(clt2)[0]
         # Create IK Ctrls
         ctrl = Controllers()
-        ccSp, ccSp2 = addPrefix([sp, sp2], ["cc_"], ["_IK"])
         ccSp = ctrl.createControllers(circle=ccSp)[0]
         pm.scale(ccSp, (1.3*self.sr, 1.3*self.sr, 1.3*self.sr))
         pm.makeIdentity(ccSp, a=1, s=1, jo=0, n=0, pn=1)
@@ -545,13 +556,12 @@ class Character(QWidget):
         pm.parent(clt2Grp, ccSp2)
         ccSp2Grp = groupOwnPivot(ccSp2)
         parentHierarchically(*ccSpGrp+ccSp2Grp)
-        try:
-            pm.parent([cuv, ikH], "extraNodes")
-        except:
-            pass
+        # try:
+        #     pm.parent([cuv, ikH], "extraNodes")
+        # except:
+        #     pass
         # Create FK Ctrls
         FKSize = [17, 18.5, 21]
-        ccFKs = addPrefix(self.spine[:3], ["cc_"], ["_FK"])
         createdFK = []
         for ccName, jnt, scl in zip(ccFKs, self.spine[:3], FKSize):
             cc = pm.circle(nr=(0,1,0), r=scl*self.sr, n=ccName, ch=0)[0]
@@ -604,9 +614,10 @@ class Character(QWidget):
         ctrl = Controllers()
         jntShoulder = [jntShoulder_L, jntShoulder_R]
         ccShoulder = [ccShoulder_L, ccShoulder_R]
+        ccSize= 0.8*self.sr
         for jnt, cc in zip(jntShoulder, ccShoulder):
             cc = ctrl.createControllers(scapula=cc)[0]
-            pm.scale(cc, (self.sr, self.sr, self.sr))
+            pm.scale(cc, (ccSize, ccSize, ccSize))
             rotZ = 135 if "Right" in jnt else -45
             pm.rotate(cc, (0, 0, rotZ))
             pm.makeIdentity(cc, a=1, r=1, s=1, pn=1)
@@ -788,7 +799,8 @@ class Character(QWidget):
             # Create IK - UpLeg
             rotation = (0, 0, 90) if "Right" == side else (0, 0, -90)
             pm.rotate(sca, rotation)
-            pm.makeIdentity(sca, a=1, r=1, pn=1)
+            pm.scale(sca, (0.9, 0.9, 0.9))
+            pm.makeIdentity(sca, a=1, r=1, s=1, pn=1)
             pm.matchTransform(sca, pelvis, pos=True)
             scaGrouping = groupOwnPivot(sca)
             # Create IK - Knee
@@ -886,6 +898,77 @@ class Character(QWidget):
 
 
     def createFingerCtrl(self) -> None:
+        """ Creates a Finger's Controller.
+
+        Process
+        -------
+        - Create the names of the controllers from Joint.
+        - Colorize.
+        - Grouping.
+         """
+        # Create Names
+        jntFinger = []
+        jntFinger += self.leftThumb[:-1]
+        jntFinger += self.leftIndex[:-1]
+        jntFinger += self.leftMiddle[:-1]
+        jntFinger += self.leftRing[:-1]
+        jntFinger += self.leftPinky[:-1]
+        jntFinger += self.rightThumb[:-1]
+        jntFinger += self.rightIndex[:-1]
+        jntFinger += self.rightMiddle[:-1]
+        jntFinger += self.rightRing[:-1]
+        jntFinger += self.rightPinky[:-1]
+        ccFinger = addPrefix(jntFinger, ["cc_"], [])
+        FKSize = [2, 1.6, 1.3]
+        # Check
+        if any([pm.objExists(i) for i in ccFinger]):
+            return
+        # Create Ctrls
+        for idx, (cc, jnt) in enumerate(zip(ccFinger, jntFinger)):
+            scl = FKSize[idx%3]
+            cc = pm.circle(nr=(1,0,0), r=scl*self.sr, n=cc, ch=False)[0]
+            pm.matchTransform(cc, jnt, pos=True, rot=True)
+            tmp = -1 if "Right" in cc.name() else 1
+            pm.rotate(cc, (0, 0, tmp*90), r=True, os=True, fo=True)
+            pm.rotate(cc, (tmp*-90, 0, 0), r=True, os=True, fo=True)
+            # Color
+            color = {"blue2": True} if "Right" in cc.name() else {"red2": True}
+            colorize(cc, **color)
+        # Grouping
+        grpFinger = groupOwnPivot(*ccFinger)
+        result = []
+        for idx, num in enumerate(range(0, len(grpFinger), 6)):
+            tmp = parentHierarchically(*grpFinger[num:6*(idx+1)])[0]
+            result.append(tmp)
+        pm.group(result[:5], n="cc_LeftHandFingers_grp")
+        pm.group(result[5:], n="cc_RightHandFingers_grp")
+        
+
+    def rigMainCtrl(self):
+        pass
+
+
+    def rigHipsCtrl(self):
+        pass
+
+
+    def rigSpineCtrl(self):
+        pass
+
+
+    def rigShoulderCtrl(self):
+        pass
+
+
+    def rigArmsCtrl(self):
+        pass
+
+
+    def rigLegsCtrl(self):
+        pass
+
+
+    def rigFingerCtrl(self):
         pass
 
 
