@@ -890,72 +890,159 @@ def addPrefix(name: list=[], prefix: list=[], suffix: list=[]):
     return result
 
 
-def connectBlendColor(ctrl: str, joints: list=[], \
-                      t=False, r=False, s=False, v=False) -> None:
-    """ Create a <blendColorNode>.
-    - Connect FK, IK to color1, color2 of the <blendColorNode>.
-    - Connect the output of the <blendColorNode> to the joint.
-    - Connect the controller to the blender. 
+def createBlendColor(controller: str="", 
+                     jnt: list=[], 
+                     jntFK: list=[], 
+                     jntIK: list=[], 
+                     t=False, r=False, s=False, v=False) -> None:
+    """ 
+    - Create a blendColor node
+    - FK -> color1
+    - IK -> color2
+    - output -> jnt
+    - ctrl -> blender
     
     Args
     ----
-    - ctrl : str
+    - controller : str
         - "cc_IKFK.Spine_IK0_FK1", 
         - "cc_IKFK.Left_Arm_IK0_FK1", 
         - "cc_IKFK.Right_Arm_IK0_FK1", 
         - "cc_IKFK.Left_Leg_IK0_FK1", 
         - "cc_IKFK.Right_Leg_IK0_FK1"
     - joints : list
-        - sample = [
-            'rig_RightUpLeg', 
-            'rig_RightLeg', 
-            'rig_RightFoot', 
-            'rig_RightToeBase', 
-            'rig_RightToe_End', 
-            'rig_RightUpLeg_FK', 
-            'rig_RightLeg_FK', 
-            'rig_RightFoot_FK', 
-            'rig_RightToeBase_FK', 
-            'rig_RightToe_End_FK', 
-            'rig_RightUpLeg_IK', 
-            'rig_RightLeg_IK', 
-            'rig_RightFoot_IK', 
-            'rig_RightToeBase_IK', 
-            'rig_RightToe_End_IK', 
-            ]
-    - t : bool (translate)
-    - r : bool (rotate)
-    - s : bool (scale)
-    - v : bool (visibility)
+        - jnt = ['rig_RightUpLeg', 'rig_RightLeg']
+        - jntFK = ['rig_RightUpLeg_FK', 'rig_RightLeg_FK']
+        - jntIK = ['rig_RightUpLeg_IK', 'rig_RightLeg_IK']
+    - kwargs
+        - t (translate)
+        - r (rotate)
+        - s (scale)
+        - v (visibility)
 
     Examples
     --------
-    >>> connectBlendColor("cc_IKFK.Spine_IK0_FK1", t=1, r=1)
-    >>> connectBlendColor("cc_IKFK.Left_Arm_IK0_FK1", t=1, r=1)
-    >>> connectBlendColor("cc_IKFK.Right_Arm_IK0_FK1", t=1, r=1)
-    >>> connectBlendColor("cc_IKFK.Left_Leg_IK0_FK1", joints, t=1, r=1)
-    >>> connectBlendColor("cc_IKFK.Right_Leg_IK0_FK1", joints, t=1, r=1)
-        """
-    sel = joints if joints else pm.selected()
-    if len(sel) % 3:
-        return
-    else:
-        mod = len(sel) // 3
-        joint = sel[0 : mod*1]
-        jntFK = sel[mod : mod*2]
-        jntIK = sel[mod*2 : mod*3]
+    >>> createBlendColor("ctrl.Switch", [jnt], [jntFK], [jntIK], t=1, r=1)
+     """
     attr = []
     if t:   attr.append("translate")
     if r:   attr.append("rotate")
     if s:   attr.append("scale")
     if v:   attr.append("visibility")
     for i in attr:
-        for fk, ik, jnt in zip(jntFK, jntIK, joint):
+        for jnt, fk, ik in zip(jnt, jntFK, jntIK):
             blColor = pm.shadingNode("blendColors", au=True)
             pm.connectAttr(f"{fk}.{i}", f"{blColor}.color1", f=True)
             pm.connectAttr(f"{ik}.{i}", f"{blColor}.color2", f=True)
             pm.connectAttr(f"{blColor}.output", f"{jnt}.{i}", f=True)
-            pm.connectAttr(ctrl, f"{blColor}.blender")
+            pm.connectAttr(controller, f"{blColor}.blender")
+
+
+def createIKHandle(startJnt: str="", endJnt: str="", 
+                   rp=False, sc=False, spl=False, spr=False) -> str:
+    """ Create a ikHandle and return names.
+
+    Args
+    ----
+    - startJnt
+    - endJnt
+
+    Options
+    -------
+    - rp: "ikRPsolver"
+    - sc: "ikSCsolver"
+    - spl: "ikSplineSolver"
+    - spr: "ikSpringSolver"
+    
+    Return
+    ------
+    - Created ikHandle name.
+     """
+    if rp:
+        solver = "ikRPsolver"
+    elif sc:
+        solver = "ikSCsolver"
+    elif spl:
+        solver = "ikSplineSolver"
+    elif spr:
+        solver = "ikSpringSolver"
+    else:
+        return
+    temp = startJnt.split("_")
+    temp[0] = "ikH"
+    ikHandleName = "_".join(temp)
+    result = pm.ikHandle(sj=startJnt, ee=endJnt, sol=solver, n=ikHandleName)
+    return result
+
+
+def connectSpace(ctrl: str, menu: dict, enum=False, float=False):
+    """ Connects the controller and space.
+    There are two cases: enum and float. 
+
+    Args
+    ----
+    - ctrl : controller
+    - menu
+        - enumMenu = {"World": "null_worldSpace", "Root": "null_rootSpace"}
+        - floatMenu = {"world0": "null_worldSpace", "root1": "null_rootSpace"}
+    
+    Examples
+    --------
+    >>> connectSpace("cc_LeftFoot_IK", {...}, enum=True)
+    >>> connectSpace("cc_LeftFoot_IK", {...}, float=True)
+     """
+    if enum:
+        isAttr = pm.attributeQuery("Space", node=ctrl, exists=True)
+        if isAttr:
+            pm.deleteAttr(ctrl, at="Space")
+        ctrlGrp = pm.listRelatives(ctrl, p=True)[0]
+        selector = list(menu.keys())
+        space = list(menu.values())
+        pm.addAttr(ctrl, ln="Space", at="enum", en=":".join(selector))
+        pm.setAttr(f'{ctrl}.Space', e=True, k=True)
+        for idx, name in enumerate(selector):
+            nodeName = f"{ctrl}_space{name}"
+            animCurve = pm.shadingNode("animCurveTL", au=True, n=nodeName)
+            for i in range(len(selector)):
+                num = 1 if idx==i else 0
+                pm.setKeyframe(animCurve, time=i, value=num)
+            pm.keyTangent(animCurve, ott="step")
+            pConstraint = pm.parentConstraint(space[idx], ctrlGrp, mo=1, w=1)
+            sConstraint = pm.scaleConstraint(space[idx], ctrlGrp, mo=1, w=1)
+            pm.connectAttr(f"{ctrl}.Space", f"{animCurve}.input", f=True)
+            pm.connectAttr(f"{animCurve}.output", 
+                           f"{pConstraint}.{space[idx]}W{idx}", f=True)
+            pm.connectAttr(f"{animCurve}.output", 
+                           f"{sConstraint}.{space[idx]}W{idx}", f=True)
+    elif float:
+        selector = list(menu.keys())
+        space = list(menu.values())
+        if len(selector) != 2:
+            return
+        attr = "_".join(selector)
+        isAttr = pm.attributeQuery(attr, node=ctrl, exists=True)
+        if isAttr:
+            pm.deleteAttr(ctrl, at=attr)
+        pm.addAttr(ctrl, ln=attr, at="double", min=0, max=1, dv=0)
+        pm.setAttr(f'{ctrl}.{attr}', e=True, k=True)
+        ctrlGrp = pm.listRelatives(ctrl, p=True)[0]
+        for idx, name in enumerate(space):
+            pConstraint = pm.parentConstraint(name, ctrlGrp, mo=1, w=1)
+            sConstraint = pm.scaleConstraint(name, ctrlGrp, mo=1, w=1)
+            if idx == 0:
+                reverseNode = pm.shadingNode("reverse", au=True)
+                pm.connectAttr(f"{ctrl}.{attr}", f"{reverseNode}.inputX", f=1)
+                pm.connectAttr(f"{reverseNode}.outputX", 
+                               f"{pConstraint}.{name}W{idx}", f=True)
+                pm.connectAttr(f"{reverseNode}.outputX", 
+                               f"{sConstraint}.{name}W{idx}", f=True)
+            else:
+                pm.connectAttr(f"{ctrl}.{attr}", 
+                               f"{pConstraint}.{name}W{idx}", f=True)
+                pm.connectAttr(f"{ctrl}.{attr}", 
+                               f"{sConstraint}.{name}W{idx}", f=True)
+    else:
+        return
 
 
 def mirrorCopy(obj: str, mirrorPlane: str="YZ") -> list:
