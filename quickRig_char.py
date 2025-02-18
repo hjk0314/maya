@@ -965,7 +965,59 @@ class Character(QWidget):
 
 
     def rigLegsCtrl(self):
-        pass
+        for leg in [self.leftLegs, self.rightLegs]:
+            side = "Left" if "Left" in leg[0] else "Right"
+            jnt = addPrefix(leg, ["rig_"], [])
+            jntFK = addPrefix(leg, ["rig_"], ["_FK"])
+            jntIK = addPrefix(leg, ["rig_"], ["_IK"])
+            ctrlAttr = f"cc_IKFK.{side}_Leg_IK0_FK1"
+            # Create IK Handle
+            pelvis, knee, foot, ball, toe = jntIK
+            ikH_pelvis = createIKHandle(pelvis, foot, rp=True)[0]
+            ikH_foot = createIKHandle(foot, ball, sc=True)[0]
+            ikH_ball = createIKHandle(ball, toe, sc=True)[0]
+            ikH_pelvisGrp = groupOwnPivot(ikH_pelvis)
+            pm.parent(ikH_pelvisGrp[0], f"loc_{side}Foot_IK")
+            pm.parent(ikH_foot, ikH_pelvisGrp[0])
+            ikH_ballGrp = pm.group(em=True, n=f"{ikH_ball}_grp")
+            ikH_ballNull = pm.group(em=True, n=f"{ikH_ball}_null")
+            pm.parent(ikH_ballNull, ikH_ballGrp)
+            pm.matchTransform(ikH_ballGrp, ball, pos=True)
+            pm.parent(ikH_ballGrp, f"loc_{side}BankOut_IK")
+            pm.parent(ikH_ball, ikH_ballNull)
+
+            
+            # Create Blend Color Node
+            # createBlendColor(ctrlAttr, jnt, jntFK, jntIK, t=True, r=True)
+            # # Connect Foot Attr to Locators
+            # ctrl = f"cc_{side}Foot_IK"
+            # locHeel = f"loc_{side}Heel_IK"
+            # locToe = f"loc_{side}Toe_End_IK"
+            # locBankIn = f"loc_{side}BankIn_IK"
+            # locBankOut = f"loc_{side}BankOut_IK"
+            # locBall = f"loc_{side}ToeBase_IK"
+            # grpBall = f"ikH_{side}ToeBase_IK_null"
+            # rx, ry, rz = ["rotateX", "rotateY", "rotateZ"]
+            # pm.connectAttr(f"{ctrl}.Heel_Up", f"{locHeel}.{rx}", f=1)
+            # pm.connectAttr(f"{ctrl}.Heel_Twist", f"{locHeel}.{ry}", f=1)
+            # pm.connectAttr(f"{ctrl}.Toe_Up", f"{locToe}.{rx}", f=1)
+            # pm.connectAttr(f"{ctrl}.Toe_Twist", f"{locToe}.{ry}", f=1)
+            # pm.connectAttr(f"{ctrl}.Ball_Up", f"{locBall}.{rx}", f=1)
+            # pm.connectAttr(f"{ctrl}.Ball_Down", f"{grpBall}.{rx}", f=1)
+            # clampNode = pm.shadingNode("clamp", au=True)
+            # pm.setAttr(f"{clampNode}.minR", -180)
+            # pm.setAttr(f"{clampNode}.maxG", 180)
+            # output1 = "outputR" if "Left" == side else "outputG"
+            # output2 = "outputG" if "Left" == side else "outputR"
+            # pm.connectAttr(f"{clampNode}.{output1}", f"{locBankOut}.{rz}", f=1)
+            # pm.connectAttr(f"{clampNode}.{output2}", f"{locBankIn}.{rz}", f=1)
+            # pm.connectAttr(f"{ctrl}.Bank", f"{clampNode}.inputR", f=1)
+            # pm.connectAttr(f"{ctrl}.Bank", f"{clampNode}.inputG", f=1)
+            # Connect polevector space
+
+
+        
+
 
 
     def rigFingerCtrl(self):
@@ -1044,12 +1096,12 @@ class Character(QWidget):
         return result[0]
 
 
-# if __name__ == "__main__":
-#     try:
-#         char.close()
-#         char.deleteLater()
-#     except:
-#         pass
-#     char = Character()
-#     char.show()
+if __name__ == "__main__":
+    try:
+        char.close()
+        char.deleteLater()
+    except:
+        pass
+    char = Character()
+    char.show()
 
