@@ -405,15 +405,6 @@ def createClosedCurve(*args) -> str:
     return circle
 
 
-def matchPivot(child: str, parents: str) -> None:
-    """ Match Child's pivot to the Parent's pivot. """
-    parentsPivot = pm.xform(parents, q=1, ws=1, rp=1)
-    pm.xform(child, sp=parentsPivot, rp=parentsPivot)
-    pm.parent(child, parents)
-    pm.makeIdentity(child, a=1, t=1, r=1, s=1, n=0, pn=1)
-    pm.parent(child, w=True)
-
-
 def createCurveAimingPoint(*args) -> str:
     """ Select two objects or points.
     A straight line is created looking at the last point.
@@ -430,7 +421,11 @@ def createCurveAimingPoint(*args) -> str:
     startLocator, endLocator = locators
     pm.aimConstraint(endLocator, startLocator)
     pm.delete(startLocator, cn=True)
-    matchPivot(linearCurve, startLocator)
+    startLocatorPivot = pm.xform(startLocator, q=1, ws=1, rp=1)
+    pm.xform(linearCurve, sp=startLocatorPivot, rp=startLocatorPivot)
+    pm.parent(linearCurve, startLocator)
+    pm.makeIdentity(linearCurve, a=1, t=1, r=1, s=1, n=0, pn=1)
+    pm.parent(linearCurve, w=True)
     pm.rebuildCurve(linearCurve, d=3, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
     pm.delete(locators)
     return linearCurve
@@ -930,11 +925,11 @@ def createBlendColor(controller: str="",
     if s:   attr.append("scale")
     if v:   attr.append("visibility")
     for i in attr:
-        for jnt, fk, ik in zip(jnt, jntFK, jntIK):
+        for j, fk, ik in zip(jnt, jntFK, jntIK):
             blColor = pm.shadingNode("blendColors", au=True)
             pm.connectAttr(f"{fk}.{i}", f"{blColor}.color1", f=True)
             pm.connectAttr(f"{ik}.{i}", f"{blColor}.color2", f=True)
-            pm.connectAttr(f"{blColor}.output", f"{jnt}.{i}", f=True)
+            pm.connectAttr(f"{blColor}.output", f"{j}.{i}", f=True)
             pm.connectAttr(controller, f"{blColor}.blender")
 
 
