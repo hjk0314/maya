@@ -802,6 +802,9 @@ class Character(QWidget):
             pm.scale(sca, (0.9, 0.9, 0.9))
             pm.makeIdentity(sca, a=1, r=1, s=1, pn=1)
             pm.matchTransform(sca, pelvis, pos=True)
+            nullSca = pm.group(em=True, n=f"null_{pelvis}Space")
+            pm.matchTransform(nullSca, sca, pos=True)
+            pm.parent(nullSca, sca)
             scaGrouping = groupOwnPivot(sca)
             # Create IK - Knee
             jnt1, jnt2 = createPolevectorJoint(*joints[:3])
@@ -863,6 +866,10 @@ class Character(QWidget):
             # locators[5] : ankle
             pm.matchTransform(locators[5], foot, pos=True)
             groupingOrder.append(locators[5])
+            # null group
+            nullCub = pm.group(em=True, n=f"null_{foot}Space")
+            pm.matchTransform(nullCub, cub, pos=True)
+            pm.parent(nullCub, cub)
             # Color
             ctrls = createdFK + createdIK
             colorBar = {"red": True} if "Left" == side else {"blue": True}
@@ -965,13 +972,14 @@ class Character(QWidget):
 
 
     def rigLegsCtrl(self):
-        for leg in [self.leftLegs, self.rightLegs]:
+        legs = [self.leftLegs, self.rightLegs]
+        for leg in legs:
+            # Variable Declaration
             side = "Left" if "Left" in leg[0] else "Right"
             jnt = addPrefix(leg, ["rig_"], [])
             jntFK = addPrefix(leg, ["rig_"], ["_FK"])
             jntIK = addPrefix(leg, ["rig_"], ["_IK"])
-            ctrlAttr = f"cc_IKFK.{side}_Leg_IK0_FK1"
-            # Create IK Handle
+            # IK Ctrl - Create Handle
             pelvis, knee, foot, ball, toe = jntIK
             ikH_pelvis = createIKHandle(pelvis, foot, rp=True)[0]
             ikH_foot = createIKHandle(foot, ball, sc=True)[0]
@@ -979,45 +987,77 @@ class Character(QWidget):
             ikH_pelvisGrp = groupOwnPivot(ikH_pelvis)
             pm.parent(ikH_pelvisGrp[0], f"loc_{side}Foot_IK")
             pm.parent(ikH_foot, ikH_pelvisGrp[0])
-            ikH_ballGrp = pm.group(em=True, n=f"{ikH_ball}_grp")
-            ikH_ballNull = pm.group(em=True, n=f"{ikH_ball}_null")
-            pm.parent(ikH_ballNull, ikH_ballGrp)
-            pm.matchTransform(ikH_ballGrp, ball, pos=True)
-            pm.parent(ikH_ballGrp, f"loc_{side}BankOut_IK")
-            pm.parent(ikH_ball, ikH_ballNull)
-
-            
-            # Create Blend Color Node
-            # createBlendColor(ctrlAttr, jnt, jntFK, jntIK, t=True, r=True)
-            # # Connect Foot Attr to Locators
-            # ctrl = f"cc_{side}Foot_IK"
-            # locHeel = f"loc_{side}Heel_IK"
-            # locToe = f"loc_{side}Toe_End_IK"
-            # locBankIn = f"loc_{side}BankIn_IK"
-            # locBankOut = f"loc_{side}BankOut_IK"
-            # locBall = f"loc_{side}ToeBase_IK"
-            # grpBall = f"ikH_{side}ToeBase_IK_null"
-            # rx, ry, rz = ["rotateX", "rotateY", "rotateZ"]
-            # pm.connectAttr(f"{ctrl}.Heel_Up", f"{locHeel}.{rx}", f=1)
-            # pm.connectAttr(f"{ctrl}.Heel_Twist", f"{locHeel}.{ry}", f=1)
-            # pm.connectAttr(f"{ctrl}.Toe_Up", f"{locToe}.{rx}", f=1)
-            # pm.connectAttr(f"{ctrl}.Toe_Twist", f"{locToe}.{ry}", f=1)
-            # pm.connectAttr(f"{ctrl}.Ball_Up", f"{locBall}.{rx}", f=1)
-            # pm.connectAttr(f"{ctrl}.Ball_Down", f"{grpBall}.{rx}", f=1)
-            # clampNode = pm.shadingNode("clamp", au=True)
-            # pm.setAttr(f"{clampNode}.minR", -180)
-            # pm.setAttr(f"{clampNode}.maxG", 180)
-            # output1 = "outputR" if "Left" == side else "outputG"
-            # output2 = "outputG" if "Left" == side else "outputR"
-            # pm.connectAttr(f"{clampNode}.{output1}", f"{locBankOut}.{rz}", f=1)
-            # pm.connectAttr(f"{clampNode}.{output2}", f"{locBankIn}.{rz}", f=1)
-            # pm.connectAttr(f"{ctrl}.Bank", f"{clampNode}.inputR", f=1)
-            # pm.connectAttr(f"{ctrl}.Bank", f"{clampNode}.inputG", f=1)
-            # Connect polevector space
-
-
-        
-
+            ikH_ballGrp = groupOwnPivot(ikH_ball, null=True)
+            ballPos = pm.xform(ball, q=True, ws=True, rp=True)
+            for idx, i in enumerate(ikH_ballGrp):
+                if idx == 0:
+                    pm.parent(i, f"loc_{side}BankOut_IK")
+                if i != ikH_ball:
+                    pm.xform(i, ws=True, piv=ballPos)
+            # IK Ctrl - Blend Color Node
+            ctrlAttr = f"cc_IKFK.{side}_Leg_IK0_FK1"
+            createBlendColor(ctrlAttr, jnt, jntFK, jntIK, t=True, r=True)
+            # IK Ctrl - Connect Foot Attr to Locators
+            ccFootIK = f"cc_{side}Foot_IK"
+            ccLegIK = f"cc_{side}Leg_IK"
+            locHeel = f"loc_{side}Heel_IK"
+            locToe = f"loc_{side}Toe_End_IK"
+            locBankIn = f"loc_{side}BankIn_IK"
+            locBankOut = f"loc_{side}BankOut_IK"
+            locBall = f"loc_{side}ToeBase_IK"
+            grpBall = f"ikH_{side}ToeBase_IK_null"
+            rx, ry, rz = ["rotateX", "rotateY", "rotateZ"]
+            pm.connectAttr(f"{ccFootIK}.Heel_Up", f"{locHeel}.{rx}", f=1)
+            pm.connectAttr(f"{ccFootIK}.Heel_Twist", f"{locHeel}.{ry}", f=1)
+            pm.connectAttr(f"{ccFootIK}.Toe_Up", f"{locToe}.{rx}", f=1)
+            pm.connectAttr(f"{ccFootIK}.Toe_Twist", f"{locToe}.{ry}", f=1)
+            pm.connectAttr(f"{ccFootIK}.Ball_Up", f"{locBall}.{rx}", f=1)
+            pm.connectAttr(f"{ccFootIK}.Ball_Down", f"{grpBall}.{rx}", f=1)
+            clampNode = pm.shadingNode("clamp", au=True)
+            pm.setAttr(f"{clampNode}.minR", -180)
+            pm.setAttr(f"{clampNode}.maxG", 180)
+            pm.connectAttr(f"{clampNode}.outputR", f"{locBankOut}.{rz}", f=1)
+            pm.connectAttr(f"{clampNode}.outputG", f"{locBankIn}.{rz}", f=1)
+            pm.connectAttr(f"{ccFootIK}.Bank", f"{clampNode}.inputR", f=1)
+            pm.connectAttr(f"{ccFootIK}.Bank", f"{clampNode}.inputG", f=1)
+            # IK Ctrl - Connect World-Root space
+            footMenu = {
+                "World0": "null_worldSpace", 
+                "Root1": "null_rootSpace"
+                }
+            connectSpace(ccFootIK, footMenu, float=True)
+            # IK Ctrl - UpLeg
+            ccPelvis = f"cc_{side}UpLeg_IK"
+            pm.pointConstraint(ccPelvis, pelvis, mo=True, w=1)
+            # IK Ctrl - Create Leg Ctrl
+            pm.poleVectorConstraint(ccLegIK, ikH_pelvis, w=1)
+            # IK Ctrl - Create Leg Ctrl - Connect Leg space
+            legMenu = {
+                "World": "null_worldSpace", 
+                "Root": "null_rootSpace", 
+                "Hip": f"null_{side}UpLegSpace", 
+                "Foot": f"null_{side}FootSpace"
+                }
+            connectSpace(ccLegIK, legMenu, enum=True)
+            # FK Ctrl
+            ccFK = addPrefix(leg, ["cc_"], ["_FK"])
+            for cc, j in zip(ccFK, jntFK):
+                try:
+                    pm.parentConstraint(cc, j, mo=True, w=1)
+                except:
+                    continue
+            # Setting Visibility
+            ccUpLegIK_grp = f"cc_{side}UpLeg_IK_grp"
+            ccLegIK_grp = f"{ccLegIK}_grp"
+            ccFootIK_grp = f"{ccFootIK}_grp"
+            ccUpLegFK_grp = f"{ccFK[0]}_grp"
+            pm.connectAttr(ctrlAttr, f"{ccUpLegFK_grp}.visibility", f=1)
+            revNode = pm.shadingNode("reverse", au=True)
+            pm.connectAttr(ctrlAttr, f"{revNode}.inputX", f=1)
+            for i in [ccUpLegIK_grp, ccLegIK_grp, ccFootIK_grp]:
+                pm.connectAttr(f"{revNode}.outputX", f"{i}.visibility", f=1)
+            # Final Touch
+            pm.setAttr(f"{locHeel}.visibility", 0)
 
 
     def rigFingerCtrl(self):
@@ -1096,12 +1136,12 @@ class Character(QWidget):
         return result[0]
 
 
-if __name__ == "__main__":
-    try:
-        char.close()
-        char.deleteLater()
-    except:
-        pass
-    char = Character()
-    char.show()
+# if __name__ == "__main__":
+#     try:
+#         char.close()
+#         char.deleteLater()
+#     except:
+#         pass
+#     char = Character()
+#     char.show()
 
