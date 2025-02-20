@@ -387,6 +387,7 @@ class Character(QWidget):
 
     def createCharCtrl(self):
         if not pm.objExists("rig_Hips"):
+            self.update()
             self.createRigJnt()
         self.createMainCtrl()
         self.createHipsCtrl()
@@ -952,7 +953,15 @@ class Character(QWidget):
         
 
     def rigMainCtrl(self):
-        pass
+        ccSub = "cc_HipsSub"
+        rigHips = "rig_Hips"
+        ccIKGrp_L = "cc_LeftUpLeg_IK_grp"
+        ccIKGrp_R = "cc_RightUpLeg_IK_grp"
+        ccFKGrp_L = "cc_LeftUpLeg_FK_grp"
+        ccFKGrp_R = "cc_RightUpLeg_FK_grp"
+        groups = [rigHips, ccIKGrp_L, ccIKGrp_R, ccFKGrp_L, ccFKGrp_R]
+        for i in groups:
+            pm.parentConstraint(ccSub, i, mo=True, w=1)
 
 
     def rigHipsCtrl(self):
@@ -971,7 +980,7 @@ class Character(QWidget):
         pass
 
 
-    def rigLegsCtrl(self):
+    def rigLegsCtrl(self) -> None:
         legs = [self.leftLegs, self.rightLegs]
         for leg in legs:
             # Variable Declaration
@@ -979,8 +988,13 @@ class Character(QWidget):
             jnt = addPrefix(leg, ["rig_"], [])
             jntFK = addPrefix(leg, ["rig_"], ["_FK"])
             jntIK = addPrefix(leg, ["rig_"], ["_IK"])
-            # IK Ctrl - Create Handle
             pelvis, knee, foot, ball, toe = jntIK
+            # Check
+            isConnected = pm.listConnections(foot, type="ikHandle")
+            if isConnected:
+                # pm.warning(f'"{foot}" joint is aleady connected to ikHandle')
+                return
+            # IK Ctrl - Create Handle
             ikH_pelvis = createIKHandle(pelvis, foot, rp=True)[0]
             ikH_foot = createIKHandle(foot, ball, sc=True)[0]
             ikH_ball = createIKHandle(ball, toe, sc=True)[0]
