@@ -7,6 +7,8 @@ import pymel.core as pm
 import maya.OpenMaya as om
 
 
+
+# Get
 def getPosition(selection: str) -> tuple:
     """ Get the coordinates of an object or point.
 
@@ -147,65 +149,8 @@ def getSubJoint(startJnt: str, endJoint: str) -> list:
     return result
 
 
-def orientJoints(*args, **kwargs) -> None:
-    """ Select joints and don't put anything in the argument, 
-    it will be oriented with the Maya default settings.
 
-    args
-    ----
-    - Args are joints or
-    - Selected joints
-
-    kwargs
-    ------
-    - If there are no Args, Maya default settings are used : 
-        1. primary: "xyz"
-        2. secondary: "yup"
-    - Mixamo Settings is : 
-        1. primary: "yzx"
-        2. secondary: "zup"
-    - Especially, If it's "Left hand" : 
-        1. primary: "yxz"
-        2. secondary: "zdown"
-
-    Examples
-    --------
-    >>> orientJoints()
-    >>> orientJoints("joint1", "joint4")
-    >>> orientJoints("joint1", "joint2", primary="yzx", secondary="zup")
-    >>> orientJoints(*["joint1", "joint2"], p="yzx", s="zup")
-     """
-    sel = [pm.PyNode(i) for i in args] if args else pm.selected(type=["joint"])
-    flags = {
-        "primary": ["xyz", "yzx", "zxy", "zyx", "yxz", "xzy", "none"], 
-        "p": ["xyz", "yzx", "zxy", "zyx", "yxz", "xzy", "none"], 
-        "secondary": ["xup", "xdown", "yup", "ydown", "zup", "zdown", "none"], 
-        "s": ["xup", "xdown", "yup", "ydown", "zup", "zdown", "none"], 
-        }
-    primary = "xyz"
-    secondary = "yup"
-    for k, v in kwargs.items():
-        if ("primary"==k or "p"==k) and v in flags[k]:
-            primary = v
-        elif ("secondary"==k or "s"==k) and v in flags[k]:
-            secondary = v
-        else:
-            continue
-    pm.makeIdentity(sel, a=True, jo=True, n=0)
-    for jnt in sel:
-        pm.joint(jnt, 
-                 edit=True, 
-                 children=True, 
-                 zeroScaleOrient=True, 
-                 orientJoint=primary, 
-                 secondaryAxisOrient=secondary, 
-                 )
-        allDescendents = pm.listRelatives(jnt, ad=True, type="joint")
-        endJoints = [i for i in allDescendents if not i.getChildren()]
-        for i in endJoints:
-            pm.joint(i, e=True, oj='none', ch=True, zso=True)
-
-
+# Create
 def createPolevectorJoint(*args) -> list:
     """ Select three joints.
     Put the pole vector at 90 degrees to the direction 
@@ -503,6 +448,258 @@ def createLocatorSameTargetsRotation(ctrl: str, target: str) -> str:
     return loc
 
 
+def createBlendColor(controller: str="", 
+                     jnt: list=[], 
+                     jntFK: list=[], 
+                     jntIK: list=[], 
+                     t=False, r=False, s=False, v=False) -> None:
+    """ 
+    - Create a blendColor node
+    - FK -> color1
+    - IK -> color2
+    - output -> jnt
+    - ctrl -> blender
+    
+    Args
+    ----
+    - controller : str
+        - "cc_IKFK.Spine_IK0_FK1", 
+        - "cc_IKFK.Left_Arm_IK0_FK1", 
+        - "cc_IKFK.Right_Arm_IK0_FK1", 
+        - "cc_IKFK.Left_Leg_IK0_FK1", 
+        - "cc_IKFK.Right_Leg_IK0_FK1"
+    - joints : list
+        - jnt = ['rig_RightUpLeg', 'rig_RightLeg']
+        - jntFK = ['rig_RightUpLeg_FK', 'rig_RightLeg_FK']
+        - jntIK = ['rig_RightUpLeg_IK', 'rig_RightLeg_IK']
+    - kwargs
+        - t (translate)
+        - r (rotate)
+        - s (scale)
+        - v (visibility)
+
+    Examples
+    --------
+    >>> createBlendColor("ctrl.Switch", [jnt], [jntFK], [jntIK], t=1, r=1)
+     """
+    attr = []
+    if t:   attr.append("translate")
+    if r:   attr.append("rotate")
+    if s:   attr.append("scale")
+    if v:   attr.append("visibility")
+    for i in attr:
+        for j, fk, ik in zip(jnt, jntFK, jntIK):
+            blColor = pm.shadingNode("blendColors", au=True)
+            pm.connectAttr(f"{fk}.{i}", f"{blColor}.color1", f=True)
+            pm.connectAttr(f"{ik}.{i}", f"{blColor}.color2", f=True)
+            pm.connectAttr(f"{blColor}.output", f"{j}.{i}", f=True)
+            pm.connectAttr(controller, f"{blColor}.blender")
+
+
+def createIKHandle(startJnt: str="", endJnt: str="", 
+                   rp=False, sc=False, spl=False, spr=False) -> str:
+    """ Create a ikHandle and return names.
+
+    Args
+    ----
+    - startJnt
+    - endJnt
+
+    Options
+    -------
+    - rp: "ikRPsolver"
+    - sc: "ikSCsolver"
+    - spl: "ikSplineSolver"
+    - spr: "ikSpringSolver"
+    
+    Return
+    ------
+    - Created ikHandle name.
+     """
+    if rp:
+        solver = "ikRPsolver"
+    elif sc:
+        solver = "ikSCsolver"
+    elif spl:
+        solver = "ikSplineSolver"
+    elif spr:
+        solver = "ikSpringSolver"
+    else:
+        return
+    temp = startJnt.split("_")
+    temp[0] = "ikh"
+    ikHandleName = "_".join(temp)
+    result = pm.ikHandle(sj=startJnt, ee=endJnt, sol=solver, n=ikHandleName)
+    return result
+
+
+def createPaintWeightToOne(maxInfluence: int, *args) -> None:
+    """ Paint Skin Weights to One.
+     - Create paintSkinWeights with value 1.
+     - Create a dictionary with the vertex weight values in this way.
+     - Paint the skin weights with the given max influence.
+     - Finally, Create paint skin weights from the dictionary.
+     """
+    sel = [pm.PyNode(i) for i in args] if args else pm.selected()
+    # Create a list of objects and joints.
+    joints = []
+    objects = []
+    for i in sel:
+        shp = i.getShape()
+        if shp and pm.ls(shp, type=["mesh", "nurbsSurface"]):
+            objects.append(i)
+        elif i.type() == "joint":
+            joints.append(i)
+        else:
+            continue
+    # Get vertex information and paint skin weight with max influence.
+    for obj in objects:
+        data = {}
+        isSkinCluster = pm.listHistory(obj, type="skinCluster")
+        if isSkinCluster:
+            pm.warning("skinCluster aleady exists.")
+            continue
+        skinClt = pm.skinCluster(joints, obj, \
+                                 toSelectedBones=True, 
+                                 bindMethod=0, 
+                                 skinMethod=0, 
+                                 normalizeWeights=1, wd=0, mi=1
+                                 )
+        for jnt in joints:
+            pm.select(cl=True)
+            pm.skinCluster(skinClt, e=True, siv=jnt)
+            data[jnt] = getVertexNumber()
+        pm.select(cl=True)
+        pm.skinCluster(obj, e=True, mi=maxInfluence)
+        # Unlock
+        lockWeights = []
+        for j in data.keys():
+            lockWeights.append(pm.getAttr(f"{j}.liw"))
+            pm.setAttr(f"{j}.liw", 0)
+        for jntName, obj_vtxList in data.items():
+            for obj, vtxList in obj_vtxList.items():
+                if not pm.objExists(obj):
+                    continue
+                for vtx in vtxList:
+                    objVtx = f"{obj}{vtx}"
+                    skinClt = pm.listHistory(objVtx, type="skinCluster")
+                    try:
+                        # Paint Skin Weights to One.
+                        pm.skinPercent(skinClt[0], objVtx, \
+                                       transformValue=(jntName, 1))
+                        pm.displayInfo(f"{objVtx} was painted successfully.")
+                    except:
+                        pm.warning(f"{objVtx} failed to be painted.")
+                        continue
+        # Lock Weights again.
+        for j, onOff in zip(data.keys(), lockWeights):
+            pm.setAttr(f"{j}.liw", onOff)
+
+
+def createJointScaleExpression(*args, **kwargs) -> str:
+    """ As the length of the curve increases, 
+    the length of the joint also increases.
+    Select at least 3 or more.
+
+    Usage: 
+     - Select the start joint
+     - Select the end joint
+     - Select the curve
+
+    Example: 
+    >>> createJointScaleExpression()
+    >>> createJointScaleExpression("startJnt", "endJnt", "curve1", x=True)
+    >>> createJointScaleExpression(x=True, y=True)
+    >>> createJointScaleExpression(*["startJnt", "endJnt", "curve1"])
+     """
+    sel = args if args else pm.selected()
+    if len(sel) < 3:
+        return
+    startJnt = sel[0]
+    endJnt = sel[-2]
+    cuv = pm.ls(sel, dag=True, type=["nurbsCurve"])
+    if cuv:
+        cuv = cuv[0]
+    else:
+        pm.warning("There is no Curve.")
+        return
+    scales = []
+    if kwargs:
+        for i in kwargs.keys():
+            if (i == "x" or i == "X") and kwargs[i]:
+                scales.append("X")
+            if (i == "y" or i == "Y") and kwargs[i]:
+                scales.append("Y")
+            if (i == "z" or i == "Z") and kwargs[i]:
+                scales.append("Z")
+    else:
+        scales.append("X")
+    cuvInf = pm.shadingNode("curveInfo", au=True)
+    pm.connectAttr(f"{cuv}.worldSpace[0]", f"{cuvInf}.inputCurve", f=True)
+    cuvLen = pm.getAttr(f"{cuvInf}.arcLength")
+    muldvd = pm.shadingNode("multiplyDivide", au=True)
+    pm.setAttr(f"{muldvd}.operation", 2)
+    pm.setAttr(f"{muldvd}.input2X", cuvLen)
+    pm.connectAttr(f"{cuvInf}.arcLength", f"{muldvd}.input1X", f=True)
+    joints = getSubJoint(startJnt, endJnt)
+    for jnt in joints:
+        for scl in scales:
+            pm.connectAttr(f"{muldvd}.outputX", f"{jnt}.scale{scl}", f=True)
+    return muldvd
+
+
+def createRigGroups(assetName: str="") -> list:
+    """ Create a Group Tree used by Madman Company.
+
+    Return
+    ------
+    >>> ['assetName', 'rig', 'MODEL', 'controllers', 'skeletons', 
+    'geoForBind', 'extraNodes', 'bindBones', 'rigBones']
+
+     """
+    grpNames = {
+        "assetName": ["rig", "MODEL"], 
+        "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
+        "skeletons": ["bindBones", "rigBones"]
+        }
+    if assetName:
+        grpNames[assetName] = grpNames.pop("assetName")
+        grpNames = {k: grpNames[k] for k in [assetName, "rig", "skeletons"]}
+    for parents, children in grpNames.items():
+        if not pm.objExists(parents):
+            pm.group(em=True, n=parents)
+        for child in children:
+            if not pm.objExists(child):
+                pm.group(em=True, n=child)
+            pm.parent(child, parents)
+    result = getFlattenList(grpNames)
+    return result
+
+
+def createAnnotation(base: str, target: str) -> str:
+    """ 
+    Create a Annotation.
+
+    Args
+    ----
+    - base : Start Object
+    - target : End Object
+
+    Examples
+    --------
+    >>> createAnnotation("kneeJoint", "kneeCtrl")
+    >>> createAnnotation("rig_LeftLeg_IK", "cc_LeftLeg_IK")
+     """
+    basePos = getPosition(base)
+    anoShp = pm.annotate(target, tx="", p=basePos)
+    ano = anoShp.getParent()
+    pm.setAttr(f"{ano}.overrideEnabled", 1)
+    pm.setAttr(f"{ano}.overrideDisplayType", 1)
+    return ano
+
+
+
+# Select
 def selectGroupOnly(*args) -> list:
     """ If there is no shape and the type is not 
     'joint', 'ikEffector', 'ikHandle' and 'Constraint', 
@@ -677,21 +874,94 @@ def selectNurbsCurveOnly(*args) -> list:
     return result
 
 
-def parentHierarchically(*args) -> list:
-    """ Hierarchically parent.
-    >>> parentHierarchically(*lst)
-    >>> parentHierarchically(parents, child)
+def softSelection() -> list:
+    """ Make the selected soft selection area into a cluster. """
+    selection = om.MSelectionList()
+    softSelection = om.MRichSelection()
+    om.MGlobal.getRichSelection(softSelection)
+    softSelection.getSelection(selection)
+    dagPath = om.MDagPath()
+    component = om.MObject()
+    iter = om.MItSelectionList(selection, om.MFn.kMeshVertComponent)
+    elements = []
+    while not iter.isDone(): 
+        iter.getDagPath(dagPath, component)
+        dagPath.pop()
+        node = dagPath.fullPathName()
+        fnComp = om.MFnSingleIndexedComponent(component)   
+        for i in range(fnComp.elementCount()):
+            elem = fnComp.element(i)
+            infl = fnComp.weight(i).influence()
+            elements.append([node, elem, infl])
+        iter.next()
+    sel = ["%s.vtx[%d]" % (el[0], el[1]) for el in elements] 
+    pm.select(sel, r=True)
+    cluster = pm.cluster(relative=True)
+    for i in range(len(elements)):
+        pm.percent(cluster[0], sel[i], v=elements[i][2])
+    pm.select(cluster[1], r=True)
+    return cluster
+
+
+
+# Etc
+def orientJoints(*args, **kwargs) -> None:
+    """ Select joints and don't put anything in the argument, 
+    it will be oriented with the Maya default settings.
+
+    args
+    ----
+    - Args are joints or
+    - Selected joints
+
+    kwargs
+    ------
+    - If there are no Args, Maya default settings are used : 
+        1. primary: "xyz"
+        2. secondary: "yup"
+    - Mixamo Settings is : 
+        1. primary: "yzx"
+        2. secondary: "zup"
+    - Especially, If it's "Left hand" : 
+        1. primary: "yxz"
+        2. secondary: "zdown"
+
+    Examples
+    --------
+    >>> orientJoints()
+    >>> orientJoints("joint1", "joint4")
+    >>> orientJoints("joint1", "joint2", primary="yzx", secondary="zup")
+    >>> orientJoints(*["joint1", "joint2"], p="yzx", s="zup")
      """
-    sel = [pm.PyNode(i) for i in args] if args else pm.selected()
-    if not sel:
-        return
-    for idx, parents in enumerate(sel):
-        try:
-            child = sel[idx + 1]
-            pm.parent(child, parents)
-        except:
+    sel = [pm.PyNode(i) for i in args] if args else pm.selected(type=["joint"])
+    flags = {
+        "primary": ["xyz", "yzx", "zxy", "zyx", "yxz", "xzy", "none"], 
+        "p": ["xyz", "yzx", "zxy", "zyx", "yxz", "xzy", "none"], 
+        "secondary": ["xup", "xdown", "yup", "ydown", "zup", "zdown", "none"], 
+        "s": ["xup", "xdown", "yup", "ydown", "zup", "zdown", "none"], 
+        }
+    primary = "xyz"
+    secondary = "yup"
+    for k, v in kwargs.items():
+        if ("primary"==k or "p"==k) and v in flags[k]:
+            primary = v
+        elif ("secondary"==k or "s"==k) and v in flags[k]:
+            secondary = v
+        else:
             continue
-    return sel
+    pm.makeIdentity(sel, a=True, jo=True, n=0)
+    for jnt in sel:
+        pm.joint(jnt, 
+                 edit=True, 
+                 children=True, 
+                 zeroScaleOrient=True, 
+                 orientJoint=primary, 
+                 secondaryAxisOrient=secondary, 
+                 )
+        allDescendents = pm.listRelatives(jnt, ad=True, type="joint")
+        endJoints = [i for i in allDescendents if not i.getChildren()]
+        for i in endJoints:
+            pm.joint(i, e=True, oj='none', ch=True, zso=True)
 
 
 def groupOwnPivot(*args, **kwargs) -> list:
@@ -741,33 +1011,117 @@ def groupOwnPivot(*args, **kwargs) -> list:
     return result
 
 
-def softSelection() -> list:
-    """ Make the selected soft selection area into a cluster. """
-    selection = om.MSelectionList()
-    softSelection = om.MRichSelection()
-    om.MGlobal.getRichSelection(softSelection)
-    softSelection.getSelection(selection)
-    dagPath = om.MDagPath()
-    component = om.MObject()
-    iter = om.MItSelectionList(selection, om.MFn.kMeshVertComponent)
-    elements = []
-    while not iter.isDone(): 
-        iter.getDagPath(dagPath, component)
-        dagPath.pop()
-        node = dagPath.fullPathName()
-        fnComp = om.MFnSingleIndexedComponent(component)   
-        for i in range(fnComp.elementCount()):
-            elem = fnComp.element(i)
-            infl = fnComp.weight(i).influence()
-            elements.append([node, elem, infl])
-        iter.next()
-    sel = ["%s.vtx[%d]" % (el[0], el[1]) for el in elements] 
-    pm.select(sel, r=True)
-    cluster = pm.cluster(relative=True)
-    for i in range(len(elements)):
-        pm.percent(cluster[0], sel[i], v=elements[i][2])
-    pm.select(cluster[1], r=True)
-    return cluster
+def parentHierarchically(*args) -> list:
+    """ Hierarchically parent.
+    >>> parentHierarchically(*lst)
+    >>> parentHierarchically(parents, child)
+     """
+    sel = [pm.PyNode(i) for i in args] if args else pm.selected()
+    if not sel:
+        return
+    for idx, parents in enumerate(sel):
+        try:
+            child = sel[idx + 1]
+            pm.parent(child, parents)
+        except:
+            continue
+    return sel
+
+
+def duplicateObj(obj: str, prefix: str="", suffix: str="") -> str:
+    """ Duplictate the joint and rename it to all descendents. 
+    
+    Args
+    ----
+    - obj : Source joint
+        - "Hips", "Spine", "LeftArm", ...
+    - prefix : Add a prefix to the source joint.
+        - "rig_Hips", "rig_Spine", "rig_LeftArm", ...
+    - suffix : Add a suffix to the source joint.
+        - "rig_Hips_FK", "rig_Spine_FK", "rig_LeftArm_FK", ...
+
+    Examples
+    --------
+    >>> duplicateObj("Hips", "", "")
+    >>> duplicateObj("Hips", "rig_", "")
+    >>> duplicateObj("Hips", "", "_FK")
+    >>> duplicateObj("Hips", "rig_", "_IK")
+     """
+    duplicated = f"{prefix}{obj}{suffix}"
+    duplicated = pm.duplicate(obj, rr=True, n=duplicated)[0]
+    for i in pm.listRelatives(duplicated, ad=True):
+        end = i.rsplit("|", 1)[-1]
+        new = i.replace(end, f"{prefix}{end}{suffix}")
+        try:
+            pm.rename(i, new)
+        except:
+            continue
+    return duplicated
+
+
+def mirrorCopy(obj: str, mirrorPlane: str="YZ") -> list:
+    """ Mirror copy based on 'YZ' or 'XY'. Default mirrorPlane is "YZ".
+    This function is shown below.
+    - First, Check Selection.
+    - Duplicate and Grouping own Pivot.
+    - Move Groups to Other Side.
+    - Creates a Mirror Shape.
+    - Finish and Clean up. 
+
+    Examples: 
+    >>> mirrorCopy()
+    >>> Error
+    >>> mirrorCopy('pCube1')
+    >>> ['pCube1_grp', 'pCube1_null', 'pCube2']
+    >>> mirrorCopy('cc_doorLeftFront')
+    >>> ['cc_doorRight_grp', 'cc_doorRight_null', 'cc_doorRight']
+    >>> mirrorCopy('lever_R', 'XY')
+    >>> ['lever_L_grp', 'lever_L_null', 'lever_L']
+     """
+    # Check Selection
+    if not obj:
+        pm.warning("Nothing Selected.")
+        return
+    # Duplicate and Grouping own Pivot
+    replaced = changeLeftToRight(obj)
+    copied = pm.duplicate(obj, rr=True, n=replaced)[0]
+    pm.parent(copied, w=True)
+    result = groupOwnPivot(copied, null=True, n=replaced)
+    topGrp, nullGrp, copied = result
+    pm.parent(copied, w=True)
+    # Move Groups to Other Side.
+    pos = pm.getAttr(f'{topGrp}.translate')
+    rot = pm.getAttr(f'{topGrp}.rotate')
+    tx, ty, tz = pos
+    rx, ry, rz = rot
+    if mirrorPlane == "XY":
+        tz *= -1
+        rz += (180 if rz < 0 else -180)
+    elif mirrorPlane == "YZ":
+        tx *= -1
+        rx += (180 if rx < 0 else -180)
+        ry *= -1
+        rz *= -1
+    else:
+        return
+    attr = {'tx': tx, 'ty': ty, 'tz': tz, 'rx': rx, 'ry': ry, 'rz': rz}
+    for key, value in attr.items():
+        pm.setAttr(f'{topGrp}.{key}', value)
+    # Creates a Mirror Shape.
+    tempGrp = pm.group(em=True)
+    pm.parent(copied, tempGrp)
+    if mirrorPlane == "XY":
+        direction = [1, 1, -1]
+    elif mirrorPlane == "YZ":
+        direction = [-1, 1, 1]
+    else:
+        return
+    pm.scale(tempGrp, direction, r=True)
+    # Finish and Clean up.
+    pm.parent(copied, nullGrp)
+    pm.makeIdentity(copied, a=True, t=1, r=1, s=1, n=0, pn=1)
+    pm.delete(tempGrp)
+    return result
 
 
 def changeLeftToRight(inputs: str) -> str:
@@ -814,37 +1168,6 @@ def changeLeftToRight(inputs: str) -> str:
     return result
 
 
-def duplicateObj(obj: str, prefix: str="", suffix: str="") -> str:
-    """ Duplictate the joint and rename it to all descendents. 
-    
-    Args
-    ----
-    - obj : Source joint
-        - "Hips", "Spine", "LeftArm", ...
-    - prefix : Add a prefix to the source joint.
-        - "rig_Hips", "rig_Spine", "rig_LeftArm", ...
-    - suffix : Add a suffix to the source joint.
-        - "rig_Hips_FK", "rig_Spine_FK", "rig_LeftArm_FK", ...
-
-    Examples
-    --------
-    >>> duplicateObj("Hips", "", "")
-    >>> duplicateObj("Hips", "rig_", "")
-    >>> duplicateObj("Hips", "", "_FK")
-    >>> duplicateObj("Hips", "rig_", "_IK")
-     """
-    duplicated = f"{prefix}{obj}{suffix}"
-    duplicated = pm.duplicate(obj, rr=True, n=duplicated)[0]
-    for i in pm.listRelatives(duplicated, ad=True):
-        end = i.rsplit("|", 1)[-1]
-        new = i.replace(end, f"{prefix}{end}{suffix}")
-        try:
-            pm.rename(i, new)
-        except:
-            continue
-    return duplicated
-
-
 def addPrefix(name: list=[], prefix: list=[], suffix: list=[]):
     """ Naming Convention Modification.
 
@@ -882,91 +1205,6 @@ def addPrefix(name: list=[], prefix: list=[], suffix: list=[]):
         result = [f"{s}" for s in suffix]
     else:
         pass
-    return result
-
-
-def createBlendColor(controller: str="", 
-                     jnt: list=[], 
-                     jntFK: list=[], 
-                     jntIK: list=[], 
-                     t=False, r=False, s=False, v=False) -> None:
-    """ 
-    - Create a blendColor node
-    - FK -> color1
-    - IK -> color2
-    - output -> jnt
-    - ctrl -> blender
-    
-    Args
-    ----
-    - controller : str
-        - "cc_IKFK.Spine_IK0_FK1", 
-        - "cc_IKFK.Left_Arm_IK0_FK1", 
-        - "cc_IKFK.Right_Arm_IK0_FK1", 
-        - "cc_IKFK.Left_Leg_IK0_FK1", 
-        - "cc_IKFK.Right_Leg_IK0_FK1"
-    - joints : list
-        - jnt = ['rig_RightUpLeg', 'rig_RightLeg']
-        - jntFK = ['rig_RightUpLeg_FK', 'rig_RightLeg_FK']
-        - jntIK = ['rig_RightUpLeg_IK', 'rig_RightLeg_IK']
-    - kwargs
-        - t (translate)
-        - r (rotate)
-        - s (scale)
-        - v (visibility)
-
-    Examples
-    --------
-    >>> createBlendColor("ctrl.Switch", [jnt], [jntFK], [jntIK], t=1, r=1)
-     """
-    attr = []
-    if t:   attr.append("translate")
-    if r:   attr.append("rotate")
-    if s:   attr.append("scale")
-    if v:   attr.append("visibility")
-    for i in attr:
-        for j, fk, ik in zip(jnt, jntFK, jntIK):
-            blColor = pm.shadingNode("blendColors", au=True)
-            pm.connectAttr(f"{fk}.{i}", f"{blColor}.color1", f=True)
-            pm.connectAttr(f"{ik}.{i}", f"{blColor}.color2", f=True)
-            pm.connectAttr(f"{blColor}.output", f"{j}.{i}", f=True)
-            pm.connectAttr(controller, f"{blColor}.blender")
-
-
-def createIKHandle(startJnt: str="", endJnt: str="", 
-                   rp=False, sc=False, spl=False, spr=False) -> str:
-    """ Create a ikHandle and return names.
-
-    Args
-    ----
-    - startJnt
-    - endJnt
-
-    Options
-    -------
-    - rp: "ikRPsolver"
-    - sc: "ikSCsolver"
-    - spl: "ikSplineSolver"
-    - spr: "ikSpringSolver"
-    
-    Return
-    ------
-    - Created ikHandle name.
-     """
-    if rp:
-        solver = "ikRPsolver"
-    elif sc:
-        solver = "ikSCsolver"
-    elif spl:
-        solver = "ikSplineSolver"
-    elif spr:
-        solver = "ikSpringSolver"
-    else:
-        return
-    temp = startJnt.split("_")
-    temp[0] = "ikH"
-    ikHandleName = "_".join(temp)
-    result = pm.ikHandle(sj=startJnt, ee=endJnt, sol=solver, n=ikHandleName)
     return result
 
 
@@ -1038,99 +1276,6 @@ def connectSpace(ctrl: str, menu: dict, enum=False, float=False):
                                f"{sConstraint}.{name}W{idx}", f=True)
     else:
         return
-
-
-def mirrorCopy(obj: str, mirrorPlane: str="YZ") -> list:
-    """ Mirror copy based on 'YZ' or 'XY'. Default mirrorPlane is "YZ".
-    This function is shown below.
-    - First, Check Selection.
-    - Duplicate and Grouping own Pivot.
-    - Move Groups to Other Side.
-    - Creates a Mirror Shape.
-    - Finish and Clean up. 
-
-    Examples: 
-    >>> mirrorCopy()
-    >>> Error
-    >>> mirrorCopy('pCube1')
-    >>> ['pCube1_grp', 'pCube1_null', 'pCube2']
-    >>> mirrorCopy('cc_doorLeftFront')
-    >>> ['cc_doorRight_grp', 'cc_doorRight_null', 'cc_doorRight']
-    >>> mirrorCopy('lever_R', 'XY')
-    >>> ['lever_L_grp', 'lever_L_null', 'lever_L']
-     """
-    # Check Selection
-    if not obj:
-        pm.warning("Nothing Selected.")
-        return
-    # Duplicate and Grouping own Pivot
-    replaced = changeLeftToRight(obj)
-    copied = pm.duplicate(obj, rr=True, n=replaced)[0]
-    pm.parent(copied, w=True)
-    result = groupOwnPivot(copied, null=True, n=replaced)
-    topGrp, nullGrp, copied = result
-    pm.parent(copied, w=True)
-    # Move Groups to Other Side.
-    pos = pm.getAttr(f'{topGrp}.translate')
-    rot = pm.getAttr(f'{topGrp}.rotate')
-    tx, ty, tz = pos
-    rx, ry, rz = rot
-    if mirrorPlane == "XY":
-        tz *= -1
-        rz += (180 if rz < 0 else -180)
-    elif mirrorPlane == "YZ":
-        tx *= -1
-        rx += (180 if rx < 0 else -180)
-        ry *= -1
-        rz *= -1
-    else:
-        return
-    attr = {'tx': tx, 'ty': ty, 'tz': tz, 'rx': rx, 'ry': ry, 'rz': rz}
-    for key, value in attr.items():
-        pm.setAttr(f'{topGrp}.{key}', value)
-    # Creates a Mirror Shape.
-    tempGrp = pm.group(em=True)
-    pm.parent(copied, tempGrp)
-    if mirrorPlane == "XY":
-        direction = [1, 1, -1]
-    elif mirrorPlane == "YZ":
-        direction = [-1, 1, 1]
-    else:
-        return
-    pm.scale(tempGrp, direction, r=True)
-    # Finish and Clean up.
-    pm.parent(copied, nullGrp)
-    pm.makeIdentity(copied, a=True, t=1, r=1, s=1, n=0, pn=1)
-    pm.delete(tempGrp)
-    return result
-
-
-def createRigGroups(assetName: str="") -> list:
-    """ Create a Group Tree used by Madman Company.
-
-    Return
-    ------
-    >>> ['assetName', 'rig', 'MODEL', 'controllers', 'skeletons', 
-    'geoForBind', 'extraNodes', 'bindBones', 'rigBones']
-
-     """
-    grpNames = {
-        "assetName": ["rig", "MODEL"], 
-        "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
-        "skeletons": ["bindBones", "rigBones"]
-        }
-    if assetName:
-        grpNames[assetName] = grpNames.pop("assetName")
-        grpNames = {k: grpNames[k] for k in [assetName, "rig", "skeletons"]}
-    for parents, children in grpNames.items():
-        if not pm.objExists(parents):
-            pm.group(em=True, n=parents)
-        for child in children:
-            if not pm.objExists(child):
-                pm.group(em=True, n=child)
-            pm.parent(child, parents)
-    result = getFlattenList(grpNames)
-    return result
 
 
 def MovePointNearObject(sourceObject: str, *arg) -> None:
@@ -1351,121 +1496,6 @@ def reName(*args) -> list:
     else:
         return
     return result
-
-
-def createPaintWeightToOne(maxInfluence: int, *args) -> None:
-    """ Paint Skin Weights to One.
-     - Create paintSkinWeights with value 1.
-     - Create a dictionary with the vertex weight values in this way.
-     - Paint the skin weights with the given max influence.
-     - Finally, Create paint skin weights from the dictionary.
-     """
-    sel = [pm.PyNode(i) for i in args] if args else pm.selected()
-    # Create a list of objects and joints.
-    joints = []
-    objects = []
-    for i in sel:
-        shp = i.getShape()
-        if shp and pm.ls(shp, type=["mesh", "nurbsSurface"]):
-            objects.append(i)
-        elif i.type() == "joint":
-            joints.append(i)
-        else:
-            continue
-    # Get vertex information and paint skin weight with max influence.
-    for obj in objects:
-        data = {}
-        isSkinCluster = pm.listHistory(obj, type="skinCluster")
-        if isSkinCluster:
-            pm.warning("skinCluster aleady exists.")
-            continue
-        skinClt = pm.skinCluster(joints, obj, \
-                                 toSelectedBones=True, 
-                                 bindMethod=0, 
-                                 skinMethod=0, 
-                                 normalizeWeights=1, wd=0, mi=1
-                                 )
-        for jnt in joints:
-            pm.select(cl=True)
-            pm.skinCluster(skinClt, e=True, siv=jnt)
-            data[jnt] = getVertexNumber()
-        pm.select(cl=True)
-        pm.skinCluster(obj, e=True, mi=maxInfluence)
-        # Unlock
-        lockWeights = []
-        for j in data.keys():
-            lockWeights.append(pm.getAttr(f"{j}.liw"))
-            pm.setAttr(f"{j}.liw", 0)
-        for jntName, obj_vtxList in data.items():
-            for obj, vtxList in obj_vtxList.items():
-                if not pm.objExists(obj):
-                    continue
-                for vtx in vtxList:
-                    objVtx = f"{obj}{vtx}"
-                    skinClt = pm.listHistory(objVtx, type="skinCluster")
-                    try:
-                        # Paint Skin Weights to One.
-                        pm.skinPercent(skinClt[0], objVtx, \
-                                       transformValue=(jntName, 1))
-                        pm.displayInfo(f"{objVtx} was painted successfully.")
-                    except:
-                        pm.warning(f"{objVtx} failed to be painted.")
-                        continue
-        # Lock Weights again.
-        for j, onOff in zip(data.keys(), lockWeights):
-            pm.setAttr(f"{j}.liw", onOff)
-
-
-def createJointScaleExpression(*args, **kwargs) -> str:
-    """ As the length of the curve increases, 
-    the length of the joint also increases.
-    Select at least 3 or more.
-
-    Usage: 
-     - Select the start joint
-     - Select the end joint
-     - Select the curve
-
-    Example: 
-    >>> createJointScaleExpression()
-    >>> createJointScaleExpression("startJnt", "endJnt", "curve1", x=True)
-    >>> createJointScaleExpression(x=True, y=True)
-    >>> createJointScaleExpression(*["startJnt", "endJnt", "curve1"])
-     """
-    sel = args if args else pm.selected()
-    if len(sel) < 3:
-        return
-    startJnt = sel[0]
-    endJnt = sel[-2]
-    cuv = pm.ls(sel, dag=True, type=["nurbsCurve"])
-    if cuv:
-        cuv = cuv[0]
-    else:
-        pm.warning("There is no Curve.")
-        return
-    scales = []
-    if kwargs:
-        for i in kwargs.keys():
-            if (i == "x" or i == "X") and kwargs[i]:
-                scales.append("X")
-            if (i == "y" or i == "Y") and kwargs[i]:
-                scales.append("Y")
-            if (i == "z" or i == "Z") and kwargs[i]:
-                scales.append("Z")
-    else:
-        scales.append("X")
-    cuvInf = pm.shadingNode("curveInfo", au=True)
-    pm.connectAttr(f"{cuv}.worldSpace[0]", f"{cuvInf}.inputCurve", f=True)
-    cuvLen = pm.getAttr(f"{cuvInf}.arcLength")
-    muldvd = pm.shadingNode("multiplyDivide", au=True)
-    pm.setAttr(f"{muldvd}.operation", 2)
-    pm.setAttr(f"{muldvd}.input2X", cuvLen)
-    pm.connectAttr(f"{cuvInf}.arcLength", f"{muldvd}.input1X", f=True)
-    joints = getSubJoint(startJnt, endJnt)
-    for jnt in joints:
-        for scl in scales:
-            pm.connectAttr(f"{muldvd}.outputX", f"{jnt}.scale{scl}", f=True)
-    return muldvd
 
 
 def colorize(*args, **kwargs) -> None:
