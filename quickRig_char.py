@@ -185,6 +185,18 @@ class Character(QWidget):
             "RightToeBase": (-10.797, 0.001, 5.7), 
             "RightToe_End": (-10.797, 0.0, 14.439), 
             }
+        self.finger_L = []
+        self.finger_L += self.thumb_L
+        self.finger_L += self.index_L
+        self.finger_L += self.middle_L
+        self.finger_L += self.ring_L
+        self.finger_L += self.pinky_L
+        self.finger_R = []
+        self.finger_R += self.thumb_R
+        self.finger_R += self.index_R
+        self.finger_R += self.middle_R
+        self.finger_R += self.ring_R
+        self.finger_R += self.pinky_R
         self.jntHierarchy = {
             "Hips": [self.spine, self.legs_L, self.legs_R], 
             "Spine2": [self.arms_L, self.arms_R], 
@@ -283,9 +295,8 @@ class Character(QWidget):
     def createTempJnt(self) -> None:
         """ Create temporary joints. """
         # CleanUp
-        temp = list(self.jntPosition.keys())
-        temp.append(self.mainCurve)
-        self.cleanUp(*temp)
+        joints = list(self.jntPosition.keys())
+        self.cleanUp(*joints)
         # Create Joints
         for jnt, pos in self.jntPosition.items():
             pm.select(cl=True)
@@ -334,11 +345,10 @@ class Character(QWidget):
             self.update()
             self.createTempJnt()
             groups = createRigGroups(groupName)
-            try:
+            if pm.objExists(self.hips):
                 pm.parent(self.hips, groups[-2])
-                pm.delete(self.mainCurve)
-            except:
-                pass
+            if pm.objExists(f"rig_{self.hips}"):
+                pm.parent(f"rig_{self.hips}", groups[-1])
 
 
     def createRigJnt(self) -> None:
@@ -446,7 +456,8 @@ class Character(QWidget):
             self.rigArmsCtrl(i)
         for i in [self.legs_L, self.legs_R]:
             self.rigLegsCtrl(i)
-        self.rigFingerCtrl()
+        for i in [self.finger_L, self.finger_R]:
+            self.rigFingerCtrl(i)
 
 
     def createMainCtrl(self) -> None:
@@ -1070,18 +1081,59 @@ class Character(QWidget):
 
     def rigArmsCtrl(self, joints: list):
         # Variables
-        jntArms = self.arms_L
-        ccArms_IK = addPrefix(jntArms, ["cc_"], ["_IK"])
-        rgArms_IK = addPrefix(jntArms, ["rig_"], ["_IK"])
-        ccScapula_IK, ccShoulder_IK, ccElbow_IK, ccHand_IK = ccArms_IK
-        rgScapula_IK, rgShoulder_IK, rgElbow_IK, rgHand_IK = rgArms_IK
-        ccArms_FK = addPrefix(jntArms, ["cc_"], ["_FK"])
+        rgArms = addPrefix(joints, ["rig_"], [])
+        ccArms_IK = addPrefix(joints, ["cc_"], ["_IK"])
+        rgArms_IK = addPrefix(joints, ["rig_"], ["_IK"])
+        ccShoulder_IK, ccElbow_IK, ccHand_IK = ccArms_IK[1:]
+        rgShoulder_IK, rgElbow_IK, rgHand_IK = rgArms_IK[1:]
+        ccArms_FK = addPrefix(joints, ["cc_"], ["_FK"])
+        rgArms_FK = addPrefix(joints, ["rig_"], ["_FK"])
+        side = "Left" if "Left" in ccShoulder_IK else "Right"
+        ccIKFK = f"cc_IKFK.{side}_Arm_IK0_FK1"
+        shoulderSpace = f"null_{side}ShoulderSpace"
+        handMenu = {
+            "World0": "null_worldSpace", 
+            "Shoulder1": shoulderSpace, 
+            }
+        elbowMenu = {
+            "World": "null_worldSpace", 
+            "Root": "null_rootSpace", 
+            "Chest": "rig_Spine2", 
+            "Arm": f"null_{side}ArmSpace", 
+            "Hand": f"null_{side}HandSpace", 
+            }
+        createBlendColor(ccIKFK, rgArms[1:], rgArms_FK[1:], rgArms_IK[1:], 
+                         t=True, r=True)
         # Check
-        # Create IK Ctrls
-        ikHandle = createIKHandle(rgShoulder_IK, rgHand_IK, rp=True)
+        # IK Ctrls - Shoulder
+        pm.pointConstraint(ccShoulder_IK, rgShoulder_IK, mo=True, w=1)
+        # IK Ctrls - Hand
+        ikHandle = createIKHandle(rgShoulder_IK, rgHand_IK, rp=True)[0]
+        pm.orientConstraint(ccHand_IK, rgHand_IK, mo=True, w=1)
+        pm.parent(ikHandle, ccHand_IK)
+        connectSpace(ccHand_IK, handMenu, float=True)
+        # IK Ctrls - Polevector
+        pm.poleVectorConstraint(ccElbow_IK, ikHandle, w=1.0)
+        connectSpace(ccElbow_IK, elbowMenu, enum=True)
+        anno = createAnnotation(rgElbow_IK, ccElbow_IK)
+        anno_grp = groupOwnPivot(anno)
+        pm.parentConstraint(rgElbow_IK, anno_grp, mo=True, w=1)
         # Create FK Ctrls
+        for cc, jnt in zip(ccArms_FK[1:], rgArms_FK[1:]):
+            pm.parentConstraint(cc, jnt, mo=True, w=1)
         # Setting Visibility
+        pm.setAttr(f"{ikHandle}.visibility", 0)
+        ccShoulder_FK_grp = pm.listRelatives(ccArms_FK[1], p=True)[0]
+        pm.connectAttr(ccIKFK, f"{ccShoulder_FK_grp}.visibility", f=1)
+        revNode = pm.shadingNode("reverse", au=True)
+        pm.connectAttr(ccIKFK, f"{revNode}.inputX", f=1)
+        for cc in ccArms_IK[1:]:
+            cc_grp = pm.listRelatives(cc, p=True)[0]
+            pm.connectAttr(f"{revNode}.outputX", f"{cc_grp}.visibility", f=1)
         # Constraint
+        pm.parentConstraint(shoulderSpace, ccShoulder_FK_grp, mo=True, w=1)
+        ccShoulder_IK_grp = pm.listRelatives(ccShoulder_IK, p=True)[0]
+        pm.parentConstraint(shoulderSpace, ccShoulder_IK_grp, mo=True, w=1)
 
 
     def rigLegsCtrl(self, joints: list) -> None:
@@ -1180,8 +1232,13 @@ class Character(QWidget):
             pm.parentConstraint(ccSub, i, mo=True, w=1)
 
 
-    def rigFingerCtrl(self):
-        pass
+    def rigFingerCtrl(self, joints: list):
+        ctrls = addPrefix(joints, ["cc_"], [])
+        for cc, jnt in zip(ctrls, joints):
+            if pm.objExists(cc) and pm.objExists(jnt):
+                pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+            else:
+                continue
 
 
     def update(self) -> None:
@@ -1256,12 +1313,12 @@ class Character(QWidget):
         return result[0]
 
 
-if __name__ == "__main__":
-    try:
-        char.close()
-        char.deleteLater()
-    except:
-        pass
-    char = Character()
-    char.show()
+# if __name__ == "__main__":
+#     try:
+#         char.close()
+#         char.deleteLater()
+#     except:
+#         pass
+#     char = Character()
+#     char.show()
 
