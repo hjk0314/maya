@@ -260,6 +260,12 @@ class Character(QWidget):
         self.btnRig = QPushButton()
         self.btnRig.setObjectName(u"btnRig")
         self.verticalLayout.addWidget(self.btnRig)
+        self.btnConnect = QPushButton()
+        self.btnConnect.setObjectName(u"btnConnect")
+        self.verticalLayout.addWidget(self.btnConnect)
+        self.btnDisconnect = QPushButton()
+        self.btnDisconnect.setObjectName(u"btnDisconnect")
+        self.verticalLayout.addWidget(self.btnDisconnect)
         self.btnClose = QPushButton()
         self.btnClose.setObjectName(u"btnClose")
         self.verticalLayout.addWidget(self.btnClose)
@@ -277,6 +283,8 @@ class Character(QWidget):
         self.btnCreateCtrls.setText(QCoreApplication.translate("Form", u"Create Controllers", None))
         self.btnMirrorCopy.setText(QCoreApplication.translate("Form", u"Mirror Copy Foot Locators", None))
         self.btnRig.setText(QCoreApplication.translate("Form", u"Rig", None))
+        self.btnConnect.setText(QCoreApplication.translate("Form", u"Connect", None))
+        self.btnDisconnect.setText(QCoreApplication.translate("Form", u"Disconnect", None))
         self.btnClose.setText(QCoreApplication.translate("Form", u"Close", None))
 
 
@@ -289,6 +297,8 @@ class Character(QWidget):
         self.btnCreateCtrls.clicked.connect(self.createCharCtrl)
         self.btnMirrorCopy.clicked.connect(self.mirrorCopyFootLocator)
         self.btnRig.clicked.connect(self.rig)
+        self.btnConnect.clicked.connect(self.connectBones)
+        self.btnDisconnect.clicked.connect(self.disConnectBones)
         self.btnClose.clicked.connect(self.close)
     
 
@@ -429,6 +439,8 @@ class Character(QWidget):
         finger_R += self.pinky_R[:-1]
         for i in [finger_L, finger_R]:
             self.createFingerCtrl(i)
+        # Final Touch
+        self.finalTouch()
 
 
     def mirrorCopyFootLocator(self):
@@ -458,6 +470,24 @@ class Character(QWidget):
             self.rigLegsCtrl(i)
         for i in [self.finger_L, self.finger_R]:
             self.rigFingerCtrl(i)
+
+
+    def connectBones(self):
+        joints = self.jntPosition.keys()
+        joints = list(joints)
+        rgJoints = addPrefix(joints, ["rig_"], [])
+        for rgJnt, jnt in zip(rgJoints, joints):
+            for attr in ["translate", "rotate"]:
+                pm.connectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}", f=1)
+
+
+    def disConnectBones(self):
+        joints = self.jntPosition.keys()
+        joints = list(joints)
+        rgJoints = addPrefix(joints, ["rig_"], [])
+        for rgJnt, jnt in zip(rgJoints, joints):
+            for attr in ["translate", "rotate"]:
+                pm.disconnectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}")
 
 
     def createMainCtrl(self) -> None:
@@ -573,6 +603,11 @@ class Character(QWidget):
             return
         cuv = pm.curve(d=3, ep=[jntSpine0Pos, jntSpine1Pos, jntSpine2Pos], 
                        n=cuvName)
+        pm.setAttr(f"{cuv}.visibility", 0)
+        try:
+            pm.parent(cuv, "extraNodes")
+        except:
+            pass
         # Create Clusters
         clt1 = pm.cluster(f"{cuv}.cv[:1]", n=f"clt_{jntSpine0}")[1]
         clt1_grp = groupOwnPivot(clt1)[0]
@@ -995,6 +1030,7 @@ class Character(QWidget):
                 pm.group(i, n=finalGroup)
         
 
+
     def rigMainCtrl(self):
         pass
 
@@ -1044,6 +1080,11 @@ class Character(QWidget):
                           parentCurve=0, 
                           numSpans=3)
         ikHandle = ikHandle[0]
+        pm.setAttr(f"{ikHandle}.visibility", 0)
+        try:
+            pm.parent(ikHandle, "extraNodes")
+        except:
+            pass
         pm.connectAttr(f"{ccSpine_IK[0]}.rotateY", f"{ikHandle}.roll", f=1)
         pm.connectAttr(f"{ccSpine_IK[2]}.rotateY", f"{ikHandle}.twist", f=1)
         # Create FK Ctrls
@@ -1063,8 +1104,11 @@ class Character(QWidget):
         pm.connectAttr(f"{rev}.outputX", f"{ccSpine_IK_grp}.visibility", f=1)
         # Constraint
         pm.parentConstraint(ccHipsSub, ccSpine_IK_grp, mo=True, w=1)
+        pm.scaleConstraint(ccHipsSub, ccSpine_IK_grp, mo=True, w=1)
         pm.parentConstraint(ccHipsSub, ccSpine_FK_grp, mo=True, w=1)
+        pm.scaleConstraint(ccHipsSub, ccSpine_FK_grp, mo=True, w=1)
         pm.parentConstraint(rgSpineJnt[-1], ccNeck_grp, mo=True, w=1)
+        pm.scaleConstraint(rgSpineJnt[-1], ccNeck_grp, mo=True, w=1)
 
 
     def rigShoulderCtrl(self, joint: str):
@@ -1077,6 +1121,7 @@ class Character(QWidget):
         # Constraint
         pm.parentConstraint(shoulderSpace, rgShoulder, mo=True, w=1)
         pm.parentConstraint(rgSpine2, ccShoulder_grp, mo=True, w=1)
+        pm.scaleConstraint(rgSpine2, ccShoulder_grp, mo=True, w=1)
 
 
     def rigArmsCtrl(self, joints: list):
@@ -1117,7 +1162,12 @@ class Character(QWidget):
         connectSpace(ccElbow_IK, elbowMenu, enum=True)
         anno = createAnnotation(rgElbow_IK, ccElbow_IK)
         anno_grp = groupOwnPivot(anno)
-        pm.parentConstraint(rgElbow_IK, anno_grp, mo=True, w=1)
+        pm.parentConstraint(rgElbow_IK, anno_grp[0], mo=True, w=1)
+        pm.scaleConstraint(rgElbow_IK, anno_grp[0], mo=True, w=1)
+        try:
+            pm.parent(anno_grp[0], "extraNodes")
+        except:
+            pass
         # Create FK Ctrls
         for cc, jnt in zip(ccArms_FK[1:], rgArms_FK[1:]):
             pm.parentConstraint(cc, jnt, mo=True, w=1)
@@ -1132,8 +1182,10 @@ class Character(QWidget):
             pm.connectAttr(f"{revNode}.outputX", f"{cc_grp}.visibility", f=1)
         # Constraint
         pm.parentConstraint(shoulderSpace, ccShoulder_FK_grp, mo=True, w=1)
+        pm.scaleConstraint(shoulderSpace, ccShoulder_FK_grp, mo=True, w=1)
         ccShoulder_IK_grp = pm.listRelatives(ccShoulder_IK, p=True)[0]
         pm.parentConstraint(shoulderSpace, ccShoulder_IK_grp, mo=True, w=1)
+        pm.scaleConstraint(shoulderSpace, ccShoulder_IK_grp, mo=True, w=1)
 
 
     def rigLegsCtrl(self, joints: list) -> None:
@@ -1213,6 +1265,11 @@ class Character(QWidget):
         ano = createAnnotation(rgKneeJnt, ccKnee_IK)
         anoGrp = groupOwnPivot(ano)
         pm.parentConstraint(rgKneeJnt, anoGrp[0], mo=True, w=1)
+        pm.scaleConstraint(rgKneeJnt, anoGrp[0], mo=True, w=1)
+        try:
+            pm.parent(anoGrp[0], "extraNodes")
+        except:
+            pass
         connectSpace(ccKnee_IK, legMenu, enum=True)
         # Create FK Ctrl
         for cc, jnt in zip(ccLegs_FK, rgLegsJnt_FK):
@@ -1230,15 +1287,51 @@ class Character(QWidget):
         # Grouping
         for i in [ccPelvis_IK_grp, ccPelvis_FK_grp]:
             pm.parentConstraint(ccSub, i, mo=True, w=1)
+            pm.scaleConstraint(ccSub, i, mo=True, w=1)
 
 
     def rigFingerCtrl(self, joints: list):
         ctrls = addPrefix(joints, ["cc_"], [])
-        for cc, jnt in zip(ctrls, joints):
+        rgJoints = addPrefix(joints, ["rig_"], [])
+        for cc, jnt in zip(ctrls, rgJoints):
             if pm.objExists(cc) and pm.objExists(jnt):
                 pm.parentConstraint(cc, jnt, mo=True, w=1.0)
             else:
                 continue
+        for i in ["Left", "Right"]:
+            finger_grp = f"cc_{i}HandFingers_grp"
+            rgJnt = f"rig_{i}Hand"
+            try:
+                pm.parentConstraint(rgJnt, finger_grp, mo=True, w=1.0)
+                pm.scaleConstraint(rgJnt, finger_grp, mo=True, w=1.0)
+            except:
+                continue
+
+
+    def finalTouch(self):
+        groups = [
+            "cc_main_grp", 
+            "cc_HipsMain_grp", 
+            "cc_Spine_grp", 
+            "cc_LeftShoulder_grp", 
+            "cc_RightShoulder_grp", 
+            "cc_LeftArm_grp", 
+            "cc_RightArm_grp", 
+            "cc_LeftLeg_grp", 
+            "cc_RightLeg_grp", 
+            "cc_LeftHandFingers_grp", 
+            "cc_RightHandFingers_grp", 
+            ]
+        for i in groups:
+            try:
+                pm.parent(i, "controllers")
+            except:
+                continue
+        try:
+            pm.delete(self.mainCurve)
+        except:
+            pass
+        pm.scaleConstraint("cc_sub2", "skeletons")
 
 
     def update(self) -> None:
