@@ -16,6 +16,7 @@ def mayaMainWindow():
 class Character(QWidget):
     def __init__(self):
         self.mainCurve = "mainCurve"
+        self.cuvDefaultSize = 90.4
         self.jntHips = "Hips"
         self.rgHips = "rig_Hips"
         self.mainCtrls = ["cc_main", "cc_sub", "cc_sub2"]
@@ -251,17 +252,16 @@ class Character(QWidget):
         # CleanUp
         joints = self.jntPosition.keys()
         joints = list(joints)
-        self.cleanUp(*joints)
+        self.cleanUp(*joints, self.mainCurve)
         # Create Joints
         for jnt, pos in self.jntPosition.items():
             pm.select(cl=True)
             pm.joint(p=pos, n=jnt)
         self.setHierarchy(self.jntHierarchy)
         # Create Main Curve
-        if not pm.objExists(self.mainCurve):
-            bbSize = getBoundingBoxSize(self.jntHips)
-            bbSize = max(bbSize)
-            pm.circle(nr=(0, 1, 0), n=self.mainCurve, ch=0, r=bbSize)
+        bbSize = self.getDefaultSize(self.jntHips)
+        bbSize = bbSize[0]
+        pm.circle(nr=(0, 1, 0), n=self.mainCurve, ch=0, r=bbSize)
         try:
             pm.parent(self.jntHips, self.mainCurve)
         except:
@@ -368,6 +368,20 @@ class Character(QWidget):
                 parentHierarchically(*joints)
                 orientJoints(*joints, p=primaryAxis, s=secondaryAxis)
                 parentHierarchically(parents, joints[0])
+
+
+    def getDefaultSize(self, object: str) -> tuple:
+        """ Get Object's BoundingBox Size and (90.4 Ratio) 
+        Return
+        ------
+        >>> getDefaultSize(object)
+        >>> (bbSize, bbRatio)
+        >>> (180.8, 2)
+         """
+        bbSize = getBoundingBoxSize(object)
+        bbSize = max(bbSize)
+        bbRatio = round(bbSize/90.4, 3)
+        return bbSize, bbRatio
 
 
 # if __name__ == "__main__":
