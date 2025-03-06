@@ -20,7 +20,7 @@ class Character(QWidget):
         self.jntHips = "Hips"
         self.rgHips = "rig_Hips"
         self.mainCtrls = ["cc_main", "cc_sub", "cc_sub2"]
-        groupNames = [
+        self.groupNames = [
             'MODEL', 
             'controllers', 
             'skeletons', 
@@ -239,7 +239,7 @@ class Character(QWidget):
         self.btnCreateRigGrp.clicked.connect(self.createGroups)
         self.fldCreateRigGrp.textChanged.connect(self.buttonUnlock)
         self.fldCreateRigGrp.returnPressed.connect(self.createGroups)
-        # self.btnCreateCtrls.clicked.connect(self.createCharCtrl)
+        self.btnCreateCtrls.clicked.connect(self.createCharCtrl)
         # self.btnMirrorCopy.clicked.connect(self.mirrorCopyFootLocator)
         # self.btnRig.clicked.connect(self.rig)
         # self.btnConnect.clicked.connect(self.connectBones)
@@ -306,6 +306,88 @@ class Character(QWidget):
             pm.parent(self.jntHips, createdGroup[-2])
         if pm.objExists(self.rgHips):
             pm.parent(self.rgHips, createdGroup[-1])
+
+
+    def createCharCtrl(self):
+        self.update()
+        # Check "rig_Hips" Joint
+        if not pm.objExists(self.rgHips):
+            self.createRigJnt()
+        # # Main Ctrl
+        self.createMainCtrl()
+        # # Body
+        # self.createHipsCtrl()
+        # self.createSpineCtrl()
+        # # Shoulders
+        # for i in [self.arms_L[0], self.arms_R[0]]:
+        #     self.createShoulderCtrl(i)
+        # # Arms
+        # for i in [self.arms_L[1:], self.arms_R[1:]]:
+        #     self.createArmsCtrl(i)
+        # # Legs
+        # for i in [self.legs_L, self.legs_R]:
+        #     self.createLegsCtrl(i)
+        # # Fingers
+        # finger_L = []
+        # finger_L += self.thumb_L[:-1]
+        # finger_L += self.index_L[:-1]
+        # finger_L += self.middle_L[:-1]
+        # finger_L += self.ring_L[:-1]
+        # finger_L += self.pinky_L[:-1]
+        # finger_R = []
+        # finger_R += self.thumb_R[:-1]
+        # finger_R += self.index_R[:-1]
+        # finger_R += self.middle_R[:-1]
+        # finger_R += self.ring_R[:-1]
+        # finger_R += self.pinky_R[:-1]
+        # for i in [finger_L, finger_R]:
+        #     self.createFingerCtrl(i)
+        # # Final Touch
+        # self.finalTouch()
+
+
+    def createRigJnt(self) -> None:
+        """ To create the rig joint by copying the original joint. """
+        if not pm.objExists(self.jntHips):
+            return
+        rigJoints = duplicateRange(self.jntHips, "", "rig_", "")
+        rgHips = rigJoints[0]
+        try:
+            pm.parent(rgHips, self.groupNames[-1])
+        except:
+            pass
+        startEndJoint = {
+            rigJoints[11]: rigJoints[13],   # rig_Spine: rig_Spine2
+            rigJoints[6]: "",               # rig_LeftUpLeg: ""
+            rigJoints[1]: "",               # rig_RightUpLeg: ""
+            rigJoints[39]: rigJoints[41],   # rig_LeftArm: rig_LeftHand
+            rigJoints[15]: rigJoints[17],   # rig_RightArm: rig_RightHand
+            }
+        types = ["_FK", "_IK"]
+        for start, end in startEndJoint.items():
+            for typ in types:
+                duplicateRange(start, end, "", typ)
+
+
+    # def createMainCtrl(self) -> None:
+    #     """ Create Main Controllers. """
+    #     # Args
+    #     space = "null_worldSpace"
+    #     ctrls = self.mainCtrls
+    #     ccColor = ["yellow", "pink", "red2"]
+    #     ccSize = [70, 58, 50]
+    #     # Check
+    #     if any([pm.objExists(i) for i in ctrls]):
+    #         return
+    #     # Create and Colorize
+    #     for cc, col, scl in zip(ctrls, ccColor, ccSize):
+    #         cuv = pm.circle(nr=(0,1,0), r=scl*self.sr, n=cc, ch=False)[0]
+    #         colorize(cuv, **{col: True})
+    #     ctrls_grp = groupOwnPivot(*ctrls)
+    #     space_grp = pm.group(em=True, n=space)
+    #     # Grouping
+    #     parentHierarchically(*ctrls_grp)
+    #     pm.parent(space_grp, ctrls_grp[-1])
 
 
     def buttonUnlock(self):
