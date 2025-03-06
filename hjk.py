@@ -1059,6 +1059,63 @@ def duplicateObj(obj: str, prefix: str="", suffix: str="") -> str:
     return duplicated
 
 
+def duplicateRange(start: str, end: str="", 
+                   prefix: str="", suffix: str="") -> list:
+    """ Range-duplicate objects with hierarchy. 
+    
+    Descriptions
+    ------------
+    - joint1
+        - joint2
+            - joint3
+                - joint4
+                    - joint5
+                        - joint6
+                            - joint7
+    
+    Args
+    ----
+    - start : Generally refers to the start joint.
+        - "Hips", "Spine", "LeftArm", ...
+    - end : Last joint to duplicate.
+        - "Spine2", "LeftHand", ...
+    - prefix : Add a prefix to the source joint.
+        - "rig_Hips", "rig_Spine", "rig_LeftArm", ...
+    - suffix : Add a suffix to the source joint.
+        - "rig_Hips_FK", "rig_Spine_FK", "rig_LeftArm_FK", ...
+
+    Examples
+    --------
+    >>> duplicateRange("joint1", "joint4", "rig_", "")
+    >>> ["rig_joint1", "rig_joint2", "rig_joint3", "rig_joint4"]
+    >>> duplicateRange("joint1", "joint4", "rig_", "_FK")
+    >>> ["rig_joint1_FK", "rig_joint2_FK", "rig_joint3_FK", "rig_joint4_FK"]
+     """
+    renamed = f"{prefix}{start}{suffix}"
+    lastJoint = f"{prefix}{end}{suffix}"
+    duplicated = pm.duplicate(start, rr=True, n=renamed)
+    duplicated = duplicated[0]
+    for i in pm.listRelatives(duplicated, ad=True):
+        endOfName = i.rsplit("|", 1)[-1]
+        new = i.replace(endOfName, f"{prefix}{endOfName}{suffix}")
+        if pm.objExists(new):
+            continue
+        else:
+            try:
+                pm.rename(i, new)
+            except:
+                continue
+    try:
+        lower = pm.listRelatives(lastJoint, c=True)
+        pm.delete(lower)
+    except:
+        pass
+    result = pm.listRelatives(renamed, ad=True)
+    result.append(duplicated)
+    result.reverse()
+    return result
+
+
 def mirrorCopy(obj: str, mirrorPlane: str="YZ") -> list:
     """ Mirror copy based on 'YZ' or 'XY'. Default mirrorPlane is "YZ".
     This function is shown below.
