@@ -366,7 +366,8 @@ class Character(QWidget):
         if not pm.objExists(self.hips) or pm.objExists("rig_Hips"):
             return
         # Duplicate All.
-        result = duplicateObj(self.hips, "rig_", "")
+        result = duplicateRange(self.hips, "", "rig_", "")
+        result = result[0]
         typ = ["_FK", "_IK"]
         # Delete list after copying
         uselessSpine = []
@@ -395,7 +396,7 @@ class Character(QWidget):
         # Main process
         for jnt, usl in joints.items():
             for k in typ:
-                duplicateObj(jnt, "", k)
+                duplicateRange(jnt, "", "", k)
                 useless = [f"rig_{i}{k}" for k in typ for i in usl]
                 self.cleanUp(useless)
         # Final Touch
