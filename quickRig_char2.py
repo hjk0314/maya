@@ -46,23 +46,18 @@ class Character(QWidget):
             "LeftForeArm", 
             "LeftHand"
             ]
+        self.arms_R = [
+            "RightShoulder", 
+            "RightArm", 
+            "RightForeArm", 
+            "RightHand"
+            ]
         self.legs_L = [
             "LeftUpLeg", 
             "LeftLeg", 
             "LeftFoot", 
             "LeftToeBase", 
             "LeftToe_End"
-            ]
-        self.thumb_L = [f"LeftHandThumb{i}" for i in range(1, 5)]
-        self.index_L = [f"LeftHandIndex{i}" for i in range(1, 5)]
-        self.middle_L = [f"LeftHandMiddle{i}" for i in range(1, 5)]
-        self.ring_L = [f"LeftHandRing{i}" for i in range(1, 5)]
-        self.pinky_L = [f"LeftHandPinky{i}" for i in range(1, 5)]
-        self.arms_R = [
-            "RightShoulder", 
-            "RightArm", 
-            "RightForeArm", 
-            "RightHand"
             ]
         self.legs_R = [
             "RightUpLeg", 
@@ -71,11 +66,18 @@ class Character(QWidget):
             "RightToeBase", 
             "RightToe_End"
             ]
+        self.thumb_L = [f"LeftHandThumb{i}" for i in range(1, 5)]
+        self.index_L = [f"LeftHandIndex{i}" for i in range(1, 5)]
+        self.middle_L = [f"LeftHandMiddle{i}" for i in range(1, 5)]
+        self.ring_L = [f"LeftHandRing{i}" for i in range(1, 5)]
+        self.pinky_L = [f"LeftHandPinky{i}" for i in range(1, 5)]
+        self.finger_L = self.thumb_L + self.index_L + self.middle_L + self.ring_L + self.pinky_L
         self.thumb_R = [f"RightHandThumb{i}" for i in range(1, 5)]
         self.index_R = [f"RightHandIndex{i}" for i in range(1, 5)]
         self.middle_R = [f"RightHandMiddle{i}" for i in range(1, 5)]
         self.ring_R = [f"RightHandRing{i}" for i in range(1, 5)]
         self.pinky_R = [f"RightHandPinky{i}" for i in range(1, 5)]
+        self.finger_R = self.thumb_R + self.index_R + self.middle_R + self.ring_R + self.pinky_R
         self.jntPosition = {
             "Hips": (0.0, 98.223, 1.464), 
             "Spine": (0.0, 107.814, 1.588), 
@@ -243,43 +245,11 @@ class Character(QWidget):
         self.fldCreateRigGrp.textChanged.connect(self.buttonUnlock)
         self.fldCreateRigGrp.returnPressed.connect(self.createGroups)
         self.btnCreateCtrls.clicked.connect(self.createCharCtrl)
-        # self.btnMirrorCopy.clicked.connect(self.mirrorCopyFootLocator)
-        # self.btnRig.clicked.connect(self.rig)
+        self.btnMirrorCopy.clicked.connect(self.mirrorCopyFootLocator)
+        self.btnRig.clicked.connect(self.rig)
         # self.btnConnect.clicked.connect(self.connectBones)
         # self.btnDisconnect.clicked.connect(self.disConnectBones)
         self.btnClose.clicked.connect(self.close)
-
-
-    def getSpaceMenu(self, side="", hand=False, elbow=False, 
-                     foot=False, knee=False) -> dict:
-        if foot:
-            result = {
-                "World0": self.worldSpace, 
-                "Root1": self.rootSpace, 
-                }
-        elif side and knee:
-            result = {
-                "World": self.worldSpace, 
-                "Root": self.rootSpace, 
-                "Hip": "null_%sUpLegSpace" % side, 
-                "Foot": "null_%sFootSpace" % side, 
-                }
-        elif side and hand:
-            result = {
-                "World0": self.worldSpace, 
-                "Shoulder1": "null_%sShoulderSpace" % side, 
-                }
-        elif side and elbow:
-            result = {
-                "World": self.worldSpace, 
-                "Root": self.rootSpace, 
-                "Chest": "rig_Spine2", 
-                "Arm": "null_%sArmSpace" % side, 
-                "Hand": "null_%sHandSpace" % side, 
-                }
-        else:
-            return
-        return result
 
 
     def createTempJoints(self) -> None:
@@ -348,32 +318,55 @@ class Character(QWidget):
         if not pm.objExists(self.rgHips):
             self.createRigJnt()
         # Run
-        self.createMainCtrl()
-        self.createHipsCtrl()
-        self.createSpineCtrl()
-        for i in [self.arms_L[0], self.arms_R[0]]:
-            self.createShoulderCtrl(i)
-        for i in [self.arms_L[1:], self.arms_R[1:]]:
-            self.createArmsCtrl(i)
-        for i in [self.legs_L, self.legs_R]:
-            self.createLegsCtrl(i)
-        # # Fingers
-        # finger_L = []
-        # finger_L += self.thumb_L[:-1]
-        # finger_L += self.index_L[:-1]
-        # finger_L += self.middle_L[:-1]
-        # finger_L += self.ring_L[:-1]
-        # finger_L += self.pinky_L[:-1]
-        # finger_R = []
-        # finger_R += self.thumb_R[:-1]
-        # finger_R += self.index_R[:-1]
-        # finger_R += self.middle_R[:-1]
-        # finger_R += self.ring_R[:-1]
-        # finger_R += self.pinky_R[:-1]
-        # for i in [finger_L, finger_R]:
-        #     self.createFingerCtrl(i)
-        # # Final Touch
-        # self.finalTouch()
+        g1 = self.createMainCtrl()
+        g2 = self.createHipsCtrl()
+        g3 = self.createSpineCtrl()
+        g4 = self.createShoulderCtrl(self.arms_L[0])
+        g5 = self.createShoulderCtrl(self.arms_R[0])
+        g6 = self.createArmsCtrl(self.arms_L[1:])
+        g7 = self.createArmsCtrl(self.arms_R[1:])
+        g8 = self.createLegsCtrl(self.legs_L)
+        g9 = self.createLegsCtrl(self.legs_R)
+        g10 = self.createFingerCtrl(self.finger_L)
+        g11 = self.createFingerCtrl(self.finger_R)
+        results = [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11]
+        try:
+            pm.parent(results, self.groupNames[1])
+        except:
+            pass
+
+
+    def mirrorCopyFootLocator(self) -> None:
+        locators_L = [
+            "loc_LeftHeel", 
+            "loc_LeftToe_End", 
+            "loc_LeftBankIn", 
+            "loc_LeftBankOut", 
+            "loc_LeftToeBase_grp", 
+            "loc_LeftFoot", 
+            ]
+        locators_R = [changeLeftToRight(i) for i in locators_L]
+        for l, r in zip(locators_L, locators_R):
+            x, y, z = pm.xform(l, q=1, ws=1, rp=1)
+            pm.move(r, (-1*x, y, z))
+
+
+    def rig(self):
+        self.rigMainCtrl()
+        self.rigHipsCtrl()
+        self.rigSpineCtrl()
+        self.rigShoulderCtrl(self.arms_L[0])
+        self.rigShoulderCtrl(self.arms_R[0])
+        self.rigArmsCtrl(self.arms_L[1:])
+        self.rigArmsCtrl(self.arms_R[1:])
+        self.rigLegsCtrl(self.legs_L)
+        self.rigLegsCtrl(self.legs_R)
+        self.rigFingerCtrl(self.finger_L)
+        self.rigFingerCtrl(self.finger_R)
+        self.finalTouch()
+
+
+# ==============================================================================
 
 
     def createRigJnt(self) -> None:
@@ -399,7 +392,9 @@ class Character(QWidget):
                 duplicateRange(start, end, "", typ)
 
 
-    def createMainCtrl(self) -> None:
+# ==============================================================================
+
+    def createMainCtrl(self) -> str:
         """ Create Main Controllers. """
         ctrlSize = [70, 58, 50]
         ctrlColor = ["yellow", "pink", "red2"]
@@ -414,9 +409,10 @@ class Character(QWidget):
         ctrls_grp = parentHierarchically(*ctrls_grp)
         nullSpace = pm.group(em=True, n=self.worldSpace)
         pm.parent(nullSpace, ctrls_grp[-1])
+        return ctrls_grp[0]
 
 
-    def createHipsCtrl(self) -> None:
+    def createHipsCtrl(self) -> str:
         """ Create Hip's Controllers.
 
         Process
@@ -465,9 +461,10 @@ class Character(QWidget):
         for i in attrName:
             pm.addAttr(ccIKFK, ln=i, at="double", min=0, max=1, dv=0)
             pm.setAttr(f'{ccIKFK}.{i}', e=True, k=True)
+        return ctrls_grp[0]
 
 
-    def createSpineCtrl(self) -> None:
+    def createSpineCtrl(self) -> str:
         """ Creates Spine, Neck, Head Controllers.
 
         Process
@@ -550,9 +547,10 @@ class Character(QWidget):
             finalGroup = pm.group(em=True, n=finalGroup)
         temp = [ccSpine0_IK_grp[0], ccSpines_FK_grp[0], ccNeckHead_grp[0]]
         pm.parent(temp, finalGroup)
+        return finalGroup
 
 
-    def createShoulderCtrl(self, shoulderJnt: str) -> None:
+    def createShoulderCtrl(self, shoulderJnt: str) -> str:
         """ Creates a Scapula's Controller.
 
         Process
@@ -579,13 +577,14 @@ class Character(QWidget):
         nullSpace = pm.group(em=True, n=nullSpace)
         pm.parent(nullSpace, ccShoulder)
         pm.matchTransform(ccShoulder, shoulderJnt, pos=True)
-        groupOwnPivot(ccShoulder)
+        ccShoulder_grp = groupOwnPivot(ccShoulder)
         # color
         colorBar = {"blue": True} if "Right" in shoulderJnt else {"red": True}
         colorize(ccShoulder, **colorBar)
+        return ccShoulder_grp[0]
 
 
-    def createArmsCtrl(self, joints: list) -> None:
+    def createArmsCtrl(self, joints: list) -> str:
         """ Creates a Arm's Controller.
 
         Process
@@ -613,7 +612,6 @@ class Character(QWidget):
         finalGroup = "cc_%sArm_grp" % side
         scaleRatio = self.getDefaultSize(self.jntHips)[1]
         FKSize = (i*scaleRatio for i in [9.3, 8, 6.8])
-        IKSize = (0.75*scaleRatio, ) * 3
         # Run
         isFKExist = any([pm.objExists(i) for i in ccArm_FK])
         isIKExist = any([pm.objExists(i) for i in ccArm_IK])
@@ -650,9 +648,9 @@ class Character(QWidget):
                                            cube=ccHand_IK)
         ccShoulder_IK, ccElbow_IK, ccHand_IK = ccArm_IK
         for i in ccArm_IK:
-            pm.scale(i, (scaleRatio, ) * 3)
+            pm.scale(i, (scaleRatio, )*3)
             pm.makeIdentity(i, a=1, s=1, jo=0, n=0, pn=1)
-        pm.scale(ccShoulder_IK, IKSize)
+        pm.scale(ccShoulder_IK, (0.75,)*3)
         pm.rotate(ccShoulder_IK, (0, 0, -90))
         pm.makeIdentity(ccShoulder_IK, a=1, r=1, s=1, pn=1)
         nullSpace = pm.group(em=True, n=nullSpace)
@@ -686,9 +684,10 @@ class Character(QWidget):
             ccArm_FK_grp[0], 
             ]
         pm.group(ctrls_grp, n=finalGroup)
+        return finalGroup
 
 
-    def createLegsCtrl(self, joints: list) -> None:
+    def createLegsCtrl(self, joints: list) -> str:
         """ Creates a Leg's Controller.
 
         Args
@@ -715,9 +714,10 @@ class Character(QWidget):
         # Variables
         pelvis, knee, foot, ball, toe = joints
         ccLegs_IK = addPrefix(joints, ["cc_"], ["_IK"])
-        ccPelvis_IK, ccKnee_IK, ccFoot_IK = ccLegs_IK[:3]
         ccLegs_FK = addPrefix(joints, ["cc_"], ["_FK"])
+        ccPelvis_IK, ccKnee_IK, ccFoot_IK = ccLegs_IK[:3]
         FKSize = [13, 10, 9, 7, 1]
+        scaleRatio = self.getDefaultSize(self.jntHips)[1]
         side = "Right" if "Right" in pelvis else "Left"
         locators = [
             f"loc_{side}Heel", 
@@ -738,41 +738,43 @@ class Character(QWidget):
             "Toe_Up", 
             ]
         attrFoot_IK_float = "World0_Root1"
-        # Check
-        isFKExist = any([pm.objExists(i) for i in ccLegs_FK])
+        pelvisSpace = f"null_{pelvis}Space"
+        footSpace = f"null_{foot}Space"
+        finalGroup = f"cc_{side}Leg_grp"
+        # Run
         isIKExist = any([pm.objExists(i) for i in ccLegs_IK])
-        if isFKExist or isIKExist:
+        isFKExist = any([pm.objExists(i) for i in ccLegs_FK])
+        isLocExist = any([pm.objExists(i) for i in locators])
+        if isFKExist or isIKExist or isLocExist:
             return
-        # Create FK
-        createdFK = []
+        # FK
         for cc, jnt, scl in zip(ccLegs_FK, joints, FKSize):
             if "Toe_End" in cc:
                 continue
             normalAxis = (0, 0, 1) if "ToeBase" in cc else (0, 1, 0)
-            scl *= self.sr
-            cuv = pm.circle(nr=normalAxis, r=scl, n=cc, ch=False)[0]
+            scl *= scaleRatio
+            cc = pm.circle(nr=normalAxis, r=scl, n=cc, ch=False)[0]
             if "Right" in jnt:
-                pm.rotate(cuv, (180, 0, 0))
-            pm.matchTransform(cuv, jnt, pos=True)
-            createdFK.append(cuv)
-        createdFK_grp = groupOwnPivot(*createdFK)
-        parentHierarchically(*createdFK_grp)
-        # Create IK
+                pm.rotate(cc, (180, 0, 0))
+            pm.matchTransform(cc, jnt, pos=True)
+        ccLegs_FK_grp = groupOwnPivot(*ccLegs_FK[:-1])
+        ccLegs_FK_grp = parentHierarchically(*ccLegs_FK_grp)
+        # IK
         ctrl = Controllers()
-        createdIK = ctrl.createControllers(scapula=ccPelvis_IK, 
-                                            sphere=ccKnee_IK, foot2=ccFoot_IK)
-        ccPelvis_IK, ccKnee_IK, ccFoot_IK = createdIK
-        for i in createdIK:
-            pm.scale(i, (self.sr, self.sr, self.sr))
+        ccLegs_IK = ctrl.createControllers(scapula=ccPelvis_IK, 
+                                           sphere=ccKnee_IK, foot2=ccFoot_IK)
+        ccPelvis_IK, ccKnee_IK, ccFoot_IK = ccLegs_IK
+        for i in ccLegs_IK:
+            pm.scale(i, (scaleRatio, )*3)
             pm.makeIdentity(i, a=1, s=1, jo=0, n=0, pn=1)
         # IK - UpLeg
         ccPelvisRotation = (0, 0, 90) if "Right" == side else (0, 0, -90)
         pm.rotate(ccPelvis_IK, ccPelvisRotation)
-        pm.scale(ccPelvis_IK, (0.9, 0.9, 0.9))
+        pm.scale(ccPelvis_IK, (0.9, )*3)
         pm.makeIdentity(ccPelvis_IK, a=1, r=1, s=1, pn=1)
         pm.matchTransform(ccPelvis_IK, pelvis, pos=True)
-        # IK - UpLeg space group
-        pelvisSpace = pm.group(em=True, n=f"null_{pelvis}Space")
+        # IK - Space group
+        pelvisSpace = pm.group(em=True, n=pelvisSpace)
         pm.matchTransform(pelvisSpace, ccPelvis_IK, pos=True)
         pm.parent(pelvisSpace, ccPelvis_IK)
         ccPelvis_IK_grp = groupOwnPivot(ccPelvis_IK)
@@ -782,20 +784,21 @@ class Character(QWidget):
         ccKnee_IK_grp = groupOwnPivot(ccKnee_IK)
         pm.delete(jnt1)
         # IK - Foot
-        for i in locators:
-            pm.spaceLocator(p=(0, 0, 0), n=i)
         groupingOrder = []
         pm.matchTransform(ccFoot_IK, foot, pos=True)
         pm.setAttr(f"{ccFoot_IK}.translateY", 0)
-        getPivot = pm.xform(foot, q=True, ws=True, rp=True)
-        pm.xform(ccFoot_IK, ws=True, piv=getPivot)
+        footPivot = pm.xform(foot, q=True, ws=True, rp=True)
+        pm.xform(ccFoot_IK, ws=True, piv=footPivot)
         ccFoot_IK_grp = groupOwnPivot(ccFoot_IK)
         pm.makeIdentity(ccFoot_IK, a=1, t=1, pn=1)
         groupingOrder.append(ccFoot_IK)
+        # IK - Locators
+        for i in locators:
+            pm.spaceLocator(p=(0, 0, 0), n=i)
         # locators[0] : heel
         pm.matchTransform(locators[0], foot, pos=True)
         pm.setAttr(f"{locators[0]}.translateY", 0)
-        tmp = pm.getAttr(f"{locators[0]}.translateZ") - (8*self.sr)
+        tmp = pm.getAttr(f"{locators[0]}.translateZ") - (8*scaleRatio)
         pm.setAttr(f"{locators[0]}.translateZ", tmp)
         groupingOrder.append(locators[0])
         # locators[1] : toe
@@ -805,13 +808,13 @@ class Character(QWidget):
         # locators[2] : bankIn
         pm.matchTransform(locators[2], ball, pos=True)
         pm.setAttr(f"{locators[2]}.translateY", 0)
-        tmp = pm.getAttr(f"{locators[2]}.translateX") - (5*self.sr)
+        tmp = pm.getAttr(f"{locators[2]}.translateX") - (5*scaleRatio)
         pm.setAttr(f"{locators[2]}.translateX", tmp)
         groupingOrder.append(locators[2])
         # locators[3] : bankOut
         pm.matchTransform(locators[3], ball, pos=True)
         pm.setAttr(f"{locators[3]}.translateY", 0)
-        tmp = pm.getAttr(f"{locators[3]}.translateX") + (5*self.sr)
+        tmp = pm.getAttr(f"{locators[3]}.translateX") + (5*scaleRatio)
         pm.setAttr(f"{locators[3]}.translateX", tmp)
         groupingOrder.append(locators[3])
         # locators[4] : ball
@@ -828,31 +831,434 @@ class Character(QWidget):
         # locators[5] : ankle
         pm.matchTransform(locators[5], foot, pos=True)
         groupingOrder.append(locators[5])
-        # foot's space group
-        footSpace = pm.group(em=True, n=f"null_{foot}Space")
+        # Foot's Space
+        footSpace = pm.group(em=True, n=footSpace)
         pm.matchTransform(footSpace, ccFoot_IK, pos=True)
         pm.parent(footSpace, ccFoot_IK)
         # Color
-        ctrls = createdFK + createdIK
+        ctrls = ccLegs_FK + ccLegs_IK
         colorBar = {"red": True} if "Left" == side else {"blue": True}
         colorize(*ctrls, **colorBar)
         # Add Attributes
-        pm.addAttr(createdIK[1], ln="Space", at="enum", en=attrLeg_IK)
-        pm.setAttr(f"{createdIK[1]}.Space", e=True, k=True)
+        pm.addAttr(ccLegs_IK[1], ln="Space", at="enum", en=attrLeg_IK)
+        pm.setAttr(f"{ccLegs_IK[1]}.Space", e=True, k=True)
         for i in attrFoot_IK_enum:
-            pm.addAttr(createdIK[2], ln=i, at="double", dv=0)
-            pm.setAttr(f"{createdIK[2]}.{i}", e=True, k=True)
+            pm.addAttr(ccLegs_IK[2], ln=i, at="double", dv=0)
+            pm.setAttr(f"{ccLegs_IK[2]}.{i}", e=True, k=True)
         pm.addAttr(ccFoot_IK, ln=attrFoot_IK_float, at="double", min=0, max=1, dv=0)
         pm.setAttr(f'{ccFoot_IK}.{attrFoot_IK_float}', e=True, k=True)
         # Final Touch
         parentHierarchically(*groupingOrder)
-        finalGroup = [
+        groups = [
             ccPelvis_IK_grp[0], 
             ccKnee_IK_grp[0], 
             ccFoot_IK_grp[0], 
-            createdFK_grp[0], 
+            ccLegs_FK_grp[0], 
             ]
-        pm.group(finalGroup, n=f"cc_{side}Leg_grp")
+        pm.group(groups, n=finalGroup)
+        return finalGroup
+
+
+    def createFingerCtrl(self, joints: list) -> str:
+        """ Creates a Finger's Controller.
+
+        Args
+        ----
+        - joints
+            - ["Thumb1", "Thumb2", "Thumb3", "Thumb4"]
+            - ["Index1", "Index2", "Index3"]
+
+        Process
+        -------
+        - Create the names of the controllers from Joint.
+        - Colorize.
+        - Grouping.
+         """
+        # Variables
+        ccFinger = addPrefix(joints, ["cc_"], [])
+        ccFingerSize = [2, 1.6, 1.3, 1]
+        scaleRatio = self.getDefaultSize(self.jntHips)[1]
+        side = "Right" if "Right" in ccFinger[0] else "Left"
+        finalGroup = f"cc_{side}HandFingers_grp"
+        # Run
+        if any([pm.objExists(i) for i in ccFinger]):
+            return
+        # Create Ctrls
+        ccFinger_FK = []
+        for idx, (cc, jnt) in enumerate(zip(ccFinger, joints)):
+            if idx%4 == 3:
+                continue
+            scl = scaleRatio * ccFingerSize[idx%4]
+            cc = pm.circle(nr=(1, 0, 0), r=scl, n=cc, ch=0)[0]
+            pm.matchTransform(cc, jnt, pos=True, rot=True)
+            rot = -1 if "Right" in cc.name() else 1
+            pm.rotate(cc, (0, 0, rot*90), r=True, os=True, fo=True)
+            pm.rotate(cc, (rot*-90, 0, 0), r=True, os=True, fo=True)
+            ccFinger_FK.append(cc)
+            # Color
+            color = {"blue2": True} if "Right" in cc.name() else {"red2": True}
+            colorize(cc, **color)
+        # Grouping
+        ccFinger_FK_grp = groupOwnPivot(*ccFinger_FK)
+        temp = []
+        for idx, num in enumerate(range(0, len(ccFinger_FK_grp), 6)):
+            tmp = parentHierarchically(*ccFinger_FK_grp[num:6*(idx+1)])[0]
+            temp.append(tmp)
+        finalGroup = pm.group(temp, n=finalGroup)
+        return finalGroup
+
+
+# ==============================================================================
+
+
+    def rigMainCtrl(self):
+        pass
+
+
+    def rigHipsCtrl(self):
+        # Variables
+        ccHipsMain_grp = "cc_%sMain_grp" % self.jntHips
+        ccHipsSub = "cc_%sSub" % self.jntHips
+        if not pm.objExists(ccHipsMain_grp):
+            return
+        if not pm.objExists(ccHipsSub):
+            return
+        if pm.listConnections(ccHipsMain_grp, type="constraint"):
+            return
+        # cc_sub2 -> rig_Hips
+        pm.parentConstraint(self.mainCtrls[2], ccHipsMain_grp, mo=1, w=1)
+        pm.scaleConstraint(self.mainCtrls[2], ccHipsMain_grp, mo=1, w=1)
+        # cc_HipsSub -> rig_Hips
+        pm.parentConstraint(ccHipsSub, self.rgHips, mo=1, w=1)
+
+
+    def rigSpineCtrl(self) -> None:
+        # Variables
+        ccHipsSub = "cc_HipsSub"
+        cuvName = "cuv_Spine"
+        ccIKFK = "cc_IKFK.Spine_IK0_FK1"
+        spineJnt = self.spine[:3]
+        ikhName = f"ikh_{spineJnt[0]}"
+        neckJnt = self.spine[3:5]
+        rgSpineJnt = addPrefix(spineJnt, ["rig_"], [])
+        rgSpineJnt_IK = addPrefix(spineJnt, ["rig_"], ["_IK"])
+        rgSpineJnt_FK = addPrefix(spineJnt, ["rig_"], ["_FK"])
+        ccSpine_IK = addPrefix(spineJnt, ["cc_"], ["_IK"])
+        ccSpine_IK_grp = f"{ccSpine_IK[0]}_grp"
+        ccSpine_FK = addPrefix(spineJnt, ["cc_"], ["_FK"])
+        ccSpine_FK_grp = f"{ccSpine_FK[0]}_grp"
+        rgNeckJnt = addPrefix(neckJnt, ["rig_"], [])
+        ccNeck = addPrefix(neckJnt, ["cc_"], [])
+        ccNeck_grp = f"{ccNeck[0]}_grp"
+        # Run
+        if not pm.objExists(ccHipsSub) or not pm.objExists(cuvName):
+            return
+        isIKHandle = pm.objExists(ikhName)
+        if isIKHandle:
+            if "ikHandle" == pm.objectType(ikhName):
+                return
+        # IK
+        ikHandle = pm.ikHandle(sj=rgSpineJnt_IK[0], ee=rgSpineJnt_IK[2], 
+                          sol="ikSplineSolver", 
+                          name=ikhName, 
+                          curve=cuvName, 
+                          createCurve=0, 
+                          parentCurve=0, 
+                          numSpans=3)
+        ikHandle = ikHandle[0]
+        pm.setAttr(f"{ikHandle}.visibility", 0)
+        try:
+            pm.parent(ikHandle, "extraNodes")
+        except:
+            pass
+        pm.connectAttr(f"{ccSpine_IK[0]}.rotateY", f"{ikHandle}.roll", f=1)
+        pm.connectAttr(f"{ccSpine_IK[2]}.rotateY", f"{ikHandle}.twist", f=1)
+        # FK
+        for cc, jnt in zip(ccSpine_FK, rgSpineJnt_FK):
+            pm.parentConstraint(cc, jnt, mo=True, w=1)
+        # Connect : FK + IK -> BlendColor -> Original
+        createBlendColor(ccIKFK, 
+                         rgSpineJnt, rgSpineJnt_FK, rgSpineJnt_IK, 
+                         t=True, r=True)
+        # Create Neck Ctrls
+        for cc, jnt in zip(ccNeck, rgNeckJnt):
+            pm.parentConstraint(cc, jnt, mo=True, w=1)
+        # Setting Visibility
+        pm.connectAttr(ccIKFK, f"{ccSpine_FK_grp}.visibility", f=1)
+        rev = pm.shadingNode("reverse", au=True)
+        pm.connectAttr(ccIKFK, f"{rev}.inputX", f=1)
+        pm.connectAttr(f"{rev}.outputX", f"{ccSpine_IK_grp}.visibility", f=1)
+        # Constraint
+        pm.parentConstraint(ccHipsSub, ccSpine_IK_grp, mo=True, w=1)
+        pm.scaleConstraint(ccHipsSub, ccSpine_IK_grp, mo=True, w=1)
+        pm.parentConstraint(ccHipsSub, ccSpine_FK_grp, mo=True, w=1)
+        pm.scaleConstraint(ccHipsSub, ccSpine_FK_grp, mo=True, w=1)
+        pm.parentConstraint(rgSpineJnt[-1], ccNeck_grp, mo=True, w=1)
+        pm.scaleConstraint(rgSpineJnt[-1], ccNeck_grp, mo=True, w=1)
+
+
+    def rigShoulderCtrl(self, joint: str):
+        # Variables
+        side = "Left" if "Left" in joint else "Right"
+        shoulderSpace = f"null_{side}ShoulderSpace"
+        rgShoulder = "rig_" + joint
+        ccShoulder_grp = "cc_" + joint + "_grp"
+        rgSpine2 = "rig_" + self.spine[2]
+        # Run
+        if not pm.objExists(ccShoulder_grp):
+            return
+        if pm.listConnections(ccShoulder_grp, type="constraint"):
+            return
+        # Constraint
+        pm.parentConstraint(shoulderSpace, rgShoulder, mo=True, w=1)
+        pm.parentConstraint(rgSpine2, ccShoulder_grp, mo=True, w=1)
+        pm.scaleConstraint(rgSpine2, ccShoulder_grp, mo=True, w=1)
+
+
+    def rigArmsCtrl(self, joints: list):
+        # Variables
+        rgArms = addPrefix(joints, ["rig_"], [])
+        ccArms_IK = addPrefix(joints, ["cc_"], ["_IK"])
+        rgArms_IK = addPrefix(joints, ["rig_"], ["_IK"])
+        ccArms_FK = addPrefix(joints, ["cc_"], ["_FK"])
+        rgArms_FK = addPrefix(joints, ["rig_"], ["_FK"])
+        ccShoulder_IK, ccElbow_IK, ccHand_IK = ccArms_IK
+        rgShoulder_IK, rgElbow_IK, rgHand_IK = rgArms_IK
+        side = "Left" if "Left" in ccShoulder_IK else "Right"
+        ccIKFK = f"cc_IKFK.{side}_Arm_IK0_FK1"
+        shoulderSpace = f"null_{side}ShoulderSpace"
+        handMenu = self.getSpaceMenu(side, hand=True)
+        elbowMenu = self.getSpaceMenu(side, elbow=True)
+        # Run
+        if not pm.objExists(ccShoulder_IK):
+            return
+        if pm.listConnections(rgShoulder_IK, type="constraint"):
+            return
+        createBlendColor(ccIKFK, rgArms, rgArms_FK, rgArms_IK, t=1, r=1)
+        # IK - Shoulder
+        pm.pointConstraint(ccShoulder_IK, rgShoulder_IK, mo=True, w=1)
+        # IK - Hand
+        ikHandle = createIKHandle(rgShoulder_IK, rgHand_IK, rp=True)[0]
+        pm.orientConstraint(ccHand_IK, rgHand_IK, mo=True, w=1)
+        pm.parent(ikHandle, ccHand_IK)
+        connectSpace(ccHand_IK, handMenu, float=True)
+        # IK - Polevector
+        pm.poleVectorConstraint(ccElbow_IK, ikHandle, w=1.0)
+        connectSpace(ccElbow_IK, elbowMenu, enum=True)
+        anno = createAnnotation(rgElbow_IK, ccElbow_IK)
+        anno_grp = groupOwnPivot(anno)
+        pm.parentConstraint(rgElbow_IK, anno_grp[0], mo=True, w=1)
+        pm.scaleConstraint(rgElbow_IK, anno_grp[0], mo=True, w=1)
+        try:
+            pm.parent(anno_grp[0], "extraNodes")
+        except:
+            pass
+        # FK
+        for cc, jnt in zip(ccArms_FK, rgArms_FK):
+            pm.parentConstraint(cc, jnt, mo=True, w=1)
+        # Setting Visibility
+        pm.setAttr(f"{ikHandle}.visibility", 0)
+        ccShoulder_FK_grp = pm.listRelatives(ccArms_FK[0], p=True)[0]
+        pm.connectAttr(ccIKFK, f"{ccShoulder_FK_grp}.visibility", f=1)
+        revNode = pm.shadingNode("reverse", au=True)
+        pm.connectAttr(ccIKFK, f"{revNode}.inputX", f=1)
+        for cc in ccArms_IK:
+            cc_grp = pm.listRelatives(cc, p=True)[0]
+            pm.connectAttr(f"{revNode}.outputX", f"{cc_grp}.visibility", f=1)
+        # Constraint
+        pm.parentConstraint(shoulderSpace, ccShoulder_FK_grp, mo=True, w=1)
+        pm.scaleConstraint(shoulderSpace, ccShoulder_FK_grp, mo=True, w=1)
+        ccShoulder_IK_grp = pm.listRelatives(ccShoulder_IK, p=True)[0]
+        pm.parentConstraint(shoulderSpace, ccShoulder_IK_grp, mo=True, w=1)
+        pm.scaleConstraint(shoulderSpace, ccShoulder_IK_grp, mo=True, w=1)
+
+
+    def rigLegsCtrl(self, joints: list) -> None:
+        # Variables
+        side = "Left" if "Left" in joints[0] else "Right"
+        locHeel = f"loc_{side}Heel"
+        locToe = f"loc_{side}Toe_End"
+        locBankIn = f"loc_{side}BankIn"
+        locBankOut = f"loc_{side}BankOut"
+        locBall = f"loc_{side}ToeBase"
+        locFoot = f"loc_{side}Foot"
+        ccSub = "cc_HipsSub"
+        ccIKFK = f"cc_IKFK.{side}_Leg_IK0_FK1"
+        footMenu = {
+            "World0": "null_worldSpace", 
+            "Root1": "null_rootSpace", 
+            }
+        legMenu = {
+            "World": "null_worldSpace", 
+            "Root": "null_rootSpace", 
+            "Hip": f"null_{side}UpLegSpace", 
+            "Foot": f"null_{side}FootSpace", 
+            }
+        rx, ry, rz = ["rotateX", "rotateY", "rotateZ"]
+        rgLegsJnt = addPrefix(joints, ["rig_"], [])
+        rgLegsJnt_FK = addPrefix(joints, ["rig_"], ["_FK"])
+        rgLegsJnt_IK = addPrefix(joints, ["rig_"], ["_IK"])
+        rgPelvisJnt, rgKneeJnt, rgFootJnt, rgBallJnt, rgToeJnt = rgLegsJnt_IK
+        ccLegs_IK = addPrefix(joints, ["cc_"], ["_IK"])
+        ccPelvis_IK, ccKnee_IK, ccFoot_IK = ccLegs_IK[:3]
+        ccPelvis_IK_grp = f"{ccPelvis_IK}_grp"
+        ccKnee_IK_grp = f"{ccKnee_IK}_grp"
+        ccFoot_IK_grp = f"{ccFoot_IK}_grp"
+        ccLegs_FK = addPrefix(joints, ["cc_"], ["_FK"])
+        ccPelvis_FK_grp = f"{ccLegs_FK[0]}_grp"
+        # Run
+        if not pm.objExists(ccPelvis_IK):
+            return
+        if pm.listConnections(rgPelvisJnt, type="constraint"):
+            return
+        if pm.listConnections(rgFootJnt, type="ikHandle"):
+            return
+        # IK - UpLeg
+        pm.pointConstraint(ccPelvis_IK, rgPelvisJnt, mo=True, w=1)
+        # IK - ikHandle
+        ikhPelvis = createIKHandle(rgPelvisJnt, rgFootJnt, rp=True)[0]
+        ikhFoot = createIKHandle(rgFootJnt, rgBallJnt, sc=True)[0]
+        ikhBall = createIKHandle(rgBallJnt, rgToeJnt, sc=True)[0]
+        ikhPelvis_grp = groupOwnPivot(ikhPelvis)[0]
+        pm.parent(ikhPelvis_grp, locFoot)
+        pm.parent(ikhFoot, ikhPelvis_grp)
+        ikhBall_grp = groupOwnPivot(ikhBall, null=True)
+        rgBallJnt_pos = pm.xform(rgBallJnt, q=True, ws=True, rp=True)
+        for idx, i in enumerate(ikhBall_grp):
+            if idx == 0:
+                pm.parent(i, locBankOut)
+            if i != ikhBall:
+                pm.xform(i, ws=True, piv=rgBallJnt_pos)
+        # IK - Connect blendColorNode
+        createBlendColor(ccIKFK, 
+                         rgLegsJnt, rgLegsJnt_FK, rgLegsJnt_IK, 
+                         t=True, r=True)
+        # IK - Connect Foot's Attr
+        pm.connectAttr(f"{ccFoot_IK}.Heel_Up", f"{locHeel}.{rx}", f=1)
+        pm.connectAttr(f"{ccFoot_IK}.Heel_Twist", f"{locHeel}.{ry}", f=1)
+        pm.connectAttr(f"{ccFoot_IK}.Toe_Up", f"{locToe}.{rx}", f=1)
+        pm.connectAttr(f"{ccFoot_IK}.Toe_Twist", f"{locToe}.{ry}", f=1)
+        pm.connectAttr(f"{ccFoot_IK}.Ball_Up", f"{locBall}.{rx}", f=1)
+        pm.connectAttr(f"{ccFoot_IK}.Ball_Down", f"{ikhBall_grp[1]}.{rx}", f=1)
+        clampNode = pm.shadingNode("clamp", au=True)
+        pm.setAttr(f"{clampNode}.minR", -180)
+        pm.setAttr(f"{clampNode}.maxG", 180)
+        pm.connectAttr(f"{clampNode}.outputR", f"{locBankOut}.{rz}", f=1)
+        pm.connectAttr(f"{clampNode}.outputG", f"{locBankIn}.{rz}", f=1)
+        pm.connectAttr(f"{ccFoot_IK}.Bank", f"{clampNode}.inputR", f=1)
+        pm.connectAttr(f"{ccFoot_IK}.Bank", f"{clampNode}.inputG", f=1)
+        connectSpace(ccFoot_IK, footMenu, float=True)
+        # IK - polevector
+        pm.poleVectorConstraint(ccKnee_IK, ikhPelvis, w=1)
+        ano = createAnnotation(rgKneeJnt, ccKnee_IK)
+        anoGrp = groupOwnPivot(ano)
+        pm.parentConstraint(rgKneeJnt, anoGrp[0], mo=True, w=1)
+        pm.scaleConstraint(rgKneeJnt, anoGrp[0], mo=True, w=1)
+        try:
+            pm.parent(anoGrp[0], "extraNodes")
+        except:
+            pass
+        connectSpace(ccKnee_IK, legMenu, enum=True)
+        # FK
+        for cc, jnt in zip(ccLegs_FK, rgLegsJnt_FK):
+            try:
+                pm.parentConstraint(cc, jnt, mo=True, w=1)
+            except:
+                continue
+        # Setting Visibility
+        pm.connectAttr(ccIKFK, f"{ccPelvis_FK_grp}.visibility", f=1)
+        revNode = pm.shadingNode("reverse", au=True)
+        pm.connectAttr(ccIKFK, f"{revNode}.inputX", f=1)
+        for i in [ccPelvis_IK_grp, ccKnee_IK_grp, ccFoot_IK_grp]:
+            pm.connectAttr(f"{revNode}.outputX", f"{i}.visibility", f=1)
+        pm.setAttr(f"{locHeel}.visibility", 0)
+        # Grouping
+        for i in [ccPelvis_IK_grp, ccPelvis_FK_grp]:
+            pm.parentConstraint(ccSub, i, mo=True, w=1)
+            pm.scaleConstraint(ccSub, i, mo=True, w=1)
+
+
+    def rigFingerCtrl(self, joints: list):
+        ctrls = addPrefix(joints, ["cc_"], [])
+        rgJoints = addPrefix(joints, ["rig_"], [])
+        for cc, jnt in zip(ctrls, rgJoints):
+            if pm.objExists(cc) and pm.objExists(jnt):
+                pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+            else:
+                continue
+        for i in ["Left", "Right"]:
+            finger_grp = f"cc_{i}HandFingers_grp"
+            rgJnt = f"rig_{i}Hand"
+            try:
+                pm.parentConstraint(rgJnt, finger_grp, mo=True, w=1.0)
+                pm.scaleConstraint(rgJnt, finger_grp, mo=True, w=1.0)
+            except:
+                continue
+
+
+# ==============================================================================
+
+
+    def getDefaultSize(self, object: str) -> tuple:
+        """ Get Object's BoundingBox Size and (90.4 Ratio) 
+        Return
+        ------
+        >>> getDefaultSize(object)
+        >>> (bbSize, bbRatio)
+        >>> (180.8, 2)
+         """
+        bbSize = getBoundingBoxSize(object)
+        bbSize = max(bbSize)
+        bbRatio = round(bbSize/self.defaultSize, 3)
+        return bbSize, bbRatio
+
+
+    def getSpaceMenu(self, side="", hand=False, elbow=False, 
+                     foot=False, knee=False) -> dict:
+        if foot:
+            result = {
+                "World0": self.worldSpace, 
+                "Root1": self.rootSpace, 
+                }
+        elif side and knee:
+            result = {
+                "World": self.worldSpace, 
+                "Root": self.rootSpace, 
+                "Hip": "null_%sUpLegSpace" % side, 
+                "Foot": "null_%sFootSpace" % side, 
+                }
+        elif side and hand:
+            result = {
+                "World0": self.worldSpace, 
+                "Shoulder1": "null_%sShoulderSpace" % side, 
+                }
+        elif side and elbow:
+            result = {
+                "World": self.worldSpace, 
+                "Root": self.rootSpace, 
+                "Chest": "rig_Spine2", 
+                "Arm": "null_%sArmSpace" % side, 
+                "Hand": "null_%sHandSpace" % side, 
+                }
+        else:
+            return
+        return result
+
+
+    def finalTouch(self):
+        ccSub2 = self.mainCtrls[2]
+        skeltonGroup = self.groupNames[2]
+        rigBoneGroup = self.groupNames[-1]
+        try:
+            pm.delete(self.mainCurve)
+        except:
+            pass
+        try:
+            pm.scaleConstraint(ccSub2, skeltonGroup)
+        except:
+            pass
+        pm.setAttr(f"{skeltonGroup}.visibility", 0)
+        pm.setAttr(f"{rigBoneGroup}.visibility", 0)
 
 
     def buttonUnlock(self):
@@ -917,20 +1323,6 @@ class Character(QWidget):
                 parentHierarchically(parents, joints[0])
 
 
-    def getDefaultSize(self, object: str) -> tuple:
-        """ Get Object's BoundingBox Size and (90.4 Ratio) 
-        Return
-        ------
-        >>> getDefaultSize(object)
-        >>> (bbSize, bbRatio)
-        >>> (180.8, 2)
-         """
-        bbSize = getBoundingBoxSize(object)
-        bbSize = max(bbSize)
-        bbRatio = round(bbSize/self.defaultSize, 3)
-        return bbSize, bbRatio
-
-
 # if __name__ == "__main__":
 #     try:
 #         char.close()
@@ -939,3 +1331,4 @@ class Character(QWidget):
 #         pass
 #     char = Character()
 #     char.show()
+
