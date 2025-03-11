@@ -1029,7 +1029,6 @@ class Character(QWidget):
                 pm.parent(i, finalGroup)
             else:
                 pm.group(i, n=finalGroup)
-        
 
 
     def rigMainCtrl(self):
