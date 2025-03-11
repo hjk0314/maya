@@ -247,8 +247,8 @@ class Character(QWidget):
         self.btnCreateCtrls.clicked.connect(self.createCharCtrl)
         self.btnMirrorCopy.clicked.connect(self.mirrorCopyFootLocator)
         self.btnRig.clicked.connect(self.rig)
-        # self.btnConnect.clicked.connect(self.connectBones)
-        # self.btnDisconnect.clicked.connect(self.disConnectBones)
+        self.btnConnect.clicked.connect(self.connectBones)
+        self.btnDisconnect.clicked.connect(self.disConnectBones)
         self.btnClose.clicked.connect(self.close)
 
 
@@ -364,6 +364,24 @@ class Character(QWidget):
         self.rigFingerCtrl(self.finger_L)
         self.rigFingerCtrl(self.finger_R)
         self.finalTouch()
+
+
+    def connectBones(self):
+        joints = self.jntPosition.keys()
+        joints = list(joints)
+        rgJoints = addPrefix(joints, ["rig_"], [])
+        for rgJnt, jnt in zip(rgJoints, joints):
+            for attr in ["translate", "rotate"]:
+                pm.connectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}", f=1)
+
+
+    def disConnectBones(self):
+        joints = self.jntPosition.keys()
+        joints = list(joints)
+        rgJoints = addPrefix(joints, ["rig_"], [])
+        for rgJnt, jnt in zip(rgJoints, joints):
+            for attr in ["translate", "rotate"]:
+                pm.disconnectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}")
 
 
 # ==============================================================================
@@ -1323,12 +1341,12 @@ class Character(QWidget):
                 parentHierarchically(parents, joints[0])
 
 
-# if __name__ == "__main__":
-#     try:
-#         char.close()
-#         char.deleteLater()
-#     except:
-#         pass
-#     char = Character()
-#     char.show()
+if __name__ == "__main__":
+    try:
+        char.close()
+        char.deleteLater()
+    except:
+        pass
+    char = Character()
+    char.show()
 
