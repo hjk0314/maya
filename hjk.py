@@ -1335,38 +1335,6 @@ def connectSpace(ctrl: str, menu: dict, enum=False, float=False):
         return
 
 
-def MovePointNearObject(sourceObject: str, *arg) -> None:
-    """ The selected point moves to the closest point 
-    on the source object. This function only works for points on -X.
-    The Selected Points move to the closest points possible, 
-    the objects should overlap as much as possible.
-    
-    Examples:
-        >>> moveNearbyPoint("pSphere1", "pSphere2.vtx[:23]")
-        >>> moveNearbyPoint("pSphere1")
-     """
-    sel = arg if arg else pm.selected(fl=True)
-    if not isinstance(sourceObject, pm.PyNode):
-        src = pm.PyNode(sourceObject)
-    sourceVertices = {i.name(): pm.pointPosition(i) for i in src.vtx[:]}
-    for i in sel:
-        if not isinstance(i, pm.MeshVertex):
-            pm.warning("Please, Select a Vertices.")
-            continue
-        temp = {}
-        iPos = pm.pointPosition(i)
-        x = iPos[0]
-        if x >= 0:
-            continue
-        else:
-            for srcVtx, srcVtxPos in sourceVertices.items():
-                distance = math.sqrt(sum((a - b)**2 \
-                                         for a, b in zip(iPos, srcVtxPos)))
-                temp[srcVtx] = distance
-        minimumKey = min(temp, key=temp.get)
-        pm.move(i, sourceVertices[minimumKey])
-
-
 def lineUpCurvePointsToStraightLine(*args) -> list:
     """ Arrange the points in a straight line.
     Use the equation of a straight line in space 
