@@ -4,7 +4,31 @@ import pymel.core as pm
 
 class Cat:
     def __init__(self):
+        self.hips = "Hips"
         self.spine = [f"Spine{i}" for i in range(1, 11)]
+        self.neck = [f"Neck{i}" for i in range(1, 4)]
+        self.head = ["Head", "HeadTop_End"]
+        self.jaw = ["Jaw", "Jaw_End"]
+        self.ear_L = [f"LeftEar{i}" for i in range(1, 4)]
+        self.ear_R = [f"RightEar{i}" for i in range(1, 4)]
+        self.eye_L = ["LeftEye", "LeftEye_End"]
+        self.eye_R = ["RightEye", "RightEye_End"]
+        self.legs_LF = [
+            'LeftFrontShoulder', 
+            'LeftFrontLeg', 
+            'LeftFrontKnee', 
+            'LeftFrontAnkle', 
+            'LeftFrontToe', 
+            'LeftFrontToe_End', 
+            ]
+        self.legs_RF = [
+            'RightFrontShoulder', 
+            'RightFrontLeg', 
+            'RightFrontKnee', 
+            'RightFrontAnkle', 
+            'RightFrontToe', 
+            'RightFrontToe_End', 
+            ]
         self.legs_LB = [
             'LeftBackLeg', 
             'LeftBackKnee', 
@@ -19,6 +43,14 @@ class Cat:
             'RightBackToe', 
             'RightBackToe_End', 
             ]
+        self.index_LF = [f"LeftFrontIndex{i}" for i in range(1, 5)]
+        self.middle_LF = [f"LeftFrontMiddle{i}" for i in range(1, 5)]
+        self.ring_LF = [f"LeftFrontRing{i}" for i in range(1, 5)]
+        self.pinky_LF = [f"LeftFrontPinky{i}" for i in range(1, 5)]
+        self.index_RF = [f"RightFrontIndex{i}" for i in range(1, 5)]
+        self.middle_RF = [f"RightFrontMiddle{i}" for i in range(1, 5)]
+        self.ring_RF = [f"RightFrontRing{i}" for i in range(1, 5)]
+        self.pinky_RF = [f"RightFrontPinky{i}" for i in range(1, 5)]
         self.index_LB = [f"LeftBackIndex{i}" for i in range(1, 5)]
         self.middle_LB = [f"LeftBackMiddle{i}" for i in range(1, 5)]
         self.ring_LB = [f"LeftBackRing{i}" for i in range(1, 5)]
@@ -40,6 +72,67 @@ class Cat:
             'Spine8': (0.0, 100.52465, 27.07221), 
             'Spine9': (0.0, 100.30797, 36.49581), 
             'Spine10': (0.0, 101.12589, 45.88787), 
+            'Neck1': (0.0, 102.38305, 56.65433), 
+            'Neck2': (0.0, 104.84668, 67.21273), 
+            'Neck3': (0.0, 107.67955, 77.68039), 
+            'Head': (0.0, 111.09206, 87.97162), 
+            'HeadTop_End': (0.0, 117.10147, 101.49742), 
+            'Jaw': (0.0, 103.1242, 97.66678), 
+            'Jaw_End': (0.0, 80.59933, 115.17514), 
+            'LeftEar1': (9.80007, 116.56773, 95.2822), 
+            'LeftEar2': (14.86112, 119.76161, 98.98467), 
+            'LeftEar3': (18.24246, 121.19656, 102.42661), 
+            'RightEar1': (-9.80007, 116.568, 95.2822), 
+            'RightEar2': (-14.8611, 119.762, 98.9847), 
+            'RightEar3': (-18.2425, 121.197, 102.427), 
+            'LeftEye': (7.51407, 104.15134, 112.95457), 
+            'LeftEye_End': (7.51407, 104.15134, 115.18304), 
+            'RightEye': (-7.51407, 104.151, 112.955), 
+            'RightEye_End': (-7.51407, 104.151, 115.183), 
+            'LeftFrontShoulder': (6.34422, 107.83035, 47.43926), 
+            'LeftFrontLeg': (10.93067, 84.97193, 57.50794), 
+            'LeftFrontKnee': (12.65204, 55.24576, 43.64996), 
+            'LeftFrontAnkle': (12.65204, 16.06096, 47.16916), 
+            'LeftFrontToe': (12.65204, 5.82732, 50.73547), 
+            'LeftFrontToe_End': (12.65204, -0.0, 61.0), 
+            'LeftFrontIndex1': (8.05349, 4.2806, 51.28584), 
+            'LeftFrontIndex2': (6.63646, 3.99462, 55.03125), 
+            'LeftFrontIndex3': (4.81825, 2.59692, 59.837), 
+            'LeftFrontIndex4': (4.19337, -2e-05, 61.48865), 
+            'LeftFrontMiddle1': (10.95358, 4.57888, 51.83132), 
+            'LeftFrontMiddle2': (10.56243, 4.36345, 56.54168), 
+            'LeftFrontMiddle3': (10.0478, 3.36558, 62.73908), 
+            'LeftFrontMiddle4': (9.91442, -2e-05, 64.34537), 
+            'LeftFrontRing1': (13.89453, 4.52929, 51.30716), 
+            'LeftFrontRing2': (14.99425, 4.43558, 56.32907), 
+            'LeftFrontRing3': (16.25926, 3.30058, 62.10575), 
+            'LeftFrontRing4': (16.62691, 0.00055, 63.7846), 
+            'LeftFrontPinky1': (17.0, 3.88854, 49.67239), 
+            'LeftFrontPinky2': (18.65164, 3.58846, 53.73807), 
+            'LeftFrontPinky3': (20.82748, 2.5276, 59.09414), 
+            'LeftFrontPinky4': (21.43522, -0.00669, 60.59015), 
+            'RightFrontShoulder': (-6.34422, 107.83035, 47.43926), 
+            'RightFrontLeg': (-10.93067, 84.97193, 57.50794), 
+            'RightFrontKnee': (-12.65204, 55.24576, 43.64996), 
+            'RightFrontAnkle': (-12.65204, 16.06096, 47.16916), 
+            'RightFrontToe': (-12.65204, 5.82732, 50.73547), 
+            'RightFrontToe_End': (-12.65204, -0.0, 61.0), 
+            'RightFrontIndex1': (-8.05349, 4.2806, 51.28584), 
+            'RightFrontIndex2': (-6.63646, 3.99462, 55.03125), 
+            'RightFrontIndex3': (-4.81825, 2.59692, 59.837), 
+            'RightFrontIndex4': (-4.19337, -2e-05, 61.48865), 
+            'RightFrontMiddle1': (-10.95358, 4.57888, 51.83132), 
+            'RightFrontMiddle2': (-10.56243, 4.36345, 56.54168), 
+            'RightFrontMiddle3': (-10.0478, 3.36558, 62.73908), 
+            'RightFrontMiddle4': (-9.91442, -2e-05, 64.34537), 
+            'RightFrontRing1': (-13.89453, 4.52929, 51.30716), 
+            'RightFrontRing2': (-14.99425, 4.43558, 56.32907), 
+            'RightFrontRing3': (-16.25926, 3.30058, 62.10575), 
+            'RightFrontRing4': (-16.62691, 0.00055, 63.7846), 
+            'RightFrontPinky1': (-17.0, 3.88854, 49.67239), 
+            'RightFrontPinky2': (-18.65164, 3.58846, 53.73807), 
+            'RightFrontPinky3': (-20.82748, 2.5276, 59.09414), 
+            'RightFrontPinky4': (-21.43522, -0.00669, 60.59015), 
             'LeftBackLeg': (8.60929, 94.73428, -61.52581), 
             'LeftBackKnee': (12.0, 56.96354, -50.1429), 
             'LeftBackAnkle': (12.0, 25.43732, -80.42925), 
@@ -93,6 +186,21 @@ class Cat:
             }
         self.jntHierarchy = {
             'Hips': [self.spine, self.legs_LB, self.legs_RB, self.tail, ], 
+            'Spine10': [self.neck, self.legs_LF, self.legs_RF, ], 
+            'Head': [self.jaw, self.ear_L, self.ear_R, self.eye_L, self.eye_R], 
+            'Neck3': [self.head, ], 
+            'LeftFrontToe': [
+                self.index_LF, 
+                self.middle_LF, 
+                self.ring_LF, 
+                self.pinky_LF
+                ], 
+            'RightFrontToe': [
+                self.index_RF, 
+                self.middle_RF, 
+                self.ring_RF, 
+                self.pinky_RF
+                ], 
             'LeftBackToe': [
                 self.index_LB, 
                 self.middle_LB, 
@@ -149,3 +257,58 @@ class Cat:
         self.setHierarchy(self.jntHierarchy)
 
 
+    def reOrientJnt(self):
+        sel = [self.hips] + self.spine + self.neck + self.head
+        for i in sel:
+            try:
+                obj = pm.PyNode(i)
+            except:
+                continue
+            worldMatrix = obj.getMatrix(worldSpace=True)
+            x = worldMatrix[0][:3]
+            y = worldMatrix[1][:3]
+            z = worldMatrix[2][:3]
+            x = round(x, 5)
+            y = round(y, 5)
+            z = round(z, 5)
+            if x[0] >= 0:
+                pm.joint(i, e=True, oj="yzx", sao="zdown", zso=True)
+            else:
+                pm.joint(i, e=True, oj="yzx", sao="zup", zso=True)
+
+# cat = Cat()
+# cat.createTempJoints()
+# cat.reOrientJnt()
+
+# a = {i.name(): getPosition(i) for i in pm.selected()}
+# print(a)
+
+# createJointOnCurveSameSpacing(num=5, cuv="curve2")
+
+
+# for i in pm.selected():
+#     try:
+#         obj = pm.PyNode(i)
+#     except:
+#         continue
+#     worldMatrix = obj.getMatrix(worldSpace=True)
+#     x = worldMatrix[0][:3]
+#     y = worldMatrix[1][:3]
+#     z = worldMatrix[2][:3]
+#     x = round(x, 5)
+#     y = round(y, 5)
+#     z = round(z, 5)
+#     if x[0] >= 0:
+#         pm.joint(i, e=True, oj="yzx", sao="zdown", zso=True)
+#     else:
+#         pm.joint(i, e=True, oj="yzx", sao="zup", zso=True)
+
+
+# for i in selectJointOnly():
+#     setJointsStyle(i, b=True)
+
+
+# createPolevectorJoint()
+# lineUpObjectsOnOnePlane("LeftBackPinky11", "LeftBackPinky12", "LeftBackPinky13", "LeftBackPinky14")
+# reName("Back", "Front")
+# groupOwnPivot()
