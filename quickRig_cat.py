@@ -5,7 +5,7 @@ import pymel.core as pm
 class Cat:
     def __init__(self):
         self.hips = "Hips"
-        self.spine = [f"Spine{i}" for i in range(1, 11)]
+        self.spine = [f"Spine{i}" for i in range(1, 10)]
         self.neck = [f"Neck{i}" for i in range(1, 4)]
         self.head = ["Head", "HeadTop_End"]
         self.jaw = ["Jaw", "Jaw_End"]
@@ -30,6 +30,7 @@ class Cat:
             'RightFrontToe_End', 
             ]
         self.legs_LB = [
+            'LeftBackShoulder', 
             'LeftBackLeg', 
             'LeftBackKnee', 
             'LeftBackAnkle', 
@@ -37,6 +38,7 @@ class Cat:
             'LeftBackToe_End', 
             ]
         self.legs_RB = [
+            'RightBackShoulder', 
             'RightBackLeg', 
             'RightBackKnee', 
             'RightBackAnkle', 
@@ -59,19 +61,18 @@ class Cat:
         self.middle_RB = [f"RightBackMiddle{i}" for i in range(1, 5)]
         self.ring_RB = [f"RightBackRing{i}" for i in range(1, 5)]
         self.pinky_RB = [f"RightBackPinky{i}" for i in range(1, 5)]
-        self.tail = [f"Tail{i}" for i in range(1, 9)]
+        self.tail = [f"Tail{i}" for i in range(1, 10)]
         self.jntPosition = {
             'Hips': (0.0, 105.5976, -47.80265), 
-            'Spine1': (0.0, 104.81905, -38.40455), 
-            'Spine2': (0.0, 104.06719, -29.00845), 
-            'Spine3': (0.0, 104.8232, -19.6161), 
-            'Spine4': (0.0, 105.64084, -10.22491), 
+            'Spine1': (0.0, 105.5976, -47.80265), 
+            'Spine2': (0.0, 104.56808, -36.06098), 
+            'Spine3': (0.0, 104.29889, -24.30194), 
+            'Spine4': (0.0, 105.53652, -12.58076), 
             'Spine5': (0.0, 105.07111, -0.82225), 
-            'Spine6': (0.0, 103.4137, 8.45871), 
-            'Spine7': (0.0, 101.54916, 17.70189), 
-            'Spine8': (0.0, 100.52465, 27.07221), 
-            'Spine9': (0.0, 100.30797, 36.49581), 
-            'Spine10': (0.0, 101.12589, 45.88787), 
+            'Spine6': (0.0, 102.91921, 10.76383), 
+            'Spine7': (0.0, 100.92647, 22.37477), 
+            'Spine8': (0.0, 100.26311, 34.13868), 
+            'Spine9': (0.0, 101.12589, 45.88787), 
             'Neck1': (0.0, 102.38305, 56.65433), 
             'Neck2': (0.0, 104.84668, 67.21273), 
             'Neck3': (0.0, 107.67955, 77.68039), 
@@ -133,6 +134,7 @@ class Cat:
             'RightFrontPinky2': (-18.65164, 3.58846, 53.73807), 
             'RightFrontPinky3': (-20.82748, 2.5276, 59.09414), 
             'RightFrontPinky4': (-21.43522, -0.00669, 60.59015), 
+            'LeftBackShoulder': (6.05402, 104.45178, -47.98636), 
             'LeftBackLeg': (8.60929, 94.73428, -61.52581), 
             'LeftBackKnee': (12.0, 56.96354, -50.1429), 
             'LeftBackAnkle': (12.0, 25.43732, -80.42925), 
@@ -154,6 +156,7 @@ class Cat:
             'LeftBackPinky2': (17.87145, 3.62354, -67.92649), 
             'LeftBackPinky3': (19.40107, 2.99099, -63.05557), 
             'LeftBackPinky4': (20.03285, 0.04649, -61.04372), 
+            'RightBackShoulder': (-6.05402, 104.45178, -47.98636), 
             'RightBackLeg': (-8.60929, 94.7343, -61.5258), 
             'RightBackKnee': (-12.0, 56.9635, -50.1429), 
             'RightBackAnkle': (-12.0, 25.4373, -80.4292), 
@@ -176,38 +179,45 @@ class Cat:
             'RightBackPinky3': (-19.4011, 2.99099, -63.0556), 
             'RightBackPinky4': (-20.0329, 0.04649, -61.0437), 
             'Tail1': (0.0, 100.30746, -74.3944), 
-            'Tail2': (0.0, 97.07727, -90.58436), 
-            'Tail3': (0.0, 96.4385, -107.07161), 
-            'Tail4': (0.0, 96.3442, -123.58429), 
-            'Tail5': (0.0, 96.05397, -140.0973), 
-            'Tail6': (0.0, 95.99479, -156.61215), 
-            'Tail7': (0.0, 95.73513, -173.12481), 
-            'Tail8': (0.0, 95.32285, -189.6359), 
+            'Tail2': (0.0, 97.34935, -88.53353), 
+            'Tail3': (0.0, 96.44871, -102.94353), 
+            'Tail4': (0.0, 96.40904, -117.39394), 
+            'Tail5': (0.0, 96.19063, -131.84264), 
+            'Tail6': (0.0, 96.01854, -146.29217), 
+            'Tail7': (0.0, 95.95709, -160.74193), 
+            'Tail8': (0.0, 95.68791, -175.18998), 
+            'Tail9': (0.0, 95.32285, -189.63589), 
             }
         self.jntHierarchy = {
-            'Hips': [self.spine, self.legs_LB, self.legs_RB, self.tail, ], 
-            'Spine10': [self.neck, self.legs_LF, self.legs_RF, ], 
-            'Head': [self.jaw, self.ear_L, self.ear_R, self.eye_L, self.eye_R], 
-            'Neck3': [self.head, ], 
-            'LeftFrontToe': [
+            self.hips: [self.spine, self.legs_LB, self.legs_RB, self.tail, ], 
+            self.spine[-1]: [self.neck, self.legs_LF, self.legs_RF, ], 
+            self.head[0]: [
+                self.jaw, 
+                self.ear_L, 
+                self.ear_R, 
+                self.eye_L, 
+                self.eye_R
+                ], 
+            self.neck[-1]: [self.head, ], 
+            self.legs_LF[-2]: [
                 self.index_LF, 
                 self.middle_LF, 
                 self.ring_LF, 
                 self.pinky_LF
                 ], 
-            'RightFrontToe': [
+            self.legs_RF[-2]: [
                 self.index_RF, 
                 self.middle_RF, 
                 self.ring_RF, 
                 self.pinky_RF
                 ], 
-            'LeftBackToe': [
+            self.legs_LB[-2]: [
                 self.index_LB, 
                 self.middle_LB, 
                 self.ring_LB, 
                 self.pinky_LB
                 ], 
-            'RightBackToe': [
+            self.legs_RB[-2]: [
                 self.index_RB, 
                 self.middle_RB, 
                 self.ring_RB, 
@@ -280,10 +290,10 @@ class Cat:
 # cat.createTempJoints()
 # cat.reOrientJnt()
 
-# a = {i.name(): getPosition(i) for i in pm.selected()}
-# print(a)
+# print({i.name(): getPosition(i) for i in pm.selected()})
 
-# createJointOnCurveSameSpacing(num=5, cuv="curve2")
+
+# createJointOnCurveSameSpacing(num=9, cuv="curve16")
 
 
 # for i in pm.selected():
@@ -312,3 +322,27 @@ class Cat:
 # lineUpObjectsOnOnePlane("LeftBackPinky11", "LeftBackPinky12", "LeftBackPinky13", "LeftBackPinky14")
 # reName("Back", "Front")
 # groupOwnPivot()
+
+
+# ctrl = Controllers()
+# ctrl.createControllers(square="")
+# mirrorCopy("cc_LeftEar2")
+# groupOwnPivot(null=True)
+
+
+# createRigGroups("tigerA")
+# reName("cc_Tail1_sub_IK")
+
+# a = ['char_tigerA_mdl_v9999:vertebra_23_bone', 'char_tigerA_mdl_v9999:phalange_R_Bk_01_bone', 'char_tigerA_mdl_v9999:muscle_R_supraspinatus_tissue', 'char_tigerA_mdl_v9999:vertebra_11_bone', 'char_tigerA_mdl_v9999:scapula_R_bone', 'char_tigerA_mdl_v9999:muscle_R_flexorDigitorumProfundusBack2_tissue', 'char_tigerA_mdl_v9999:muscle_R_tricepsBrachiiLa_tissue', 'char_tigerA_mdl_v9999:muscle_R_extensorDigitorumLateralisBck_tissue', 'char_tigerA_mdl_v9999:phalange_L_Ft_06_bone', 'char_tigerA_mdl_v9999:sternum_04_bone', 'char_tigerA_mdl_v9999:muscle_L_sternohyoid2_tissue', 'char_tigerA_mdl_v9999:metacarpals_L_Ft_03_bone', 'char_tigerA_mdl_v9999:carpaL_Ft_L_02_bone', 'char_tigerA_mdl_v9999:phalange_R_Ft_03_bone', 'char_tigerA_mdl_v9999:muscle_L_gluteusSuperficialis_tissue', 'char_tigerA_mdl_v9999:muscle_R_sartorius_tissue', 'char_tigerA_mdl_v9999:phalange_L_Bk_04_bone', 'char_tigerA_mdl_v9999:muscle_L_extensorCarpiRadualisLongus_tissue', 'char_tigerA_mdl_v9999:muscle_L_pectoralisProfundus_tissue', 'char_tigerA_mdl_v9999:ribs_L_012_bone', 'char_tigerA_mdl_v9999:metatarsal_R_Bk_02_bone', 'char_tigerA_mdl_v9999:vertebra_24_bone', 'char_tigerA_mdl_v9999:phalange_R_Bk_02_bone', 'char_tigerA_mdl_v9999:vertebra_12_bone', 'char_tigerA_mdl_v9999:tarsal_R_03_bone', 'char_tigerA_mdl_v9999:muscle_R_mylohyoid_tissue', 'char_tigerA_mdl_v9999:muscle_R_rhomboid_tissue', 'char_tigerA_mdl_v9999:cervical_06_bone', 'char_tigerA_mdl_v9999:muscle_R_flexorDigitorumProfundus2_tissue', 'char_tigerA_mdl_v9999:muscle_R_tricepsBrachiiLo_tissue', 'char_tigerA_mdl_v9999:ribs_R_04_bone', 'char_tigerA_mdl_v9999:tail_caudal_01_bone', 'char_tigerA_mdl_v9999:carpaL_Ft_L_01_bone', 'char_tigerA_mdl_v9999:sternum_03_bone', 'char_tigerA_mdl_v9999:muscle_L_pronatorTeres_tissue', 'char_tigerA_mdl_v9999:metatarsal_L_Bk_04_bone', 'char_tigerA_mdl_v9999:carpaR_Ft_L_06_bone', 'char_tigerA_mdl_v9999:muscle_L_flexorDigitorumProfundus5_tissue', 'char_tigerA_mdl_v9999:muscle_R_rectusFemoris_tissue', 'char_tigerA_mdl_v9999:femur_R_Bk_bone', 'char_tigerA_mdl_v9999:muscle_L_bicepsBrachii_tissue', 'char_tigerA_mdl_v9999:muscle_L_sternohyoid_tissue', 'char_tigerA_mdl_v9999:ribs_L_011_bone', 'char_tigerA_mdl_v9999:tail_caudal_12_bone', 'char_tigerA_mdl_v9999:phalange_R_Bk_04_bone', 'char_tigerA_mdl_v9999:muscle_R_latissimusDorsi_tissue', 'char_tigerA_mdl_v9999:vertebra_14_bone', 'char_tigerA_mdl_v9999:ribs_R_011_bone', 'char_tigerA_mdl_v9999:muscle_R_flexorDigitorumProfundus4_tissue', 'char_tigerA_mdl_v9999:muscle_R_brachioradialis_tissue', 'char_tigerA_mdl_v9999:cervical_01_bone', 'char_tigerA_mdl_v9999:muscle_R_extensordigitorumcommunis_tissue', 'char_tigerA_mdl_v9999:phalange_L_Ft_08_bone', 'char_tigerA_mdl_v9999:sternum_05_bone', 'char_tigerA_mdl_v9999:muscle_L_teresMajor_tissue', 'char_tigerA_mdl_v9999:phalange_L_Ft_01_bone', 'char_tigerA_mdl_v9999:phalange_R_Ft_01_bone', 'char_tigerA_mdl_v9999:muscle_L_hyoid_tissue', 'char_tigerA_mdl_v9999:muscle_R_tensorFasciaeLatae_tissue', 'char_tigerA_mdl_v9999:phalange_L_Bk_05_bone', 'char_tigerA_mdl_v9999:metacarpals_R_Ft_01_bone', 'char_tigerA_mdl_v9999:muscle_L_extensorCarpiUlnaris_tissue', 'char_tigerA_mdl_v9999:muscle_L_sternoOccipitalis_tissue', 'char_tigerA_mdl_v9999:fibula_R_Bk_bone', 'char_tigerA_mdl_v9999:phalange_R_Bk_03_bone', 'char_tigerA_mdl_v9999:tarsal_R_01_bone', 'char_tigerA_mdl_v9999:muscle_R_infraspinatus_tissue', 'char_tigerA_mdl_v9999:muscle_R_trapezius_tissue', 'char_tigerA_mdl_v9999:vertebra_02_bone', 'char_tigerA_mdl_v9999:muscle_R_flexorCarpiRadialis_tissue', 'char_tigerA_mdl_v9999:muscle_R_serratusVentralisCervicis_tissue', 'char_tigerA_mdl_v9999:ribs_R_03_bone', 'char_tigerA_mdl_v9999:tail_caudal_03_bone', 'char_tigerA_mdl_v9999:sternum_06_bone', 'char_tigerA_mdl_v9999:muscle_L_tibialisCranialis_tissue', 'char_tigerA_mdl_v9999:metatarsal_L_Bk_02_bone', 'char_tigerA_mdl_v9999:carpaR_Ft_L_03_bone', 'char_tigerA_mdl_v9999:muscle_L_extensordigitorumcommunis_tissue', 'char_tigerA_mdl_v9999:muscle_R_vastusMedialis_tissue', 'char_tigerA_mdl_v9999:tarsal_L_01_bone', 'char_tigerA_mdl_v9999:muscle_L_extensorDigitorumLateralisBck_tissue', 'char_tigerA_mdl_v9999:muscle_L_tricepsBrachiiLo_tissue', 'char_tigerA_mdl_v9999:humerus_L_bone', 'char_tigerA_mdl_v9999:tail_caudal_13_bone', 'char_tigerA_mdl_v9999:ribs_L_01_bone', 'char_tigerA_mdl_v9999:phalange_R_Bk_05_bone', 'char_tigerA_mdl_v9999:vertebra_07_bone', 'char_tigerA_mdl_v9999:ribs_R_09_bone', 'char_tigerA_mdl_v9999:muscle_R_palmarisLongus_tissue', 'char_tigerA_mdl_v9999:muscle_R_vastusLateralis_tissue', 'char_tigerA_mdl_v9999:muscle_R_extensorDigitorumLongus_tissue', 'char_tigerA_mdl_v9999:phalange_L_Ft_07_bone', 'char_tigerA_mdl_v9999:sternum_07_bone', 'char_tigerA_mdl_v9999:muscle_L_tricepsBrachiiLa_tissue', 'char_tigerA_mdl_v9999:metacarpals_L_Ft_05_bone', 'char_tigerA_mdl_v9999:tibia_L_Bk_bone', 'char_tigerA_mdl_v9999:phalange_R_Ft_05_bone', 'char_tigerA_mdl_v9999:muscle_L_flexorDigitorumSuperficialis_tissue', 'char_tigerA_mdl_v9999:muscle_R_semimembranosus_tissue', 'char_tigerA_mdl_v9999:phalange_L_Bk_07_bone', 'char_tigerA_mdl_v9999:metacarpals_R_Ft_03_bone', 'char_tigerA_mdl_v9999:muscle_L_flexorDigitorumProfundus4_tissue', 'char_tigerA_mdl_v9999:muscle_L_rectusAbdominis_tissue', 'char_tigerA_mdl_v9999:radius_L_bone', 'char_tigerA_mdl_v9999:tibia_R_Bk_bone', 'char_tigerA_mdl_v9999:muscle_L_rectusFemoris_tissue', 'char_tigerA_mdl_v9999:ribs_L_02_bone', 'char_tigerA_mdl_v9999:phalange_R_Bk_06_bone', 'char_tigerA_mdl_v9999:ulna_R_bone', 'char_tigerA_mdl_v9999:muscle_R_peroneusLongus_tissue', 'char_tigerA_mdl_v9999:muscle_R_deltoidAc_tissue', 'char_tigerA_mdl_v9999:vertebra_04_bone', 'char_tigerA_mdl_v9999:muscle_R_flexorCarpiUlnaris_tissue', 'char_tigerA_mdl_v9999:muscle_R_serratus_tissue', 'char_tigerA_mdl_v9999:skull_01_bone', 'char_tigerA_mdl_v9999:ribs_R_01_bone', 'char_tigerA_mdl_v9999:sternum_08_bone', 'char_tigerA_mdl_v9999:muscle_L_palmarisLongus_tissue', 'char_tigerA_mdl_v9999:phalange_L_Bk_08_bone', 'char_tigerA_mdl_v9999:carpaR_Ft_L_05_bone', 'char_tigerA_mdl_v9999:muscle_L_flexorDigitorumProfundusBack2_tissue', 'char_tigerA_mdl_v9999:muscle_R_caudofemoralis_tissue', 'char_tigerA_mdl_v9999:tarsal_L_03_bone', 'char_tigerA_mdl_v9999:metacarpals_R_Ft_04_bone', 'char_tigerA_mdl_v9999:muscle_L_tensorFasciaeLatae_tissue', 'char_tigerA_mdl_v9999:muscle_L_vastusLateralis_tissue', 'char_tigerA_mdl_v9999:scapula_L_bone', 'char_tigerA_mdl_v9999:tail_caudal_14_bone', 'char_tigerA_mdl_v9999:vertebra_22_bone', 'char_tigerA_mdl_v9999:muscle_R_gluteusMedius_tissue', 'char_tigerA_mdl_v9999:muscle_R_extensorDigitorumLateralis_tissue', 'char_tigerA_mdl_v9999:vertebra_08_bone', 'char_tigerA_mdl_v9999:ribs_R_010_bone', 'char_tigerA_mdl_v9999:cervical_02_bone', 'char_tigerA_mdl_v9999:muscle_R_bicepsBrachii_tissue', 'char_tigerA_mdl_v9999:ribs_R_05_bone', 'char_tigerA_mdl_v9999:metacarpals_L_Ft_02_bone', 'char_tigerA_mdl_v9999:carpaL_Ft_L_07_bone', 'char_tigerA_mdl_v9999:phalange_R_Ft_06_bone', 'char_tigerA_mdl_v9999:muscle_L_iliocostalisLong_tissue', 'char_tigerA_mdl_v9999:muscle_R_bicepsFemoris_tissue', 'char_tigerA_mdl_v9999:metatarsal_L_Bk_01_bone', 'char_tigerA_mdl_v9999:carpaR_Ft_L_08_bone', 'char_tigerA_mdl_v9999:muscle_L_flexorDigitorumProfundusBack_tissue', 'char_tigerA_mdl_v9999:muscle_L_pectoralisDescendes', 'char_tigerA_mdl_v9999:ulna_L_bone', 'char_tigerA_mdl_v9999:metatarsal_R_Bk_03_bone', 'char_tigerA_mdl_v9999:muscle_L_semimembranosus_tissue', 'char_tigerA_mdl_v9999:ribs_L_03_bone', 'char_tigerA_mdl_v9999:tail_caudal_15_bone', 'char_tigerA_mdl_v9999:phalange_R_Bk_07_bone', 'char_tigerA_mdl_v9999:muscle_C_ribCage_tissue', 'char_tigerA_mdl_v9999:tarsal_R_06_bone', 'char_tigerA_mdl_v9999:muscle_R_pronatorTeres_tissue', 'char_tigerA_mdl_v9999:vertebra_01_bone', 'char_tigerA_mdl_v9999:muscle_R_flexorDigitorumProfundusBack_tissue', 'char_tigerA_mdl_v9999:muscle_R_splenius_tissue', 'char_tigerA_mdl_v9999:ribs_R_06_bone', 'char_tigerA_mdl_v9999:tail_caudal_04_bone', 'char_tigerA_mdl_v9999:phalange_L_Ft_04_bone', 'char_tigerA_mdl_v9999:pelvis_bone', 'char_tigerA_mdl_v9999:muscle_L_mylohyoid_tissue', 'char_tigerA_mdl_v9999:metatarsal_L_Bk_03_bone', 'char_tigerA_mdl_v9999:muscle_L_infraspinatus_tissue', 'char_tigerA_mdl_v9999:muscle_R_semitendinosus_tissue', 'char_tigerA_mdl_v9999:tarsal_L_06_bone', 'char_tigerA_mdl_v9999:muscle_L_gracilis_tissue', 'char_tigerA_mdl_v9999:muscle_L_brachioradialis_tissue', 'char_tigerA_mdl_v9999:ribs_L_08_bone', 'char_tigerA_mdl_v9999:muscle_L_vastusMedialis_tissue', 'char_tigerA_mdl_v9999:vertebra_21_bone', 'char_tigerA_mdl_v9999:phalange_R_Bk_08_bone', 'char_tigerA_mdl_v9999:muscle_C_throat__tissue', 'char_tigerA_mdl_v9999:muscle_R_pectoralisDescendes', 'char_tigerA_mdl_v9999:vertebra_15_bone', 'char_tigerA_mdl_v9999:ribs_R_012_bone', 'char_tigerA_mdl_v9999:muscle_R_gluteusSuperficialis_tissue', 'char_tigerA_mdl_v9999:cervical_04_bone', 'char_tigerA_mdl_v9999:ribs_R_07_bone', 'char_tigerA_mdl_v9999:tail_caudal_05_bone', 'char_tigerA_mdl_v9999:patela_L_Bk__bone', 'char_tigerA_mdl_v9999:metacarpals_L_Ft_04_bone', 'char_tigerA_mdl_v9999:phalange_R_Ft_07_bone', 'char_tigerA_mdl_v9999:muscle_L_pectoralisTransversus_tissue', 'char_tigerA_mdl_v9999:muscle_R_gracilis_tissue', 'char_tigerA_mdl_v9999:phalange_L_Bk_03_bone', 'char_tigerA_mdl_v9999:carpaR_Ft_L_07_bone', 'char_tigerA_mdl_v9999:muscle_L_flexorDigitorumProfundus2_tissue', 'char_tigerA_mdl_v9999:muscle_L_deltoidAc_tissue1', 'char_tigerA_mdl_v9999:metatarsal_R_Bk_01_bone', 'char_tigerA_mdl_v9999:muscle_L_bicepsFemoris_tissue', 'char_tigerA_mdl_v9999:ribs_L_07_bone', 'char_tigerA_mdl_v9999:tail_caudal_09_bone', 'char_tigerA_mdl_v9999:muscle_R_pectoralisTransversus_tissue', 'char_tigerA_mdl_v9999:muscle_R_rectusAbdominis_tissue', 'char_tigerA_mdl_v9999:vertebra_03_bone', 'char_tigerA_mdl_v9999:muscle_R_flexorDigitorumProfundus5_tissue', 'char_tigerA_mdl_v9999:muscle_R_sternohyoid2_tissue', 'char_tigerA_mdl_v9999:cervical_05_bone', 'char_tigerA_mdl_v9999:tail_caudal_06_bone', 'char_tigerA_mdl_v9999:phalange_L_Ft_05_bone', 'char_tigerA_mdl_v9999:sternum_01_bone', 'char_tigerA_mdl_v9999:muscle_L_serratus_tissue', 'char_tigerA_mdl_v9999:fibula_L_Bk__bone', 'char_tigerA_mdl_v9999:carpaR_Ft_L_02_bone', 'char_tigerA_mdl_v9999:muscle_L_gastrocnemiusLateralhead_tissue', 'char_tigerA_mdl_v9999:tarsal_L_02_bone', 'char_tigerA_mdl_v9999:muscle_L_sartorius_tissue', 'char_tigerA_mdl_v9999:muscle_L_extensorDigitorumLateralis_tissue', 'char_tigerA_mdl_v9999:tail_caudal_16_bone', 'char_tigerA_mdl_v9999:vertebra_20_bone', 'char_tigerA_mdl_v9999:tigerA_fat_tissue', 'char_tigerA_mdl_v9999:vertebra_13_bone', 'char_tigerA_mdl_v9999:muscle_R_gastrocnemiusMedialhead_tissue', 'char_tigerA_mdl_v9999:muscle_R_sternohyoid_tissue', 'char_tigerA_mdl_v9999:muscle_R_extensorCarpiRadualisLongus_tissue', 'char_tigerA_mdl_v9999:tail_caudal_02_bone', 'char_tigerA_mdl_v9999:carpaL_Ft_L_08_bone', 'char_tigerA_mdl_v9999:phalange_R_Ft_02_bone', 'char_tigerA_mdl_v9999:muscle_L_peroneusLongus_tissue', 'char_tigerA_mdl_v9999:muscle_R_Soleus_tissue', 'char_tigerA_mdl_v9999:carpaR_Ft_L_01_bone', 'char_tigerA_mdl_v9999:muscle_L_flexorCarpiRadialis_tissue', 'char_tigerA_mdl_v9999:muscle_L_brachiocephalicus_tissue', 'char_tigerA_mdl_v9999:tarsal_L_05_bone', 'char_tigerA_mdl_v9999:metatarsal_R_Bk_04_bone', 'char_tigerA_mdl_v9999:muscle_L_Soleus_tissue', 'char_tigerA_mdl_v9999:ribs_L_05_bone', 'char_tigerA_mdl_v9999:tail_caudal_08_bone', 'char_tigerA_mdl_v9999:vertebra_16_bone', 'char_tigerA_mdl_v9999:muscle_R_peroneusBrevis_tissue', 'char_tigerA_mdl_v9999:muscle_R_omotranversarius_tissue', 'char_tigerA_mdl_v9999:vertebra_05_bone', 'char_tigerA_mdl_v9999:ribs_R_08_bone', 'char_tigerA_mdl_v9999:muscle_R_flexorDigitorumSuperficialis_tissue', 'char_tigerA_mdl_v9999:muscle_R_tibialisCranialis_tissue', 'char_tigerA_mdl_v9999:tail_caudal_07_bone', 'char_tigerA_mdl_v9999:phalange_L_Ft_02_bone', 'char_tigerA_mdl_v9999:sternum_02_bone', 'char_tigerA_mdl_v9999:muscle_L_serratusVentralisCervicis_tissue', 'char_tigerA_mdl_v9999:femur_L_Bk__bone', 'char_tigerA_mdl_v9999:carpaL_Ft_L_06_bone', 'char_tigerA_mdl_v9999:muscle_L_gastrocnemiusMedialhead_tissue', 'char_tigerA_mdl_v9999:muscle_R_abductorDigiLongus_tissue', 'char_tigerA_mdl_v9999:tarsal_L_04_bone', 'char_tigerA_mdl_v9999:metacarpals_R_Ft_02_bone', 'char_tigerA_mdl_v9999:muscle_L_abductorDigiLongus_tissue', 'char_tigerA_mdl_v9999:muscle_L_rhomboid_tissue', 'char_tigerA_mdl_v9999:ribs_L_010_bone', 'char_tigerA_mdl_v9999:tail_caudal_17_bone', 'char_tigerA_mdl_v9999:vertebra_17_bone', 'char_tigerA_mdl_v9999:vertebra_09_bone', 'char_tigerA_mdl_v9999:humerus_R_bone', 'char_tigerA_mdl_v9999:muscle_R_gastrocnemiusLateralhead_tissue', 'char_tigerA_mdl_v9999:muscle_R_sternoOccipitalis_tissue', 'char_tigerA_mdl_v9999:muscle_R_extensorCarpiUlnaris_tissue', 'char_tigerA_mdl_v9999:ribs_R_02_bone', 'char_tigerA_mdl_v9999:carpaL_Ft_L_05_bone', 'char_tigerA_mdl_v9999:phalange_R_Ft_04_bone', 'char_tigerA_mdl_v9999:muscle_L_splenius_tissue', 'char_tigerA_mdl_v9999:muscle_R_anconeus_tissue', 'char_tigerA_mdl_v9999:calcaneum_L_Bk_bone', 'char_tigerA_mdl_v9999:muscle_L_flexorCarpiUlnaris_tissue', 'char_tigerA_mdl_v9999:muscle_L_omotranversarius_tissue', 'char_tigerA_mdl_v9999:calcaneum_R_Bk_bone', 'char_tigerA_mdl_v9999:muscle_L_caudofemoralis_tissue', 'char_tigerA_mdl_v9999:ribs_L_04_bone', 'char_tigerA_mdl_v9999:tail_caudal_10_bone', 'char_tigerA_mdl_v9999:vertebra_18_bone', 'char_tigerA_mdl_v9999:tarsal_R_02_bone', 'char_tigerA_mdl_v9999:muscle_R_pectoralisProfundus_tissue', 'char_tigerA_mdl_v9999:muscle_R_teresMajor_tissue', 'char_tigerA_mdl_v9999:vertebra_06_bone', 'char_tigerA_mdl_v9999:radius_R_bone', 'char_tigerA_mdl_v9999:muscle_R_hyoid_tissue', 'char_tigerA_mdl_v9999:cervical_03_bone', 'char_tigerA_mdl_v9999:phalange_L_Ft_03_bone', 'char_tigerA_mdl_v9999:muscle_L_subscapularis_tissue', 'char_tigerA_mdl_v9999:metacarpals_L_Ft_01_bone', 'char_tigerA_mdl_v9999:carpaL_Ft_L_04_bone', 'char_tigerA_mdl_v9999:phalange_R_Ft_08_bone', 'char_tigerA_mdl_v9999:muscle_L_gluteusMedius_tissue', 'char_tigerA_mdl_v9999:muscle_L_latissimusDorsi_tissue', 'char_tigerA_mdl_v9999:phalange_L_Bk_01_bone', 'char_tigerA_mdl_v9999:metacarpals_R_Ft_05_bone', 'char_tigerA_mdl_v9999:muscle_L_anconeus_tissue', 'char_tigerA_mdl_v9999:muscle_L_supraspinatus_tissue', 'char_tigerA_mdl_v9999:ribs_L_09_bone', 'char_tigerA_mdl_v9999:muscle_L_semitendinosus_tissue', 'char_tigerA_mdl_v9999:vertebra_19_bone', 'char_tigerA_mdl_v9999:tarsal_R_04_bone', 'char_tigerA_mdl_v9999:vertebra_10_bone', 'char_tigerA_mdl_v9999:tarsal_R_05_bone', 'char_tigerA_mdl_v9999:muscle_R_iliocostalisLong_tissue', 'char_tigerA_mdl_v9999:muscle_R_brachiocephalicus_tissue', 'char_tigerA_mdl_v9999:muscle_R_deltoidSp_tissue', 'char_tigerA_mdl_v9999:muscle_R_subscapularis_tissue', 'char_tigerA_mdl_v9999:carpaL_Ft_L_03_bone', 'char_tigerA_mdl_v9999:muscle_L_peroneusBrevis_tissue', 'char_tigerA_mdl_v9999:phalange_L_Bk_06_bone', 'char_tigerA_mdl_v9999:carpaR_Ft_L_04_bone', 'char_tigerA_mdl_v9999:muscle_L_extensorDigitorumLongus_tissue', 'char_tigerA_mdl_v9999:muscle_L_trapezius_tissue', 'char_tigerA_mdl_v9999:phalange_L_Bk_02_bone', 'char_tigerA_mdl_v9999:patela_R_Bk_bone', 'char_tigerA_mdl_v9999:muscle_L_deltoidSp_tissue', 'char_tigerA_mdl_v9999:ribs_L_06_bone', 'char_tigerA_mdl_v9999:tail_caudal_11_bone']
+
+# for obj in a:
+#     temp = obj.split(":")[-1]
+#     objParents = pm.listRelatives(obj, p=True)[0]
+#     objParents = objParents.split(":")[-1]
+#     try:
+#         pm.parent(temp, objParents)
+#     except:
+#         continue
+
+# selectObjectOnly()
+
