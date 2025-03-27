@@ -1110,9 +1110,25 @@ def duplicateRange(start: str, end: str="",
         pm.delete(lower)
     except:
         pass
-    result = pm.listRelatives(renamed, ad=True)
-    result.append(duplicated)
-    result.reverse()
+    result = []
+    if not end:
+        result = pm.listRelatives(renamed, ad=True)
+        result.append(duplicated)
+        result.reverse()
+    else:
+        upper = pm.listRelatives(lastJoint, p=True)[0]
+        while upper != duplicated:
+            result.append(upper)
+            upper = upper.getParent()
+        result.reverse()
+        result.insert(0, duplicated)
+        result.append(pm.PyNode(lastJoint))
+        for idx, jnt in enumerate(result):
+            if idx+1 >= len(result):
+                continue
+            for i in jnt.getChildren():
+                if result[idx+1] != i:
+                    pm.delete(i)
     return result
 
 
