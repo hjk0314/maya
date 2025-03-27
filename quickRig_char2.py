@@ -398,11 +398,11 @@ class Character(QWidget):
         except:
             pass
         startEndJoint = {
-            rigJoints[11]: rigJoints[13],   # rig_Spine: rig_Spine2
-            rigJoints[6]: "",               # rig_LeftUpLeg: ""
-            rigJoints[1]: "",               # rig_RightUpLeg: ""
-            rigJoints[39]: rigJoints[41],   # rig_LeftArm: rig_LeftHand
-            rigJoints[15]: rigJoints[17],   # rig_RightArm: rig_RightHand
+            "rig_Spine": "rig_Spine2", 
+            "rig_LeftUpLeg": "", 
+            "rig_RightUpLeg": "", 
+            "rig_LeftArm": "rig_LeftHand", 
+            "rig_RightArm": "rig_RightHand", 
             }
         types = ["_FK", "_IK"]
         for start, end in startEndJoint.items():
@@ -411,6 +411,7 @@ class Character(QWidget):
 
 
 # ==============================================================================
+
 
     def createMainCtrl(self) -> str:
         """ Create Main Controllers. """
@@ -1341,12 +1342,12 @@ class Character(QWidget):
                 parentHierarchically(parents, joints[0])
 
 
-if __name__ == "__main__":
-    try:
-        char.close()
-        char.deleteLater()
-    except:
-        pass
-    char = Character()
-    char.show()
+# if __name__ == "__main__":
+#     try:
+#         char.close()
+#         char.deleteLater()
+#     except:
+#         pass
+#     char = Character()
+#     char.show()
 
