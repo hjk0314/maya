@@ -352,7 +352,7 @@ class Cat:
 
 
 # ctrl = Controllers()
-# ctrl.createControllers(square="")
+# ctrl.createControllers(arrow="")
 # mirrorCopy("cc_LeftBackKnee_FK1")
 # groupOwnPivot(null=True)
 
@@ -365,3 +365,4 @@ class Cat:
 
 
 # groupOwnPivot(null=True)
+# deletePlugins()
