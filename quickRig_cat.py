@@ -6,8 +6,8 @@ class Cat:
     def __init__(self):
         self.hips = "Hips"
         self.spine = [f"Spine{i}" for i in range(1, 10)]
-        self.neck = [f"Neck{i}" for i in range(1, 4)]
-        self.head = ["Head", "HeadTop_End"]
+        self.neck = ["Neck1", "Neck2", "Neck3", "Head", "HeadTop_End"]
+        # self.head = ["Head", "HeadTop_End"]
         self.jaw = ["Jaw", "Jaw_End"]
         self.ear_L = [f"LeftEar{i}" for i in range(1, 4)]
         self.ear_R = [f"RightEar{i}" for i in range(1, 4)]
@@ -191,14 +191,14 @@ class Cat:
         self.jntHierarchy = {
             self.hips: [self.spine, self.legs_LB, self.legs_RB, self.tail, ], 
             self.spine[-1]: [self.neck, self.legs_LF, self.legs_RF, ], 
-            self.head[0]: [
+            self.neck[3]: [
                 self.jaw, 
                 self.ear_L, 
                 self.ear_R, 
                 self.eye_L, 
                 self.eye_R
                 ], 
-            self.neck[-1]: [self.head, ], 
+            # self.neck[-1]: [self.head, ], 
             self.legs_LF[-2]: [
                 self.index_LF, 
                 self.middle_LF, 
@@ -279,6 +279,7 @@ class Cat:
             pass
         startEndJoint = {
             "rig_Spine1": "rig_Spine9", 
+            "rig_Neck1": "rig_Head", 
             "rig_LeftBackShoulder": "rig_LeftBackToe_End", 
             "rig_RightBackShoulder": "rig_RightBackToe_End", 
             "rig_LeftFrontShoulder": "rig_LeftFrontToe_End", 
@@ -291,7 +292,7 @@ class Cat:
 
 
     def reOrientJnt(self):
-        sel = [self.hips] + self.spine + self.neck + self.head
+        sel = [self.hips] + self.spine + self.neck
         for i in sel:
             try:
                 obj = pm.PyNode(i)
@@ -352,7 +353,7 @@ class Cat:
 
 
 # ctrl = Controllers()
-# ctrl.createControllers(arrow="")
+# ctrl.createControllers(cube="")
 # mirrorCopy("cc_LeftBackKnee_FK1")
 # groupOwnPivot(null=True)
 
