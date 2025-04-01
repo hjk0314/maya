@@ -482,18 +482,81 @@ def createBlendColor(controller: str="",
     --------
     >>> createBlendColor("ctrl.Switch", [jnt], [jntFK], [jntIK], t=1, r=1)
      """
-    attr = []
-    if t:   attr.append("translate")
-    if r:   attr.append("rotate")
-    if s:   attr.append("scale")
-    if v:   attr.append("visibility")
-    for i in attr:
+    attributes = []
+    if t:   attributes.append("translate")
+    if r:   attributes.append("rotate")
+    if s:   attributes.append("scale")
+    if v:   attributes.append("visibility")
+    for attr in attributes:
         for j, fk, ik in zip(jnt, jntFK, jntIK):
             blColor = pm.shadingNode("blendColors", au=True)
-            pm.connectAttr(f"{fk}.{i}", f"{blColor}.color1", f=True)
-            pm.connectAttr(f"{ik}.{i}", f"{blColor}.color2", f=True)
-            pm.connectAttr(f"{blColor}.output", f"{j}.{i}", f=True)
+            pm.connectAttr(f"{fk}.{attr}", f"{blColor}.color1", f=True)
+            pm.connectAttr(f"{ik}.{attr}", f"{blColor}.color2", f=True)
+            pm.connectAttr(f"{blColor}.output", f"{j}.{attr}", f=True)
             pm.connectAttr(controller, f"{blColor}.blender")
+
+
+def createBlendColor2(controller: str="", 
+                      jnt: list=[], 
+                      jntFK: list=[], 
+                      jntIK: list=[], 
+                      t=False, r=False, s=False, v=False) -> str:
+    """ 
+    - Create a blendColor node with "setRangeNode"
+    - FK -> color1
+    - IK -> color2
+    - output -> jnt
+    - ctrl -> blender
+
+    Return
+    ------
+    >>> "setRange1"
+
+    Usage
+    -----
+    >>> setRangeNode = createBlendColor2(...)
+    >>> pm.connectAttr(f"{setRangeNode}.outValueX", ...)
+    
+    Args
+    ----
+    - controller : str
+        - "cc_IKFK.Spine_IK0_FK1", 
+        - "cc_IKFK.Left_Arm_IK0_FK1", 
+        - "cc_IKFK.Right_Arm_IK0_FK1", 
+        - "cc_IKFK.Left_Leg_IK0_FK1", 
+        - "cc_IKFK.Right_Leg_IK0_FK1"
+    - joints : list
+        - jnt = ['rig_RightUpLeg', 'rig_RightLeg']
+        - jntFK = ['rig_RightUpLeg_FK', 'rig_RightLeg_FK']
+        - jntIK = ['rig_RightUpLeg_IK', 'rig_RightLeg_IK']
+    - kwargs
+        - t (translate)
+        - r (rotate)
+        - s (scale)
+        - v (visibility)
+
+    Examples
+    --------
+    >>> createBlendColor2("ctrl.Switch", [jnt], [jntFK], [jntIK], t=1, r=1)
+     """
+    attributes = []
+    if t:   attributes.append("translate")
+    if r:   attributes.append("rotate")
+    if s:   attributes.append("scale")
+    if v:   attributes.append("visibility")
+    setRangeNode = pm.shadingNode("setRange", au=True)
+    for i in ["X", "Y", "Z"]:
+        pm.setAttr(f"{setRangeNode}.oldMax{i}", 10)
+        pm.setAttr(f"{setRangeNode}.max{i}", 1)
+        pm.connectAttr(controller, f"{setRangeNode}.value{i}")
+    for attr in attributes:
+        for j, fk, ik in zip(jnt, jntFK, jntIK):
+            blColor = pm.shadingNode("blendColors", au=True)
+            pm.connectAttr(f"{fk}.{attr}", f"{blColor}.color1", f=True)
+            pm.connectAttr(f"{ik}.{attr}", f"{blColor}.color2", f=True)
+            pm.connectAttr(f"{blColor}.output", f"{j}.{attr}", f=True)
+            pm.connectAttr(f"{setRangeNode}.outValueX", f"{blColor}.blender")
+    return setRangeNode
 
 
 def createIKHandle(startJnt: str="", endJnt: str="", 
