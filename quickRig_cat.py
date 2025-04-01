@@ -65,10 +65,10 @@ class Cat:
         self.jntPosition = {
             'Hips': (0.0, 105.5976, -47.80265), 
             'Spine1': (0.0, 105.5976, -47.80265), 
-            'Spine2': (0.0, 104.56808, -36.06098), 
-            'Spine3': (0.0, 104.29889, -24.30194), 
-            'Spine4': (0.0, 105.53652, -12.58076), 
-            'Spine5': (0.0, 105.07111, -0.82225), 
+            'Spine2': (0.0, 105.81381, -36.03417), 
+            'Spine3': (0.0, 105.88847, -24.30194), 
+            'Spine4': (0.0, 105.74386, -12.58076), 
+            'Spine5': (0.0, 104.80744, -0.82225), 
             'Spine6': (0.0, 102.91921, 10.76383), 
             'Spine7': (0.0, 100.92647, 22.37477), 
             'Spine8': (0.0, 100.26311, 34.13868), 
@@ -313,7 +313,7 @@ class Cat:
 
 
 
-# cat = Cat()
+cat = Cat()
 # cat.createTempJoints()
 # cat.reOrientJnt()
 # cat.createRigJnt()
@@ -366,4 +366,19 @@ class Cat:
 
 
 # groupOwnPivot(null=True)
+# groupOwnPivot()
 # deletePlugins()
+
+
+# for idx, cv in enumerate(pm.selected(fl=True)):
+#     pos = getPosition(cv)
+#     loc = "loc_SpinePoint_%d" % idx
+#     pm.move(loc, pos)
+
+# createJointScaleExpression("rig_Spine1_IK", "rig_Spine9_IK", "cuv_Spine", y=True)
+
+
+# rig = addPrefix(cat.spine, ["rig_"], [])
+# FKs = addPrefix(cat.spine, ["rig_"], ["_FK"])
+# IKs = addPrefix(cat.spine, ["rig_"], ["_IK"])
+# createBlendColor2("cc_root_main.Spine_IK0_FK1", rig, FKs, IKs, t=True, r=True, s=True)
