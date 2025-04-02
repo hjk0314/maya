@@ -280,6 +280,7 @@ class Cat:
         startEndJoint = {
             "rig_Spine1": "rig_Spine9", 
             "rig_Neck1": "rig_Head", 
+            "rig_Tail1": "rig_Tail9", 
             "rig_LeftBackShoulder": "rig_LeftBackToe_End", 
             "rig_RightBackShoulder": "rig_RightBackToe_End", 
             "rig_LeftFrontShoulder": "rig_LeftFrontToe_End", 
@@ -372,13 +373,13 @@ cat = Cat()
 
 # for idx, cv in enumerate(pm.selected(fl=True)):
 #     pos = getPosition(cv)
-#     loc = "loc_SpinePoint_%d" % idx
+#     loc = "loc_TailPoint_%d" % idx
 #     pm.move(loc, pos)
 
-# createJointScaleExpression("rig_Spine1_IK", "rig_Spine9_IK", "cuv_Spine", y=True)
+# createJointScaleExpression("rig_Tail1_IK", "rig_Tail9_IK", "cuv_Tail", y=True)
 
 
-# rig = addPrefix(cat.spine, ["rig_"], [])
-# FKs = addPrefix(cat.spine, ["rig_"], ["_FK"])
-# IKs = addPrefix(cat.spine, ["rig_"], ["_IK"])
-# createBlendColor2("cc_root_main.Spine_IK0_FK1", rig, FKs, IKs, t=True, r=True, s=True)
+# rig = addPrefix(cat.tail, ["rig_"], [])
+# FKs = addPrefix(cat.tail, ["rig_"], ["_FK"])
+# IKs = addPrefix(cat.tail, ["rig_"], ["_IK"])
+# createBlendColor2("cc_root_main.Tail_IK0_FK1", rig, FKs, IKs, t=True, r=True, s=True)
