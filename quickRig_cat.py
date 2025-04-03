@@ -5,12 +5,13 @@ import pymel.core as pm
 class Cat:
     def __init__(self):
         self.hips = "Hips"
-        self.spine = [f"Spine{i}" for i in range(1, 10)]
-        self.neck = ["Neck1", "Neck2", "Neck3", "Head", "HeadTop_End"]
-        # self.head = ["Head", "HeadTop_End"]
+        self.spine = ["Spine%s" % (i if i else "") for i in range(9)]
+        self.neck = ["Neck%s" % (i if i else "") for i in range(3)]
+        self.tail = ["Tail%s" % (i if i else "") for i in range(9)]
+        self.head = ["Head", "HeadTop_End"]
         self.jaw = ["Jaw", "Jaw_End"]
-        self.ear_L = [f"LeftEar{i}" for i in range(1, 4)]
-        self.ear_R = [f"RightEar{i}" for i in range(1, 4)]
+        self.ear_L = ["LeftEar%s" % (i if i else "") for i in range(3)]
+        self.ear_R = ["RightEar%s"% (i if i else "") for i in range(3)]
         self.eye_L = ["LeftEye", "LeftEye_End"]
         self.eye_R = ["RightEye", "RightEye_End"]
         self.legs_LF = [
@@ -61,31 +62,30 @@ class Cat:
         self.middle_RB = [f"RightBackMiddle{i}" for i in range(1, 5)]
         self.ring_RB = [f"RightBackRing{i}" for i in range(1, 5)]
         self.pinky_RB = [f"RightBackPinky{i}" for i in range(1, 5)]
-        self.tail = [f"Tail{i}" for i in range(1, 10)]
         self.jntPosition = {
             'Hips': (0.0, 105.5976, -47.80265), 
-            'Spine1': (0.0, 105.5976, -47.80265), 
-            'Spine2': (0.0, 105.81381, -36.03417), 
-            'Spine3': (0.0, 105.88847, -24.30194), 
-            'Spine4': (0.0, 105.74386, -12.58076), 
-            'Spine5': (0.0, 104.80744, -0.82225), 
-            'Spine6': (0.0, 102.91921, 10.76383), 
-            'Spine7': (0.0, 100.92647, 22.37477), 
-            'Spine8': (0.0, 100.26311, 34.13868), 
-            'Spine9': (0.0, 101.12589, 45.88787), 
-            'Neck1': (0.0, 102.38305, 56.65433), 
-            'Neck2': (0.0, 104.84668, 67.21273), 
-            'Neck3': (0.0, 107.67955, 77.68039), 
+            'Spine': (0.0, 105.7347, -46.19885), 
+            'Spine1': (0.0, 105.81381, -36.03417), 
+            'Spine2': (0.0, 105.88847, -24.30194), 
+            'Spine3': (0.0, 105.74386, -12.58076), 
+            'Spine4': (0.0, 104.80744, -0.82225), 
+            'Spine5': (0.0, 102.91921, 10.76383), 
+            'Spine6': (0.0, 100.92647, 22.37477), 
+            'Spine7': (0.0, 100.26311, 34.13868), 
+            'Spine8': (0.0, 101.12589, 45.88787), 
+            'Neck': (0.0, 102.38305, 56.65433), 
+            'Neck1': (0.0, 104.84668, 67.21273), 
+            'Neck2': (0.0, 107.67955, 77.68039), 
             'Head': (0.0, 111.09206, 87.97162), 
             'HeadTop_End': (0.0, 117.10147, 101.49742), 
             'Jaw': (0.0, 103.1242, 97.66678), 
             'Jaw_End': (0.0, 80.59933, 115.17514), 
-            'LeftEar1': (9.80007, 116.56773, 95.2822), 
-            'LeftEar2': (14.86112, 119.76161, 98.98467), 
-            'LeftEar3': (18.24246, 121.19656, 102.42661), 
-            'RightEar1': (-9.80007, 116.568, 95.2822), 
-            'RightEar2': (-14.8611, 119.762, 98.9847), 
-            'RightEar3': (-18.2425, 121.197, 102.427), 
+            'LeftEar': (9.80007, 116.56773, 95.2822), 
+            'LeftEar1': (14.86112, 119.76161, 98.98467), 
+            'LeftEar2': (18.24246, 121.19656, 102.42661), 
+            'RightEar': (-9.80007, 116.568, 95.2822), 
+            'RightEar1': (-14.8611, 119.762, 98.9847), 
+            'RightEar2': (-18.2425, 121.197, 102.427), 
             'LeftEye': (7.51407, 104.15134, 112.95457), 
             'LeftEye_End': (7.51407, 104.15134, 115.18304), 
             'RightEye': (-7.51407, 104.151, 112.955), 
@@ -178,27 +178,27 @@ class Cat:
             'RightBackPinky2': (-17.8715, 3.62354, -67.9265), 
             'RightBackPinky3': (-19.4011, 2.99099, -63.0556), 
             'RightBackPinky4': (-20.0329, 0.04649, -61.0437), 
-            'Tail1': (0.0, 100.30746, -74.3944), 
-            'Tail2': (0.0, 97.34935, -88.53353), 
-            'Tail3': (0.0, 96.44871, -102.94353), 
-            'Tail4': (0.0, 96.40904, -117.39394), 
-            'Tail5': (0.0, 96.19063, -131.84264), 
-            'Tail6': (0.0, 96.01854, -146.29217), 
-            'Tail7': (0.0, 95.95709, -160.74193), 
-            'Tail8': (0.0, 95.68791, -175.18998), 
-            'Tail9': (0.0, 95.32285, -189.63589), 
+            'Tail': (0.0, 100.30746, -74.3944), 
+            'Tail1': (0.0, 97.34935, -88.53353), 
+            'Tail2': (0.0, 96.44871, -102.94353), 
+            'Tail3': (0.0, 96.40904, -117.39394), 
+            'Tail4': (0.0, 96.19063, -131.84264), 
+            'Tail5': (0.0, 96.01854, -146.29217), 
+            'Tail6': (0.0, 95.95709, -160.74193), 
+            'Tail7': (0.0, 95.68791, -175.18998), 
+            'Tail8': (0.0, 95.32285, -189.63589), 
             }
         self.jntHierarchy = {
             self.hips: [self.spine, self.legs_LB, self.legs_RB, self.tail, ], 
             self.spine[-1]: [self.neck, self.legs_LF, self.legs_RF, ], 
-            self.neck[3]: [
+            self.neck[-1]: [self.head, ], 
+            self.head[0]: [
                 self.jaw, 
                 self.ear_L, 
                 self.ear_R, 
                 self.eye_L, 
                 self.eye_R
                 ], 
-            # self.neck[-1]: [self.head, ], 
             self.legs_LF[-2]: [
                 self.index_LF, 
                 self.middle_LF, 
@@ -224,6 +224,17 @@ class Cat:
                 self.pinky_RB
                 ]
             }
+
+
+    def createTempJoints(self):
+        for jnt, pos in self.jntPosition.items():
+            pm.select(cl=True)
+            pm.joint(p=pos, n=jnt)
+        self.setHierarchy(self.jntHierarchy)
+        try:
+            pm.parent(self.hips, "bindBones")
+        except:
+            pass
 
 
     def setHierarchy(self, boneTree: dict) -> None:
@@ -260,40 +271,8 @@ class Cat:
                 parentHierarchically(parents, joints[0])
 
 
-    def createTempJoints(self):
-        for jnt, pos in self.jntPosition.items():
-            pm.select(cl=True)
-            pm.joint(p=pos, n=jnt)
-        self.setHierarchy(self.jntHierarchy)
-
-
-    def createRigJnt(self) -> None:
-        """ To create the rig joint by copying the original joint. """
-        if not pm.objExists(self.hips):
-            return
-        rigJoints = duplicateRange(self.hips, "", "rig_", "")
-        rgHips = rigJoints[0]
-        try:
-            pm.parent(rgHips, "rigBones")
-        except:
-            pass
-        startEndJoint = {
-            "rig_Spine1": "rig_Spine9", 
-            "rig_Neck1": "rig_Head", 
-            "rig_Tail1": "rig_Tail9", 
-            "rig_LeftBackShoulder": "rig_LeftBackToe_End", 
-            "rig_RightBackShoulder": "rig_RightBackToe_End", 
-            "rig_LeftFrontShoulder": "rig_LeftFrontToe_End", 
-            "rig_RightFrontShoulder": "rig_RightFrontToe_End", 
-            }
-        types = ["_FK", "_IK"]
-        for start, end in startEndJoint.items():
-            for typ in types:
-                duplicateRange(start, end, "", typ)
-
-
     def reOrientJnt(self):
-        sel = [self.hips] + self.spine + self.neck
+        sel = [self.hips] + self.spine + self.neck + self.head
         for i in sel:
             try:
                 obj = pm.PyNode(i)
@@ -307,79 +286,138 @@ class Cat:
             y = round(y, 5)
             z = round(z, 5)
             if x[0] >= 0:
-                pm.joint(i, e=True, oj="yzx", sao="zdown", zso=True)
+                pm.joint(obj, e=True, oj="yzx", sao="zdown", zso=True)
             else:
-                pm.joint(i, e=True, oj="yzx", sao="zup", zso=True)
+                pm.joint(obj, e=True, oj="yzx", sao="zup", zso=True)
+            if not obj.getChildren():
+                pm.joint(obj, e=True, oj='none', ch=True, zso=True)
 
 
+    def createRigJnt(self) -> None:
+        """ To create the rig joint by copying the original joint. """
+        if not pm.objExists(self.hips):
+            return
+        rigJoints = duplicateRange(self.hips, "", "rig_", "")
+        rgHips = rigJoints[0]
+        try:
+            pm.parent(rgHips, "rigBones")
+        except:
+            pass
+        startEndJoint = {
+            self.spine[0]: self.spine[-1], 
+            self.neck[0]: self.head[0], 
+            self.tail[0]: self.tail[-1], 
+            self.legs_LF[0]: self.legs_LF[-1], 
+            self.legs_RF[0]: self.legs_RF[-1], 
+            self.legs_LB[0]: self.legs_LB[-1], 
+            self.legs_RB[0]: self.legs_RB[-1], 
+            }
+        types = ["_FK", "_IK"]
+        for start, end in startEndJoint.items():
+            for typ in types:
+                duplicateRange(f"rig_{start}", f"rig_{end}", "", typ)
+
+
+# ===========================================================================
 
 
 cat = Cat()
+# createRigGroups("tigerA")
 # cat.createTempJoints()
 # cat.reOrientJnt()
 # cat.createRigJnt()
 
+
 # print({i.name(): getPosition(i) for i in pm.selected()})
 
 
-# createJointOnCurveSameSpacing(num=9, cuv="curve16")
-
-
-# for i in pm.selected():
-#     try:
-#         obj = pm.PyNode(i)
-#     except:
-#         continue
-#     worldMatrix = obj.getMatrix(worldSpace=True)
-#     x = worldMatrix[0][:3]
-#     y = worldMatrix[1][:3]
-#     z = worldMatrix[2][:3]
-#     x = round(x, 5)
-#     y = round(y, 5)
-#     z = round(z, 5)
-#     if x[0] >= 0:
-#         pm.joint(i, e=True, oj="yzx", sao="zdown", zso=True)
-#     else:
-#         pm.joint(i, e=True, oj="yzx", sao="zup", zso=True)
-
-
-# for i in selectJointOnly():
-#     setJointsStyle(i, b=True)
-
-
-# createPolevectorJoint()
-# lineUpObjectsOnOnePlane("LeftBackPinky11", "LeftBackPinky12", "LeftBackPinky13", "LeftBackPinky14")
-# reName("Back", "Front")
-# groupOwnPivot()
-
-
-# ctrl = Controllers()
-# ctrl.createControllers(cube="")
-# mirrorCopy("cc_LeftBackKnee_FK1")
-# groupOwnPivot(null=True)
-
-
-# createRigGroups("tigerA")
-# reName("cc_Tail1_sub_IK")
-
-
-# selectObjectOnly()
-
-
 # groupOwnPivot(null=True)
 # groupOwnPivot()
+
+
+# reName("_main_IK", "_IK_main")
+# reName("_sub_IK", "_IK_sub")
+# reName("_root", "_Hips")
+
+
 # deletePlugins()
 
 
-# for idx, cv in enumerate(pm.selected(fl=True)):
-#     pos = getPosition(cv)
-#     loc = "loc_TailPoint_%d" % idx
-#     pm.move(loc, pos)
+def createLocatorsOnCurvePoint(curve:str, name: str) -> list:
+    """ Create Locators on Curve Point.
+    Examples
+    --------
+    >>> createLocatorsOnCurvePoint("cuv_Neck", "Neck")
+    >>> createLocatorsOnCurvePoint("cuv_Spine", "Spine")
+    >>> createLocatorsOnCurvePoint("cuv_Tail", "Tail")
 
-# createJointScaleExpression("rig_Tail1_IK", "rig_Tail9_IK", "cuv_Tail", y=True)
+    Return
+    ------
+    >>> ["loc_NeckCurvePoint", "loc_NeckCurvePoint1", ...]
+     """
+    cuv = pm.PyNode(curve)
+    curveShape = cuv.getShape()
+    curvePosition = curveShape.getCVs(space="world")
+    locators = []
+    for idx, pos in enumerate(curvePosition):
+        num = "%s" % (idx if idx else "")
+        loc = pm.spaceLocator(p=(0, 0, 0), n=f"loc_{name}CurvePoint{num}")
+        pm.move(loc, pos)
+        locators.append(loc)
+    for i, loc in enumerate(locators):
+        locShape = loc.getShape()
+        pm.connectAttr(f"{locShape}.worldPosition[0]", 
+                       f"{curveShape}.controlPoints[{i}]", f=True)
+    locators_grp = groupOwnPivot(*locators)
+    pm.group(locators_grp[::2], n=f"{locators[0]}s")
+    return locators_grp
 
 
-# rig = addPrefix(cat.tail, ["rig_"], [])
-# FKs = addPrefix(cat.tail, ["rig_"], ["_FK"])
-# IKs = addPrefix(cat.tail, ["rig_"], ["_IK"])
-# createBlendColor2("cc_root_main.Tail_IK0_FK1", rig, FKs, IKs, t=True, r=True, s=True)
+# locatorGroups = createLocatorsOnCurvePoint("cuv_Tail", "Tail")
+
+
+def constraintParentByDistance(ctrl1, ctrl2, locatorGroups):
+    pos1, pos2 = [getPosition(i) for i in [ctrl1, ctrl2]]
+    totalRange = getDistance(pos1, pos2)
+    for i in locatorGroups:
+        unitRange = getDistance(pos1, getPosition(i))
+        dRatio = round(unitRange/totalRange, 5)
+        pm.parentConstraint(ctrl1, i, mo=1, w=0 if 1-dRatio < 0 else 1-dRatio)
+        pm.parentConstraint(ctrl2, i, mo=1, w=1 if dRatio >= 1 else dRatio)
+
+
+# ctrl1 = "cc_Tail6_IK_sub"
+# ctrl2 = "cc_Tail8_IK_sub"
+# locatorGroups = []
+# for i in range(7, 11):
+#     grpName = "loc_TailCurvePoint%s_grp" % (i if i else "")
+#     locatorGroups.append(grpName)
+# constraintParentByDistance(ctrl1, ctrl2, locatorGroups)
+
+
+# ikHandle -> manually
+
+
+# startJoint = "rig_Tail_IK"
+# endJoint = "rig_Tail8_IK"
+# curveName = "cuv_Tail"
+# createJointScaleExpression(startJoint, endJoint, curveName, y=True)
+
+
+# selectFKCtrls = pm.selected()
+# for cc in selectFKCtrls:
+#     jnt = cc.replace("cc_", "rig_")
+#     pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+
+
+# ctrlAttr = "cc_Hips_main.%s_IK0_FK1" % "Tail"
+# joints = cat.tail
+# rg = addPrefix(joints, ["rig_"], [])
+# fk = addPrefix(joints, ["rig_"], ["_FK"])
+# ik = addPrefix(joints, ["rig_"], ["_IK"])
+# createBlendColor2(ctrlAttr, rg, fk, ik, t=True, r=True, s=True)
+
+
+# Show and Hide Ctrls and Connect Stretch -> Manually
+
+
