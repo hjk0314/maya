@@ -404,20 +404,34 @@ def constraintParentByDistance(ctrl1, ctrl2, locatorGroups):
 # createJointScaleExpression(startJoint, endJoint, curveName, y=True)
 
 
-# selectFKCtrls = pm.selected()
-# for cc in selectFKCtrls:
-#     jnt = cc.replace("cc_", "rig_")
-#     pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+selectFKCtrls = pm.selected()
+for cc in selectFKCtrls:
+    jnt = cc.replace("cc_", "rig_")
+    pm.parentConstraint(cc, jnt, mo=True, w=1.0)
 
 
-# ctrlAttr = "cc_Hips_main.%s_IK0_FK1" % "Tail"
-# joints = cat.tail
+# ctrlAttr = "cc_Hips_main.%s_IK0_FK1" % "Left_Arm"
+# joints = cat.legs_LF
 # rg = addPrefix(joints, ["rig_"], [])
 # fk = addPrefix(joints, ["rig_"], ["_FK"])
 # ik = addPrefix(joints, ["rig_"], ["_IK"])
-# createBlendColor2(ctrlAttr, rg, fk, ik, t=True, r=True, s=True)
+# createBlendColor2(ctrlAttr, rg, fk, ik, s=True)
 
 
 # Show and Hide Ctrls and Connect Stretch -> Manually
 
+# =========================================================================
 
+
+# groupOwnPivot(null=True)
+# sel = pm.selected()
+# for i in sel:
+#     mirrorCopy(i)
+
+
+# sel = pm.selected()
+# duplicateRange(sel[0], sel[-1], "", "_spring")
+
+# ctrl = Controllers()
+# ctrl.createControllers()
+# createPolevectorJoint()
