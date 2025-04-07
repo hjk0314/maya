@@ -404,10 +404,10 @@ def constraintParentByDistance(ctrl1, ctrl2, locatorGroups):
 # createJointScaleExpression(startJoint, endJoint, curveName, y=True)
 
 
-selectFKCtrls = pm.selected()
-for cc in selectFKCtrls:
-    jnt = cc.replace("cc_", "rig_")
-    pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+# selectFKCtrls = pm.selected()
+# for cc in selectFKCtrls:
+#     jnt = cc.replace("cc_", "rig_")
+#     pm.parentConstraint(cc, jnt, mo=True, w=1.0)
 
 
 # ctrlAttr = "cc_Hips_main.%s_IK0_FK1" % "Left_Arm"
@@ -423,15 +423,114 @@ for cc in selectFKCtrls:
 # =========================================================================
 
 
+def createLegsFK():
+    sel_ccFK = pm.selected()
+    ccFK_grp = groupOwnPivot()
+    for cc in sel_ccFK:
+        jnt = cc.replace("cc_", "rig_")
+        pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+    for idx, cc in enumerate(sel_ccFK):
+        if idx+1 >= len(sel_ccFK):
+            continue
+        else:
+            pm.parent(ccFK_grp[::2][idx+1], cc)
+    
+
+# createLegsFK()
+
+
+def createLegsIK():
+    sel_jntIK = pm.selected()
+    if not sel_jntIK:
+        return
+    sel_jntSpring = duplicateRange(sel_jntIK[0].name(), sel_jntIK[3], "", "_spring")
+    A = "L" if "Left" in sel_jntIK[0].name() else "R"
+    B = "F" if "Front" in sel_jntIK[0].name() else "B"
+    AB = f"{A}{B}"
+    ikH_spring = pm.ikHandle(sj=sel_jntSpring[0], ee=sel_jntSpring[3], 
+                             sol="ikSpringSolver", n=f"ikHandle_{AB}_spring")
+    ikH_rp = pm.ikHandle(sj=sel_jntIK[1], ee=sel_jntIK[3], 
+                             sol="ikRPsolver", n=f"ikHandle_{AB}_rp")
+    ikH_sc = pm.ikHandle(sj=sel_jntIK[3], ee=sel_jntIK[4], 
+                             sol="ikSCsolver", n=f"ikHandle_{AB}_sc")
+    ikH_sc1 = pm.ikHandle(sj=sel_jntIK[4], ee=sel_jntIK[5], 
+                             sol="ikSCsolver", n=f"ikHandle_{AB}_sc1", )
+    pm.parent(ikH_rp[0], ikH_spring[0])
+    groupOwnPivot(ikH_sc1[0])
+    pm.parent(sel_jntIK[0].name(), sel_jntSpring[0])
+    for i in sel_jntSpring:
+        setJointsStyle(i, n=True)
+    createPolevectorJoint(sel_jntIK[1], sel_jntIK[2], sel_jntIK[3])
+    ccShoulder = sel_jntIK[0].name()
+    ccShoulder = ccShoulder.replace("rig_", "cc_")
+    pm.pointConstraint(ccShoulder, sel_jntSpring[0], mo=True, w=1.0)
+    pm.connectAttr(f"{ccShoulder}.rotate", f"{sel_jntIK[0]}.rotate", f=True)
+
+
+# createLegsIK()
+
+
+def createLegsAttrs(ccLegsIK: str):
+    if not ccLegsIK:
+        return
+    attr = ["Bank", "Spring", "Up_Spring", "Down_Spring"]
+    pm.addAttr(ccLegsIK, ln=attr[0], at="double", dv=0)
+    pm.setAttr(f"{ccLegsIK}.{attr[0]}", e=True, k=True)
+    pm.addAttr(ccLegsIK, ln=attr[1], at="bool", dv=1)
+    pm.setAttr(f"{ccLegsIK}.{attr[1]}", e=True, k=True)
+    pm.addAttr(ccLegsIK, ln=attr[2], at="double", dv=0.5, min=0, max=1)
+    pm.setAttr(f"{ccLegsIK}.{attr[2]}", e=True, k=True)
+    pm.addAttr(ccLegsIK, ln=attr[3], at="double", dv=0.5, min=0, max=1)
+    pm.setAttr(f"{ccLegsIK}.{attr[3]}", e=True, k=True)
+    A = "L" if "Left" in ccLegsIK else "R"
+    B = "F" if "Front" in ccLegsIK else "B"
+    AB = "%s%s" % (A, B)
+    pm.connectAttr(f"{ccLegsIK}.Spring", f"ikHandle_{AB}_spring.ikBlend")
+    pm.connectAttr(f"{ccLegsIK}.Up_Spring", f"ikHandle_{AB}_spring.springAngleBias[0].springAngleBias_FloatValue")
+    pm.connectAttr(f"{ccLegsIK}.Down_Spring", f"ikHandle_{AB}_spring.springAngleBias[1].springAngleBias_FloatValue")
+    clampNode = pm.shadingNode("clamp", au=True)
+    pm.setAttr(f"{clampNode}.minR", -180)
+    pm.setAttr(f"{clampNode}.maxG", 180)
+    pm.connectAttr(f"{ccLegsIK}.Bank", f"{clampNode}.inputR")
+    pm.connectAttr(f"{ccLegsIK}.Bank", f"{clampNode}.inputG")
+    C = "Left" if A == "L" else "Right"
+    D = "Front" if B == "F" else "Back"
+    if A == "L":
+        I = "BankIn"
+        O = "BankOut"
+    else:
+        I = "BankOut"
+        O = "BankIn"
+    pm.connectAttr(f"{clampNode}.outputR", f"grp_{C}{D}{O}_IK.rotateZ")
+    pm.connectAttr(f"{clampNode}.outputG", f"grp_{C}{D}{I}_IK.rotateZ")
+
+
+# createLegsAttrs()
+
+
+def connectLegsJoints(attr: str, joints: list):
+    """ 
+    Args
+    ----
+    - attr -> "Left_Leg"
+    - joints -> cat.legs_LB
+     """
+    ctrlAttr = "cc_Hips_main.%s_IK0_FK1" % attr
+    Org = addPrefix(joints, ["rig_"], [])
+    FKs = addPrefix(joints, ["rig_"], ["_FK"])
+    IKs = addPrefix(joints, ["rig_"], ["_IK"])
+    setRangeNode = createBlendColor2(ctrlAttr, Org, FKs, IKs, s=True)
+    reverseNode = pm.shadingNode("reverse", au=True)
+    pm.connectAttr(f"{setRangeNode}.outValueX", f"{reverseNode}.inputX", f=True)
+    for rg, fk, ik in zip(Org, FKs, IKs):
+        fkConstraint = pm.parentConstraint(fk, rg, mo=True, w=1.0)
+        ikConstraint = pm.parentConstraint(ik, rg, mo=True, w=1.0)
+        pm.connectAttr(f"{setRangeNode}.outValueX", f"{fkConstraint}.{fk}W0", f=True)
+        pm.connectAttr(f"{reverseNode}.outputX", f"{ikConstraint}.{ik}W1", f=True)
+
+
+# connectLegsJoints("Left_Leg", cat.legs_LB)
+
+
 # groupOwnPivot(null=True)
-# sel = pm.selected()
-# for i in sel:
-#     mirrorCopy(i)
-
-
-# sel = pm.selected()
-# duplicateRange(sel[0], sel[-1], "", "_spring")
-
-# ctrl = Controllers()
-# ctrl.createControllers()
-# createPolevectorJoint()
+# reName("Left", "Right")
