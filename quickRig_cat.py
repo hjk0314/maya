@@ -331,15 +331,6 @@ cat = Cat()
 # print({i.name(): getPosition(i) for i in pm.selected()})
 
 
-# groupOwnPivot(null=True)
-# groupOwnPivot()
-
-
-# reName("_main_IK", "_IK_main")
-# reName("_sub_IK", "_IK_sub")
-# reName("_root", "_Hips")
-
-
 # deletePlugins()
 
 
@@ -420,10 +411,12 @@ def constraintParentByDistance(ctrl1, ctrl2, locatorGroups):
 
 # Show and Hide Ctrls and Connect Stretch -> Manually
 
+
 # =========================================================================
 
 
 def createLegsFK():
+    """ Select FKs Controllers """
     sel_ccFK = pm.selected()
     ccFK_grp = groupOwnPivot()
     for cc in sel_ccFK:
@@ -440,6 +433,7 @@ def createLegsFK():
 
 
 def createLegsIK():
+    """ Select Legs Joints. """
     sel_jntIK = pm.selected()
     if not sel_jntIK:
         return
@@ -471,6 +465,14 @@ def createLegsIK():
 
 
 def createLegsAttrs(ccLegsIK: str):
+    """ 
+    Args
+    ----
+    >>> createLegsAttrs(cc_LeftFrontToe_IK)
+    >>> createLegsAttrs(cc_RightFrontToe_IK)
+    >>> createLegsAttrs(cc_LeftBackToe_IK)
+    >>> createLegsAttrs(cc_RightBackToe_IK)
+     """
     if not ccLegsIK:
         return
     attr = ["Bank", "Spring", "Up_Spring", "Down_Spring"]
@@ -505,15 +507,14 @@ def createLegsAttrs(ccLegsIK: str):
     pm.connectAttr(f"{clampNode}.outputG", f"grp_{C}{D}{I}_IK.rotateZ")
 
 
-# createLegsAttrs()
+# createLegsAttrs("cc_RightBackToe_IK")
 
 
 def connectLegsJoints(attr: str, joints: list):
-    """ 
-    Args
-    ----
-    - attr -> "Left_Leg"
-    - joints -> cat.legs_LB
+    """ Main Controller is "cc_Hips_main"
+    Examples
+    --------
+    >>> connectLegsJoints("Left_Leg", cat.legs_LB)
      """
     ctrlAttr = "cc_Hips_main.%s_IK0_FK1" % attr
     Org = addPrefix(joints, ["rig_"], [])
@@ -529,8 +530,39 @@ def connectLegsJoints(attr: str, joints: list):
         pm.connectAttr(f"{reverseNode}.outputX", f"{ikConstraint}.{ik}W1", f=True)
 
 
-# connectLegsJoints("Left_Leg", cat.legs_LB)
+# connectLegsJoints("Right_Leg", cat.legs_RB)
 
 
-# groupOwnPivot(null=True)
-# reName("Left", "Right")
+# ===========================================================================
+
+
+def connectBones():
+    joints = cat.jntPosition.keys()
+    joints = list(joints)
+    rgJoints = addPrefix(joints, ["rig_"], [])
+    for rgJnt, jnt in zip(rgJoints, joints):
+        for attr in ["translate", "rotate"]:
+            pm.connectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}", f=1)
+
+
+# connectBones()
+
+
+def disConnectBones():
+    joints = cat.jntPosition.keys()
+    joints = list(joints)
+    rgJoints = addPrefix(joints, ["rig_"], [])
+    for rgJnt, jnt in zip(rgJoints, joints):
+        for attr in ["translate", "rotate"]:
+            pm.disconnectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}")
+
+
+# disConnectBones()
+
+
+# ===========================================================================
+
+
+# ctrl = Controllers()
+# ctrl.createControllers(car="", car2="")
+# groupOwnPivot()
