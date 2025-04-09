@@ -328,7 +328,7 @@ cat = Cat()
 # cat.createRigJnt()
 
 
-# print({i.name(): getPosition(i) for i in pm.selected()})
+# print({i.name(): getPosition(i) for i in pm.selected(fl=True)})
 
 
 # deletePlugins()
@@ -563,6 +563,41 @@ def disConnectBones():
 # ===========================================================================
 
 
-# ctrl = Controllers()
-# ctrl.createControllers(car="", car2="")
-# groupOwnPivot()
+ctrl = Controllers()
+sel = pm.selected()
+# _1stJnt, _2ndJnt = sel
+# ccName = ctrl.createControllers(pointer="")
+# for i in ccName:
+#     pm.matchTransform(i, _1stJnt, pos=True)
+#     acNode = pm.aimConstraint(_2ndJnt, i, 
+#                               o=(0,0,0), aim=(0,0,1), u=(0,1,0), 
+#                               wut="vector", wu=(0,1,0), sk=["x", "z"])
+#     pm.delete(acNode)
+
+# for i in sel:
+#     cc = ctrl.createControllers(pointer2="")[0]
+#     # pm.matchTransform(cc, i, scl=True)
+#     # pm.rotate(cc, (45,0,0))
+#     # pm.makeIdentity(cc, a=True, r=True, s=True, jo=0, n=0, pn=1)
+#     pm.matchTransform(cc, i, pos=True, rot=True)
+
+# cc = ctrl.createControllers(pointer="")[0]
+
+
+# for org, new in zip(sel[:8], sel[8:]):
+#     pm.matchTransform(new, org, rot=True)
+
+
+# reName("RightFront", "RightBack")
+# groupOwnPivot(null=True)
+
+
+# selectObjectOnly()
+# sel = pm.selected()
+# for box in sel:
+#     tmp = box.split("_")
+#     jnt = f"rig_{tmp[1]}"
+#     # jntPivot = pm.xform(jnt, q=True, ws=True, rp=True)
+#     # pm.xform(box, ws=True, piv=jntPivot)
+#     pm.parentConstraint(jnt, box, mo=True, w=1.0)
+#     pm.scaleConstraint(jnt, box, mo=True, w=1.0, sk=["x", "z"])
