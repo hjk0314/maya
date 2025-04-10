@@ -1613,12 +1613,14 @@ def colorize(*args, **kwargs) -> None:
     ------
     - "blue": 6, 
     - "blue2": 18, 
+    - "brown": 10, 
     - "pink": 9, 
     - "red": 13, 
     - "red2": 21, 
     - "green": 14, 
     - "green2": 23, 
     - "yellow": 17,
+    - "yellow2": 25, 
     
     Examples
     --------
@@ -1633,12 +1635,14 @@ def colorize(*args, **kwargs) -> None:
     colorBar = {
         "blue": 6, 
         "blue2": 18, 
+        "brown": 10, 
         "pink": 9, 
         "red": 13, 
         "red2": 21, 
         "green": 14, 
         "green2": 23, 
-        "yellow": 17
+        "yellow": 17, 
+        "yellow2": 25, 
         }
     idx = [colorBar[j] for j, k in kwargs.items() if j in colorBar and k]
     for obj in sel:
@@ -1711,6 +1715,10 @@ class Controllers:
                 (-0, 10, -6), (0, 12, 0), (0, 10, 6), (0, 6, 10), 
                 (0, 2, 12), (0, 0, 12.6), (0, 2, 10), (0, 4, 13), 
                 (0, 0, 12.6)
+                ], 
+            "arrow6": [
+                (0, 0, 0), (0, 6, 0), (0, 6, 3), 
+                (1, 6, 2), (-1, 6, 2), (0, 6, 3), 
                 ], 
             "cap": [
                 (0, 0, 12), (-9, 0, 9), (-6.667, 6.667, 6.667), 
@@ -1909,7 +1917,7 @@ class Controllers:
 
         kwargs
         ------
-        - "arrow", "arrow1", "arrow2", "arrow3", "arrow4", "arrow5", 
+        - "arrow", "arrow1", "arrow2", "arrow3", "arrow4", "arrow5", "arrow6", 
         - "cap", "car", "car1", "circle", "cone", "cone1", 
         - "cross", "cube", "cylinder", 
         - "door", "door1", 
