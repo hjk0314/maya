@@ -328,7 +328,7 @@ cat = Cat()
 # cat.createRigJnt()
 
 
-# print({i.name(): getPosition(i) for i in pm.selected(fl=True)})
+print({i.name(): getPosition(i) for i in pm.selected(fl=True)})
 
 
 # deletePlugins()
@@ -541,7 +541,7 @@ def connectBones():
     joints = list(joints)
     rgJoints = addPrefix(joints, ["rig_"], [])
     for rgJnt, jnt in zip(rgJoints, joints):
-        for attr in ["translate", "rotate"]:
+        for attr in ["translate", "rotate", "scale"]:
             pm.connectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}", f=1)
 
 
@@ -564,7 +564,6 @@ def disConnectBones():
 
 
 ctrl = Controllers()
-sel = pm.selected()
 # _1stJnt, _2ndJnt = sel
 # ccName = ctrl.createControllers(pointer="")
 # for i in ccName:
@@ -596,8 +595,21 @@ sel = pm.selected()
 # sel = pm.selected()
 # for box in sel:
 #     tmp = box.split("_")
-#     jnt = f"rig_{tmp[1]}"
-#     # jntPivot = pm.xform(jnt, q=True, ws=True, rp=True)
-#     # pm.xform(box, ws=True, piv=jntPivot)
+#     jnt = "%s" % tmp[1]
+#     jntPivot = pm.xform(jnt, q=True, ws=True, rp=True)
+#     pm.xform(box, ws=True, piv=jntPivot)
 #     pm.parentConstraint(jnt, box, mo=True, w=1.0)
-#     pm.scaleConstraint(jnt, box, mo=True, w=1.0, sk=["x", "z"])
+#     pm.scaleConstraint(jnt, box, mo=True, w=1.0)
+    # pm.scaleConstraint(jnt, box, mo=True, w=1.0, sk=["x", "z"])
+
+
+# selectConstraintOnly()
+
+
+# sel = pm.selected()
+# # colorize(*sel, yellow=True)
+# tmp = createAnnotation(sel[0], sel[-1])
+# tmp_grp = groupOwnPivot(tmp)[0]
+# pm.parentConstraint(sel[0], tmp_grp, mo=True, w=1.0)
+# pm.scaleConstraint(sel[0], tmp_grp, mo=True, w=1.0)
+# groupOwnPivot()
