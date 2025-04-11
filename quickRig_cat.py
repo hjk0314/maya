@@ -328,7 +328,7 @@ cat = Cat()
 # cat.createRigJnt()
 
 
-print({i.name(): getPosition(i) for i in pm.selected(fl=True)})
+# print({i.name(): getPosition(i) for i in pm.selected(fl=True)})
 
 
 # deletePlugins()
@@ -613,3 +613,10 @@ ctrl = Controllers()
 # pm.parentConstraint(sel[0], tmp_grp, mo=True, w=1.0)
 # pm.scaleConstraint(sel[0], tmp_grp, mo=True, w=1.0)
 # groupOwnPivot()
+
+
+# sel = pm.selected()
+# for i in sel:
+#     result = pm.listConnections(i, s=1, d=0, p=1)
+#     result = list(set(result))
+#     print(result)
