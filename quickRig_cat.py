@@ -318,9 +318,6 @@ class Cat:
                 duplicateRange(f"rig_{start}", f"rig_{end}", "", typ)
 
 
-# ===========================================================================
-
-
 cat = Cat()
 # createRigGroups("tigerA")
 # cat.createTempJoints()
@@ -328,10 +325,7 @@ cat = Cat()
 # cat.createRigJnt()
 
 
-# print({i.name(): getPosition(i) for i in pm.selected(fl=True)})
-
-
-# deletePlugins()
+# ===========================================================================
 
 
 def createLocatorsOnCurvePoint(curve:str, name: str) -> list:
@@ -429,9 +423,6 @@ def createLegsFK():
             pm.parent(ccFK_grp[::2][idx+1], cc)
     
 
-# createLegsFK()
-
-
 def createLegsIK():
     """ Select Legs Joints. """
     sel_jntIK = pm.selected()
@@ -459,9 +450,6 @@ def createLegsIK():
     ccShoulder = ccShoulder.replace("rig_", "cc_")
     pm.pointConstraint(ccShoulder, sel_jntSpring[0], mo=True, w=1.0)
     pm.connectAttr(f"{ccShoulder}.rotate", f"{sel_jntIK[0]}.rotate", f=True)
-
-
-# createLegsIK()
 
 
 def createLegsAttrs(ccLegsIK: str):
@@ -507,9 +495,6 @@ def createLegsAttrs(ccLegsIK: str):
     pm.connectAttr(f"{clampNode}.outputG", f"grp_{C}{D}{I}_IK.rotateZ")
 
 
-# createLegsAttrs("cc_RightBackToe_IK")
-
-
 def connectLegsJoints(attr: str, joints: list):
     """ Main Controller is "cc_Hips_main"
     Examples
@@ -530,6 +515,9 @@ def connectLegsJoints(attr: str, joints: list):
         pm.connectAttr(f"{reverseNode}.outputX", f"{ikConstraint}.{ik}W1", f=True)
 
 
+# createLegsFK()
+# createLegsIK()
+# createLegsAttrs("cc_RightBackToe_IK")
 # connectLegsJoints("Right_Leg", cat.legs_RB)
 
 
@@ -541,11 +529,8 @@ def connectBones():
     joints = list(joints)
     rgJoints = addPrefix(joints, ["rig_"], [])
     for rgJnt, jnt in zip(rgJoints, joints):
-        for attr in ["translate", "rotate"]:
+        for attr in ["translate", "rotate", "scale"]:
             pm.connectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}", f=1)
-
-
-# connectBones()
 
 
 def disConnectBones():
@@ -553,74 +538,13 @@ def disConnectBones():
     joints = list(joints)
     rgJoints = addPrefix(joints, ["rig_"], [])
     for rgJnt, jnt in zip(rgJoints, joints):
-        for attr in ["translate", "rotate"]:
+        for attr in ["translate", "rotate", "scale"]:
             pm.disconnectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}")
 
 
+# connectBones()
 # disConnectBones()
 
 
 # ===========================================================================
-
-
-ctrl = Controllers()
-# _1stJnt, _2ndJnt = sel
-# ccName = ctrl.createControllers(pointer="")
-# for i in ccName:
-#     pm.matchTransform(i, _1stJnt, pos=True)
-#     acNode = pm.aimConstraint(_2ndJnt, i, 
-#                               o=(0,0,0), aim=(0,0,1), u=(0,1,0), 
-#                               wut="vector", wu=(0,1,0), sk=["x", "z"])
-#     pm.delete(acNode)
-
-# for i in sel:
-#     cc = ctrl.createControllers(pointer2="")[0]
-#     # pm.matchTransform(cc, i, scl=True)
-#     # pm.rotate(cc, (45,0,0))
-#     # pm.makeIdentity(cc, a=True, r=True, s=True, jo=0, n=0, pn=1)
-#     pm.matchTransform(cc, i, pos=True, rot=True)
-
-# cc = ctrl.createControllers(pointer="")[0]
-
-
-# for org, new in zip(sel[:8], sel[8:]):
-#     pm.matchTransform(new, org, rot=True)
-
-
-# reName("RightFront", "RightBack")
-# groupOwnPivot(null=True)
-
-
-# selectObjectOnly()
-# sel = pm.selected()
-# for box in sel:
-#     tmp = box.split("_")
-#     jnt = "%s" % tmp[1]
-#     jntPivot = pm.xform(jnt, q=True, ws=True, rp=True)
-#     pm.xform(box, ws=True, piv=jntPivot)
-#     pm.parentConstraint(jnt, box, mo=True, w=1.0)
-#     pm.scaleConstraint(jnt, box, mo=True, w=1.0)
-    # pm.scaleConstraint(jnt, box, mo=True, w=1.0, sk=["x", "z"])
-
-
-# selectConstraintOnly()
-
-
-# sel = pm.selected()
-# # colorize(*sel, yellow=True)
-# tmp = createAnnotation(sel[0], sel[-1])
-# tmp_grp = groupOwnPivot(tmp)[0]
-# pm.parentConstraint(sel[0], tmp_grp, mo=True, w=1.0)
-# pm.scaleConstraint(sel[0], tmp_grp, mo=True, w=1.0)
-# groupOwnPivot()
-
-
-# sel = pm.selected()
-# for i in sel:
-#     result = pm.listConnections(i, s=1, d=0, p=1)
-#     result = list(set(result))
-#     print(result)
-# groupOwnPivot(null=True)
-# reName("_LB", "_RB")
-
 
