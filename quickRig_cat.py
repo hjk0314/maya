@@ -548,3 +548,21 @@ def disConnectBones():
 
 # ===========================================================================
 
+
+sel = pm.selected()
+# for cc in sel:
+#     cc_grp = f"{cc}_grp"
+#     copied = pm.duplicate(cc_grp, rr=True)[0]
+#     pm.select(cl=True)
+#     pm.select(copied, hi=True)
+#     reName("2", "3")
+#     tmp = reName("grp1", "grp")[0]
+#     bone = tmp.split("_")[1]
+#     pm.matchTransform(copied, bone, pos=True)
+#     pm.parent(copied, cc)
+
+
+# for cc in sel:
+#     jnt = cc.replace("cc_", "rig_")
+#     pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+
