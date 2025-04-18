@@ -566,3 +566,20 @@ sel = pm.selected()
 #     jnt = cc.replace("cc_", "rig_")
 #     pm.parentConstraint(cc, jnt, mo=True, w=1.0)
 
+
+# for cc in sel:
+#     pm.addAttr(cc, ln="Finger_Controllers", at="enum", en="Off:On:")
+#     pm.setAttr(f"{cc}.Finger_Controllers", e=True, keyable=True)
+#     pm.addAttr(cc, ln="Spread_Finger", at="double", min=0, max=10, dv=0)
+#     pm.setAttr(f"{cc}.Spread_Finger", e=True, keyable=True)
+#     pm.addAttr(cc, ln="Claw_Controllers", at="enum", en="Off:On:")
+#     pm.setAttr(f"{cc}.Claw_Controllers", e=True, keyable=True)
+#     pm.addAttr(cc, ln="Index_Out", at="double", min=0, max=10, dv=0)
+#     pm.setAttr(f"{cc}.Index_Out", e=True, keyable=True)
+#     pm.addAttr(cc, ln="Middle_Out", at="double", min=0, max=10, dv=0)
+#     pm.setAttr(f"{cc}.Middle_Out", e=True, keyable=True)
+#     pm.addAttr(cc, ln="Ring_Out", at="double", min=0, max=10, dv=0)
+#     pm.setAttr(f"{cc}.Ring_Out", e=True, keyable=True)
+#     pm.addAttr(cc, ln="Pinky_Out", at="double", min=0, max=10, dv=0)
+#     pm.setAttr(f"{cc}.Pinky_Out", e=True, keyable=True)
+
