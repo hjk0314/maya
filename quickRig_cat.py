@@ -583,3 +583,102 @@ sel = pm.selected()
 #     pm.addAttr(cc, ln="Pinky_Out", at="double", min=0, max=10, dv=0)
 #     pm.setAttr(f"{cc}.Pinky_Out", e=True, keyable=True)
 
+
+def reNameClaws(key, side):
+    sel = pm.selected()
+    name = [
+        "geo_clawsNail_%s_%s_1" % (key, side), 
+        "geo_clawsNail_%s_%s_2" % (key, side), 
+        "geo_clawsTissue_%s_%s_1" % (key, side), 
+        ]
+    for obj, objName in zip(sel, name):
+        pm.select(cl=True)
+        pm.select(obj)
+        reName(objName)
+    pm.group(sel[:2], n="geo_clawsNail_%s_%s_grp" % (key, side))
+    pm.group(sel[-1], n="geo_clawsTissue_%s_%s_grp" % (key, side))
+
+
+# reNameClaws("pinky", "RB")
+
+
+# for i in sel:
+#     pm.select(cl=True)
+#     pm.select(i)
+#     reName("cc_", "cc_claws_")
+
+
+# for i in sel:
+#     pm.setAttr(f"{i}.displayRotatePivot", 1)
+
+
+# a, b, c, d = sel
+# aP = a.getParent()
+# cn = a.replace("4", "Claw")
+# dn = a.replace("4", "ClawEnd")
+# firstJnt = a.replace("4", "1")
+# new = a + "temp"
+# e = pm.rename(a, new)
+# f = pm.rename(b, a)
+# pm.delete(e)
+# pm.rename(c, cn)
+# pm.rename(d, dn)
+# pm.parent(f, aP)
+# pm.rename(f, f.replace("temp", ""))
+# pm.joint(firstJnt, e=True, oj="yzx", secondaryAxisOrient="yup", ch=True, zso=True)
+# pm.joint(dn, e=True, oj="none", ch=True, zso=True)
+
+
+# result = []
+# for i in sel:
+#     new = i.replace("rig_", "")
+#     pm.duplicate(i, rr=True, n=new)
+#     result.append(new)
+# pm.parent(result, w=True)
+# pm.select(result)
+# sel = pm.selected()
+# print(sel)
+# for i in sel:
+#     pm.select(i, hi=True)
+#     for j in pm.selected():
+#         new = j.replace("rig_", "")
+#         try:
+#             pm.rename(j, new)
+#         except:
+#             continue
+
+
+# Controllers().createControllers(square="")
+# Controllers().createControllers(pointer2="")
+
+# for i in sel:
+#     cc = pm.duplicate("curve1", rr=True)[0]
+#     pm.matchTransform(cc, i, pos=True, rot=True)
+#     if "Claw" in i.name():
+#         pm.scale(cc, (0.4, 0.4, 0.4))
+#         pm.rotate(cc, (90, 0, 0), r=True, os=True, fo=True)
+#         pm.rotate(cc, (0, -90, 0), r=True, os=True, fo=True)
+#         pm.rotate(cc, (0, -90, 0), r=True, os=True, fo=True)
+#     else:
+#         pm.scale(cc, (0.6, 0.6, 0.6))
+#         pm.rotate(cc, (0, 90, 0), r=True, os=True, fo=True)
+#         pm.rotate(cc, (0, 90, 0), r=True, os=True, fo=True)
+#     ccName = i.replace("rig_", "cc_")
+#     pm.rename(cc, ccName)
+
+
+
+
+# for i in range(0, len(sel), 2):
+#     o = sel[i]
+#     n = sel[i+1]
+#     pm.parentConstraint(o, n, mo=True, w=1.0)
+#     pm.currentTime(0)
+#     pm.setKeyframe(n, at=["translateX","translateY", "translateZ", "rotateX", "rotateY", "rotateZ"])
+#     pm.setAttr(f"{n}.blendParent1", 1)
+#     pm.currentTime(10)
+#     pm.setKeyframe(n, at=["translateX","translateY", "translateZ", "rotateX", "rotateY", "rotateZ"])
+#     pm.currentTime(0)
+
+
+# reName("cc_clawIndex_LF_grp")
