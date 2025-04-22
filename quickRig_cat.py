@@ -47,21 +47,37 @@ class Cat:
             'RightBackToe_End', 
             ]
         self.index_LF = [f"LeftFrontIndex{i}" for i in range(1, 5)]
+        self.index_LF += ["LeftFrontIndexClaw", "LeftFrontIndexClawEnd"]
         self.middle_LF = [f"LeftFrontMiddle{i}" for i in range(1, 5)]
+        self.middle_LF += ["LeftFrontMiddleClaw", "LeftFrontMiddleClawEnd"]
         self.ring_LF = [f"LeftFrontRing{i}" for i in range(1, 5)]
+        self.ring_LF += ["LeftFrontRingClaw", "LeftFrontRingClawEnd"]
         self.pinky_LF = [f"LeftFrontPinky{i}" for i in range(1, 5)]
+        self.pinky_LF += ["LeftFrontPinkyClaw", "LeftFrontPinkyClawEnd"]
         self.index_RF = [f"RightFrontIndex{i}" for i in range(1, 5)]
+        self.index_RF += ["RightFrontIndexClaw", "RightFrontIndexClawEnd"]
         self.middle_RF = [f"RightFrontMiddle{i}" for i in range(1, 5)]
+        self.middle_RF += ["RightFrontMiddleClaw", "RightFrontMiddleClawEnd"]
         self.ring_RF = [f"RightFrontRing{i}" for i in range(1, 5)]
+        self.ring_RF += ["RightFrontRingClaw", "RightFrontRingClawEnd"]
         self.pinky_RF = [f"RightFrontPinky{i}" for i in range(1, 5)]
+        self.pinky_RF += ["RightFrontPinkyClaw", "RightFrontPinkyClawEnd"]
         self.index_LB = [f"LeftBackIndex{i}" for i in range(1, 5)]
+        self.index_LB += ["LeftBackIndexClaw", "LeftBackIndexClawEnd"]
         self.middle_LB = [f"LeftBackMiddle{i}" for i in range(1, 5)]
+        self.middle_LB += ["LeftBackMiddleClaw", "LeftBackMiddleClawEnd"]
         self.ring_LB = [f"LeftBackRing{i}" for i in range(1, 5)]
+        self.ring_LB += ["LeftBackRingClaw", "LeftBackRingClawEnd"]
         self.pinky_LB = [f"LeftBackPinky{i}" for i in range(1, 5)]
+        self.pinky_LB += ["LeftBackPinkyClaw", "LeftBackPinkyClawEnd"]
         self.index_RB = [f"RightBackIndex{i}" for i in range(1, 5)]
+        self.index_RB += ["RightBackIndexClaw", "RightBackIndexClawEnd"]
         self.middle_RB = [f"RightBackMiddle{i}" for i in range(1, 5)]
+        self.middle_RB += ["RightBackMiddleClaw", "RightBackMiddleClawEnd"]
         self.ring_RB = [f"RightBackRing{i}" for i in range(1, 5)]
+        self.ring_RB += ["RightBackRingClaw", "RightBackRingClawEnd"]
         self.pinky_RB = [f"RightBackPinky{i}" for i in range(1, 5)]
+        self.pinky_RB += ["RightBackPinkyClaw", "RightBackPinkyClawEnd"]
         self.jntPosition = {
             'Hips': (0.0, 105.5976, -47.80265), 
             'Spine': (0.0, 105.7347, -46.19885), 
@@ -80,12 +96,12 @@ class Cat:
             'HeadTop_End': (0.0, 117.10147, 101.49742), 
             'Jaw': (0.0, 103.1242, 97.66678), 
             'Jaw_End': (0.0, 80.59933, 115.17514), 
-            'LeftEar': (9.80007, 116.56773, 95.2822), 
-            'LeftEar1': (14.86112, 119.76161, 98.98467), 
-            'LeftEar2': (18.24246, 121.19656, 102.42661), 
-            'RightEar': (-9.80007, 116.568, 95.2822), 
-            'RightEar1': (-14.8611, 119.762, 98.9847), 
-            'RightEar2': (-18.2425, 121.197, 102.427), 
+            "LeftEar": (9.80007, 116.56776, 95.28221), 
+            "LeftEar1": (13.00385, 119.239, 99.07684), 
+            "LeftEar2": (16.17083, 122.76902, 101.9936), 
+            "RightEar": (-9.80007, 116.568, 95.2822), 
+            "RightEar1": (-13.0039, 119.239, 99.0768), 
+            "RightEar2": (-16.1708, 122.769, 101.994), 
             'LeftEye': (7.51407, 104.15134, 112.95457), 
             'LeftEye_End': (7.51407, 104.15134, 115.18304), 
             'RightEye': (-7.51407, 104.151, 112.955), 
@@ -99,19 +115,27 @@ class Cat:
             'LeftFrontIndex1': (8.05349, 4.2806, 51.28584), 
             'LeftFrontIndex2': (6.63646, 3.99462, 55.03125), 
             'LeftFrontIndex3': (5.33999, 2.998, 58.45802), 
-            'LeftFrontIndex4': (4.71511, 0.40106, 60.10967), 
+            "LeftFrontIndex4": (4.96698, 0.51659, 59.44393), 
+            "LeftFrontIndexClaw": (4.90726, 2.51888, 59.6018), 
+            "LeftFrontIndexClawEnd": (4.34124, 0.35807, 61.09785), 
             'LeftFrontMiddle1': (10.95358, 4.57888, 51.83132), 
             'LeftFrontMiddle2': (10.56243, 4.36345, 56.54168), 
             'LeftFrontMiddle3': (10.22265, 3.70462, 60.63353), 
-            'LeftFrontMiddle4': (10.08927, 0.33902, 62.23983), 
+            "LeftFrontMiddle4": (10.09611, 0.68552, 62.15742), 
+            "LeftFrontMiddleClaw": (10.08238, 2.68508, 62.32273), 
+            "LeftFrontMiddleClawEnd": (9.93488, 0.27728, 64.09901), 
             'LeftFrontRing1': (13.89453, 4.52929, 51.30716), 
             'LeftFrontRing2': (14.99425, 4.43558, 56.32907), 
             'LeftFrontRing3': (15.81403, 3.70006, 60.07263), 
-            'LeftFrontRing4': (16.18168, 0.40003, 61.75148), 
+            "LeftFrontRing4": (16.0479, 0.92329, 61.1406), 
+            "LeftFrontRingClaw": (16.08252, 2.86464, 61.29869), 
+            "LeftFrontRingClawEnd": (16.45288, 0.52579, 62.98996), 
             'LeftFrontPinky1': (17.0, 3.88854, 49.67239), 
             'LeftFrontPinky2': (18.65164, 3.58846, 53.73807), 
             'LeftFrontPinky3': (20.07594, 2.89403, 57.24418), 
-            'LeftFrontPinky4': (20.68368, 0.35974, 58.74019), 
+            "LeftFrontPinky4": (20.25231, 0.60535, 57.67835), 
+            "LeftFrontPinkyClaw": (20.31314, 2.54671, 57.82808), 
+            "LeftFrontPinkyClawEnd": (20.85223, 0.61177, 59.1551), 
             'RightFrontShoulder': (-6.34422, 107.83035, 47.43926), 
             'RightFrontLeg': (-10.93067, 84.97193, 57.50794), 
             'RightFrontKnee': (-12.65204, 55.24576, 43.64996), 
@@ -121,19 +145,27 @@ class Cat:
             'RightFrontIndex1': (-8.05349, 4.2806, 51.28584), 
             'RightFrontIndex2': (-6.63646, 3.99462, 55.03125), 
             'RightFrontIndex3': (-5.33999, 2.998, 58.45802), 
-            'RightFrontIndex4': (-4.71511, 0.40106, 60.10967), 
+            "RightFrontIndex4": (-4.96223, 0.5241, 59.45649), 
+            "RightFrontIndexClaw": (-4.8359, 2.50153, 59.7904), 
+            "RightFrontIndexClawEnd": (-4.34457, 0.1994, 61.08904), 
             'RightFrontMiddle1': (-10.95358, 4.57888, 51.83132), 
             'RightFrontMiddle2': (-10.56243, 4.36345, 56.54168), 
             'RightFrontMiddle3': (-10.22265, 3.70462, 60.63353), 
-            'RightFrontMiddle4': (-10.08927, 0.33902, 62.23983), 
+            "RightFrontMiddle4": (-10.10632, 0.63246, 62.03434), 
+            "RightFrontMiddleClaw": (-10.0926, 2.63203, 62.19964), 
+            "RightFrontMiddleClawEnd": (-9.9451, 0.22423, 63.97592), 
             'RightFrontRing1': (-13.89453, 4.52929, 51.30716), 
             'RightFrontRing2': (-14.99425, 4.43558, 56.32907), 
             'RightFrontRing3': (-15.81403, 3.70006, 60.07263), 
-            'RightFrontRing4': (-16.18168, 0.40003, 61.75148), 
+            "RightFrontRing4": (-16.03228, 0.77917, 61.06931), 
+            "RightFrontRingClaw": (-16.0669, 2.72052, 61.2274), 
+            "RightFrontRingClawEnd": (-16.43727, 0.38168, 62.91867), 
             'RightFrontPinky1': (-17.0, 3.88854, 49.67239), 
             'RightFrontPinky2': (-18.65164, 3.58846, 53.73807), 
             'RightFrontPinky3': (-20.07594, 2.89403, 57.24418), 
-            'RightFrontPinky4': (-20.68368, 0.35974, 58.74019), 
+            "RightFrontPinky4": (-20.23687, 0.58762, 57.64033), 
+            "RightFrontPinkyClaw": (-20.29769, 2.52898, 57.79005), 
+            "RightFrontPinkyClawEnd": (-20.83678, 0.59404, 59.11708), 
             'LeftBackShoulder': (6.05402, 104.45178, -47.98636), 
             'LeftBackLeg': (8.60929, 94.73428, -61.52581), 
             'LeftBackKnee': (12.0, 56.96354, -50.1429), 
@@ -143,19 +175,27 @@ class Cat:
             'LeftBackIndex1': (7.52184, 4.14442, -72.46626), 
             'LeftBackIndex2': (6.63325, 4.03951, -68.07547), 
             'LeftBackIndex3': (6.02132, 3.4229, -65.0518), 
-            'LeftBackIndex4': (5.29779, 0.07662, -61.47664), 
+            "LeftBackIndex4": (5.6025, 1.30866, -62.98227), 
+            "LeftBackIndexClaw": (5.53682, 3.31922, -62.65774), 
+            "LeftBackIndexClawEnd": (5.2617, 1.01619, -61.29834), 
             'LeftBackMiddle1': (10.19021, 4.55537, -71.47229), 
             'LeftBackMiddle2': (9.94945, 4.33986, -65.65421), 
             'LeftBackMiddle3': (9.83661, 3.99909, -62.92745), 
-            'LeftBackMiddle4': (9.78106, 0.33447, -61.58491), 
+            "LeftBackMiddle4": (9.73306, 1.83989, -60.42521), 
+            "LeftBackMiddleClaw": (9.72728, 3.87273, -60.28546), 
+            "LeftBackMiddleClawEnd": (9.65365, 1.46376, -58.50617), 
             'LeftBackRing1': (13.54015, 4.69679, -71.9467), 
             'LeftBackRing2': (14.12033, 4.46423, -65.63917), 
             'LeftBackRing3': (14.43758, 3.9596, -62.19006), 
-            'LeftBackRing4': (14.60884, 0.33742, -60.32818), 
+            "LeftBackRing4": (14.51209, 1.59993, -61.38008), 
+            "LeftBackRingClaw": (14.52453, 3.57455, -61.24479), 
+            "LeftBackRingClawEnd": (14.68297, 1.23457, -59.52225), 
             'LeftBackPinky1': (16.14631, 4.12414, -73.42003), 
             'LeftBackPinky2': (17.87145, 3.62354, -67.92649), 
             'LeftBackPinky3': (18.88605, 3.20397, -64.69559), 
-            'LeftBackPinky4': (19.51783, 0.25947, -62.68374), 
+            "LeftBackPinky4": (19.02818, 1.04085, -64.243), 
+            "LeftBackPinkyClaw": (19.06889, 3.01547, -64.11338), 
+            "LeftBackPinkyClawEnd": (19.49764, 1.07959, -62.74804), 
             'RightBackShoulder': (-6.05402, 104.45178, -47.98636), 
             'RightBackLeg': (-8.60929, 94.7343, -61.5258), 
             'RightBackKnee': (-12.0, 56.9635, -50.1429), 
@@ -165,19 +205,27 @@ class Cat:
             'RightBackIndex1': (-7.52184, 4.14442, -72.4663), 
             'RightBackIndex2': (-6.63325, 4.03951, -68.0755), 
             'RightBackIndex3': (-6.02133, 3.4229, -65.0518), 
-            'RightBackIndex4': (-5.62944, 0.4108, -63.1153), 
+            "RightBackIndex4": (-5.59209, 1.30999, -62.93084), 
+            "RightBackIndexClaw": (-5.52641, 3.32056, -62.60631), 
+            "RightBackIndexClawEnd": (-5.2513, 1.01752, -61.24691), 
             'RightBackMiddle1': (-10.1902, 4.55537, -71.4723), 
             'RightBackMiddle2': (-9.94945, 4.33986, -65.6542), 
             'RightBackMiddle3': (-9.83661, 3.99909, -62.92745), 
-            'RightBackMiddle4': (-9.78106, 0.33447, -61.58495), 
+            "RightBackMiddle4": (-9.73454, 1.78832, -60.46098), 
+            "RightBackMiddleClaw": (-9.72876, 3.82116, -60.32122), 
+            "RightBackMiddleClawEnd": (-9.65513, 1.41219, -58.54193), 
             'RightBackRing1': (-13.5402, 4.69679, -71.9467), 
             'RightBackRing2': (-14.1203, 4.46423, -65.6392), 
             'RightBackRing3': (-14.43758, 3.9596, -62.19006), 
-            'RightBackRing4': (-14.60888, 0.33742, -60.32816), 
+            "RightBackRing4": (-14.50997, 1.42813, -61.40306), 
+            "RightBackRingClaw": (-14.52242, 3.40275, -61.26777), 
+            "RightBackRingClawEnd": (-14.68086, 1.06277, -59.54523), 
             'RightBackPinky1': (-16.1463, 4.12414, -73.42), 
             'RightBackPinky2': (-17.8715, 3.62354, -67.9265), 
             'RightBackPinky3': (-18.88605, 3.20397, -64.69559), 
-            'RightBackPinky4': (-19.51785, 0.25947, -62.68369), 
+            "RightBackPinky4": (-19.04469, 1.05647, -64.19041), 
+            "RightBackPinkyClaw": (-19.0854, 3.03109, -64.06078), 
+            "RightBackPinkyClawEnd": (-19.51416, 1.09521, -62.69545), 
             'Tail': (0.0, 100.30746, -74.3944), 
             'Tail1': (0.0, 97.34935, -88.53353), 
             'Tail2': (0.0, 96.44871, -102.94353), 
@@ -319,8 +367,8 @@ class Cat:
 
 
 cat = Cat()
-# createRigGroups("tigerA")
-# cat.createTempJoints()
+createRigGroups("tigerA")
+cat.createTempJoints()
 # cat.reOrientJnt()
 # cat.createRigJnt()
 
@@ -682,3 +730,4 @@ def reNameClaws(key, side):
 
 
 # reName("cc_clawIndex_LF_grp")
+# showNameAndPosition()
