@@ -598,10 +598,17 @@ def createIKHandle(startJnt: str="", endJnt: str="",
 
 def createPaintWeightToOne(maxInfluence: int, *args) -> None:
     """ Paint Skin Weights to One.
-     - Create paintSkinWeights with value 1.
-     - Create a dictionary with the vertex weight values in this way.
-     - Paint the skin weights with the given max influence.
-     - Finally, Create paint skin weights from the dictionary.
+
+    Args
+    ----
+    - maxInfluence: int
+    - *args: Select Joints and Objects.
+
+    Examples
+    --------
+    >>> createPaintWeightToOne(5)
+    >>> createPaintWeightToOne(4, "joint1", "joint2", "object1")
+    >>> createPaintWeightToOne(3, *["joint1", "joint2", "object1"])
      """
     sel = [pm.PyNode(i) for i in args] if args else pm.selected()
     # Create a list of objects and joints.
