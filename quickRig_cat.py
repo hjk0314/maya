@@ -367,8 +367,8 @@ class Cat:
 
 
 cat = Cat()
-createRigGroups("tigerA")
-cat.createTempJoints()
+# createRigGroups("tigerA")
+# cat.createTempJoints()
 # cat.reOrientJnt()
 # cat.createRigJnt()
 
@@ -731,3 +731,61 @@ def reNameClaws(key, side):
 
 # reName("cc_clawIndex_LF_grp")
 # showNameAndPosition()
+joints = [
+    'Hips', 
+    'Spine2', 'Spine4', 'Spine6', 'Spine8', 
+    'Neck', 'Neck1', 'Neck2', 
+    'Head', 
+    'Jaw', 'Jaw_End', 
+    'LeftEar', 'LeftEar1', 'RightEar', 'RightEar1', 
+    'LeftFrontShoulder', 
+    'LeftFrontLeg', 
+    'LeftFrontKnee', 
+    'LeftFrontAnkle', 
+    'LeftFrontToe', 
+    'LeftFrontIndex1', 'LeftFrontIndex2', 'LeftFrontIndex3', 
+    'LeftFrontMiddle1', 'LeftFrontMiddle2', 'LeftFrontMiddle3', 
+    'LeftFrontRing1', 'LeftFrontRing2', 'LeftFrontRing3', 
+    'LeftFrontPinky1', 'LeftFrontPinky2', 'LeftFrontPinky3', 
+    'RightFrontShoulder', 
+    'RightFrontLeg', 
+    'RightFrontKnee', 
+    'RightFrontAnkle', 
+    'RightFrontToe', 
+    'RightFrontIndex1', 'RightFrontIndex2', 'RightFrontIndex3', 
+    'RightFrontMiddle1', 'RightFrontMiddle2', 'RightFrontMiddle3', 
+    'RightFrontRing1', 'RightFrontRing2', 'RightFrontRing3', 
+    'RightFrontPinky1', 'RightFrontPinky2', 'RightFrontPinky3', 
+    'LeftBackShoulder', 
+    'LeftBackLeg', 
+    'LeftBackKnee', 
+    'LeftBackAnkle', 
+    'LeftBackToe', 
+    'LeftBackIndex1', 'LeftBackIndex2', 'LeftBackIndex3', 
+    'LeftBackMiddle1', 'LeftBackMiddle2', 'LeftBackMiddle3', 
+    'LeftBackRing1', 'LeftBackRing2', 'LeftBackRing3', 
+    'LeftBackPinky1', 'LeftBackPinky2', 'LeftBackPinky3', 
+    'RightBackShoulder', 
+    'RightBackLeg', 
+    'RightBackKnee', 
+    'RightBackAnkle', 
+    'RightBackToe', 
+    'RightBackIndex1', 'RightBackIndex2', 'RightBackIndex3', 
+    'RightBackMiddle1', 'RightBackMiddle2', 'RightBackMiddle3', 
+    'RightBackRing1', 'RightBackRing2', 'RightBackRing3', 
+    'RightBackPinky1', 'RightBackPinky2', 'RightBackPinky3', 
+    'Tail', 
+    'Tail1', 
+    'Tail2', 
+    'Tail3', 
+    'Tail4', 
+    'Tail5', 
+    'Tail6', 
+    'Tail7', 
+    'Tail8', 
+    ]
+# objects = ["geo_low"]
+# jointsAndObjects = joints + objects
+# createPaintWeightToOne(5, *jointsAndObjects)
+# sel = pm.select(joints)
+# deletePlugins()
