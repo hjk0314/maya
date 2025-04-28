@@ -53,7 +53,18 @@ def getFlattenList(data, seen=None) -> list:
 
 
 def getBoundingBoxPosition(vertexOrObject) -> list:
-    """ Get the coordinates of the center pivot of the boundingBox. """
+    """ Get the coordinates of the center pivot of the boundingBox.
+
+    Args
+    ----
+    1. Vertices
+    2. Objects
+
+    Examples
+    --------
+    >>> getBoundingBoxPosition("objectName")
+    >>> getBoundingBoxPosition("objectName.vtx[0:7]")
+     """
     boundingBox = pm.xform(vertexOrObject, q=True, bb=True, ws=True)
     xMin, yMin, zMin, xMax, yMax, zMax = boundingBox
     x = (xMin + xMax) / 2
