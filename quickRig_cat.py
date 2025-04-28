@@ -789,3 +789,31 @@ joints = [
 # createPaintWeightToOne(5, *jointsAndObjects)
 # sel = pm.select(joints)
 # deletePlugins()
+# Controllers().createControllers(cube="")
+# a = "prop_scissorsA_mdl_v9999:scissorsA_C_spring.vtx[0:7]"
+# pos = getBoundingBoxPosition(a)
+# loc = pm.spaceLocator(p=(0,0,0))
+# pm.move(loc, pos)
+# getBoundingBoxPosition()
+
+# curvePoints = []
+# reName("jnt_Sping1")
+# groupOwnPivot()
+# createRigGroups("scissorsA")
+# createJointScaleExpression("jnt_Sping1", "jnt_Sping56", "cuv_Spring", x=True)
+# colorize(yellow=True)
+
+# def createCurveAndJointsThroughTheTube(tubeName, 
+#                                        firstPointNumber, 
+#                                        lastPointNumber, 
+#                                        numberOfPointGroup, 
+#                                        numberOfJoints):
+#     firstPointGroup = tubeName.vtx[%d:%d]
+#     for i in range(0, 4401, 80):
+#         vtx = "prop_scissorsA_mdl_v9999:scissorsA_C_spring.vtx[%d:%d]" % (i, i+7)
+#         pos = getBoundingBoxPosition(vtx)
+#         jnt = pm.joint(p=(0, 0, 0))
+#         pm.move(jnt, pos)
+#         curvePoints.append(pos)
+#     pm.curve(d=3, ep=curvePoints)
+    
