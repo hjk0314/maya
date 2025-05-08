@@ -784,7 +784,7 @@ joints = [
     'Tail7', 
     'Tail8', 
     ]
-# objects = ["geo_low"]
+# objects = ["geo_middle"]
 # jointsAndObjects = joints + objects
 # createPaintWeightToOne(5, *jointsAndObjects)
 # sel = pm.select(joints)
