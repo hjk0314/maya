@@ -407,6 +407,8 @@ def createLocatorsOnCurvePoint(curve:str, name: str) -> list:
 
 
 # locatorGroups = createLocatorsOnCurvePoint("cuv_Tail", "Tail")
+# locatorGroups = ["loc_SpineCurvePoint%s" % (i if i else "") for i in range(6)]
+# locatorGroups = ["loc_SpineCurvePoint%s" % (i if i else "") for i in range(5, 11)]
 
 
 def constraintParentByDistance(ctrl1, ctrl2, locatorGroups):
@@ -417,6 +419,10 @@ def constraintParentByDistance(ctrl1, ctrl2, locatorGroups):
         dRatio = round(unitRange/totalRange, 5)
         pm.parentConstraint(ctrl1, i, mo=1, w=0 if 1-dRatio < 0 else 1-dRatio)
         pm.parentConstraint(ctrl2, i, mo=1, w=1 if dRatio >= 1 else dRatio)
+
+
+# constraintParentByDistance("cc_Spine_IK_sub", "cc_Spine4_IK_sub", locatorGroups)
+# constraintParentByDistance("cc_Spine4_IK_sub", "cc_Spine8_IK_sub", locatorGroups)
 
 
 # ctrl1 = "cc_Tail6_IK_sub"
