@@ -405,8 +405,8 @@ class QuickRig_Car(QWidget):
         asset = self.rootGroup.rsplit(":", 1)[-1] if self.rootGroup else ""
         createRigGroups(asset)
         self.deleteCtrl()
-        self.createGlobalCtrl(self.rootGroup)
-        self.createBodyCtrl(self.bodyGroup)
+        self.createGlobalCtrl(self.fldRootGrp.text())
+        self.createBodyCtrl(self.fldBodyGrp.text())
         self.buildDoorCtrl()
         self.buildWheelCtrl()
         self.finalTouch()
@@ -476,7 +476,7 @@ class QuickRig_Car(QWidget):
         right = "right" in doorName
         _R = "_R" in doorName
         _rt = "_rt" in doorName
-        doorType = "door2" if any([Back, back, Bk]) else "door"
+        doorType = "door1" if any([Back, back, Bk]) else "door"
         ctrls = Controllers().createControllers(**{doorType: doorName})
         ctrl = ctrls[0]
         doorSize = max(getBoundingBoxSize(objectGroup)) / defaultScale
@@ -779,7 +779,7 @@ class QuickRig_Car(QWidget):
         a, b, c = getBoundingBoxSize(objectGroup)
         x, y, z = 100, 100, 250
         cc = Controllers()
-        ccs = cc.createControllers(car3=ccMain, car2=ccSub)
+        ccs = cc.createControllers(car2=ccMain, car1=ccSub)
         for i in ccs:
             pm.scale(i, [a/x, b/y, c/z])
             pm.makeIdentity(i, a=1, t=1, r=1, s=1, n=0, pn=1)
