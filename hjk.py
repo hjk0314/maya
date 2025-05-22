@@ -1253,9 +1253,12 @@ def mirrorCopy(obj: str, mirrorPlane: str="YZ") -> list:
         rz += (180 if rz < 0 else -180)
     elif mirrorPlane == "YZ":
         tx *= -1
+        rx *= -1
         rx += (180 if rx < 0 else -180)
         ry *= -1
+        # ry += (180 if rx < 0 else -180)
         rz *= -1
+        # rz += (180 if rx < 0 else -180)
     else:
         return
     attr = {'tx': tx, 'ty': ty, 'tz': tz, 'rx': rx, 'ry': ry, 'rz': rz}
