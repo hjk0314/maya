@@ -78,6 +78,37 @@ class Cat:
         self.ring_RB += ["RightBackRingClaw", "RightBackRingClawEnd"]
         self.pinky_RB = [f"RightBackPinky{i}" for i in range(1, 5)]
         self.pinky_RB += ["RightBackPinkyClaw", "RightBackPinkyClawEnd"]
+        self.chest_A = ["Spine8_A"]
+        self.chest_BC = ["Spine8_BC"]
+        self.chest_BL = ["Spine8_BL"]
+        self.chest_BR = ["Spine8_BR"]
+        self.rear = [f"Spine_C{i}" for i in range(1, 4)]
+        self.ribs2_L = [f"Spine2_L{i}" for i in range(1, 4)]
+        self.ribs2_R = [f"Spine2_R{i}" for i in range(1, 4)]
+        self.ribs4_L = [f"Spine4_L{i}" for i in range(1, 4)]
+        self.ribs4_R = [f"Spine4_R{i}" for i in range(1, 4)]
+        self.ribs6_L = [f"Spine6_L{i}" for i in range(1, 4)]
+        self.ribs6_R = [f"Spine6_R{i}" for i in range(1, 4)]
+        self.subLeg1_LFU = [f"LeftFrontLeg_{i}" for i in ["A", "B"]]
+        self.subLeg2_LFU = [f"LeftFrontLeg_B{i}" for i in ["C", "L", "R"]]
+        self.subLeg1_RFU = [f"RightFrontLeg_{i}" for i in ["A", "B"]]
+        self.subLeg2_RFU = [f"RightFrontLeg_B{i}" for i in ["C", "L", "R"]]
+        self.subLeg1_LFD = [f"LeftFrontKnee_{i}" for i in ["A", "B"]]
+        self.subLeg2_LFD = [f"LeftFrontKnee_B{i}" for i in ["C", "L", "R"]]
+        self.subLeg1_RFD = [f"RightFrontKnee_{i}" for i in ["A", "B"]]
+        self.subLeg2_RFD = [f"RightFrontKnee_B{i}" for i in ["C", "L", "R"]]
+        self.subLeg1_LBU = [f"LeftBackLeg_A{i}" for i in ["", "_End"]]
+        self.subLeg2_LBU = [f"LeftBackLeg_{i}" for i in ["B", "C"]]
+        self.subLeg3_LBU = [f"LeftBackLeg_C{i}" for i in ["C", "L", "R"]]
+        self.subLeg1_LBD = [f"LeftBackKnee_{i}" for i in ["A", "B"]]
+        self.subLeg2_LBD = [f"LeftBackKnee_B{i}" for i in ["C", "L", "R"]]
+        self.subLeg1_RBU = [f"RightBackLeg_A{i}" for i in ["", "_End"]]
+        self.subLeg2_RBU = [f"RightBackLeg_{i}" for i in ["B", "C"]]
+        self.subLeg3_RBU = [f"RightBackLeg_C{i}" for i in ["C", "L", "R"]]
+        self.subLeg1_RBD = [f"RightBackKnee_{i}" for i in ["A", "B"]]
+        self.subLeg2_RBD = [f"RightBackKnee_B{i}" for i in ["C", "L", "R"]]
+
+
         self.jntPosition = {
             'Hips': (0.0, 105.5976, -47.80265), 
             'Spine': (0.0, 105.7347, -46.19885), 
@@ -261,7 +292,6 @@ class Cat:
             "Spine8_BC": (0.0, 54.76612, 45.86158), 
             "Spine8_BL": (4.8019, 57.29316, 45.86302), 
             "Spine8_BR": (-4.8019, 57.2932, 45.863), 
-
             "LeftFrontLeg_A": (12.65204, 77.05088, 60.99702), 
             "LeftFrontLeg_B": (12.65204, 57.23504, 54.6412), 
             "LeftFrontLeg_BC": (12.65204, 55.41219, 56.74334), 
@@ -272,7 +302,6 @@ class Cat:
             "RightFrontLeg_BC": (-12.652, 55.4122, 56.7433), 
             "RightFrontLeg_BL": (-16.8334, 57.235, 54.6412), 
             "RightFrontLeg_BR": (-8.24673, 57.235, 54.6412), 
-
             "LeftFrontKnee_A": (12.652, 25.46658, 48.47807), 
             "LeftFrontKnee_B": (12.65201, 47.54552, 51.55061), 
             "LeftFrontKnee_BC": (12.65201, 47.92952, 54.31704), 
@@ -283,12 +312,10 @@ class Cat:
             "RightFrontKnee_BC": (-12.652, 47.9295, 54.317), 
             "RightFrontKnee_BL": (-16.8698, 47.5455, 51.5506), 
             "RightFrontKnee_BR": (-9.9093, 47.5455, 51.5506), 
-
             "LeftBackLeg_A": (8.61483, 94.74344, -47.35054), 
             "LeftBackLeg_A_End": (12.00254, 59.89025, -47.35066), 
             "RightBackLeg_A": (-8.61483, 94.7434, -47.3505), 
             "RightBackLeg_A_End": (-12.0025, 59.8902, -47.3507), 
-
             "LeftBackLeg_B": (8.61483, 87.56935, -71.51873), 
             "LeftBackLeg_C": (8.61483, 64.30238, -67.89892), 
             "LeftBackLeg_CC": (8.61483, 61.43716, -71.57153), 
@@ -299,7 +326,6 @@ class Cat:
             "RightBackLeg_CC": (-8.61483, 61.4372, -71.5715), 
             "RightBackLeg_CL": (-12.9402, 64.3024, -67.8989), 
             "RightBackLeg_CR": (-4.36273, 64.3024, -67.8989), 
-
             "LeftBackKnee_A": (11.04193, 33.12261, -77.52138), 
             "LeftBackKnee_B": (11.04314, 49.79617, -67.95207), 
             "LeftBackKnee_BC": (11.0433, 53.21229, -71.54929), 
@@ -313,7 +339,15 @@ class Cat:
             }
         self.jntHierarchy = {
             self.hips: [self.spine, self.legs_LB, self.legs_RB, self.tail, ], 
-            self.spine[-1]: [self.neck, self.legs_LF, self.legs_RF, ], 
+            self.spine[0]: [self.rear, ], 
+            self.spine[2]: [self.ribs2_L, self.ribs2_R, ], 
+            self.spine[4]: [self.ribs4_L, self.ribs4_R, ], 
+            self.spine[6]: [self.ribs6_L, self.ribs6_R, ], 
+            self.spine[-1]: [
+                self.neck, 
+                self.legs_LF, self.legs_RF, 
+                self.chest_A, self.chest_BC, self.chest_BL, self.chest_BR
+                ], 
             self.neck[-1]: [self.head, ], 
             self.head[0]: [
                 self.jaw, 
@@ -322,24 +356,40 @@ class Cat:
                 self.eye_L, 
                 self.eye_R
                 ], 
+            self.legs_LF[1]: [self.subLeg1_LFU, ], 
+            self.subLeg1_LFU[-1]: [[i] for i in self.subLeg2_LFU], 
+            self.legs_LF[2]: [self.subLeg1_LFD, ], 
+            self.subLeg1_LFD[-1]: [[i] for i in self.subLeg2_LFD], 
             self.legs_LF[-2]: [
                 self.index_LF, 
                 self.middle_LF, 
                 self.ring_LF, 
                 self.pinky_LF
                 ], 
+            self.legs_RF[1]: [self.subLeg1_RFU, ], 
+            self.subLeg1_RFU[-1]: [[i] for i in self.subLeg2_RFU], 
+            self.legs_RF[2]: [self.subLeg1_RFD, ], 
+            self.subLeg1_RFD[-1]: [[i] for i in self.subLeg2_RFD], 
             self.legs_RF[-2]: [
                 self.index_RF, 
                 self.middle_RF, 
                 self.ring_RF, 
                 self.pinky_RF
                 ], 
+            self.legs_LB[1]: [self.subLeg1_LBU, self.subLeg2_LBU, ], 
+            self.subLeg2_LBU[-1]: [[i] for i in self.subLeg3_LBU], 
+            self.legs_LB[2]: [self.subLeg1_LBD, ], 
+            self.subLeg1_LBD[-1]: [[i] for i in self.subLeg2_LBD], 
             self.legs_LB[-2]: [
                 self.index_LB, 
                 self.middle_LB, 
                 self.ring_LB, 
                 self.pinky_LB
                 ], 
+            self.legs_RB[1]: [self.subLeg1_RBU, self.subLeg2_RBU, ], 
+            self.subLeg2_RBU[-1]: [[i] for i in self.subLeg3_RBU], 
+            self.legs_RB[2]: [self.subLeg1_RBD, ], 
+            self.subLeg1_RBD[-1]: [[i] for i in self.subLeg2_RBD], 
             self.legs_RB[-2]: [
                 self.index_RB, 
                 self.middle_RB, 
@@ -678,7 +728,7 @@ def disConnectBones():
 # ===========================================================================
 
 
-sel = pm.selected()
+# sel = pm.selected()
 # for cc in sel:
 #     cc_grp = f"{cc}_grp"
 #     copied = pm.duplicate(cc_grp, rr=True)[0]
@@ -865,9 +915,9 @@ joints = [
     'Tail7', 
     'Tail8', 
     ]
-# objects = ["geo_middle"]
-# jointsAndObjects = joints + objects
-# createPaintWeightToOne(5, *jointsAndObjects)
+objects = ["geo_middle"]
+jointsAndObjects = joints + objects
+createPaintWeightToOne(5, *jointsAndObjects)
 # sel = pm.select(joints)
 # deletePlugins()
 # Controllers().createControllers(cube="")
@@ -898,5 +948,3 @@ joints = [
 #         curvePoints.append(pos)
 #     pm.curve(d=3, ep=curvePoints)
 
-
-mirrorCopy("cc_Spine4_L2")
