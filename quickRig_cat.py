@@ -728,7 +728,7 @@ def disConnectBones():
 # ===========================================================================
 
 
-# sel = pm.selected()
+sel = pm.selected()
 # for cc in sel:
 #     cc_grp = f"{cc}_grp"
 #     copied = pm.duplicate(cc_grp, rr=True)[0]
@@ -915,9 +915,9 @@ joints = [
     'Tail7', 
     'Tail8', 
     ]
-objects = ["geo_middle"]
-jointsAndObjects = joints + objects
-createPaintWeightToOne(5, *jointsAndObjects)
+# objects = ["geo_middle"]
+# jointsAndObjects = joints + objects
+# createPaintWeightToOne(5, *jointsAndObjects)
 # sel = pm.select(joints)
 # deletePlugins()
 # Controllers().createControllers(cube="")
@@ -948,3 +948,8 @@ createPaintWeightToOne(5, *jointsAndObjects)
 #         curvePoints.append(pos)
 #     pm.curve(d=3, ep=curvePoints)
 
+
+# for i in sel:
+#     pm.connectAttr("Main_Control.Skeletons", f"{i}.visibility", f=True)
+# selectJointOnly()
+# colorize(yellow=True)
