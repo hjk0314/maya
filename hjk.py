@@ -943,6 +943,28 @@ def selectLocatorOnly(*args) -> list:
     return result
 
 
+def selectVerticesAffectedJoint(*args):
+    """ Select the vertices affected by this joint.
+
+    How to Use
+    ----------
+    1. Select the bone First.
+    2. Select the mesh at the Second.
+     """
+    sel = args if args else pm.selected()
+    if len(sel) != 2:
+        return
+    bone = sel[0]
+    mesh = sel[-1]
+    if pm.objectType(bone) != 'joint':
+        print("Select the bone first.")
+    elif not mesh.getShape():
+        print("the mesh at the end.")
+    else:
+        skin = mesh.listHistory(type="skinCluster")
+        pm.skinCluster(skin, e=True, siv=bone)
+
+
 def selectNurbsCurveOnly(*args) -> list:
     """ If the type is 'nurbsCurve', it is most likely a nurbsCurve.
      """
