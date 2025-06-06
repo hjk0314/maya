@@ -81,3 +81,36 @@ def get_face_center(face):
     positions = [pm.pointPosition(v, world=True) for v in verts]
     avg = [sum(vals) / len(positions) for vals in zip(*positions)]
     return tuple(avg)
+
+
+def get_face_uv_center(face, uv_set=None):
+    """Return the UV-space center of a polygon face.
+
+    Parameters
+    ----------
+    face : str or pm.MeshFace
+        Mesh face component to query.
+    uv_set : str, optional
+        UV set name to use. Defaults to the current set.
+
+    Returns
+    -------
+    tuple
+        Coordinates ``(u, v)`` of the face center in UV space.
+    """
+    comp = pm.PyNode(face)
+    shape = comp.node()
+
+    if uv_set:
+        pm.polyUVSet(shape, currentUVSet=True, uvSet=uv_set)
+
+    uvs = pm.polyListComponentConversion(comp, toUV=True)
+    uvs = pm.ls(uvs, fl=True)
+
+    if not uvs:
+        return (0.0, 0.0)
+
+    coords = [pm.polyEditUV(uv, query=True) for uv in uvs]
+    mean_u = sum(u for u, _ in coords) / len(coords)
+    mean_v = sum(v for _, v in coords) / len(coords)
+    return (mean_u, mean_v)
