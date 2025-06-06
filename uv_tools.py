@@ -56,3 +56,28 @@ def get_uv_coords_from_faces(mesh, face_indices, uv_set=None):
         result[index] = uv_coords
     return result
 
+
+
+def get_face_center(face):
+    """Return the centroid of a polygon face.
+
+    Parameters
+    ----------
+    face : str or pm.MeshFace
+        Mesh face component to query.
+
+    Returns
+    -------
+    tuple
+        Coordinates ``(x, y, z)`` of the face center in world space.
+    """
+    comp = pm.PyNode(face)
+    verts = pm.polyListComponentConversion(comp, toVertex=True)
+    verts = pm.ls(verts, fl=True)
+
+    if not verts:
+        return (0.0, 0.0, 0.0)
+
+    positions = [pm.pointPosition(v, world=True) for v in verts]
+    avg = [sum(vals) / len(positions) for vals in zip(*positions)]
+    return tuple(avg)
