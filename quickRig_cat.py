@@ -914,6 +914,31 @@ joints = [
     'Tail6', 
     'Tail7', 
     'Tail8', 
+    "Spine8_A", 
+    "Spine8_BC", 
+    "Spine8_BL", 
+    "Spine8_BR", 
+    "Spine_C1", 
+    "Spine_C2", 
+    "Spine_C3", 
+    "Spine2_L1", 
+    "Spine2_L2", 
+    "Spine2_L3", 
+    "Spine2_R1", 
+    "Spine2_R2", 
+    "Spine2_R3", 
+    "Spine4_L1", 
+    "Spine4_L2", 
+    "Spine4_L3", 
+    "Spine4_R1", 
+    "Spine4_R2", 
+    "Spine4_R3", 
+    "Spine6_L1", 
+    "Spine6_L2", 
+    "Spine6_L3", 
+    "Spine6_R1", 
+    "Spine6_R2", 
+    "Spine6_R3", 
     ]
 # objects = ["geo_middle"]
 # jointsAndObjects = joints + objects
@@ -953,4 +978,195 @@ joints = [
 #     pm.connectAttr("Main_Control.Skeletons", f"{i}.visibility", f=True)
 # selectJointOnly()
 # colorize(yellow=True)
+
+
+def bindSkin_claws():
+    clawsDict = {
+        'LeftFrontIndex4': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_L_D_2_tissue'], 
+        'LeftFrontIndexClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_L_D_3_int', 'char_tigerA_mdl_v9999:tigerA_claws_Ft_L_D_1_bone'], 
+        'LeftFrontMiddle4': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_L_C_2_tissue'], 
+        'LeftFrontMiddleClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_L_C_3_int', 'char_tigerA_mdl_v9999:tigerA_claws_Ft_L_C_1_bone'], 
+        'LeftFrontRing4': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_L_B_2_tissue'], 
+        'LeftFrontRingClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_L_B_3_int', 'char_tigerA_mdl_v9999:tigerA_claws_Ft_L_B_1_bone'], 
+        'LeftFrontPinky4': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_L_A_2_tissue'], 
+        'LeftFrontPinkyClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_L_A_3_int', 'char_tigerA_mdl_v9999:tigerA_claws_Ft_L_A_1_bone'], 
+        'RightFrontIndex4': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_R_D_2_tissue'], 
+        'RightFrontIndexClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_R_D_1_bone', 'char_tigerA_mdl_v9999:tigerA_claws_Ft_R_D_3_int'], 
+        'RightFrontMiddle4': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_R_C_2_tissue'], 
+        'RightFrontMiddleClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_R_C_1_bone', 'char_tigerA_mdl_v9999:tigerA_claws_Ft_R_C_3_int'], 
+        'RightFrontRing4': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_R_B_2_tissue'], 
+        'RightFrontRingClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_R_B_3_int', 'char_tigerA_mdl_v9999:tigerA_claws_Ft_R_B_1_bone'], 
+        'RightFrontPinky4': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_R_A_2_tissue'], 
+        'RightFrontPinkyClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Ft_R_A_1_bone', 'char_tigerA_mdl_v9999:tigerA_claws_Ft_R_A_3_int'], 
+        'LeftBackIndex4': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_L_D_2_tissue'], 
+        'LeftBackIndexClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_L_D_1_bone', 'char_tigerA_mdl_v9999:tigerA_claws_Bk_L_D_3_int'], 
+        'LeftBackMiddle4': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_L_C_2_tissue'], 
+        'LeftBackMiddleClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_L_C_3_int', 'char_tigerA_mdl_v9999:tigerA_claws_Bk_L_C_1_bone'], 
+        'LeftBackRing4': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_L_B_2_tissue'], 
+        'LeftBackRingClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_L_B_3_int', 'char_tigerA_mdl_v9999:tigerA_claws_Bk_L_B_1_bone'], 
+        'LeftBackPinky4': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_L_A_2_tissue'], 
+        'LeftBackPinkyClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_L_A_1_bone', 'char_tigerA_mdl_v9999:tigerA_claws_Bk_L_A_3_int'], 
+        'RightBackIndex4': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_R_D_2_tissue'], 
+        'RightBackIndexClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_R_D_3_int', 'char_tigerA_mdl_v9999:tigerA_claws_Bk_R_D_1_bone'], 
+        'RightBackMiddle4': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_R_C_2_tissue'], 
+        'RightBackMiddleClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_R_C_3_int', 'char_tigerA_mdl_v9999:tigerA_claws_Bk_R_C_1_bone'], 
+        'RightBackRing4': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_R_B_2_tissue'], 
+        'RightBackRingClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_R_B_1_bone', 'char_tigerA_mdl_v9999:tigerA_claws_Bk_R_B_3_int'], 
+        'RightBackPinky4': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_R_A_2_tissue'], 
+        'RightBackPinkyClaw': ['char_tigerA_mdl_v9999:tigerA_claws_Bk_R_A_1_bone', 'char_tigerA_mdl_v9999:tigerA_claws_Bk_R_A_3_int'], 
+        }
+    for jnt, objList in clawsDict.items():
+        for obj in objList:
+            pm.skinCluster(jnt, obj, toSelectedBones=True, bindMethod=0, skinMethod=0, normalizeWeights=1, wd=0, mi=1, foc=True)
+
+
+def bindSkin_thumbClaw():
+    jnt_thumbClaw_L = [f"LeftFront{i}" for i in ["Ankle", "Toe", "Index1", "Index2"]]
+    obj_thumbClaw_L = ["char_tigerA_mdl_v9999:tigerA_claws_Ft_L_E_2_tissue", "char_tigerA_mdl_v9999:tigerA_claws_Ft_L_E_1_bone", "char_tigerA_mdl_v9999:tigerA_claws_Ft_L_E_3_int"]
+    for obj in obj_thumbClaw_L:
+        pm.skinCluster(jnt_thumbClaw_L, obj, toSelectedBones=True, bindMethod=0, skinMethod=0, normalizeWeights=1, wd=0, mi=4, foc=True)
+    jnt_thumbClaw_R = [f"RightFront{i}" for i in ["Ankle", "Toe", "Index1", "Index2"]]
+    obj_thumbClaw_R = ["char_tigerA_mdl_v9999:tigerA_claws_Ft_R_E_2_tissue", "char_tigerA_mdl_v9999:tigerA_claws_Ft_R_E_1_bone", "char_tigerA_mdl_v9999:tigerA_claws_Ft_R_E_3_int"]
+    for obj in obj_thumbClaw_R:
+        pm.skinCluster(jnt_thumbClaw_R, obj, toSelectedBones=True, bindMethod=0, skinMethod=0, normalizeWeights=1, wd=0, mi=4, foc=True)
+
+
+# bindSkin_claws()
+# bindSkin_thumbClaw()
+
+
+# sel = pm.selected()
+# for num, obj in enumerate(sel):
+#     tx = 100*num + 100
+#     pm.setAttr(f"{obj}.translateX", -1*tx)
+
+
+def createBlendShapeDict():
+    sel = pm.selected()
+    result = {}
+    for i in sel:
+        temp = i.split("_")[1]
+        if "Lt" in temp:
+            objName = temp.replace("Lt", "")
+            side = "_L"
+        elif "Rt" in temp:
+            objName = temp.replace("Rt", "")
+            side = "_R"
+        else:
+            objName = temp
+            side = ""
+        objList = []
+        for j in pm.ls():
+            if objName in j.name() and "tigerA" in j.name() and side in j.name() and not "Shape" in j.name():
+                objList.append(j.name())
+        result[i.name()] = objList
+    print(result)
+
+
+# createBlendShapeDict()
+
+
+blendShapedict = {
+    'faceControlUI_NSsnarlLt_NSSLL_CON': ['char_tigerA_mdl_v9999:NSsnarl_L'], 
+    'faceControlUI_MOnarrowRt_MONR_CON': ['char_tigerA_mdl_v9999:MOnarrow_R'], 
+    'faceControlUI_EYsquintLt_EYSL_CON': ['char_tigerA_mdl_v9999:EYsquint_L'], 
+    'faceControlUI_CKsuckPuffLt_CKSPL_CON': ['char_tigerA_mdl_v9999:CKsuckPuff_1_L', 'char_tigerA_mdl_v9999:CKsuckPuff_2_L'], 
+    'faceControlUI_NSsneerLt_NSSRL_CON': ['char_tigerA_mdl_v9999:NSsneer_L'], 
+    'faceControlUI_SPscalpForwardBackLt_SPSFBL_CON': ['char_tigerA_mdl_v9999:SPscalpForwardBack_1_L', 'char_tigerA_mdl_v9999:SPscalpForwardBack_2_L'], 
+    'faceControlUI_NSsnarlRt_NSSLR_CON': ['char_tigerA_mdl_v9999:NSsnarl_R'], 
+    'faceControlUI_MOsmileLt_MOSLL_CON': ['char_tigerA_mdl_v9999:MOsmile_L'], 
+    'faceControlUI_NEtenseLt_NETL_CON': ['char_tigerA_mdl_v9999:NEtense_L'], 
+    'faceControlUI_JWclenchLt_JWCHL_CON': ['char_tigerA_mdl_v9999:JWclench_L'], 
+    'faceControlUI_EBinnerUpRt_EBIUR_CON': ['char_tigerA_mdl_v9999:EBinnerUp_R'], 
+    'faceControlUI_MOgrimaceRt_MOGR_CON': ['char_tigerA_mdl_v9999:MOgrimace_R'], 
+    'faceControlUI_MOlipCornerOpenCloseRt_MOLCOCR_CON': ['char_tigerA_mdl_v9999:MOlipCornerOpenClose_1_R', 'char_tigerA_mdl_v9999:MOlipCornerOpenClose_2_R'], 
+    'faceControlUI_EYtightenRt_EYTR_CON': ['char_tigerA_mdl_v9999:EYtighten_R'], 
+    'faceControlUI_EBouterUpRt_EBOUR_CON': ['char_tigerA_mdl_v9999:EBouterUp_R'], 
+    'faceControlUI_NSdownRt_NSDR_CON': ['char_tigerA_mdl_v9999:NSdown_R'], 
+    'faceControlUI_NSwrinkleRt_NSWR_CON': ['char_tigerA_mdl_v9999:NSwrinkle_R'], 
+    'faceControlUI_NEtenseRt_NETR_CON': ['char_tigerA_mdl_v9999:NEtense_R'], 
+    'faceControlUI_EBfurrowBottomRt_EBFBTR_CON': ['char_tigerA_mdl_v9999:EBfurrowBottom_R'], 
+    'faceControlUI_NEtongueFlick_NETF_CON': ['char_tigerA_mdl_v9999:NEtongueFlick'], 
+    'faceControlUI_NEswallow_NES_CON': ['char_tigerA_mdl_v9999:NEswallow'], 
+    'faceControlUI_MOlipDepressorLt_MOLDL_CON': ['char_tigerA_mdl_v9999:MOlipDepressor_L'], 
+    'faceControlUI_CHupLt_CHUL_CON': ['char_tigerA_mdl_v9999:CHup_L'], 
+    'faceControlUI_CHupRt_CHUR_CON': ['char_tigerA_mdl_v9999:CHup_R'], 
+    'faceControlUI_MOtogetherLt_MOTL_CON': ['char_tigerA_mdl_v9999:MOtogether_L'], 
+    'faceControlUI_NSdownLt_NSDL_CON': ['char_tigerA_mdl_v9999:NSdown_L'], 
+    'faceControlUI_MOmuzzlePuffLt_MOMPL_CON': ['char_tigerA_mdl_v9999:MOmuzzlePuff_L'], 
+    'faceControlUI_NSflareInOutLt_NSFIOL_CON': ['char_tigerA_mdl_v9999:NSflareInOut_1_L', 'char_tigerA_mdl_v9999:NSflareInOut_2_L'], 
+    'faceControlUI_MOlipCornerOpenCloseLt_MOLCOCL_CON': ['char_tigerA_mdl_v9999:MOlipCornerOpenClose_1_L', 'char_tigerA_mdl_v9999:MOlipCornerOpenClose_2_L'], 
+    'faceControlUI_ERforwardBackLt_ERFBL_CON': ['char_tigerA_mdl_v9999:ERforwardBack_1_L', 'char_tigerA_mdl_v9999:ERforwardBack_2_L'], 
+    'faceControlUI_NSwrinkleLt_NSWL_CON': ['char_tigerA_mdl_v9999:NSwrinkle_L'], 
+    'faceControlUI_MOwideLt_MOWL_CON': ['char_tigerA_mdl_v9999:MOwide_L'], 
+    'faceControlUI_MOnarrowLt_MONL_CON': ['char_tigerA_mdl_v9999:MOnarrow_L'], 
+    'faceControlUI_EBdownLt_EBDL_CON': ['char_tigerA_mdl_v9999:EBdown_L'], 
+    'faceControlUI_EBfurrowTopLt_EBFTPL_CON': ['char_tigerA_mdl_v9999:EBfurrowTop_L'], 
+    'faceControlUI_MOmuzzlePuffRt_MOMPR_CON': ['char_tigerA_mdl_v9999:MOmuzzlePuff_R'], 
+    'faceControlUI_EYtightenLt_EYTL_CON': ['char_tigerA_mdl_v9999:EYtighten_L'], 
+    'faceControlUI_SPscalpForwardBackRt_SPSFBR_CON': ['char_tigerA_mdl_v9999:SPscalpForwardBack_1_R', 'char_tigerA_mdl_v9999:SPscalpForwardBack_2_R'], 
+    'faceControlUI_MOtogetherRt_MOTR_CON': ['char_tigerA_mdl_v9999:MOtogether_R'], 
+    'faceControlUI_EYcloseWideLt_EYBWL_CON': ['char_tigerA_mdl_v9999:EYcloseWide_1_L', 'char_tigerA_mdl_v9999:EYcloseWide_2_L'], 
+    'faceControlUI_NSflareInOutRt_NSFIOR_CON': ['char_tigerA_mdl_v9999:NSflareInOut_1_R', 'char_tigerA_mdl_v9999:NSflareInOut_2_R'], 
+    'faceControlUI_MOupperLipRaiserRt_MOULRR_CON': ['char_tigerA_mdl_v9999:MOupperLipRaiser_R'], 
+    'faceControlUI_ERforwardBackRt_ERFBR_CON': ['char_tigerA_mdl_v9999:ERforwardBack_1_R', 'char_tigerA_mdl_v9999:ERforwardBack_2_R'], 
+    'faceControlUI_EBinnerUpLt_EBIUL_CON': ['char_tigerA_mdl_v9999:EBinnerUp_L'], 
+    'faceControlUI_EYcloseWideRt_EYBWR_CON': ['char_tigerA_mdl_v9999:EYcloseWide_1_R', 'char_tigerA_mdl_v9999:EYcloseWide_2_R'], 
+    'faceControlUI_MOsmirkLt_MOSRL_CON': ['char_tigerA_mdl_v9999:MOsmirk_L'], 
+    'faceControlUI_EBfurrowBottomLt_EBFBTL_CON': ['char_tigerA_mdl_v9999:EBfurrowBottom_L'], 
+    'faceControlUI_NSsneerRt_NSSRR_CON': ['char_tigerA_mdl_v9999:NSsneer_R'], 
+    'faceControlUI_EYsquintRt_EYSR_CON': ['char_tigerA_mdl_v9999:EYsquint_R'], 
+    'faceControlUI_CKupRt_CKUR_CON': ['char_tigerA_mdl_v9999:CKup_R'], 
+    'faceControlUI_CKupLt_CKUL_CON': ['char_tigerA_mdl_v9999:CKup_L'], 
+    'faceControlUI_MOsmirkRt_MOSRR_CON': ['char_tigerA_mdl_v9999:MOsmirk_R'], 
+    'faceControlUI_EBfurrowTopRt_EBFTPR_CON': ['char_tigerA_mdl_v9999:EBfurrowTop_R'], 
+    'faceControlUI_JWclenchRt_JWCHR_CON': ['char_tigerA_mdl_v9999:JWclench_R'], 
+    'faceControlUI_MOwideRt_MOWR_CON': ['char_tigerA_mdl_v9999:MOwide_R'], 
+    'faceControlUI_CKsuckPuffRt_CKSPR_CON': ['char_tigerA_mdl_v9999:CKsuckPuff_1_R', 'char_tigerA_mdl_v9999:CKsuckPuff_2_R'], 
+    'faceControlUI_NSupRt_NSUR_CON': ['char_tigerA_mdl_v9999:NSup_R'], 
+    'faceControlUI_MOsmileRt_MOSLL_CON': ['char_tigerA_mdl_v9999:MOsmile_R'], 
+    'faceControlUI_EBdownRt_EBDR_CON': ['char_tigerA_mdl_v9999:EBdown_R'], 
+    'faceControlUI_MOupperLipRaiserLt_MOULRL_CON': ['char_tigerA_mdl_v9999:MOupperLipRaiser_L'], 
+    'faceControlUI_MOlipDepressorLt_MOLDR_CON': ['char_tigerA_mdl_v9999:MOlipDepressor_L'], 
+    'faceControlUI_NSupLt_NSUL_CON': ['char_tigerA_mdl_v9999:NSup_L'], 
+    'faceControlUI_MOgrimaceLt_MOGL_CON': ['char_tigerA_mdl_v9999:MOgrimace_L'], 
+    'faceControlUI_EBouterUpLt_EBOUL_CON': ['char_tigerA_mdl_v9999:EBouterUp_L']
+    }
+
+
+def connectBlendShapeToController(ctrl=str, bls1=str, bls2=""):
+    blsNode = "blendShape1"
+    if not bls2:
+        pm.connectAttr(f"{ctrl}.translateZ", f"{blsNode}.{bls1}", f=True)
+    else:
+        clp = pm.shadingNode("clamp", asUtility=True)
+        pm.setAttr(f"{clp}.maxR", 1)
+        pm.setAttr(f"{clp}.minG", -1)
+        mld = pm.shadingNode("multiplyDivide", asUtility=True)
+        pm.setAttr(f"{mld}.input2X", -1)
+        pm.connectAttr(f"{ctrl}.translateZ", f"{clp}.inputR", f=True)
+        pm.connectAttr(f"{ctrl}.translateZ", f"{clp}.inputG", f=True)
+        pm.connectAttr(f"{clp}.outputR", f"{blsNode}.{bls1}", f=True)
+        pm.connectAttr(f"{clp}.outputG", f"{mld}.input1X", f=True)
+        pm.connectAttr(f"{mld}.outputX", f"{blsNode}.{bls2}", f=True)
+    rmv = pm.shadingNode("remapValue", asUtility=True)
+    pm.setAttr(f"{rmv}.inputMin", -0.01)
+    pm.setAttr(f"{rmv}.inputMax", 0.01)
+    pm.setAttr(f"{rmv}.outputMin", 6)
+    pm.setAttr(f"{rmv}.outputMax", 13)
+    pm.setAttr(f"{rmv}.value[0].value_FloatValue", 1)
+    pm.setAttr(f"{rmv}.value[2].value_Position", 0.5)
+    pm.setAttr(f"{rmv}.value[2].value_FloatValue", 0)
+    pm.connectAttr(f"{ctrl}.translateZ", f"{rmv}.inputValue", f=True)
+    pm.connectAttr(f"{rmv}.outValue", f"{ctrl}Shape.overrideColor", f=True)
+
+
+# for ctrl, objList in blendShapedict.items():
+#     tmp = [i.split(":")[-1] for i in objList]
+#     if len(tmp) == 1:
+#         connectBlendShapeToController(ctrl, tmp[0])
+#     elif len(tmp) == 2:
+#         connectBlendShapeToController(ctrl, tmp[0], tmp[1])
+#     else:
+#         pm.warning("objList number is incorrect.")
 
