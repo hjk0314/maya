@@ -1,4 +1,5 @@
 import pymel.core as pm
+import maya.api.OpenMaya as om
 
 
 def getUVcoordinates(face, uvSet=None):
@@ -34,16 +35,57 @@ def getUVcoordinates(face, uvSet=None):
     return (mean_u, mean_v)
 
 
+def locator_uv(locator, mesh, uv_set="map1"):
+    """Return (u, v) on 'mesh' where 'locator' touches."""
+    loc = pm.PyNode(locator)
+    shape = pm.PyNode(mesh).getShape()
+    point = om.MPoint(*pm.xform(loc, q=True, ws=True, t=True))
+
+    dag = shape.__apimdagpath__()
+    fn_mesh = om.MFnMesh(dag)
+
+    ray_dir = om.MVector(0, -1, 0)               # ray direction toward mesh
+    hit = fn_mesh.closestIntersection(
+        om.MFloatPoint(point), om.MFloatVector(ray_dir),
+        None, None, False,
+        om.MSpace.kWorld, 1e6, False,
+        None, None, None, None, None, None, None)
+
+    if not hit[0]:
+        return None                              # no intersection
+
+    hit_point = hit[1]
+    u, v = fn_mesh.getUVAtPoint(hit_point, om.MSpace.kWorld, uv_set)
+    return u, v
+
+
 sel = pm.ls(sl=True, fl=True)
+# for i in sel:
+#     pf = pm.PyNode(i)
+#     pfShp = pf.node()
+#     folShp = pm.createNode("follicle")
+#     fol = folShp.getParent()
+#     pm.connectAttr(f"{folShp}.outTranslate", f"{fol}.translate", f=1)
+#     pm.connectAttr(f"{folShp}.outRotate", f"{fol}.rotate", f=1)
+#     pm.connectAttr(f"{pfShp}.outMesh", f"{folShp}.inputMesh", f=1)
+#     pm.connectAttr(f"{pfShp}.worldMatrix[0]", f"{folShp}.inputWorldMatrix", f=1)
+#     uValue, vValue = getUVcoordinates(i.name())
+#     pm.setAttr(f"{folShp}.parameterU", uValue)
+#     pm.setAttr(f"{folShp}.parameterV", vValue)
+
+
+mesh = "pSphere1"
+pyMesh = pm.PyNode(mesh)
+pyMeshShape = pyMesh.getShapes()
 for i in sel:
-    pf = pm.PyNode(i)
-    pfShp = pf.node()
     folShp = pm.createNode("follicle")
     fol = folShp.getParent()
     pm.connectAttr(f"{folShp}.outTranslate", f"{fol}.translate", f=1)
     pm.connectAttr(f"{folShp}.outRotate", f"{fol}.rotate", f=1)
-    pm.connectAttr(f"{pfShp}.outMesh", f"{folShp}.inputMesh", f=1)
-    pm.connectAttr(f"{pfShp}.worldMatrix[0]", f"{folShp}.inputWorldMatrix", f=1)
-    uValue, vValue = getUVcoordinates(i.name())
+    pm.connectAttr(f"{pyMeshShape}.outMesh", f"{folShp}.inputMesh", f=1)
+    pm.connectAttr(f"{pyMeshShape}.worldMatrix[0]", f"{folShp}.inputWorldMatrix", f=1)
+    uValue, vValue = locator_uv(i, pyMesh)
     pm.setAttr(f"{folShp}.parameterU", uValue)
     pm.setAttr(f"{folShp}.parameterV", vValue)
+
+
