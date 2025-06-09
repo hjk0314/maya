@@ -36,59 +36,89 @@ def getUVcoordinates(face, uvSet=None):
 
 
 def locator_uv(locator, mesh, uv_set="map1"):
-    """Return ``(u, v)`` of ``mesh`` corresponding to ``locator``.
+    """Return the UV coordinates on ``mesh`` where ``locator`` lies.
 
-    The locator is assumed to lie on the surface (e.g. via *Make Live*).
-    Compatible with Maya API version 20220300.
+    Parameters
+    ----------
+    locator : str or pm.PyNode
+        Locator snapped onto the mesh (for example via *Make Live*).
+    mesh : str or pm.PyNode
+        Mesh on which the locator is positioned.
+    uv_set : str, optional
+        Name of the UV set to sample from. ``"map1"`` by default.
+
+    Returns
+    -------
+    tuple
+        ``(u, v)`` coordinates on ``mesh`` corresponding to the locator's
+        world-space position.
+
+    Notes
+    -----
+    Uses Maya API 2.0 (tested with version 20220300).
     """
 
-    # World-space location of the locator
     loc = pm.PyNode(locator)
     pos = om.MPoint(*pm.xform(loc, q=True, ws=True, t=True))
 
-    # Build an API 2.0 dag path for the mesh
     shape = pm.PyNode(mesh).getShape()
     sel = om.MSelectionList()
     sel.add(shape.name())
     dag = sel.getDagPath(0)
     fn_mesh = om.MFnMesh(dag)
 
-    # Find the nearest point on the mesh
     closest_point, _ = fn_mesh.getClosestPoint(pos, om.MSpace.kWorld)
-
-    # Query UV coordinates at that point
     u, v = fn_mesh.getUVAtPoint(closest_point, om.MSpace.kWorld, uv_set)
     return u, v
 
 
-sel = pm.ls(sl=True, fl=True)
-# for i in sel:
-#     pf = pm.PyNode(i)
-#     pfShp = pf.node()
-#     folShp = pm.createNode("follicle")
-#     fol = folShp.getParent()
-#     pm.connectAttr(f"{folShp}.outTranslate", f"{fol}.translate", f=1)
-#     pm.connectAttr(f"{folShp}.outRotate", f"{fol}.rotate", f=1)
-#     pm.connectAttr(f"{pfShp}.outMesh", f"{folShp}.inputMesh", f=1)
-#     pm.connectAttr(f"{pfShp}.worldMatrix[0]", f"{folShp}.inputWorldMatrix", f=1)
-#     uValue, vValue = getUVcoordinates(i.name())
-#     pm.setAttr(f"{folShp}.parameterU", uValue)
-#     pm.setAttr(f"{folShp}.parameterV", vValue)
+def create_follicles(mesh, locators, uv_set="map1"):
+    """Create follicles on ``mesh`` at the positions of ``locators``.
+
+    Parameters
+    ----------
+    mesh : str or pm.PyNode
+        Mesh used to host the follicles.
+    locators : iterable
+        Locators whose positions should be converted to UV coordinates.
+    uv_set : str, optional
+        UV set to query. ``"map1"`` by default.
+
+    Returns
+    -------
+    list of pm.PyNode
+        The created follicle transform nodes.
+    """
+
+    py_mesh = pm.PyNode(mesh)
+    mesh_shape = py_mesh.getShape()
+    follicles = []
+
+    for loc in locators:
+        fol_shape = pm.createNode("follicle")
+        fol = fol_shape.getParent()
+
+        pm.connectAttr(f"{fol_shape}.outTranslate", f"{fol}.translate", f=1)
+        pm.connectAttr(f"{fol_shape}.outRotate", f"{fol}.rotate", f=1)
+        pm.connectAttr(f"{mesh_shape}.outMesh", f"{fol_shape}.inputMesh", f=1)
+        pm.connectAttr(
+            f"{mesh_shape}.worldMatrix[0]", f"{fol_shape}.inputWorldMatrix", f=1
+        )
+
+        u, v = locator_uv(loc, py_mesh, uv_set)
+        pm.setAttr(f"{fol_shape}.parameterU", u)
+        pm.setAttr(f"{fol_shape}.parameterV", v)
+
+        follicles.append(fol)
+
+    return follicles
 
 
-mesh = "pSphere1"
-pyMesh = pm.PyNode(mesh)
-pyMeshShape = pyMesh.getShapes()
-pyMeshShape = pyMeshShape[0]
-for i in sel:
-    folShp = pm.createNode("follicle")
-    fol = folShp.getParent()
-    pm.connectAttr(f"{folShp}.outTranslate", f"{fol}.translate", f=1)
-    pm.connectAttr(f"{folShp}.outRotate", f"{fol}.rotate", f=1)
-    pm.connectAttr(f"{pyMeshShape}.outMesh", f"{folShp}.inputMesh", f=1)
-    pm.connectAttr(f"{pyMeshShape}.worldMatrix[0]", f"{folShp}.inputWorldMatrix", f=1)
-    uValue, vValue = locator_uv(i, pyMesh)
-    pm.setAttr(f"{folShp}.parameterU", uValue)
-    pm.setAttr(f"{folShp}.parameterV", vValue)
+
+
+if __name__ == "__main__":
+    sel = pm.ls(sl=True, fl=True)
+    mesh = "pSphere1"
+    create_follicles(mesh, sel)
 
 
