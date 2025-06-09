@@ -68,7 +68,8 @@ def locator_uv(locator, mesh, uv_set="map1"):
     fn_mesh = om.MFnMesh(dag)
 
     closest_point, _ = fn_mesh.getClosestPoint(pos, om.MSpace.kWorld)
-    u, v = fn_mesh.getUVAtPoint(closest_point, om.MSpace.kWorld, uv_set)
+    uv = fn_mesh.getUVAtPoint(closest_point, om.MSpace.kWorld, uv_set)
+    u, v = uv[:2]
     return u, v
 
 
