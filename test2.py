@@ -36,36 +36,28 @@ def getUVcoordinates(face, uvSet=None):
 
 
 def locator_uv(locator, mesh, uv_set="map1"):
-    """Return (u, v) on 'mesh' where 'locator' touches."""
-    loc = pm.PyNode(locator)
-    point = om.MPoint(*pm.xform(loc, q=True, ws=True, t=True))
+    """Return ``(u, v)`` of ``mesh`` corresponding to ``locator``.
 
+    The locator is assumed to lie on the surface (e.g. via *Make Live*).
+    Compatible with Maya API version 20220300.
+    """
+
+    # World-space location of the locator
+    loc = pm.PyNode(locator)
+    pos = om.MPoint(*pm.xform(loc, q=True, ws=True, t=True))
+
+    # Build an API 2.0 dag path for the mesh
     shape = pm.PyNode(mesh).getShape()
     sel = om.MSelectionList()
     sel.add(shape.name())
     dag = sel.getDagPath(0)
-
-    # dag = shape.__apimdagpath__()
     fn_mesh = om.MFnMesh(dag)
 
-    ray_dir = om.MVector(0, -1, 0)               # ray direction toward mesh
-    hit = fn_mesh.closestIntersection(
-        om.MFloatPoint(point), 
-        om.MFloatVector(ray_dir),
-        None, 
-        None, 
-        False,
-        om.MSpace.kWorld, 
-        1e6, 
-        False,
-        None, 
-        False)
+    # Find the nearest point on the mesh
+    closest_point, _ = fn_mesh.getClosestPoint(pos, om.MSpace.kWorld)
 
-    if not hit[0]:
-        return None                              # no intersection
-
-    hit_point, hit_ray, hit_face, hit_triangle, bary1, bary2 = hit[:6]
-    u, v = fn_mesh.getUVAtPoint(hit_point, om.MSpace.kWorld, uv_set)
+    # Query UV coordinates at that point
+    u, v = fn_mesh.getUVAtPoint(closest_point, om.MSpace.kWorld, uv_set)
     return u, v
 
 
