@@ -38,23 +38,33 @@ def getUVcoordinates(face, uvSet=None):
 def locator_uv(locator, mesh, uv_set="map1"):
     """Return (u, v) on 'mesh' where 'locator' touches."""
     loc = pm.PyNode(locator)
-    shape = pm.PyNode(mesh).getShape()
     point = om.MPoint(*pm.xform(loc, q=True, ws=True, t=True))
 
-    dag = shape.__apimdagpath__()
+    shape = pm.PyNode(mesh).getShape()
+    sel = om.MSelectionList()
+    sel.add(shape.name())
+    dag = sel.getDagPath(0)
+
+    # dag = shape.__apimdagpath__()
     fn_mesh = om.MFnMesh(dag)
 
     ray_dir = om.MVector(0, -1, 0)               # ray direction toward mesh
     hit = fn_mesh.closestIntersection(
-        om.MFloatPoint(point), om.MFloatVector(ray_dir),
-        None, None, False,
-        om.MSpace.kWorld, 1e6, False,
-        None, None, None, None, None, None, None)
+        om.MFloatPoint(point), 
+        om.MFloatVector(ray_dir),
+        None, 
+        None, 
+        False,
+        om.MSpace.kWorld, 
+        1e6, 
+        False,
+        None, 
+        False)
 
     if not hit[0]:
         return None                              # no intersection
 
-    hit_point = hit[1]
+    hit_point, hit_ray, hit_face, hit_triangle, bary1, bary2 = hit[:6]
     u, v = fn_mesh.getUVAtPoint(hit_point, om.MSpace.kWorld, uv_set)
     return u, v
 
@@ -77,6 +87,7 @@ sel = pm.ls(sl=True, fl=True)
 mesh = "pSphere1"
 pyMesh = pm.PyNode(mesh)
 pyMeshShape = pyMesh.getShapes()
+pyMeshShape = pyMeshShape[0]
 for i in sel:
     folShp = pm.createNode("follicle")
     fol = folShp.getParent()
