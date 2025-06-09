@@ -49,16 +49,19 @@ def locator_uv(locator, mesh, uv_set="map1"):
     fn_mesh = om.MFnMesh(dag)
 
     ray_dir = om.MVector(0, -1, 0)               # ray direction toward mesh
+    face_ids = om.MIntArray()
+    tri_ids = om.MIntArray()
+    accel_params = om.MMeshIsectAccelParams()
     hit = fn_mesh.closestIntersection(
         om.MFloatPoint(point), 
         om.MFloatVector(ray_dir),
-        None, 
-        None, 
+        face_ids, 
+        tri_ids, 
         False,
         om.MSpace.kWorld, 
         1e6, 
         False,
-        None, 
+        accel_params, 
         False)
 
     if not hit[0]:
