@@ -5,6 +5,7 @@ import numpy as np
 import sympy
 import pymel.core as pm
 import maya.OpenMaya as om
+import maya.api.OpenMaya as om2
 
 
 
@@ -1743,6 +1744,123 @@ def addProxyAttributes(FKCtrl: str, IKCtrl: str, attrName: str) -> None:
                proxy=f"{FKCtrl}.{attrName}")
 
 
+def getFaceUV(face: str, uvSet=None) -> tuple:
+    """ Return the UV-space ``Center`` of a polygon face.
+
+    Parameters
+    ----------
+    face : str or pm.MeshFace
+        Mesh face component to query.
+    uvSet : str, optional
+        UV set name to use. Defaults to the current set.
+
+    Examples    
+    --------
+    >>> getUVcoordinates("pSphere1.f[279]")
+    
+    Returns
+    -------
+    tuple
+        Coordinates ``(u, v)`` of the face center in UV space.
+     """
+    pyFace = pm.PyNode(face)
+    objShape = pyFace.node()
+    if uvSet:
+        pm.polyUVSet(objShape, currentUVSet=True, uvSet=uvSet)
+    uvs = pm.polyListComponentConversion(pyFace, toUV=True)
+    uvs = pm.ls(uvs, fl=True)
+    if not uvs:
+        return (0.0, 0.0)
+    coordinates = [pm.polyEditUV(uv, query=True) for uv in uvs]
+    mean_U = sum(u for u, _ in coordinates) / len(coordinates)
+    mean_V = sum(v for _, v in coordinates) / len(coordinates)
+    return mean_U, mean_V
+
+
+def getLocatorUV_onMesh(locator: str, mesh: str, uv_set="map1") -> tuple:
+    """ Return the UV coordinates on ``mesh`` where ``locator`` lies.
+
+    Parameters
+    ----------
+    locator : str or pm.PyNode
+        Locator snapped onto the mesh (for example via *Make Live*).
+    mesh : str or pm.PyNode
+        Mesh on which the locator is positioned.
+    uv_set : str, optional
+        Name of the UV set to sample from. ``"map1"`` by default.
+
+    Returns
+    -------
+    tuple
+        ``(u, v)`` coordinates on ``mesh`` corresponding to the locator's
+        world-space position.
+
+    Notes
+    -----
+    Uses Maya API 2.0 (tested with version 20220300).
+     """
+    pyLoc = pm.PyNode(locator)
+    pyLoc_pos = pm.xform(pyLoc, q=True, ws=True, t=True)
+    world_pos = om2.MPoint(*pyLoc_pos)
+    pyMesh = pm.PyNode(mesh)
+    pyMeshShp = pyMesh.getShape()
+    if not pyMeshShp:
+        raise RuntimeError(f"Mesh '{mesh}' has no Shape node.")
+    sel = om2.MSelectionList()
+    sel.add(pyMeshShp.name())
+    dagPath = sel.getDagPath(0)
+    fnMesh = om2.MFnMesh(dagPath)
+    closestPoint, _ = fnMesh.getClosestPoint(world_pos, om2.MSpace.kWorld)
+    u, v, _= fnMesh.getUVAtPoint(closestPoint, om2.MSpace.kWorld, uv_set)
+    return u, v
+
+
+def createFollicles(mesh: str, UVCoord: tuple, uv_set="map1") -> list:
+    """Create follicles on ``mesh`` at the positions of ``UVCoordinates``.
+
+    Parameters
+    ----------
+    mesh : str or pm.PyNode
+        Mesh used to host the follicles.
+    UVCoord : tuple
+        UVCoord whose positions should be converted to UV coordinates.
+    uv_set : str, optional
+        UV set to query. ``"map1"`` by default.
+
+    Examples
+    --------
+    >>> mesh = "pSphere1"
+    >>> sel = pm.selected(sl=True, fl=True)
+    >>> for i in sel:
+    >>> isTransform = isinstance(i, pm.nodetypes.Transform)
+    >>> isLocatorShape = any(isinstance(shp, pm.nodetypes.Locator) for shp in i.getShapes())
+    >>>     if isinstance(i, pm.general.MeshFace):
+    >>>         uvs = getFaceUV(i.name())
+    >>>     elif isTransform and isLocatorShape:
+    >>>         uvs = getLocatorUV_onMesh(i.name(), mesh)
+    >>>     else:
+    >>>         continue
+    >>>     createFollicles(mesh, uvs)
+
+    Returns
+    -------
+    list of pm.PyNode
+        The created follicle transform nodes.
+    """
+    pyMesh = pm.PyNode(mesh)
+    pyMeshShp = pyMesh.getShape()
+    folShp = pm.createNode("follicle")
+    fol = folShp.getParent()
+    pm.connectAttr(f"{folShp}.outTranslate", f"{fol}.translate", f=1)
+    pm.connectAttr(f"{folShp}.outRotate", f"{fol}.rotate", f=1)
+    pm.connectAttr(f"{pyMeshShp}.outMesh", f"{folShp}.inputMesh", f=1)
+    pm.connectAttr(f"{pyMesh}.worldMatrix[0]", f"{folShp}.inputWorldMatrix", f=1)
+    u, v = UVCoord
+    pm.setAttr(f"{folShp}.parameterU", u)
+    pm.setAttr(f"{folShp}.parameterV", v)
+    return fol
+
+
 class Controllers:
     def __init__(self):
         """ Create Curve Controllers for rig """
@@ -2060,5 +2178,25 @@ class Controllers:
             cuv = pm.curve(p=pos, d=1, n=cuvName)
             result.append(cuv)
         return result
+
+
+# mesh = "char_tigerA_mdl_v9999:tigerA_body"
+# sel = pm.selected(sl=True, fl=True)
+# locators = []
+# for i in sel:
+#     objName = i.split(":")[-1]
+#     temp = "_".join(objName.split("_")[:-2])
+#     locName = f"loc_{temp}"
+#     loc = pm.spaceLocator(p=(0, 0, 0), n=locName)
+#     pm.matchTransform(loc, i, pos=True)
+#     locators.append(loc)
+
+
+# for locator in locators:
+#     uvs = getLocatorUV_onMesh(locator, mesh)
+#     grpName = locator.replace("loc_", "char_tigerA_mdl_v9999:") + "_geo_grp"
+#     fol = createFollicles(mesh, uvs)
+#     pm.parentConstraint(fol, grpName, mo=True, w=1.0)
+#     pm.scaleConstraint(fol, grpName, mo=True, w=1.0)
 
 
