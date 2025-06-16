@@ -1170,3 +1170,33 @@ def connectBlendShapeToController(ctrl=str, bls1=str, bls2=""):
 #     else:
 #         pm.warning("objList number is incorrect.")
 
+boneInfulenced = [
+    'Hips', 
+    'Spine', 'Spine1', 'Spine2', 'Spine3', 'Spine4', 'Spine5', 'Spine6', 'Spine7', 'Spine8', 
+    'Neck', 'Neck1', 'Neck2', 
+    'Head', 
+    'Jaw', 
+    'LeftFrontShoulder', 'LeftFrontLeg', 'LeftFrontKnee', 'LeftFrontAnkle', 'LeftFrontToe', 
+    'LeftFrontIndex1', 'LeftFrontIndex2', 
+    'LeftFrontMiddle1', 'LeftFrontMiddle2', 
+    'LeftFrontRing1', 'LeftFrontRing2', 
+    'LeftFrontPinky1', 'LeftFrontPinky2', 
+    'RightFrontShoulder', 'RightFrontLeg', 'RightFrontKnee', 'RightFrontAnkle', 'RightFrontToe', 
+    'RightFrontIndex1', 'RightFrontIndex2', 
+    'RightFrontMiddle1', 'RightFrontMiddle2', 
+    'RightFrontRing1', 'RightFrontRing2', 
+    'RightFrontPinky1', 'RightFrontPinky2', 
+    'LeftBackShoulder', 'LeftBackLeg', 'LeftBackKnee', 'LeftBackAnkle', 'LeftBackToe', 
+    'LeftBackIndex1', 'LeftBackIndex2', 
+    'LeftBackMiddle1', 'LeftBackMiddle2', 
+    'LeftBackRing1', 'LeftBackRing2', 
+    'LeftBackPinky1', 'LeftBackPinky2', 
+    'RightBackShoulder', 'RightBackLeg', 'RightBackKnee', 'RightBackAnkle', 'RightBackToe', 
+    'RightBackIndex1', 'RightBackIndex2', 
+    'RightBackMiddle1', 'RightBackMiddle2', 
+    'RightBackRing1', 'RightBackRing2', 
+    'RightBackPinky1', 'RightBackPinky2', 
+    'Tail', 'Tail1', 'Tail2', 'Tail3', 'Tail4', 'Tail5', 'Tail6', 'Tail7', 'Tail8', 
+    ]
+
+
