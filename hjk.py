@@ -1854,7 +1854,7 @@ def get_deformed_shape(obj: str) -> str:
     return s.name().split('|')[-1].split(':')[-1]
 
 
-def createFollicles(mesh: str, UVCoord: tuple, uv_set="map1") -> list:
+def createFollicles(mesh: str, UVCoord: tuple, uv_set="map1") -> str:
     """Create follicles on ``mesh`` at the positions of ``UVCoordinates``.
 
     Parameters
@@ -1865,21 +1865,6 @@ def createFollicles(mesh: str, UVCoord: tuple, uv_set="map1") -> list:
         UVCoord whose positions should be converted to UV coordinates.
     uv_set : str, optional
         UV set to query. ``"map1"`` by default.
-
-    Examples
-    --------
-    >>> mesh = "pSphere1"
-    >>> sel = pm.selected(sl=True, fl=True)
-    >>> for i in sel:
-    >>> isTransform = isinstance(i, pm.nodetypes.Transform)
-    >>> isLoc = any(isinstance(s, pm.nodetypes.Locator) for s in i.getShapes())
-    >>>     if isinstance(i, pm.general.MeshFace):
-    >>>         uvs = getFaceUV(i.name())
-    >>>     elif isTransform and isLoc:
-    >>>         uvs = getLocatorUV_onMesh(i.name(), mesh)
-    >>>     else:
-    >>>         continue
-    >>>     createFollicles(mesh, uvs)
 
     Returns
     -------
@@ -2220,23 +2205,12 @@ class Controllers:
         return result
 
 
-# mesh = "char_tigerA_mdl_v9999:tigerA_body"
-# sel = pm.selected(sl=True, fl=True)
-# locators = []
-# for i in sel:
-#     objName = i.split(":")[-1]
-#     temp = "_".join(objName.split("_")[:-2])
-#     locName = f"loc_{temp}"
-#     loc = pm.spaceLocator(p=(0, 0, 0), n=locName)
-#     pm.matchTransform(loc, i, pos=True)
-#     locators.append(loc)
-
-
-# for locator in locators:
-#     uvs = getLocatorUV_onMesh(locator, mesh)
-#     grpName = locator.replace("loc_", "char_tigerA_mdl_v9999:") + "_geo_grp"
-#     fol = createFollicles(mesh, uvs)
-#     pm.parentConstraint(fol, grpName, mo=True, w=1.0)
-#     pm.scaleConstraint(fol, grpName, mo=True, w=1.0)
+# all_names = pm.ls()
+# duplicated_names = [name for name in all_names if all_names.count(name) > 1]
+# if duplicated_names:
+#     for i in duplicated_names:
+#         print(i)
+# else:
+#     print("There is no duplicated name.")
 
 
