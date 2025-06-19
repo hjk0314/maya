@@ -1713,6 +1713,17 @@ def deletePlugins() -> None:
             print(f"{j} : {k}")
 
 
+def check_duplicatedNames() -> list:
+    all = pm.ls()
+    result = [i for i in all if all.count(i) > 1]
+    if not result:
+        print("There is no duplicated names.")
+    else:
+        for i in result:
+            print(i)
+    return result
+
+
 def showNameAndPosition(*args) -> dict:
     """ Shows the name and coordinates of the selected object.
 
@@ -1740,7 +1751,11 @@ def addProxyAttributes(FKCtrl: str, IKCtrl: str, attrName: str) -> None:
     >>> addProxyAttributes("FK", "IK", "FK1IK0")
      """
     # pm.addAttr(FKCtrl, ln=attrName, at="double", min=0, max=10, dv=0, k=True)
-    pm.addAttr(IKCtrl, ln=attrName, at="double", min=0, max=10, dv=0, k=True, 
+    # pm.addAttr(IKCtrl, ln=attrName, at="double", min=0, max=10, dv=0, k=True, 
+    #            proxy=f"{FKCtrl}.{attrName}")
+    # pm.addAttr(IKCtrl, ln=attrName, at="enum", en="World:Hips:Chest:", k=True, 
+    #            proxy=f"{FKCtrl}.{attrName}")
+    pm.addAttr(IKCtrl, ln=attrName, at="bool", k=True, 
                proxy=f"{FKCtrl}.{attrName}")
 
 
@@ -2203,14 +2218,5 @@ class Controllers:
             cuv = pm.curve(p=pos, d=1, n=cuvName)
             result.append(cuv)
         return result
-
-
-# all_names = pm.ls()
-# duplicated_names = [name for name in all_names if all_names.count(name) > 1]
-# if duplicated_names:
-#     for i in duplicated_names:
-#         print(i)
-# else:
-#     print("There is no duplicated name.")
 
 
