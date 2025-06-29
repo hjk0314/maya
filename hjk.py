@@ -1068,6 +1068,23 @@ def orientJoints(*args, **kwargs) -> None:
             pm.joint(i, e=True, oj='none', ch=True, zso=True)
 
 
+def parentHierarchically(*args) -> list:
+    """ Hierarchically parent.
+    >>> parentHierarchically(*lst)
+    >>> parentHierarchically(parents, child)
+     """
+    sel = [pm.PyNode(i) for i in args] if args else pm.selected()
+    if not sel:
+        return
+    for idx, parents in enumerate(sel):
+        try:
+            child = sel[idx + 1]
+            pm.parent(child, parents)
+        except:
+            continue
+    return sel
+
+
 def groupOwnPivot(*args, **kwargs) -> list:
     """ Create a group with the same pivot.
 
@@ -1113,23 +1130,6 @@ def groupOwnPivot(*args, **kwargs) -> list:
         except: pass
         result += temp
     return result
-
-
-def parentHierarchically(*args) -> list:
-    """ Hierarchically parent.
-    >>> parentHierarchically(*lst)
-    >>> parentHierarchically(parents, child)
-     """
-    sel = [pm.PyNode(i) for i in args] if args else pm.selected()
-    if not sel:
-        return
-    for idx, parents in enumerate(sel):
-        try:
-            child = sel[idx + 1]
-            pm.parent(child, parents)
-        except:
-            continue
-    return sel
 
 
 def duplicateObj(obj: str, prefix: str="", suffix: str="") -> str:
