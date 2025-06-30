@@ -2,6 +2,7 @@
 
 
 from typing import Union, Tuple
+import maya.cmds as cmds
 import pymel.core as pm
 import math
 import re
@@ -17,7 +18,7 @@ __all__ = []
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
 
-def with_selection(func):
+def use_selection(func):
     """ If there is no argument in the wrapper,
     Pass the selected object as an argument to the wrapper.
      """
@@ -27,39 +28,37 @@ def with_selection(func):
     has_varargs = any(
         p.kind == inspect.Parameter.VAR_POSITIONAL for p in params
     )
-    required_positional = [
+    positional_arg = [
         p 
         for p in params 
         if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
     ]
+    num_positional_arg = len(positional_arg)
 
     def wrapper(*args, **kwargs):
         if args:
             return func(*args, **kwargs)
 
-        sel = pm.ls(sl=True, fl=True)
+        sel = cmds.ls(fl=True, os=True)
+
         if not sel:
             pm.warning("Nothing is selected.")
             return
 
         if has_varargs:
             return func(*sel, **kwargs)
-
-        elif len(required_positional) == 1:
+        elif num_positional_arg == 1:
             result = {}
             for i in sel:
-                key = i.name() if isinstance(i, pm.PyNode) else str(i)
-                result[key] = func(i, **kwargs)
+                result[i] = func(i, **kwargs)
             return result
-
         else:
-            pm.warning("Unsupported function signature for with_selection.")
-            return
+            return func(*sel[:num_positional_arg], **kwargs)
 
     return wrapper
 
 
-@with_selection
+@use_selection
 def get_position(obj_or_vtx: str) -> tuple:
     """ Get the coordinates of an object or point.
 
@@ -78,7 +77,7 @@ def get_position(obj_or_vtx: str) -> tuple:
     return tuple(result)
 
 
-@with_selection
+@use_selection
 def get_bounding_box_position(obj_or_vtx: str) -> tuple:
     """ Get the coordinates of the center pivot of the boundingBox.
 
@@ -103,7 +102,7 @@ def get_bounding_box_position(obj_or_vtx: str) -> tuple:
     return tuple(result)
 
 
-@with_selection
+@use_selection
 def get_bounding_box_size(obj_or_vtx: str) -> tuple:
     """ Get the length, width, and height of the bounding box.
 
@@ -195,14 +194,10 @@ def get_referenced_list() -> list:
     return result
 
 
+@use_selection
 def get_downstream(start: str, end: str) -> list:
     """ Get the downstream ``joints`` or ``objects`` 
     from the start joint to the end joint. The end is included.
-
-    Examples
-    --------
-    >>> get_downstream('joint2', 'joint10')
-    >>> ['joint2', 'joint3', 'joint8', 'joint9', 'joint10']
 
     Structure
     ---------
@@ -215,6 +210,11 @@ def get_downstream(start: str, end: str) -> list:
                 joint9
                     joint10
                         joint11
+
+    Examples
+    --------
+    >>> get_downstream('joint2', 'joint10')
+    >>> ['joint2', 'joint3', 'joint8', 'joint9', 'joint10']
      """
     end = pm.PyNode(end)
     result = [end.name()]
@@ -237,7 +237,7 @@ def get_downstream(start: str, end: str) -> list:
     return result
 
 
-@with_selection
+@use_selection
 def split_by_number(name: str) -> dict:
     """ If the name contains a number, 
     it returns a dict with the number and index.
@@ -254,7 +254,7 @@ def split_by_number(name: str) -> dict:
     return result
 
 
-@with_selection
+@use_selection
 def orient_joints(*joints, **kwargs) -> None:
     """ Select joints and don't put anything in the argument, 
     it will be oriented with the Maya default settings.
@@ -309,7 +309,7 @@ def orient_joints(*joints, **kwargs) -> None:
             pm.joint(j, e=True, oj='none', ch=True, zso=True)
 
 
-@with_selection
+@use_selection
 def create_pole_vector_joints(*joints) -> list:
     """ Put the pole vector joint at 90 degrees to the direction 
     of the first and last joints.
@@ -345,8 +345,8 @@ def create_pole_vector_joints(*joints) -> list:
     return result
 
 
-@with_selection
-def chain_parenting(*args) -> list:
+@use_selection
+def chain_parenting(*objs) -> list:
     """ Parent given nodes hierarchically in sequence.
     If no arguments are provided, use the current selection.
     Each node will become the parent of the next one in order.
@@ -357,21 +357,21 @@ def chain_parenting(*args) -> list:
     >>> chain_parenting() # Uses current selection
     >>> ['joint1', 'joint2', 'joint3']
      """
-    sel = [pm.PyNode(i) for i in args]
+    sel = [pm.PyNode(i) for i in objs]
 
     result = []
-    for idx, parents in enumerate(sel):
-        result.append(parents.name())
+    for idx, obj in enumerate(sel):
+        result.append(obj.name())
         try:
             child = sel[idx + 1]
-            pm.parent(child, parents)
+            pm.parent(child, obj)
         except:
             continue
 
     return result
 
 
-@with_selection
+@use_selection
 def group_with_pivot(*args, **kwargs) -> list:
     """ Create a group at the same pivot point as the object(s).
     If no arguments are given, the selected objects in Maya 
@@ -429,7 +429,7 @@ def group_with_pivot(*args, **kwargs) -> list:
     return result
 
 
-@with_selection
+@use_selection
 def set_joint_style(*joints, style: str="bone") -> None:
     """
     Set the drawing style of the specified joints in Maya.
@@ -470,8 +470,8 @@ def set_joint_style(*joints, style: str="bone") -> None:
             continue
 
 
-@with_selection
-def create_curve_from_positions(*args) -> str:
+@use_selection
+def create_curve_from_positions(*obj_or_vtx) -> str:
     """ Create a degree-3 curve 
     passing through the positions of the given objects.
 
@@ -480,7 +480,7 @@ def create_curve_from_positions(*args) -> str:
 
     Parameters
     ----------
-    *args : pm.PyNode, optional
+    *obj_or_vtx : pm.PyNode, optional
         Maya objects to get positions from. If empty, uses selected objects.
 
     Returns
@@ -492,8 +492,12 @@ def create_curve_from_positions(*args) -> str:
     >>> create_curve_from_positions(obj1, obj2, obj3)
     >>> create_curve_from_positions()  # Uses current selection
     """
-    sel = [pm.PyNode(i) for i in args]
-    positions = [pm.xform(i, q=True, ws=True, rp=True) for i in sel]
+    positions = []
+    for i in obj_or_vtx:
+        i_name = i.name() if isinstance(i, pm.PyNode) else str(i)
+        pos = get_position(i_name)
+        positions.append(pos)
+
     result = pm.curve(ep=positions, d=3)
 
     return result
@@ -560,8 +564,8 @@ def create_motion_path_joints(num: int, curve: str) -> list:
     return result
 
 
-@with_selection
-def create_joint_chain_on_curve(*args) -> list:
+@use_selection
+def create_joint_chain_on_curve(*obj_or_vtx) -> list:
     """ Create a joint chain based on the positions of the given objects.
 
     This function creates joints at the world positions of the input objects,
@@ -569,7 +573,7 @@ def create_joint_chain_on_curve(*args) -> list:
 
     Parameters
     ----------
-    *args : pm.PyNode
+    *obj_or_vtx : pm.PyNode
         Objects (e.g., locators or curve points) to use as joint positions.
 
     Returns
@@ -583,13 +587,13 @@ def create_joint_chain_on_curve(*args) -> list:
     >>> ["joint1", "joint2", "joint3", ...]
      """
     result = []
-
-    sel = [pm.PyNode(i) for i in args]
-    for i in sel:
+    for i in obj_or_vtx:
         pm.select(cl=True)
         jnt = pm.joint(p=(0, 0, 0))
-        pm.matchTransform(jnt, i, pos=True)
-        result.append(jnt)
+        i_name = i.name() if isinstance(i, pm.PyNode) else str(i)
+        i_position = get_position(i_name)
+        pm.xform(jnt, ws=True, t=i_position)
+        result.append(jnt.name())
 
     chain_parenting(*result)
     pm.makeIdentity(result, t=1, r=1, s=1, n=0, pn=1, jo=1, a=1)
@@ -598,6 +602,156 @@ def create_joint_chain_on_curve(*args) -> list:
     return result
 
 
+@use_selection
+def create_animation_curves(*obj_or_vtx, **kwargs) -> list:
+    """ Create animation curves 
+    from object or vertex positions over a frame range.
+
+    This function iterates through a specified frame range, retrieves the
+    position of each provided object or vertex at each frame, and then
+    creates a 3-degree NURBS curve using these recorded positions.
+
+    obj_or_vtx:
+        *obj_or_vtx (pm.PyNode or str): Positional arguments
+            representing the objects or vertices for which to record positions.
+            Can be PyNode objects or their string names.
+        **kwargs: Keyword arguments for specifying the frame range.
+            - start_frame (int): The starting frame of the animation range.
+                Aliases: 'sf'.
+            - end_frame (int): The ending frame of the animation range.
+                Aliases: 'ef'.
+
+    Returns:
+        list: A list of `pymel.core.general.Curve` objects,
+            each representing an animation curve created from the
+            recorded positions.
+
+    Raises:
+        pm.maya.warning: If 'start_frame' or 'end_frame' (or their aliases)
+            are not provided or are not integers.
+     """
+    start_frame = kwargs.get("start_frame") or kwargs.get("sf")
+    end_frame = kwargs.get("end_frame") or kwargs.get("ef")
+
+    if not isinstance(start_frame, int) or not isinstance(end_frame, int):
+        pm.warning("Both start_frame and end_frame must be provided as int.")
+        return []
+
+    recorded_positions = {}
+    for frame in range(start_frame, end_frame + 1):
+        pm.currentTime(frame)
+        for i in obj_or_vtx:
+            i_name = i.name() if isinstance(i, pm.PyNode) else str(i)
+            pos = get_position(i_name)
+            recorded_positions.setdefault(i_name, []).append(pos)
+
+    result_curves = []
+    for positions in recorded_positions.values():
+        if len(positions) >= 2:
+            curve = pm.curve(p=positions, d=3)
+            result_curves.append(curve.name())
+        else:
+            pm.warning(f"Not enough points to create a curve for an item.")
+
+    return result_curves
+
+
+@use_selection
+def create_closed_curve(*obj_or_vtx) -> str:
+    """ Creates a circle that passes through objects or points.
+
+    This function takes any number of objects or vertices names as args.
+    It then creates a NURBS circle and positions its control vertices (CVs)
+    to pass through the specified objects or points.
+
+    Args:
+        *obj_or_vtx: Variable length argument list of objects or vertices.
+                     Each argument should be a string representing the name of
+                     a valid object or vertex in the scene.
+
+    Returns:
+        str: The name of the created NURBS circle object.
+
+    Examples:
+        >>> create_closed_curve("sphere1", "cube2", "pCylinder3")
+        >>> create_closed_curve("obj1.vtx[0]", "obj2.vtx[1]", "obj3.vtx[2]")
+     """
+    positions = [get_position(i) for i in obj_or_vtx]
+    circles = pm.circle(nr=(0, 1, 0), ch=False, s=len(obj_or_vtx))
+    circle = circles[0]
+
+    for idx, pos in enumerate(positions):
+        pm.move(f"{circle}.cv[{idx}]", pos, ws=True)
+
+    return circle
+
+
+@use_selection
+def create_aimed_curve(
+        start_obj_or_vtx: str, 
+        end_obj_or_vtx: str, 
+        world_up_object: str=""
+    ) -> str:
+    """ Create a straight curve between two points and aim it at the end point.
+
+    The curve is initially created along the X-axis at the origin and then
+    translated to the 'start_obj_or_vtx' position. It is then aimed at the
+    'end_obj_or_vtx'. An optional 'world_up_object' can be provided to control
+    the world up vector for the aiming constraint. The resulting curve 
+    is rebuilt for smoother interpolation and history is deleted.
+
+    Args:
+        start_obj_or_vtx: 
+            The name of the starting object or vertex 
+            (e.g., 'pSphere1', 'pCube1.vtx[0]').
+        end_obj_or_vtx: 
+            The name of the ending object or vertex.
+        world_up_object: 
+            An optional object to define the world up direction 
+            for the aim constraint. If not provided, 
+            a default world up will be used.
+
+    Returns:
+        str: The name of the newly created and aimed curve.
+
+    Examples:
+    >>> create_aimed_curve(obj1, obj2)
+    >>> create_aimed_curve(obj1, obj2, obj3)
+    >>> create_aimed_curve(obj1.vtx[23], obj2.vtx[99])
+    >>> create_aimed_curve(obj1.vtx[23], obj2.vtx[99], obj3.vtx[36])
+     """
+    positions = [get_position(i) for i in [start_obj_or_vtx, end_obj_or_vtx]]
+    start_point, end_point = positions
+    length_of_curve = get_distance(start_point, end_point)
+
+    result_curve = pm.curve(p=[(0, 0, 0), (length_of_curve, 0, 0)], d=1)
+    pm.xform(result_curve, ws=True, t=start_point)
+
+    end_point_locator = pm.spaceLocator()
+    pm.move(end_point_locator, end_point)
+
+    if not world_up_object:
+        pm.aimConstraint(end_point_locator, result_curve)
+    else:
+        world_up_object_position = get_position(world_up_object)
+        world_up_object_locator = pm.spaceLocator()
+        pm.move(world_up_object_locator, world_up_object_position)
+        pm.aimConstraint(
+            end_point_locator, 
+            result_curve, 
+            worldUpType="object", 
+            worldUpObject=world_up_object_locator
+        )
+        pm.delete(world_up_object_locator)
+
+    pm.rebuildCurve(result_curve, d=3, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
+    pm.delete(result_curve, cn=True)
+    pm.delete(end_point_locator)
+
+    return result_curve
+
+
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
+
 
