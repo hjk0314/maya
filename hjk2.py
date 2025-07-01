@@ -2,11 +2,12 @@
 
 
 from typing import Union, Tuple
-import maya.cmds as cmds
-import pymel.core as pm
 import math
 import re
 import inspect
+import maya.cmds as cmds
+import pymel.core as pm
+import maya.api.OpenMaya as om2
 
 
 __version__ = "Python 3.7.9"
@@ -565,7 +566,7 @@ def create_motion_path_joints(num: int, curve: str) -> list:
 
 
 @use_selection
-def create_joint_chain_on_curve(*obj_or_vtx) -> list:
+def create_chain_joint(*obj_or_vtx) -> list:
     """ Create a joint chain based on the positions of the given objects.
 
     This function creates joints at the world positions of the input objects,
@@ -753,5 +754,161 @@ def create_aimed_curve(
 
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
+
+
+def get_uv_coordinates(*vtx_edge_face) -> tuple:
+    uvs = []
+    for i in vtx_edge_face:
+        item = i if isinstance(i, pm.PyNode) else pm.PyNode(i.name())
+        if isinstance(item, pm.MeshVertex):
+            uv = item.getUV()
+            uvs.append(uv)
+        elif isinstance(item, pm.MeshEdge):
+            print(item.connectedVertices())
+            print("Edge Type.")
+        elif isinstance(item, pm.MeshFace):
+            print(item.getVertices())
+            print("Face Type.")
+        else:
+            print("Unknown Type.")
+    average_u = sum(u for u, v in uvs) / len(uvs)
+    average_v = sum(v for u, v in uvs) / len(uvs)
+    result_u = round(average_u, 5)
+    result_v = round(average_v, 5)
+    return result_u, result_v
+
+
+def get_deformed_shape(obj: str) -> str:
+    """ Returns the original shape (including namespace) 
+    and the shape resulting from the deformer 
+    (without namespace or intermediate) from the transform node.
+
+    Parameters
+    ----------
+    obj : str
+        "char_tigerA_mdl_v9999:tigerA_body"
+     """
+    try:
+        transform = pm.PyNode(obj)
+    except pm.MayaNodeError:
+        pm.warning(f"Node {obj} does not exist.")
+        return None, None
+
+    shapes = transform.getShapes(noIntermediate=False)
+    shapes_ = transform.getShapes(noIntermediate=True)
+    original_shape = None
+    deformed_shape = None
+
+    for shp in shapes:
+        # name = shp.nodeName()
+        # if name.startswith(transform.namespace()):
+        if shp.intermediateObject.get():
+            original_shape = shp
+        else:
+        # elif ":" not in name:
+            deformed_shape = shp
+
+    return original_shape, deformed_shape
+
+
+
+def getLocatorUV_onMesh(locator: str, mesh: str, uv_set="map1") -> tuple:
+    """ Return the UV coordinates on ``mesh`` where ``locator`` lies.
+
+    Parameters
+    ----------
+    locator : str or pm.PyNode
+        Locator snapped onto the mesh (for example via *Make Live*).
+    mesh : str or pm.PyNode
+        Mesh on which the locator is positioned.
+    uv_set : str, optional
+        Name of the UV set to sample from. ``"map1"`` by default.
+
+    Returns
+    -------
+    tuple
+        ``(u, v)`` coordinates on ``mesh`` corresponding to the locator's
+        world-space position.
+
+    Notes
+    -----
+    Uses Maya API 2.0 (tested with version 20220300).
+     """
+    pyLoc = pm.PyNode(locator)
+    pyLoc_pos = pm.xform(pyLoc, q=True, ws=True, t=True)
+    world_pos = om2.MPoint(*pyLoc_pos)
+    # pyMesh = pm.PyNode(mesh)
+    print(mesh)
+    pyMeshShp = get_deformed_shape(mesh)
+    print(pyMeshShp)
+    pyMeshShp = pm.PyNode(pyMeshShp)
+    if not pyMeshShp:
+        raise RuntimeError(f"Mesh '{mesh}' has no Shape node.")
+    sel = om2.MSelectionList()
+    print(f"sel : {sel}")
+    sel.add(pyMeshShp.name())
+    print(f"pyMeshShp.name() : {pyMeshShp.name()}")
+    dagPath = sel.getDagPath(0)
+    print(f"dagPath : {dagPath}")
+    fnMesh = om2.MFnMesh(dagPath)
+    print(f"fnMesh : {fnMesh}")
+    closestPoint, _ = fnMesh.getClosestPoint(world_pos, om2.MSpace.kWorld)
+    u, v, _= fnMesh.getUVAtPoint(closestPoint, om2.MSpace.kWorld, uv_set)
+    return u, v
+
+
+a = get_deformed_shape("char_tigerA_mdl_v9999:tigerA_body")
+print(a)
+
+def create_follicle(obj: str, UVCoordinates: tuple, uv_set="map1") -> str:
+    """ Create ``follicles`` on mesh at the positions of ``UVCoordinates``.
+
+    Parameters
+    ----------
+    - mesh : str or pm.PyNode
+        Mesh used to host the follicles.
+    - UVCoordinates : tuple
+        UVCoordinates whose positions should be converted to UV coordinates.
+    - uv_set : str, optional
+        UV set to query. ``map1`` by default.
+
+    Returns
+    -------
+    - str : The created follicle transform nodes.
+
+    Examples
+    --------
+    >>> create_follicle("tigerA", (0.8, 0.8), )
+     """
+    mesh = pm.PyNode(obj)
+    deformed_shape = get_deformed_shape(obj)
+    follicle_shape = pm.createNode("follicle")
+    follicle_node = follicle_shape.getParent()
+
+    pm.connectAttr(
+        f"{follicle_shape}.outTranslate", 
+        f"{follicle_node}.translate", 
+        f=True
+    )
+    pm.connectAttr(
+        f"{follicle_shape}.outRotate", 
+        f"{follicle_node}.rotate", 
+        f=True
+    )
+    pm.connectAttr(
+        f"{deformed_shape}.outMesh", 
+        f"{follicle_shape}.inputMesh", 
+        f=True
+    )
+    pm.connectAttr(
+        f"{mesh}.worldMatrix[0]", 
+        f"{follicle_shape}.inputWorldMatrix", 
+        f=True
+    )
+    u, v = UVCoordinates
+    pm.setAttr(f"{follicle_shape}.parameterU", u)
+    pm.setAttr(f"{follicle_shape}.parameterV", v)
+
+    return follicle_node
 
 
