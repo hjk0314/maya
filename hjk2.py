@@ -795,21 +795,16 @@ def get_deformed_shape(obj: str) -> str:
         return None, None
 
     shapes = transform.getShapes(noIntermediate=False)
-    shapes_ = transform.getShapes(noIntermediate=True)
     original_shape = None
     deformed_shape = None
 
     for shp in shapes:
-        # name = shp.nodeName()
-        # if name.startswith(transform.namespace()):
         if shp.intermediateObject.get():
             original_shape = shp
         else:
-        # elif ":" not in name:
             deformed_shape = shp
 
     return original_shape, deformed_shape
-
 
 
 def getLocatorUV_onMesh(locator: str, mesh: str, uv_set="map1") -> tuple:
@@ -857,9 +852,6 @@ def getLocatorUV_onMesh(locator: str, mesh: str, uv_set="map1") -> tuple:
     return u, v
 
 
-a = get_deformed_shape("char_tigerA_mdl_v9999:tigerA_body")
-print(a)
-
 def create_follicle(obj: str, UVCoordinates: tuple, uv_set="map1") -> str:
     """ Create ``follicles`` on mesh at the positions of ``UVCoordinates``.
 
@@ -881,7 +873,7 @@ def create_follicle(obj: str, UVCoordinates: tuple, uv_set="map1") -> str:
     >>> create_follicle("tigerA", (0.8, 0.8), )
      """
     mesh = pm.PyNode(obj)
-    deformed_shape = get_deformed_shape(obj)
+    deformed_shape = get_deformed_shape(obj)[-1]
     follicle_shape = pm.createNode("follicle")
     follicle_node = follicle_shape.getParent()
 
