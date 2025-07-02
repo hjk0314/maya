@@ -196,7 +196,7 @@ def get_referenced_list() -> list:
 
 
 @use_selection
-def get_downstream(start: str, end: str) -> list:
+def get_downstream_path(start: str, end: str) -> list:
     """ Get the downstream ``joints`` or ``objects`` 
     from the start joint to the end joint. The end is included.
 
@@ -347,14 +347,14 @@ def create_pole_vector_joints(*joints) -> list:
 
 
 @use_selection
-def chain_parenting(*objs) -> list:
+def parent_in_sequence(*objs) -> list:
     """ Parent given nodes hierarchically in sequence.
     If no arguments are provided, use the current selection.
     Each node will become the parent of the next one in order.
 
     Examples
     --------
-    >>> chain_parenting('joint1', 'joint2', 'joint3')
+    >>> parent_in_sequence('joint1', 'joint2', 'joint3')
     >>> chain_parenting() # Uses current selection
     >>> ['joint1', 'joint2', 'joint3']
      """
@@ -420,7 +420,7 @@ def group_with_pivot(*args, **kwargs) -> list:
             pm.matchTransform(grp, i, pos=True, rot=True)
             temp.append(grp.name())
         temp.append(i.name())
-        chain_parenting(*temp)
+        parent_in_sequence(*temp)
         try:
             pm.parent(temp[0], top_group)
         except:
@@ -472,9 +472,9 @@ def set_joint_style(*joints, style: str="bone") -> None:
 
 
 @use_selection
-def create_curve_from_positions(*obj_or_vtx) -> str:
+def create_curve_from_points(*obj_or_vtx) -> str:
     """ Create a degree-3 curve 
-    passing through the positions of the given objects.
+    passing through the points of the given objects.
 
     If no arguments are provided, 
     it uses the currently selected objects in Maya.
@@ -482,7 +482,7 @@ def create_curve_from_positions(*obj_or_vtx) -> str:
     Parameters
     ----------
     *obj_or_vtx : pm.PyNode, optional
-        Maya objects to get positions from. If empty, uses selected objects.
+        Maya objects to get points from. If empty, uses selected objects.
 
     Returns
     -------
@@ -490,16 +490,16 @@ def create_curve_from_positions(*obj_or_vtx) -> str:
     
     Examples
     --------
-    >>> create_curve_from_positions(obj1, obj2, obj3)
-    >>> create_curve_from_positions()  # Uses current selection
+    >>> create_curve_from_points(obj1, obj2, obj3)
+    >>> create_curve_from_points()  # Uses current selection
     """
-    positions = []
+    points = []
     for i in obj_or_vtx:
         i_name = i.name() if isinstance(i, pm.PyNode) else str(i)
         pos = get_position(i_name)
-        positions.append(pos)
+        points.append(pos)
 
-    result = pm.curve(ep=positions, d=3)
+    result = pm.curve(ep=points, d=3)
 
     return result
 
@@ -596,7 +596,7 @@ def create_chain_joint(*obj_or_vtx) -> list:
         pm.xform(jnt, ws=True, t=i_position)
         result.append(jnt.name())
 
-    chain_parenting(*result)
+    parent_in_sequence(*result)
     pm.makeIdentity(result, t=1, r=1, s=1, n=0, pn=1, jo=1, a=1)
     orient_joints(*result)
 
@@ -752,32 +752,7 @@ def create_aimed_curve(
     return result_curve
 
 
-# Limit all lines to a maximum of 79 characters. ==============================
-# Docstrings or Comments, limit the line length to 72 characters. ======
-
-
-def get_uv_coordinates(*vtx_edge_face) -> tuple:
-    uvs = []
-    for i in vtx_edge_face:
-        item = i if isinstance(i, pm.PyNode) else pm.PyNode(i.name())
-        if isinstance(item, pm.MeshVertex):
-            uv = item.getUV()
-            uvs.append(uv)
-        elif isinstance(item, pm.MeshEdge):
-            print(item.connectedVertices())
-            print("Edge Type.")
-        elif isinstance(item, pm.MeshFace):
-            print(item.getVertices())
-            print("Face Type.")
-        else:
-            print("Unknown Type.")
-    average_u = sum(u for u, v in uvs) / len(uvs)
-    average_v = sum(v for u, v in uvs) / len(uvs)
-    result_u = round(average_u, 5)
-    result_v = round(average_v, 5)
-    return result_u, result_v
-
-
+@use_selection
 def get_deformed_shape(obj: str) -> str:
     """ Returns the original shape (including namespace) 
     and the shape resulting from the deformer 
@@ -807,48 +782,111 @@ def get_deformed_shape(obj: str) -> str:
     return original_shape, deformed_shape
 
 
-def getLocatorUV_onMesh(locator: str, mesh: str, uv_set="map1") -> tuple:
-    """ Return the UV coordinates on ``mesh`` where ``locator`` lies.
+@use_selection
+def get_uv_coordinates(vtx_edge_face: str) -> tuple:
+    """ Get the average UV coordinates for a given mesh component.
 
-    Parameters
-    ----------
-    locator : str or pm.PyNode
-        Locator snapped onto the mesh (for example via *Make Live*).
-    mesh : str or pm.PyNode
-        Mesh on which the locator is positioned.
-    uv_set : str, optional
-        Name of the UV set to sample from. ``"map1"`` by default.
+    This function calculates the average UV coordinates for a mesh vertex,
+    edge, or face. For edges and faces, it averages the UVs of their
+    connected vertices.
+
+    Args
+    ----
+    vtx_edge_face : str
+        A string representing the name of a mesh vertex, edge,
+        or face (e.g., "pCube1.vtx[0]", "pCube1.e[0]",
+        "pCube1.f[0]"), or a PyNode object representing one of these components.
 
     Returns
     -------
-    tuple
-        ``(u, v)`` coordinates on ``mesh`` corresponding to the locator's
-        world-space position.
+    tuple : 
+        A tuple containing the rounded average U,V coordinates (float, float).
+        Returns an empty tuple if an invalid component type is provided.
 
-    Notes
-    -----
-    Uses Maya API 2.0 (tested with version 20220300).
+    Raises
+    ------
+        (No explicit raises, but pymel.PyNode may raise if name is invalid)
      """
-    pyLoc = pm.PyNode(locator)
-    pyLoc_pos = pm.xform(pyLoc, q=True, ws=True, t=True)
-    world_pos = om2.MPoint(*pyLoc_pos)
-    # pyMesh = pm.PyNode(mesh)
-    print(mesh)
-    pyMeshShp = get_deformed_shape(mesh)
-    print(pyMeshShp)
-    pyMeshShp = pm.PyNode(pyMeshShp)
-    if not pyMeshShp:
+    if isinstance(vtx_edge_face, pm.PyNode):
+        item = vtx_edge_face 
+    else:
+        item = pm.PyNode(vtx_edge_face)
+
+    uvs = []
+    if isinstance(item, pm.MeshVertex):
+        uv = item.getUV()
+        uvs.append(uv)
+    elif isinstance(item, pm.MeshEdge):
+        points = item.connectedVertices()
+        uvs += [i.getUV() for i in points]
+    elif isinstance(item, pm.MeshFace):
+        points = item.getVertices()
+        uvs += [i.getUV() for i in points]
+    else:
+        pm.warning("No valid arguments supplied for uv coodinates.")
+        return ()
+
+    average_u = sum(u for u, v in uvs) / len(uvs)
+    average_v = sum(v for u, v in uvs) / len(uvs)
+    result_u = round(average_u, 5)
+    result_v = round(average_v, 5)
+    return result_u, result_v
+
+
+def get_uv_coordinates_closet_object(
+    obj_closet_mesh: str, mesh: str, uv_set: str = "map1"
+) -> Tuple[float, float]:
+    """ Get UV coordinates from the closest point on a mesh to an object.
+
+    This function finds the closest point on the specified mesh to the
+    given object's world position and then returns the UV coordinates
+    at that point.
+
+    Args
+    ----
+    - obj_closet_mesh : str
+        The object to get the world position from.
+        Can be a PyNode or a string convertible to PyNode.
+    - mesh : str
+        The target mesh to find the closest point on.
+        Can be a PyNode or a string convertible to PyNode.
+    - uv_set : str, optional
+        The name of the UV set to query. Defaults to "map1".
+
+    Returns
+    -------
+    tuple : 
+        A tuple containing the U and V coordinates (float, float).
+
+    Raises
+    ------
+    RuntimeError : 
+        If the mesh has no shape node.
+     """
+    obj = (
+        obj_closet_mesh 
+        if isinstance(obj_closet_mesh, pm.PyNode) 
+        else pm.PyNode(obj_closet_mesh)
+    )
+
+    obj_position = pm.xform(obj, q=True, ws=True, t=True)
+    world_position = om2.MPoint(*obj_position)
+
+    mesh_shapes = get_deformed_shape(mesh)
+    mesh_shp = pm.PyNode(mesh_shapes[-1])
+    if not mesh_shp:
         raise RuntimeError(f"Mesh '{mesh}' has no Shape node.")
-    sel = om2.MSelectionList()
-    print(f"sel : {sel}")
-    sel.add(pyMeshShp.name())
-    print(f"pyMeshShp.name() : {pyMeshShp.name()}")
-    dagPath = sel.getDagPath(0)
-    print(f"dagPath : {dagPath}")
-    fnMesh = om2.MFnMesh(dagPath)
-    print(f"fnMesh : {fnMesh}")
-    closestPoint, _ = fnMesh.getClosestPoint(world_pos, om2.MSpace.kWorld)
-    u, v, _= fnMesh.getUVAtPoint(closestPoint, om2.MSpace.kWorld, uv_set)
+
+    selection = om2.MSelectionList()
+    selection.add(mesh_shp.name())
+    dag_path = selection.getDagPath(0)
+    mfn_mesh = om2.MFnMesh(dag_path)
+
+    closet_point, _ = mfn_mesh.getClosestPoint(
+        world_position, om2.MSpace.kWorld
+    )
+    u, v, _= mfn_mesh.getUVAtPoint(closet_point, om2.MSpace.kWorld, uv_set)
+
     return u, v
 
 
@@ -902,5 +940,9 @@ def create_follicle(obj: str, UVCoordinates: tuple, uv_set="map1") -> str:
     pm.setAttr(f"{follicle_shape}.parameterV", v)
 
     return follicle_node
+
+
+# Limit all lines to a maximum of 79 characters. ==============================
+# Docstrings or Comments, limit the line length to 72 characters. ======
 
 
