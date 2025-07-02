@@ -946,3 +946,61 @@ def create_follicle(obj: str, UVCoordinates: tuple, uv_set="map1") -> str:
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
 
+def create_blend_color(
+    controller: str,
+    jnt_list: list,
+    fk_list: list,
+    ik_list: list,
+    translate: bool = False,
+    rotate: bool = False,
+    scale: bool = False,
+    visibility: bool = False
+) -> pm.nt.SetRange:
+    """
+    Create blendColors nodes to blend FK and IK joints and connect them to target joints.
+
+    A setRange node is created to normalize the controller's input value (0–10 → 0–1),
+    which is then connected to the blendColors nodes to blend selected transform attributes.
+
+    Args:
+        controller (str): The controller node used to drive blending.
+        jnt_list (list): List of target joints to receive blended values.
+        fk_list (list): List of corresponding FK joints.
+        ik_list (list): List of corresponding IK joints.
+        translate (bool): Whether to blend translation attributes.
+        rotate (bool): Whether to blend rotation attributes.
+        scale (bool): Whether to blend scale attributes.
+        visibility (bool): Whether to blend visibility attribute.
+
+    Returns:
+        pm.nt.SetRange: The created setRange node used as the blend driver.
+    """
+    if not (len(jnt_list) == len(fk_list) == len(ik_list)):
+        raise ValueError("jnt_list, fk_list, and ik_list must be the same length.")
+
+    # Determine which attributes to blend
+    attr_flags = {
+        "translate": translate,
+        "rotate": rotate,
+        "scale": scale,
+        "visibility": visibility
+    }
+    blend_attrs = [attr for attr, flag in attr_flags.items() if flag]
+
+    # Create setRange node to normalize control value
+    set_range = pm.shadingNode("setRange", asUtility=True, name="fkIk_setRange")
+    for axis in ["X", "Y", "Z"]:
+        pm.setAttr(f"{set_range}.oldMax{axis}", 10)
+        pm.setAttr(f"{set_range}.max{axis}", 1)
+        pm.connectAttr(controller, f"{set_range}.value{axis}", force=True)
+
+    # Connect blendColors for each joint and attribute
+    for target_jnt, fk_jnt, ik_jnt in zip(jnt_list, fk_list, ik_list):
+        for attr in blend_attrs:
+            blend_node = pm.shadingNode("blendColors", asUtility=True, name=f"{target_jnt}_{attr}_blend")
+            pm.connectAttr(f"{fk_jnt}.{attr}", f"{blend_node}.color1", force=True)
+            pm.connectAttr(f"{ik_jnt}.{attr}", f"{blend_node}.color2", force=True)
+            pm.connectAttr(f"{blend_node}.output", f"{target_jnt}.{attr}", force=True)
+            pm.connectAttr(f"{set_range}.outValueX", f"{blend_node}.blender", force=True)
+
+    return set_range
