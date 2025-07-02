@@ -946,39 +946,67 @@ def create_follicle(obj: str, UVCoordinates: tuple, uv_set="map1") -> str:
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
 
-def create_blend_color(
+def create_blendcolor_node(
     controller: str,
-    jnt_list: list,
-    fk_list: list,
-    ik_list: list,
-    translate: bool = False,
-    rotate: bool = False,
-    scale: bool = False,
-    visibility: bool = False
+    jnt_list: list, fk_list: list, ik_list: list,
+    translate: bool=False, rotate: bool=False, 
+    scale: bool=False, visibility: bool=False
 ) -> pm.nt.SetRange:
-    """
-    Create blendColors nodes to blend FK and IK joints and connect them to target joints.
+    """ Set up FK/IK blending between target joints and control lists.
 
-    A setRange node is created to normalize the controller's input value (0–10 → 0–1),
-    which is then connected to the blendColors nodes to blend selected transform attributes.
+    This function creates a `setRange` node to normalize a controller's
+    value, and then uses `blendColors` nodes to blend specified attributes
+    (translate, rotate, scale, visibility) between corresponding FK and IK
+    control elements.
 
-    Args:
-        controller (str): The controller node used to drive blending.
-        jnt_list (list): List of target joints to receive blended values.
-        fk_list (list): List of corresponding FK joints.
-        ik_list (list): List of corresponding IK joints.
-        translate (bool): Whether to blend translation attributes.
-        rotate (bool): Whether to blend rotation attributes.
-        scale (bool): Whether to blend scale attributes.
-        visibility (bool): Whether to blend visibility attribute.
+    Args
+    ----
+    - controller : str 
+        The name of the Maya attribute that will drive the
+        FK/IK blend (e.g., 'pCube1.tx'). This attribute's value will be
+        normalized between 0 and 1 using a `setRange` node.
+    - jnt_list : list 
+        A list of target joints (pm.PyNode or str) to which
+        the blended attributes will be connected.
+    - fk_list : list 
+        A list of FK control elements (pm.PyNode or str)
+        whose attributes will be used as 'color1' in the `blendColors` node. 
+        Must be the same length as `jnt_list` and `ik_list`.
+    - ik_list : list
+        A list of IK control elements (pm.PyNode or str)
+        whose attributes will be used as 'color2' in the `blendColors` node. 
+        Must be the same length as `jnt_list` and `fk_list`.
+    - translate : bool, optional 
+        If True, blend the 'translate' attributes (tx, ty, tz). 
+        Defaults to False.
+    - rotate : bool, optional
+        If True, blend the 'rotate' attributes (rx, ry, rz). 
+        Defaults to False.
+    - scale : bool, optional
+        If True, blend the 'scale' attributes (sx, sy, sz). 
+        Defaults to False.
+    - visibility : bool, optional
+        If True, blend the 'visibility' attribute. 
+        Defaults to False.
 
-    Returns:
-        pm.nt.SetRange: The created setRange node used as the blend driver.
-    """
+    Raises
+    ------
+    ValueError : 
+        If `jnt_list`, `fk_list`, and `ik_list` do not have the same length.
+
+    Returns
+    -------
+    pm.nt.SetRange : 
+        The `setRange` node created to normalize the controller's value.
+
+    Examples
+    --------
+    >>> create_blendcolor_node(
+        "ctrl.attr", [jnt_list], [fk_list], [ik_list], t=True, r=True)
+     """
     if not (len(jnt_list) == len(fk_list) == len(ik_list)):
-        raise ValueError("jnt_list, fk_list, and ik_list must be the same length.")
+        raise ValueError("(jnt, fk, ik) list must be the same length.")
 
-    # Determine which attributes to blend
     attr_flags = {
         "translate": translate,
         "rotate": rotate,
@@ -986,21 +1014,87 @@ def create_blend_color(
         "visibility": visibility
     }
     blend_attrs = [attr for attr, flag in attr_flags.items() if flag]
+    set_range = pm.shadingNode("setRange", au=True)
 
-    # Create setRange node to normalize control value
-    set_range = pm.shadingNode("setRange", asUtility=True, name="fkIk_setRange")
     for axis in ["X", "Y", "Z"]:
         pm.setAttr(f"{set_range}.oldMax{axis}", 10)
         pm.setAttr(f"{set_range}.max{axis}", 1)
         pm.connectAttr(controller, f"{set_range}.value{axis}", force=True)
 
-    # Connect blendColors for each joint and attribute
     for target_jnt, fk_jnt, ik_jnt in zip(jnt_list, fk_list, ik_list):
         for attr in blend_attrs:
-            blend_node = pm.shadingNode("blendColors", asUtility=True, name=f"{target_jnt}_{attr}_blend")
-            pm.connectAttr(f"{fk_jnt}.{attr}", f"{blend_node}.color1", force=True)
-            pm.connectAttr(f"{ik_jnt}.{attr}", f"{blend_node}.color2", force=True)
-            pm.connectAttr(f"{blend_node}.output", f"{target_jnt}.{attr}", force=True)
-            pm.connectAttr(f"{set_range}.outValueX", f"{blend_node}.blender", force=True)
+            blend_node = pm.shadingNode("blendColors", au=True)
+            pm.connectAttr(
+                f"{fk_jnt}.{attr}", f"{blend_node}.color1", force=True)
+            pm.connectAttr(
+                f"{ik_jnt}.{attr}", f"{blend_node}.color2", force=True)
+            pm.connectAttr(
+                f"{blend_node}.output", f"{target_jnt}.{attr}", force=True)
+            pm.connectAttr(
+                f"{set_range}.outValueX", f"{blend_node}.blender", force=True)
 
     return set_range
+
+
+
+def createJointScaleExpression(start_joint, end_joint, curve, **kwargs) -> str:
+    """  """
+    scales = []
+    if kwargs:
+        for i in kwargs.keys():
+            if (i == "x" or i == "X") and kwargs[i]:
+                scales.append("X")
+            if (i == "y" or i == "Y") and kwargs[i]:
+                scales.append("Y")
+            if (i == "z" or i == "Z") and kwargs[i]:
+                scales.append("Z")
+    else:
+        scales.append("X")
+    curve_info = pm.shadingNode("curve_info", au=True)
+    pm.connectAttr(f"{curve}.worldSpace[0]", f"{curve_info}.inputCurve", f=True)
+    curve_length = pm.getAttr(f"{curve_info}.arcLength")
+    multiplyDivide_node = pm.shadingNode("multiplyDivide", au=True)
+    pm.setAttr(f"{multiplyDivide_node}.operation", 2)
+    pm.setAttr(f"{multiplyDivide_node}.input2X", curve_length)
+    pm.connectAttr(f"{curve_info}.arcLength", f"{multiplyDivide_node}.input1X", f=True)
+    joints = get_downstream_path(start_joint, end_joint)
+    for jnt in joints:
+        for scl in scales:
+            pm.connectAttr(f"{multiplyDivide_node}.outputX", f"{jnt}.scale{scl}", f=True)
+    return multiplyDivide_node
+
+
+
+def createJointScaleExpression(start_joint: str, end_joint: str, curve: str, **kwargs) -> pm.PyNode:
+    """  """
+    scales = []
+    
+    axis_map = {"x": "X", "y": "Y", "z": "Z"}
+
+    
+    for kwarg_key, maya_attr_suffix in axis_map.items():
+        if kwargs.get(kwarg_key, False) or kwargs.get(kwarg_key.upper(), False):
+            scales.append(maya_attr_suffix)
+
+    if not scales:
+        scales.append("X")
+
+    curve_info = pm.shadingNode("curveInfo", asUtility=True)
+    pm.connectAttr(f"{curve}.worldSpace[0]", f"{curve_info}.inputCurve", force=True)
+
+    curve_length = pm.getAttr(f"{curve_info}.arcLength")
+
+    multiplyDivide_node = pm.shadingNode("multiplyDivide", asUtility=True)
+    pm.setAttr(f"{multiplyDivide_node}.operation", 2)  # Set operation to Divide
+
+    pm.setAttr(f"{multiplyDivide_node}.input2X", curve_length)
+
+    pm.connectAttr(f"{curve_info}.arcLength", f"{multiplyDivide_node}.input1X", force=True)
+
+    joints = get_downstream_path(start_joint, end_joint)
+
+    for jnt in joints:
+        for scl in scales:
+            pm.connectAttr(f"{multiplyDivide_node}.outputX", f"{jnt}.scale{scl}", force=True)
+
+    return multiplyDivide_node
