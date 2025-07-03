@@ -2,6 +2,7 @@
 
 
 from typing import Union, Tuple
+from functools import wraps
 import math
 import re
 import inspect
@@ -58,6 +59,48 @@ def use_selection(func):
 
     return wrapper
 
+
+def alias(**alias_map):
+    """ Decorator to allow aliasing of keyword args when calling a function.
+
+    This decorator enables alternate (shortened or customized) 
+    keyword arguments to be mapped to the actual parameter names 
+    defined in the function signature.
+
+    Args
+    ----
+    alias_map : dict
+        A dictionary mapping alias names (str) to actual parameter names. 
+        For example: {'a': 'x', 'b': 'y'}
+
+    Returns
+    -------
+    function : 
+        A wrapped version of the original function that resolves
+        aliases before calling it.
+
+    Example
+    -------
+    >>> @alias(rx='rangeX', ry='rangeY', rz='rangeZ')
+    ... def func(rangeX=[0,0,0,0], rangeY=[0,0,0,0], rangeZ=[0,0,0,0]):
+    ...     print(rangeX, rangeY, rangeZ)
+    >>> func(rx=[0,10,0,1], ry=[0,10,0,1], rz=[0,10,0,1])
+    # [0,10,0,1], [0,10,0,1], [0,10,0,1]
+     """
+    def decorator(func):
+        sig = inspect.signature(func)
+        valid_params = set(sig.parameters.keys())
+
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            resolved_kwargs = {}
+            for key, value in kwargs.items():
+                full_key = alias_map.get(key, key)
+                if full_key in valid_params:
+                    resolved_kwargs[full_key] = value
+            return func(*args, **resolved_kwargs)
+        return wrapper
+    return decorator
 
 @use_selection
 def get_position(obj_or_vtx: str) -> tuple:
@@ -942,16 +985,13 @@ def create_follicle(obj: str, UVCoordinates: tuple, uv_set="map1") -> str:
     return follicle_node
 
 
-# Limit all lines to a maximum of 79 characters. ==============================
-# Docstrings or Comments, limit the line length to 72 characters. ======
-
-
+@alias(rx="rangeX", ry="rangeY", rz="rangeZ")
 def create_setRange_node(
         ctrl: str, 
         ctrl_attr: str, 
         rangeX: list=[0, 0, 0, 0], 
         rangeY: list=[0, 0, 0, 0], 
-        rangeZ: list=[0, 0, 0, 0]
+        rangeZ: list=[0, 0, 0, 0], 
     ) -> list:
     """ Create and configure a setRange node 
     connected to a controller's attribute.
@@ -983,7 +1023,7 @@ def create_setRange_node(
     Examples
     --------
     >>> create_setRange_node("ctrl", "IK0_FK1", [0, 10, 0, 1])
-    # ['setRange1.outValueX', 'setRange1.outValueY', 'setRange1.outValueZ']
+    # ['setRange1', 'outValueX', 'outValueY', 'outValueZ']
      """
     inputs = ['valueX', 'valueY', 'valueZ']
     outputs = ['outValueX', 'outValueY', 'outValueZ']
@@ -1012,6 +1052,7 @@ def create_setRange_node(
     return result_attr
 
 
+@alias(t="translate", r="rotate", s="sclae", v="visibility")
 def create_blendColor_node(
     ctrl: str, 
     ctrl_attr: str, 
@@ -1046,72 +1087,15 @@ def create_blendColor_node(
     return result
 
 
-def createJointScaleExpression(start_joint, end_joint, curve, **kwargs) -> str:
-    """  """
-    scales = []
-    if kwargs:
-        for i in kwargs.keys():
-            if (i == "x" or i == "X") and kwargs[i]:
-                scales.append("X")
-            if (i == "y" or i == "Y") and kwargs[i]:
-                scales.append("Y")
-            if (i == "z" or i == "Z") and kwargs[i]:
-                scales.append("Z")
-    else:
-        scales.append("X")
-    curve_info = pm.shadingNode("curve_info", au=True)
-    pm.connectAttr(f"{curve}.worldSpace[0]", f"{curve_info}.inputCurve", f=True)
-    curve_length = pm.getAttr(f"{curve_info}.arcLength")
-    multiplyDivide_node = pm.shadingNode("multiplyDivide", au=True)
-    pm.setAttr(f"{multiplyDivide_node}.operation", 2)
-    pm.setAttr(f"{multiplyDivide_node}.input2X", curve_length)
-    pm.connectAttr(f"{curve_info}.arcLength", f"{multiplyDivide_node}.input1X", f=True)
-    joints = get_downstream_path(start_joint, end_joint)
-    for jnt in joints:
-        for scl in scales:
-            pm.connectAttr(f"{multiplyDivide_node}.outputX", f"{jnt}.scale{scl}", f=True)
-    return multiplyDivide_node
+# Limit all lines to a maximum of 79 characters. ==============================
+# Docstrings or Comments, limit the line length to 72 characters. ======
 
 
-def createJointScaleExpression(start_joint: str, end_joint: str, curve: str, **kwargs) -> pm.PyNode:
+setRange_node = create_setRange_node("ctrl", "IK0_FK1", rx=[0, 10, 0, 1])
+ctrl, outX, _, _ = setRange_node
 
-    """  """
-    scales = []
-    
-    axis_map = {"x": "X", "y": "Y", "z": "Z"}
+blendColor_node = create_blendColor_node(
+    ctrl, outX, "joint_fk", "joint_ik", t=True, r=True)
 
-    
-    for kwarg_key, maya_attr_suffix in axis_map.items():
-        if kwargs.get(kwarg_key, False) or kwargs.get(kwarg_key.upper(), False):
-            scales.append(maya_attr_suffix)
-
-    if not scales:
-        scales.append("X")
-
-    curve_info = pm.shadingNode("curveInfo", asUtility=True)
-    pm.connectAttr(f"{curve}.worldSpace[0]", f"{curve_info}.inputCurve", force=True)
-
-    curve_length = pm.getAttr(f"{curve_info}.arcLength")
-
-    multiplyDivide_node = pm.shadingNode("multiplyDivide", asUtility=True)
-    pm.setAttr(f"{multiplyDivide_node}.operation", 2)  # Set operation to Divide
-
-    pm.setAttr(f"{multiplyDivide_node}.input2X", curve_length)
-
-    pm.connectAttr(f"{curve_info}.arcLength", f"{multiplyDivide_node}.input1X", force=True)
-
-    joints = get_downstream_path(start_joint, end_joint)
-
-    for jnt in joints:
-        for scl in scales:
-            pm.connectAttr(f"{multiplyDivide_node}.outputX", f"{jnt}.scale{scl}", force=True)
-
-    return multiplyDivide_node
-
-
-setRange_nodes = create_setRange_node("ctrl", "IK0_FK1", [0, 10, 0, 1])
-
-blendColor_node = create_blendColor_node(setRange_nodes[0], setRange_nodes[1], "joint_fk", "joint_ik", translate=True, rotate=True)
-
-for i, attr in zip(blendColor_node, ["translate", "rotate"]):
-    pm.connectAttr(f"{i[0]},{i[1]}", f"joint.{attr}", f=True)
+# for i, attr in zip(blendColor_node, ["translate", "rotate"]):
+#     pm.connectAttr(f"{i[0]},{i[1]}", f"joint.{attr}", f=True)
