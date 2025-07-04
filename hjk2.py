@@ -16,13 +16,49 @@ __author__ = "HONG JINKI <hjk0314@gmail.com>"
 __all__ = []
 
 
-# Limit all lines to a maximum of 79 characters. ==============================
-# Docstrings or Comments, limit the line length to 72 characters. ======
-
-
 def use_selection(func):
-    """ If there is no argument in the wrapper,
-    Pass the selected object as an argument to the wrapper.
+    """ Decorator to pass selected objects as args to the wrapped function.
+
+    This decorator modifies the behavior of a function 
+    such that if no arguments are explicitly provided when 
+    calling the wrapped function, it attempts to pass the currently 
+    selected objects (from `cmds.ls(fl=True, os=True)`) as arguments.
+
+    The behavior depends on the decorated function's signature:
+    - If the function accepts variable positional arguments (`*args`), 
+      all selected objects will be passed as individual positional arguments.
+    - If the function accepts exactly one positional argument, 
+      it will be called for each selected object, 
+      and the results will be returned in a dictionary where 
+      keys are the selected objects and values are the func's return values.
+    - Otherwise, if the function accepts a fixed number of positional args,
+      the decorator will pass the first `n` selected objects, where
+      `n` is the number of positional arguments the function expects.
+
+    If no objects are selected and no arguments are provided, 
+    a warning will be issued.
+
+    Args:
+        func (callable): The function to be wrapped.
+
+    Returns:
+        callable: The wrapped function with selection handling capabilities.
+
+    Raises:
+        RuntimeWarning: If nothing is selected and no arguments are passed.
+
+    Examples:
+        >>> @use_selection
+        >>> func(*args)
+        ...
+        >>> @use_selection
+        >>> func(obj)
+        ...
+        >>> @use_selection
+        >>> func(item1, item2)
+        ...
+        >>> @use_selection
+        >>> func(arg1, arg2="default")
      """
     sig = inspect.signature(func)
     params = list(sig.parameters.values())
@@ -37,6 +73,7 @@ def use_selection(func):
     ]
     num_positional_arg = len(positional_arg)
 
+    @wraps(func)
     def wrapper(*args, **kwargs):
         if args:
             return func(*args, **kwargs)
