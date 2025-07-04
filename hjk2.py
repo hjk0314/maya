@@ -82,10 +82,10 @@ def alias(**alias_map):
     Example
     -------
     >>> @alias(rx='rangeX', ry='rangeY', rz='rangeZ')
-    ... def func(rangeX=[0,0,0,0], rangeY=[0,0,0,0], rangeZ=[0,0,0,0]):
-    ...     print(rangeX, rangeY, rangeZ)
-    >>> func(rx=[0,10,0,1], ry=[0,10,0,1], rz=[0,10,0,1])
-    # [0,10,0,1], [0,10,0,1], [0,10,0,1]
+    >>> func(rx=[0, 0, 0, 0], ry=[0, 0, 0, 0])
+    ...
+    >>> @alias(t="translate", r="rotate", s="sclae", v="visibility")
+    >>> func(t=True, r=True, s=True, v=True)
      """
     def decorator(func):
         sig = inspect.signature(func)
@@ -101,6 +101,7 @@ def alias(**alias_map):
             return func(*args, **resolved_kwargs)
         return wrapper
     return decorator
+
 
 @use_selection
 def get_position(obj_or_vtx: str) -> tuple:
@@ -1087,15 +1088,93 @@ def create_blendColor_node(
     return result
 
 
+@alias(ft="float_type", bt="bool_type", et="enum_type", it="integer_type", p="source_ctrl_for_proxy")
+def create_attributes(
+    ctrl_name: str,
+    attr_name: str,
+    source_ctrl_for_proxy: str = "",
+    keyable: bool = True,
+    float_type: dict = None,
+    bool_type: dict = None,
+    enum_type: dict = None,
+    integer_type: dict = None,
+) -> None:
+    """ Creates attributes on a given controller.
+
+    Args
+    ----
+    ctrl_name : str
+        The name of the controller to add attributes to.
+    attr_name : str
+        The name of the attribute to create.
+    keyable : bool, optional 
+        Whether the attribute is keyable. Defaults to True.
+    source_ctrl_for_proxy : str, optional
+        The name of the source controller for a proxy attribute. 
+        Defaults to an empty string.
+    float_type : dict, optional
+        Additional properties for a float type attribute
+        (e.g., {"at": "double", "dv": 0, "min": 0, "max": 10})
+    bool_type : dict, optional
+        Additional properties for a boolean type attribute
+        (e.g., {"at": "bool"})
+    enum_type : dict, optional
+        Additional properties for an enum type attribute
+        (e.g., {"at": "enum", "enumName": "World:Hips:Chest"})
+    integer_type : dict, optional
+        Additional properties for an integer type attribute
+        (e.g., {"at": "long", "dv": 0, "min": 0, "max": 10})
+
+    Examples
+    --------
+    >>> ctrl_1 = "nurbsCircle1"
+    >>> ctrl_2 = "nurbsCircle2"
+    >>> attr = "FK1_IK0"
+    ...
+    >>> ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+    >>> bt_dict = {"at": "bool"}
+    >>> et_dict = {"at": "enum", "enumName": "World:Hips:Chest"}
+    >>> it_dict = {"at": "long", "dv": 0}
+    ...
+    >>> create_attributes(ctrl_1, attr, ft=ft_dict)
+    >>> create_attributes(ctrl_2, attr, ft=ft_dict, p=ctrl_1)
+    ...
+    >>> create_attributes(ctrl_2, attr, ft=ft_dict, p=ctrl_1)
+    >>> create_attributes(ctrl_2, attr, bt=bt_dict)
+    >>> create_attributes(ctrl_2, attr, et=et_dict)
+    >>> create_attributes(ctrl_2, attr, it=it_dict)
+
+    Returns
+    -------
+    tuple: 
+        A tuple containing the controller name and the created attribute name.
+     """
+    kwargs = {
+        "ln": attr_name,
+        "k": keyable,
+    }
+
+    if float_type:
+        kwargs.update(float_type)
+    elif bool_type:
+        kwargs.update(bool_type)
+    elif enum_type:
+        kwargs.update(enum_type)
+    elif integer_type:
+        kwargs.update(integer_type)
+
+    if source_ctrl_for_proxy:
+        kwargs["proxy"] = f"{source_ctrl_for_proxy}.{attr_name}"
+
+    if pm.attributeQuery(attr_name, node=ctrl_name, exists=True):
+        pm.deleteAttr(f"{ctrl_name}.{attr_name}")
+
+    pm.addAttr(ctrl_name, **kwargs)
+
+    return ctrl_name, attr_name
+
+
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
 
-setRange_node = create_setRange_node("ctrl", "IK0_FK1", rx=[0, 10, 0, 1])
-ctrl, outX, _, _ = setRange_node
-
-blendColor_node = create_blendColor_node(
-    ctrl, outX, "joint_fk", "joint_ik", t=True, r=True)
-
-# for i, attr in zip(blendColor_node, ["translate", "rotate"]):
-#     pm.connectAttr(f"{i[0]},{i[1]}", f"joint.{attr}", f=True)
