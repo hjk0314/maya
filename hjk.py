@@ -1750,13 +1750,15 @@ def addProxyAttributes(FKCtrl: str, IKCtrl: str, attrName: str) -> None:
     --------
     >>> addProxyAttributes("FK", "IK", "FK1IK0")
      """
-    # pm.addAttr(FKCtrl, ln=attrName, at="double", min=0, max=10, dv=0, k=True)
+    # pm.addAttr(FKCtrl, ln=attrName, at="double", dv=0, k=True)
+    # pm.addAttr(IKCtrl, ln=attrName, at="double", dv=0, k=True)
     # pm.addAttr(IKCtrl, ln=attrName, at="double", min=0, max=10, dv=0, k=True, 
     #            proxy=f"{FKCtrl}.{attrName}")
     # pm.addAttr(IKCtrl, ln=attrName, at="enum", en="World:Hips:Chest:", k=True, 
     #            proxy=f"{FKCtrl}.{attrName}")
-    pm.addAttr(IKCtrl, ln=attrName, at="bool", k=True, 
-               proxy=f"{FKCtrl}.{attrName}")
+    # pm.addAttr(IKCtrl, ln=attrName, at="bool", k=True, 
+    #            proxy=f"{FKCtrl}.{attrName}")
+    pm.addAttr(IKCtrl, ln=attrName, at="double", dv=0, k=True, proxy=f"{FKCtrl}.{attrName}")
 
 
 def getFaceUV(face: str, uvSet=None) -> tuple:
