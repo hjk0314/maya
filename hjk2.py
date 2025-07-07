@@ -1,8 +1,8 @@
 """ These functions were created to speed up rigging in Maya. """
 
 
-from typing import Union, Tuple
-from functools import wraps
+from typing import Iterable, Optional, Union, List, Tuple
+import functools
 import math
 import re
 import inspect
@@ -17,7 +17,7 @@ __all__ = []
 
 
 def use_selection(func):
-    """ Decorator to pass selected objects as args to the wrapped function.
+    """ Decorator to pass selected objects as item to the wrapped function.
 
     This decorator modifies the behavior of a function 
     such that if no arguments are explicitly provided when 
@@ -73,7 +73,7 @@ def use_selection(func):
     ]
     num_positional_arg = len(positional_arg)
 
-    @wraps(func)
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         if args:
             return func(*args, **kwargs)
@@ -124,17 +124,26 @@ def alias(**alias_map):
     >>> @alias(t="translate", r="rotate", s="sclae", v="visibility")
     >>> func(t=True, r=True, s=True, v=True)
      """
-    def decorator(func):
-        sig = inspect.signature(func)
-        valid_params = set(sig.parameters.keys())
+    # def decorator(func):
+    #     sig = inspect.signature(func)
+    #     valid_params = set(sig.parameters.keys())
 
-        @wraps(func)
+    #     @functools.wraps(func)
+    #     def wrapper(*args, **kwargs):
+    #         resolved_kwargs = {}
+    #         for key, value in kwargs.items():
+    #             full_key = alias_map.get(key, key)
+    #             if full_key in valid_params:
+    #                 resolved_kwargs[full_key] = value
+    #         return func(*args, **resolved_kwargs)
+    #     return wrapper
+    # return decorator
+    def decorator(func):
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            resolved_kwargs = {}
-            for key, value in kwargs.items():
-                full_key = alias_map.get(key, key)
-                if full_key in valid_params:
-                    resolved_kwargs[full_key] = value
+            resolved_kwargs = {
+                alias_map.get(k, k): v for k, v in kwargs.items()
+            }
             return func(*args, **resolved_kwargs)
         return wrapper
     return decorator
@@ -295,7 +304,7 @@ def get_downstream_path(start: str, end: str) -> list:
 
     Examples
     --------
-    >>> get_downstream('joint2', 'joint10')
+    >>> get_downstream_path('joint2', 'joint10')
     >>> ['joint2', 'joint3', 'joint8', 'joint9', 'joint10']
      """
     end = pm.PyNode(end)
@@ -1084,7 +1093,7 @@ def create_setRange_node(
         for attr, num in zip(attrs, ranges[axis]):
             pm.setAttr(f"{setRange_node}.{attr}", num)
 
-    result_attr = [setRange_node]
+    result_attr = [setRange_node.name()]
     result_attr += outputs
 
     return result_attr
@@ -1101,8 +1110,40 @@ def create_blendColor_node(
     scale: bool=False, 
     visibility: bool=False
 ) -> list:
-    """  """
+    """ Create blendColors nodes to blend attributes between two joints.
 
+    This function generates blendColors nodes to seamlessly blend specified
+    attributes (translate, rotate, scale, visibility) between a 'fk' (forward
+    kinematics) joint and an 'ik' (inverse kinematics) joint. The blending is
+    controlled by a given attribute on a control object.
+
+    Args:
+        ctrl (str): The name of the control object that drives the blend.
+        ctrl_attr (str): The specific attribute on the control object used
+                         as the 'blender' input for the blendColors node.
+        fk_joint (str): The name of the FK joint, whose attributes will be
+                        connected to 'color1' of the blendColors node.
+        ik_joint (str): The name of the IK joint, whose attributes will be
+                        connected to 'color2' of the blendColors node.
+        translate (bool, optional): If True, blend translate attributes (tx, ty, tz).
+                                    Defaults to False.
+        rotate (bool, optional): If True, blend rotate attributes (rx, ry, rz).
+                                 Defaults to False.
+        scale (bool, optional): If True, blend scale attributes (sx, sy, sz).
+                                Defaults to False.
+        visibility (bool, optional): If True, blend the visibility attribute.
+                                     Defaults to False.
+
+    Returns:
+        list: A list of tuples, where each tuple contains the name of the
+              created blendColors node and the string "output", representing
+              the output attribute of the blendColors node
+              (e.g., [('blendColors1', 'output')]).
+
+    Raises:
+        RuntimeError: If any of the specified nodes or attributes do not exist
+                      or connections cannot be made.
+     """
     attrs = {
         "translate": translate,
         "rotate": rotate,
@@ -1120,12 +1161,15 @@ def create_blendColor_node(
             f"{fk_joint}.{attr}", f"{blend_node}.color1", force=True)
         pm.connectAttr(
             f"{ik_joint}.{attr}", f"{blend_node}.color2", force=True)
-        result.append((blend_node.name(), "output"))
+        result.append(blend_node.name())
+    
+    result.append("output")
 
     return result
 
 
-@alias(ft="float_type", bt="bool_type", et="enum_type", it="integer_type", p="source_ctrl_for_proxy")
+@alias(ft="float_type", bt="bool_type", et="enum_type", it="integer_type", 
+       p="source_ctrl_for_proxy")
 def create_attributes(
     ctrl_name: str,
     attr_name: str,
@@ -1211,7 +1255,298 @@ def create_attributes(
     return ctrl_name, attr_name
 
 
+def create_rig_groups(group_name: str) -> list:
+    """" Create a hierarchical set of rig groups in the scene.
+
+    This function generates a predefined structure of empty Maya groups,
+    parenting them according to a standard rig hierarchy. It checks for
+    the existence of groups before creating them and ensures proper
+    parenting.
+
+    Args:
+        group_name (str): 
+            The name for the topmost group in the hierarchy.
+            This will typically be the main group for the rig
+            (e.g., "characterName_rig_GRP").
+
+    Returns:
+        A list of strings containing the names of all created or existing
+        groups in the rig hierarchy. This list provides a flat representation
+        of all groups involved.
+     """
+    if not group_name:
+        return []
+    
+    names_of_all_groups = {
+        group_name: ["rig", "MODEL"], 
+        "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
+        "skeletons": ["bindBones", "rigBones"]
+    }
+    result = [
+        group_name, 
+        "rig", 
+        "MODEL", 
+        "controllers", 
+        "skeletons", 
+        "geoForBind", 
+        "extraNodes", 
+        "bindBones", 
+        "rigBones"
+    ]
+
+    for parents, children in names_of_all_groups.items():
+        if not pm.objExists(parents):
+            pm.group(em=True, n=parents)
+        for child in children:
+            if not pm.objExists(child):
+                pm.group(em=True, n=child)
+            pm.parent(child, parents)
+
+    return result
+
+
+@use_selection
+def create_annotation(knee_jnt: str, polevector_ctrl: str) -> str:
+    """ Create a temporary annotation from the knee joint to 
+    the pole vector control.
+
+    This function places an annotation at the position of the specified 
+    knee joint and points it toward the pole vector control object. 
+    The annotation transform's display type is set to 'template' 
+    to make it non-selectable and visually distinct.
+
+    Parameters
+    ----------
+    knee_jnt : str
+        The name of the knee joint to serve as the base position for the annotation.
+    polevector_ctrl : str
+        The name of the pole vector control to which the annotation will point.
+
+    Returns
+    -------
+    str
+        The name of the annotation transform node created in the scene.
+
+    Examples
+    --------
+    >>> create_annotation() # @use_selection
+    >>> create_annotation("knee_jnt_L", "cc_poleVector_L")
+    # 'annotation1'
+     """
+    knee_jnt_position = get_position(knee_jnt)
+    annotation_shape = pm.annotate(polevector_ctrl, tx="", p=knee_jnt_position)
+    annotation_transform = annotation_shape.getParent()
+    pm.setAttr(f"{annotation_transform}.overrideEnabled", 1)
+    pm.setAttr(f"{annotation_transform}.overrideDisplayType", 1)
+
+    return annotation_transform
+
+
+@alias(obj="object", grp="group", con="constraint", loc="locator", 
+       jnt="joint", clt="cluster", cuv="nurbsCurve", ikh="ikhandle")
+@use_selection
+def select_only(*args, **kwargs) -> list:
+    """ Select objects that match one or more specified filter types.
+
+    Parameters
+    ----------
+    *args: str 
+        Object names to filter. If empty, uses current selection.
+
+    **kwargs : dict
+        Supported filters (all bool, default False):
+        - joint
+        - ikhandle
+        - constraint
+        - group
+        - object (mesh/nurbsSurface)
+        - cluster
+        - locator
+        - nurbsCurve
+
+    Returns
+    -------
+    List[pm.nt.Transform]
+        List of filtered transform nodes.
+
+    Examples
+    --------
+    >>> select_only(joint=True) # @use_selection
+    >>> select_only(jnt=True, loc=True) # @use_selection, @alias
+    >>> select_only('obj1', 'obj2', group=True, constraint=True)
+     """
+    filters = {
+        "joint": kwargs.get("joint", False),
+        "ikhandle": kwargs.get("ikhandle", False),
+        "constraint": kwargs.get("constraint", False),
+        "group": kwargs.get("group", False),
+        "object": kwargs.get("object", False),
+        "cluster": kwargs.get("cluster", False),
+        "locator": kwargs.get("locator", False),
+        "nurbsCurve": kwargs.get("nurbsCurve", False),
+    }
+
+    if not any(filters.values()):
+        raise ValueError("At least one filter must be set to True.")
+
+    result = set()
+
+    if filters["object"]:
+        shapes = pm.ls(args, dag=True, type=['mesh', 'nurbsSurface'])
+        result.update(i.getParent() for i in shapes)
+
+    if filters["nurbsCurve"]:
+        curves = pm.ls(args, dag=True, type=['nurbsCurve'])
+        result.update(i.getParent() for i in curves)
+
+    if args: 
+        sel = pm.ls(args, dag=True, type=["transform"]) 
+    else:
+        sel = pm.selected(dag=True, type=["transform"])
+
+    for obj in sel:
+        obj_type = pm.objectType(obj)
+        shapes = pm.listRelatives(obj, s=True)
+        node_type = pm.nodeType(shapes[0]) if shapes else None
+    
+        if filters["joint"] and obj_type == "joint":
+            result.add(obj)
+
+        if filters["ikhandle"] and obj_type == "ikHandle":
+            result.add(obj)
+
+        if filters["constraint"] and "Constraint" in obj_type and not shapes:
+            result.add(obj)
+
+        if filters["group"]:
+            is_constraint = "Constraint" in obj_type
+            is_special = obj_type in ['joint', 'ikEffector', 'ikHandle']
+            if not (shapes or is_constraint or is_special):
+                result.add(obj)
+
+        if filters["cluster"] and node_type == "clusterHandle":
+            result.add(obj)
+
+        if filters["locator"] and node_type == "locator":
+            result.add(obj)
+    
+    pm.select(result)
+
+    return list(result)
+
+
+@alias(p="prefix", s="suffix")
+@use_selection
+def add_affixes(*args, prefix: str = "", suffix: str = "") -> list:
+    """ Add a prefix and/or suffix to each input string.
+
+    Given one or more strings, returns a list of strings with the specified
+    prefix and/or suffix added to each string. If neither prefix nor suffix 
+    is provided, the string is omitted from the result.
+
+    Args:
+        *args: One or more strings to modify.
+        prefix (str, optional): 
+            String to prepend to each input. Defaults to "".
+        suffix (str, optional): 
+            String to append to each input. Defaults to "".
+
+    Returns:
+        list: A list of strings with the prefix and/or suffix applied.
+
+    Examples:
+        >>> add_affixes("item", "node", prefix="pre_")
+        # ['pre_item', 'pre_node']
+        >>> add_affixes("item", "node", suffix="_ctrl")
+        # ['item_ctrl', 'node_ctrl']
+        >>> add_affixes("item", prefix="pre_", suffix="_ctrl")
+        # ['pre_item_ctrl']
+     """
+    result = []
+    for input_string in args:
+        if prefix and suffix:
+            result_string = f"{prefix}{input_string}{suffix}"
+        elif prefix and not suffix:
+            result_string = f"{prefix}{input_string}"
+        elif not prefix and suffix:
+            result_string = f"{input_string}{suffix}"
+        else:
+            continue
+        result.append(result_string)
+
+    return result
+
+
+def duplicate_with_rename(downstream_path: list, new_names: list) -> list:
+    """
+    Duplicates the top-level object of a specified hierarchy and renames
+    specific nodes within the duplicated hierarchy.
+
+    This function maps the original node names listed in `downstream_path` 
+    to the new names in `new_names`, then renames the corresponding nodes 
+    in the duplicated hierarchy. Any other nodes within the duplicated 
+    hierarchy that are not included in `downstream_path` will be deleted.
+
+    Args:
+        downstream_path (list): 
+            A list of original node names (short names) within the hierarchy 
+            to be renamed. The first element should be the name of the 
+            top-level object to be duplicated.
+        new_names (list): 
+            A list of new names that correspond one-to-one with the nodes 
+            in `downstream_path`.
+
+    Returns:
+        list: 
+            A list of the full path names of the newly created or renamed
+            objects. The top-level duplicated object will be the last
+            element in the list.
+
+    Raises:
+        Warning: 
+            A warning is issued and the function exits if any of the names 
+            in `new_names` already exist in the scene. In this case, no 
+            duplication or renaming will occur.
+        Exception: 
+            If an unexpected error occurs during the name mapping process 
+            or during Maya command execution, the error will be printed 
+            to the console and the function will exit.
+    
+    Examples:
+        >>> list_of_joints = get_downstream_path("joint1", "joint9")
+        >>> renamed_joints = add_affixes(*list_of_joints, p="rig_", s="_FK")
+        >>> duplicate_with_rename(list_of_joints, renamed_joints)
+        # List with child nodes removed
+     """
+    if any([pm.objExists(i) for i in new_names]):
+        pm.warning("There are duplicate names in new_names.")
+        return
+
+    try:
+        name_info = {d: n for d, n in zip(downstream_path, new_names)}
+    except Exception as e:
+        print(e)
+        return
+
+    copied = pm.duplicate(downstream_path[0], rr=True, n=new_names[0])
+    copied = copied[0]
+
+    result = []
+    for i in pm.listRelatives(copied, ad=True):
+        old_name = i.rsplit("|", 1)[-1]
+        if old_name in downstream_path:
+            new_name = i.replace(old_name, name_info[old_name])
+            result_name = pm.rename(i, new_name)
+            result.append(result_name.name())
+        else:
+            pm.delete(i)
+
+    result.append(copied.name())
+    result.reverse()
+
+    return result
+
+
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
-
 
