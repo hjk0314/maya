@@ -1478,9 +1478,8 @@ def add_affixes(*args, prefix: str = "", suffix: str = "") -> list:
 
 
 def duplicate_with_rename(downstream_path: list, new_names: list) -> list:
-    """
-    Duplicates the top-level object of a specified hierarchy and renames
-    specific nodes within the duplicated hierarchy.
+    """ Duplicates the top-level object of a specified hierarchy and 
+    renames specific nodes within the duplicated hierarchy.
 
     This function maps the original node names listed in `downstream_path` 
     to the new names in `new_names`, then renames the corresponding nodes 
@@ -1549,4 +1548,5 @@ def duplicate_with_rename(downstream_path: list, new_names: list) -> list:
 
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
+
 
