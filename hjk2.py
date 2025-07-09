@@ -1550,3 +1550,39 @@ def duplicate_with_rename(downstream_path: list, new_names: list) -> list:
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
 
+
+
+def set_key_on_range(start_frame: int, end_frame: int, rot: bool = False):
+    """ Sets the position (and optionally rotation) values to keys 
+    for the specified frame range for the currently selected object.
+
+    Args:
+        start_frame (int) : 
+        end_frame (int) : 
+        rot (bool, optional) : 
+
+    Examples:
+    >>> set_key_on_range(12, 27)
+    >>> set_key_on_range(12, 27, rot=True)
+     """
+    sel = pm.selected()
+    if not sel:
+        pm.warning("Nothing Selected.")
+        return
+
+    for obj in sel:
+        position = obj.getTranslation(space='world')
+        if rot:
+            rotation_value = obj.getRotation(space='world')
+
+        for frame in range(start_frame, end_frame + 1):
+            pm.currentTime(frame)
+            obj.translateX.setKey(value=position.x, time=frame)
+            obj.translateY.setKey(value=position.y, time=frame)
+            obj.translateZ.setKey(value=position.z, time=frame)
+            if rot:
+                obj.rotateX.setKey(value=rotation_value.x, time=frame)
+                obj.rotateY.setKey(value=rotation_value.y, time=frame)
+                obj.rotateZ.setKey(value=rotation_value.z, time=frame)
+
+
