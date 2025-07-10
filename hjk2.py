@@ -693,6 +693,7 @@ def create_chain_joint(*obj_or_vtx) -> list:
     return result
 
 
+@alias(sf="start_frame", ef="end_frame")
 @use_selection
 def create_animation_curves(*obj_or_vtx, **kwargs) -> list:
     """ Create animation curves 
@@ -720,9 +721,13 @@ def create_animation_curves(*obj_or_vtx, **kwargs) -> list:
     Raises:
         pm.maya.warning: If 'start_frame' or 'end_frame' (or their aliases)
             are not provided or are not integers.
+
+    Examples:
+        >>> create_animation_curves(start_frame=1, end_frame=27)
+        >>> create_animation_curves(obj, sf=1, ef=27)
      """
-    start_frame = kwargs.get("start_frame") or kwargs.get("sf")
-    end_frame = kwargs.get("end_frame") or kwargs.get("ef")
+    start_frame = kwargs.get("start_frame")
+    end_frame = kwargs.get("end_frame")
 
     if not isinstance(start_frame, int) or not isinstance(end_frame, int):
         pm.warning("Both start_frame and end_frame must be provided as int.")
@@ -745,6 +750,63 @@ def create_animation_curves(*obj_or_vtx, **kwargs) -> list:
             pm.warning(f"Not enough points to create a curve for an item.")
 
     return result_curves
+
+
+@alias(sf="start_frame", ef="end_frame", rot="rotation")
+@use_selection
+def set_key_on_range(
+    object: str, 
+    start_frame: int, 
+    end_frame: int, 
+    rotation: bool = False
+) -> None:
+    """ Sets keyframes for an object's translation and optional rotation 
+    over a specified frame range.
+
+    This function takes an object's name, a start frame, and an end frame. 
+    It then iterates through each frame in the given range (inclusive) 
+    and sets keyframes for the object's current world-space translation. 
+    If the 'rotation' parameter is set to True, it also sets keyframes 
+    for the object's current world-space rotation.
+
+    Args:
+        object (str): 
+            The name of the object to set keyframes on. This should be a valid
+            PyNode-compatible string (e.g., 'pCube1').
+        start_frame (int): 
+            The first frame in the range to set keyframes.
+        end_frame (int): 
+            The last frame in the range to set keyframes (inclusive).
+        rotation (bool, optional): 
+            If True, keyframes will also be set for the object's
+            X, Y, and Z rotation channels. Defaults to False.
+
+    Raises:
+        pm.MayaNodeError: 
+            If the provided 'object' string does not correspond to a valid
+            Maya object.
+
+    Examples:
+        >>> set_key_on_range(start_frame=12, end_frame=20) # @use_selection
+        >>> # @alias
+        >>> set_key_on_range("pSphere1", sf=12, ef=20, rot=True) # @alias
+        >>> set_key_on_range(sf=12, ef=20) # @alias, # @use_selection
+
+     """
+    obj = pm.PyNode(object)
+    position = obj.getTranslation(space='world')
+    if rotation:
+        rotation_value = obj.getRotation(space='world')
+
+    for frame in range(start_frame, end_frame + 1):
+        pm.currentTime(frame)
+        obj.translateX.setKey(value=position.x, time=frame)
+        obj.translateY.setKey(value=position.y, time=frame)
+        obj.translateZ.setKey(value=position.z, time=frame)
+        if rotation:
+            obj.rotateX.setKey(value=rotation_value.x, time=frame)
+            obj.rotateY.setKey(value=rotation_value.y, time=frame)
+            obj.rotateZ.setKey(value=rotation_value.z, time=frame)
 
 
 @use_selection
@@ -1548,41 +1610,5 @@ def duplicate_with_rename(downstream_path: list, new_names: list) -> list:
 
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
-
-
-
-
-def set_key_on_range(start_frame: int, end_frame: int, rot: bool = False):
-    """ Sets the position (and optionally rotation) values to keys 
-    for the specified frame range for the currently selected object.
-
-    Args:
-        start_frame (int) : 
-        end_frame (int) : 
-        rot (bool, optional) : 
-
-    Examples:
-    >>> set_key_on_range(12, 27)
-    >>> set_key_on_range(12, 27, rot=True)
-     """
-    sel = pm.selected()
-    if not sel:
-        pm.warning("Nothing Selected.")
-        return
-
-    for obj in sel:
-        position = obj.getTranslation(space='world')
-        if rot:
-            rotation_value = obj.getRotation(space='world')
-
-        for frame in range(start_frame, end_frame + 1):
-            pm.currentTime(frame)
-            obj.translateX.setKey(value=position.x, time=frame)
-            obj.translateY.setKey(value=position.y, time=frame)
-            obj.translateZ.setKey(value=position.z, time=frame)
-            if rot:
-                obj.rotateX.setKey(value=rotation_value.x, time=frame)
-                obj.rotateY.setKey(value=rotation_value.y, time=frame)
-                obj.rotateZ.setKey(value=rotation_value.z, time=frame)
 
 
