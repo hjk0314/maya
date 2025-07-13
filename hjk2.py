@@ -16,6 +16,309 @@ __author__ = "HONG JINKI <hjk0314@gmail.com>"
 __all__ = []
 
 
+class Data:
+    def __init__(self):
+        """ This data class contains information such as the position 
+        of the joint or the shape of the controller.
+        
+        ctrl_shapes
+        -----------
+            - A
+                arch_two_line, arrow_plane, arrow_persp, arrow_circle, 
+                arrow_cross, arrow_two_way, arrow_arch, arrow_L_shaped
+            - C
+                cap_half_sphere, car_body, car_bottom_sub, car_bottom_main, 
+                circle_octagon, cone_triangle, cone_pyramid, cube, cross, 
+                cylinder, 
+            - D
+                door_front, door_back
+            - F
+                foot_shoes, foot_box_type, foot_bear
+            - H
+                hat, head, hoof_horseshoe, hoof_simple_type
+            - P
+                pipe, plane_square, pointer_pin, pointer_rhombus, 
+                pointer_circle, 
+            - S
+                scapula, sphere
+            - T
+                text_IKFK
+         """
+        self.ctrl_shapes = {
+            "arch_two_line": [
+                (-4, 0, 18), (4, 0, 18), (4, 12, 12.7), (4, 17, 0), 
+                (4, 12, -12.7), (4, 0, -18), (-4, 0, -18), (-4, 12, -12.7), 
+                (-4, 18, 0), (-4, 12, 12.7), (-4, 0, 18)
+                ], 
+            "arrow_plane": [
+                (0, 0, 8), (8, 0, 4), (4, 0, 4), (4, 0, -8), 
+                (-4, 0, -8), (-4, 0, 4), (-8, 0, 4), (0, 0, 8)
+                ], 
+            "arrow_persp": [
+                (0, 3, 12), (12, 3, 6), (6, 3, 6), (6, 3, -12), 
+                (-6, 3, -12), (-6, 3, 6), (-12, 3, 6), (0, 3, 12), 
+                (0, -3, 12), (12, -3, 6), (6, -3, 6), (6, -3, -12), 
+                (-6, -3, -12), (-6, -3, 6), (-12, -3, 6), (0, -3, 12), 
+                (12, -3, 6), (12, 3, 6), (6, 3, 6), (6, 3, -12), 
+                (6, -3, -12), (-6, -3, -12), (-6, 3, -12), (-6, 3, 6), 
+                (-12, 3, 6), (-12, -3, 6)
+                ], 
+            "arrow_circle": [
+                (14, 0, 0), (10, 0, -10), (0, 0, -14), (-10, 0, -10), 
+                (-14, 0, 0), (-10, 0, 10), (0, 0, 14), (10, 0, 10), 
+                (14, 0, 0), (10, 0, 4), (14, 0, 6), (14, 0, 0)
+                ], 
+            "arrow_cross": [
+                (0, 0, -23.1), (-6.3, 0, -16.8), (-4.2, 0, -16.8), 
+                (-4.2, 0, -12.6), (-10.5, 0, -10.5), (-12.6, 0, -4.2), 
+                (-16.8, 0, -4.2), (-16.8, 0, -6.3), (-23.1, 0, 0), 
+                (-16.8, 0, 6.3), (-16.8, 0, 4.2), (-12.6, 0, 4.2), 
+                (-10.5, 0, 10.5), (-4.2, 0, 12.6), (-4.2, 0, 16.8), 
+                (-6.3, 0, 16.8), (0, 0, 23.1), (6.3, 0, 16.8), 
+                (4.2, 0, 16.8), (4.2, 0, 12.6), (10.5, 0, 10.5), 
+                (12.6, 0, 4.2), (16.8, 0, 4.2), (16.8, 0, 6.3), 
+                (23.1, 0, 0), (16.8, 0, -6.3), (16.8, 0, -4.2), 
+                (12.6, 0, -4.2), (10.5, 0, -10.5), (4.2, 0, -12.6), 
+                (4.2, 0, -16.8), (6.3, 0, -16.8), (0, 0, -23.1)
+                ], 
+            "arrow_two_way": [
+                (-8, 0, -4), (8, 0, -4), (8, 0, -8), (16, 0, 0), 
+                (8, 0, 8), (8, 0, 4), (-8, 0, 4), (-8, 0, 8), 
+                (-16, 0, 0), (-8, 0, -8), (-8, 0, -4)
+                ], 
+            "arrow_arch": [
+                (-0, 0, -12.6), (-0, 4, -13), (-0, 2, -10), 
+                (-0, 0, -12.6), (-0, 2, -12), (-0, 6, -10), 
+                (-0, 10, -6), (0, 12, 0), (0, 10, 6), (0, 6, 10), 
+                (0, 2, 12), (0, 0, 12.6), (0, 2, 10), (0, 4, 13), 
+                (0, 0, 12.6)
+                ], 
+            "arrow_L_shaped": [
+                (0, 0, 0), (0, 6, 0), (0, 6, 3), 
+                (1, 6, 2), (-1, 6, 2), (0, 6, 3), 
+                ], 
+            "cap_half_sphere": [
+                (0, 0, 12), (-9, 0, 9), (-6.667, 6.667, 6.667), 
+                (0, 9, 9), (6.667, 6.667, 6.667), (9, 0, 9), 
+                (0, 0, 12), (0, 9, 9), (0, 12, 0), 
+                (0, 9, -9), (0, 0, -12), (9, 0, -9), 
+                (6.667, 6.667, -6.667), (0, 9, -9), (-6.667, 6.667, -6.667), 
+                (-9, 0, -9), (0, 0, -12), (9, 0, -9), 
+                (12, 0, 0), (9, 0, 9), (6.667, 6.667, 6.667), 
+                (9, 9, 0), (6.667, 6.667, -6.667), (9, 0, -9), 
+                (12, 0, 0), (9, 9, 0), (0, 12, 0), 
+                (-9, 9, 0), (-6.667, 6.667, -6.667), (-9, 0, -9), 
+                (-12, 0, 0), (-9, 9, 0), (-6.667, 6.667, 6.667), 
+                (-9, 0, 9), (-12, 0, 0)
+                ], 
+            "car_body": [
+                (81, 70, 119), (89, 56, 251), (89, -12, 251), 
+                (89, -12, 117), (89, -12, -117), (89, -12, -229), 
+                (81, 70, -229), (81, 70, -159), (69, 111, -105), 
+                (69, 111, 63), (81, 70, 119), (-81, 70, 119), 
+                (-89, 56, 251), (-89, -12, 251), (-89, -12, 117), 
+                (-89, -12, -117), (-89, -12, -229), (-81, 70, -229), 
+                (-81, 70, -159), (-69, 111, -105), (69, 111, -105), 
+                (81, 70, -159), (-81, 70, -159), (-81, 70, -229), 
+                (81, 70, -229), (89, -12, -229), (-89, -12, -229), 
+                (-89, -12, -117), (-89, -12, 117), (-89, -12, 251), 
+                (89, -12, 251), (89, 56, 251), (-89, 56, 251), 
+                (-81, 70, 119), (-69, 111, 63), (-69, 111, -105), 
+                (69, 111, -105), (69, 111, 63), (-69, 111, 63)
+                ], 
+            "car_bottom_sub": [
+                (165, 0, -195), (0, 0, -276), (-165, 0, -195), (-165, 0, -0), 
+                (-165, -0, 195), (-0, -0, 276), (165, -0, 195), (165, -0, 0), 
+                (165, 0, -195)
+                ], 
+            "car_bottom_main": [
+                (-92, 0, -300), (-193, 0, -200), (-193, 0, 0), 
+                (-193, 0, 200), (-92, 0, 300), (92, 0, 300), 
+                (193, 0, 200), (193, 0, 0), (193, 0, -200), 
+                (92, 0, -300), (-92, 0, -300)
+                ], 
+            "circle_octagon": [
+                (0, 0, -15), (-10, 0, -10), (-15, 0, 0), 
+                (-10, 0, 10), (0, 0, 15), (10, 0, 10), 
+                (15, 0, 0), (10, 0, -10), (0, 0, -15)
+                ], 
+            "cone_triangle": [
+                (0, 10, 0), (-4.35, 0, 0), (4.35, 0, 0), (0, 10, 0), 
+                (0, 0, 5), (-4.35, 0, 0), (4.35, 0, 0), (0, 0, 5)
+                ], 
+            "cone_pyramid": [
+                (-5, 0, 0), (0, 0, 5), (5, 0, 0), (0, 0, -5), 
+                (0, 10, 0), (-5, 0, 0), (0, 10, 0), (0, 0, 5), 
+                (5, 0, 0), (0, 0, -5), (0, 0, -5), (-5, 0, 0), 
+                (0, 0, 5), (5, 0, 0), (0, 10, 0)
+                ], 
+            "cube": [
+                (-5, 5, -5), (-5, 5, 5), (5, 5, 5), (5, 5, -5), 
+                (-5, 5, -5), (-5, -5, -5), (-5, -5, 5), (5, -5, 5), 
+                (5, -5, -5), (-5, -5, -5), (-5, -5, 5), (-5, 5, 5), 
+                (5, 5, 5), (5, -5, 5), (5, -5, -5), (5, 5, -5)
+                ], 
+            "cross": [
+                (-1, 5, 0), (1, 5, 0), (1, 1, 0), (5, 1, 0), 
+                (5, -1, 0), (1, -1, 0), (1, -5, 0), (-1, -5, 0), 
+                (-1, -1, 0), (-5, -1, 0), (-5, 1, 0), (-1, 1, 0), 
+                (-1, 5, 0)
+                ], 
+            "cylinder": [
+                (-7, 7, 0), (-5, 7, 5), (0, 7, 7), (5, 7, 5), (7, 7, 0), 
+                (5, 7, -5), (0, 7, -7), (0, 7, 7), (0, -7, 7), (-5, -7, 5), 
+                (-7, -7, 0), (-5, -7, -5), (0, -7, -7), (5, -7, -5), 
+                (7, -7, 0), (5, -7, 5), (0, -7, 7), (0, -7, -7), 
+                (0, 7, -7), (-5, 7, -5), (-7, 7, 0), (7, 7, 0), 
+                (7, -7, 0), (-7, -7, 0), (-7, 7, 0)
+                ], 
+            "door_front": [
+                (0, 8, 0), (0, 58, -48), (0, 61, -100), (0, 8, -97), 
+                (0, -45, -97), (0, -45, 0), (0, -16, 2), (0, 8, 0)
+                ], 
+            "door_back": [
+                (0, 8, 0), (0, 58, -5), (0, 61, -73), (0, -4, -82), 
+                (0, -45, -46), (0, -45, -2), (0, 8, 0)
+                ], 
+            "foot_shoes": [
+                (-4, 0, -4), (-4, 0, -7), (-3, 0, -11), (-1, 0, -12), 
+                (0, 0, -12), (1, 0, -12), (3, 0, -11), (4, 0, -7), 
+                (4, 0, -4), (-4, 0, -4), (-5, 0, 1), (-5, 0, 6), 
+                (-4, 0, 12), (-2, 0, 15), (0, 0, 15.5), (2, 0, 15), 
+                (4, 0, 12), (5, 0, 6), (5, 0, 1), (4, 0, -4), (-4, 0, -4), 
+                (4, 0, -4)
+                ], 
+            "foot_box_type": [
+                (-6, 12, -14), (-6, 12, 6), (6, 12, 6), (6, 12, -14), 
+                (-6, 12, -14), (-6, 0, -14), (-6, 0, 18), (6, 0, 18), 
+                (6, 0, -14), (-6, 0, -14), (-6, 0, 18), (-6, 12, 6), 
+                (6, 12, 6), (6, 0, 18), (6, 0, -14), (6, 12, -14)
+                ], 
+            "foot_bear": [
+                (0, 0, 14.60237), (-3.77937, 0, 14.10481), 
+                (-4.09646, 0, 15.28819), (-1.63552, 0, 17.47042), 
+                (-0.97612, 0, 20.69277), (-3.15835, 0, 23.15371), 
+                (-6.3807, 0, 23.81311), (-8.84164, 0, 21.63087), 
+                (-9.50104, 0, 18.40853), (-7.31881, 0, 15.94759), 
+                (-4.09646, 0, 15.28819), (-3.77937, 0, 14.10481), 
+                (-7.30119, 0, 12.64603), (-10.32544, 0, 10.32544), 
+                (-11.19173, 0, 11.19173), (-10.15162, 0, 14.31207), 
+                (-11.19173, 0, 17.43241), (-14.31207, 0, 18.47252), 
+                (-17.43241, 0, 17.43241), (-18.47252, 0, 14.31207), 
+                (-17.43241, 0, 11.19173), (-14.31207, 0, 10.15162), 
+                (-11.19173, 0, 11.19173), (-10.32544, 0, 10.32544), 
+                (-12.64603, 0, 7.30119), (-14.10481, 0, 3.77937), 
+                (-14.60237, 0, 0), (-14.10481, 0, -3.77937), 
+                (-12.64602, 0, -7.30119), (-10.32543, 0, -10.32544), 
+                (-7.30118, 0, -12.64602), (-3.77937, 0, -14.10481), 
+                (0, 0, -14.60237), (3.77937, 0, -14.1048), 
+                (7.30119, 0, -12.64602), (10.32543, 0, -10.32543), 
+                (12.64602, 0, -7.30118), (14.1048, 0, -3.77937), 
+                (14.60238, 0, 0), (14.10481, 0, 3.77937), 
+                (12.64603, 0, 7.30119), (10.32544, 0, 10.32544), 
+                (11.19173, 0, 11.19173), (14.31207, 0, 10.15162), 
+                (17.43241, 0, 11.19173), (18.47252, 0, 14.31207), 
+                (17.43241, 0, 17.43241), (14.31207, 0, 18.47252), 
+                (11.19173, 0, 17.43241), (10.15162, 0, 14.31207), 
+                (11.19173, 0, 11.19173), (10.32544, 0, 10.32544), 
+                (7.30119, 0, 12.64603), (3.77937, 0, 14.10481), 
+                (4.09646, 0, 15.28819), (7.31881, 0, 15.94759), 
+                (9.50104, 0, 18.40853), (8.84164, 0, 21.63087), 
+                (6.3807, 0, 23.81311), (3.15835, 0, 23.15371), 
+                (0.97612, 0, 20.69277), (1.63552, 0, 17.47042), 
+                (4.09646, 0, 15.28819), (3.77937, 0, 14.10481), 
+                (0, 0, 14.60237), 
+                ], 
+            "hat": [
+                (14, 9, 0), (0, 15, 0), (-14, 9, 0), (-7, -5, 0), 
+                (-16, -7, 0), (0, -7, 0), (16, -7, 0), (7, -5, 0), 
+                (14, 9, 0)
+                ], 
+            "head": [
+                (13, 15, -11), (0, 25, -15), (-13, 15, -11), (-14, 6, 0), 
+                (-13, 15, 11), (0, 25, 15), (13, 15, 11), (14, 6, 0), 
+                (13, 15, -11)
+                ], 
+            "hoof_horseshoe": [
+                (-6, 0, -5), (-6.5, 0, -1), (-6, 0, 3), (-5.2, 0, 5.5), 
+                (-3, 0, 7.5), (0, 0, 8.2), (3, 0, 7.5), (5.2, 0, 5.5), 
+                (6, 0, 3), (6.5, 0, -1), (6, 0, -5), (4, 0, -5), 
+                (4.5, 0, -1), (4, 0, 3), (3.5, 0, 4.5), (2, 0, 6), 
+                (0, 0, 6.5), (-2, 0, 6), (-3.5, 0, 4.5), (-4, 0, 3), 
+                (-4.5, 0, -1), (-4, 0, -5), (-6, 0, -5), (-5.5, 0, -6.5), 
+                (5.5, 0, -6.5), (4.5, 0, -10), (2.2, 0, -12.2), 
+                (0, 0, -12.2), (-2.2, 0, -12.2), (-4.5, 0, -10), 
+                (-5.5, 0, -6.5)
+                ], 
+            "hoof_simple_type": [
+                (6, 6, -12), (0, 8, -12), (-6, 6, -12), (-8, 3, -13), 
+                (-8, 0, -12), (-7, 0, -10), (-8, 0, -6), (-9, 0, -1), 
+                (-8, 0, 4), (-5, 0, 9), (0, 0, 10), (5, 0, 9), (8, 0, 4), 
+                (9, 0, -1), (8, 0, -6), (7, 0, -10), (8, 0, -12), 
+                (8, 3, -13), (6, 6, -12)
+                ], 
+            "text_IKFK": [
+                (-6.611, 0, 2), (-6.611, 0, -2), (-5.792, 0, -2), 
+                (-5.792, 0, 2), (-6.611, 0, 2), (-4.692, 0, 2), 
+                (-4.692, 0, -2), (-3.879, 0, -2), (-3.879, 0, -0.368), 
+                (-2.391, 0, -2), (-1.342, 0, -2), (-2.928, 0, -0.358), 
+                (-1.245, 0, 2), (-2.304, 0, 2), (-3.495, 0, 0.245), 
+                (-3.879, 0, 0.65), (-3.879, 0, 2), (-4.692, 0, 2), 
+                (-0.376, 0, 2), (-0.376, 0, -2), (2.401, 0, -2), 
+                (2.401, 0, -1.294), (0.442, 0, -1.294), (0.442, 0, -0.384), 
+                (2.156, 0, -0.384), (2.156, 0, 0.322), (0.442, 0, 0.322), 
+                (0.442, 0, 2), (-0.376, 0, 2), (3.164, 0, 2), 
+                (3.164, 0, -2), (3.977, 0, -2), (3.977, 0, -0.368), 
+                (5.465, 0, -2), (6.513, 0, -2), (4.928, 0, -0.358), 
+                (6.611, 0, 2), (5.552, 0, 2), (4.36, 0, 0.245), 
+                (3.977, 0, 0.65), (3.977, 0, 2), (3.164, 0, 2), 
+                (6.611, 0, 2)
+                ], 
+            "pipe": [
+                (0, 7, 7), (0, -7, 7), (4.9, -7, 4.9), (7, -7, 0), 
+                (7, 7, 0), (4.9, 7, -4.9), (0, 7, -7), (0, -7, -7), 
+                (-4.9, -7, -4.9), (-7, -7, 0), (-7, 7, 0), (-4.9, 7, 4.9), 
+                (0, 7, 7), (4.9, 7, 4.9), (7, 7, 0), (7, -7, 0), 
+                (4.9, -7, -4.9), (0, -7, -7), (0, 7, -7), (-4.9, 7, -4.9), 
+                (-7, 7, 0), (-7, -7, 0), (-4.9, -7, 4.9), (0, -7, 7)
+                ], 
+            "plane_square": [
+                (25, 0, 25), (25, 0, -25), (-25, 0, -25), 
+                (-25, 0, 25), (25, 0, 25)
+                ], 
+            "pointer_pin": [
+                (0, 8, 4), (-2.8, 8, 2.8), (-4, 8, 0), (-2.8, 8, -2.8), 
+                (0, 8, -4), (2.8, 8, -2.8), (4, 8, -0), (2.8, 8, 2.8), 
+                (0, 8, 4), (0, 8, -0), (0, 0, -0)
+                ], 
+            "pointer_rhombus": [
+                (0, 0, 0), (0, 4, 0), (0, 5, 1), (0, 6, 0), 
+                (0, 5, -1), (0, 4, 0), 
+                ], 
+            "pointer_circle": [
+                (0, 0, 0), (0, 4, 0), (0, 4.586, 1.414), 
+                (0, 6, 2), (0, 7.586, 1.414), (0, 8, 0), 
+                (0, 7.586, -1.414), (0, 6, -2), (0, 4.586, -1.414), 
+                (0, 4, 0), 
+                ], 
+            "scapula": [
+                (2.4, 9.5, -15), (0, 0, -18), (-2.4, 9.5, -15), (-4, 17, 0), 
+                (-2.4, 9.5, 15), (0, 0, 18), (2.4, 9.5, 15), (4, 17, 0), 
+                (2.4, 9.5, -15)
+                ], 
+            "sphere": [
+                (0, 5, 0), (0, 3.5, 3.5), (0, 0, 5), (0, -3.5, 3.5), 
+                (0, -5, 0), (0, -3.5, -3.5), (0, 0, -5), (0, 3.5, -3.5), 
+                (0, 5, 0), (-3.5, 3.5, 0), (-5, 0, 0), (-3.5, 0, 3.5), 
+                (0, 0, 5), (3.5, 0, 3.5), (5, 0, 0), (3.5, 0, -3.5), 
+                (0, 0, -5), (-3.5, 0, -3.5), (-5, 0, 0), (-3.5, -3.5, 0), 
+                (0, -5, 0), (3.5, -3.5, 0), (5, 0, 0), (3.5, 3.5, 0), 
+                (0, 5, 0)
+                ], 
+        }
+        self.char_joints = {}
+
+
 def use_selection(func):
     """ Decorator to pass selected objects as item to the wrapped function.
 
@@ -339,8 +642,8 @@ def split_by_number(name: str) -> dict:
     >>> {0: 'vhcl_car', 1: '123', 2: '_rig_v', 3: '0123'}
      """
     name_slices = re.split(r'(\d+)', name)
-    name_slices = [i for i in name_slices if i]
-    result = {i: slice for i, slice in enumerate(name_slices)}
+    names = [i for i in name_slices if i]
+    result = {idx: name for idx, name in enumerate(names)}
 
     return result
 
@@ -565,6 +868,7 @@ def set_joint_style(*joints, style: str="bone") -> None:
 def create_curve_from_points(*obj_or_vtx) -> str:
     """ Create a degree-3 curve 
     passing through the points of the given objects.
+    If the start and end points are the same, it creates a closed curve.
 
     If no arguments are provided, 
     it uses the currently selected objects in Maya.
@@ -582,14 +886,20 @@ def create_curve_from_points(*obj_or_vtx) -> str:
     --------
     >>> create_curve_from_points(obj1, obj2, obj3)
     >>> create_curve_from_points()  # Uses current selection
-    """
+    >>> create_curve_from_points(p1, p2, p3, p4)  # p1 == p4 -> closed_curve
+     """
     points = []
     for i in obj_or_vtx:
         i_name = i.name() if isinstance(i, pm.PyNode) else str(i)
         pos = get_position(i_name)
         points.append(pos)
 
-    result = pm.curve(ep=points, d=3)
+    if points[0] != points[-1]:
+        result = pm.curve(ep=points, d=3)
+    else:
+        result = pm.circle(nr=(0, 1, 0), ch=False, s=len(points)-1)[0]
+        for i, pos in enumerate(points[:-1]):
+            pm.move(f"{result}.cv[{i}]", pos, ws=True)
 
     return result
 
@@ -693,9 +1003,151 @@ def create_chain_joint(*obj_or_vtx) -> list:
     return result
 
 
+@alias(d="degree", cn="curve_name", cc="closed_curve")
+@use_selection
+def create_curve(
+    *args, 
+    degree: int = 1, 
+    closed_curve: bool = False, 
+    curve_name: str = ""
+) -> str:
+    """ Create a NURBS curve or closed curve from given points or 
+    transform names in Maya.
+
+    This function generates a curve using the provided control points, 
+    which can be either explicit coordinate tuples/lists or transform names. 
+    If a transform name is given, its world position will be used as the 
+    control point. The curve can be either open or closed depending on 
+    the `closed_curve` flag.
+
+    Args:
+        *args:
+            Variable length argument list of control points. Each item can be 
+            a tuple/list of three numbers representing a point (x, y, z), or 
+            a transform name (str) from which the position will be extracted.
+        degree (int, optional):
+            Degree of the curve. Defaults to 1 (linear).
+        closed_curve (bool, optional):
+            Whether to create a closed (cyclic) curve. Defaults to False.
+        curve_name (str, optional):
+            Name of the created curve node. If empty, Maya will assign a 
+            default name.
+
+    Returns:
+        str: 
+            The name of the created curve transform node. 
+            Returns an empty string on failure.
+
+    Example:
+        >>> create_curve((0, 0, 0), (1, 1, 0), (2, 0, 0), d=3, cn="myCurve")
+        # 'myCurve'
+        >>> create_curve('locator1', 'locator2', 'locator3', d=3)
+        # 'curve1'
+        >>> dt = Data()
+        >>> points = dt.ctrl_shapes["cylinder"]
+        >>> create_curve(*points, cn="cc_cylinder")
+        # "cc_cylinder"
+        >>> create_curve(d=3, cn="cc_circle", cc=True) # @use_selection
+        # "cc_circle"
+     """
+    points = []
+    for item in args:
+        is_tuple_or_list = isinstance(item, (tuple, list))
+        is_three = len(item)==3
+        is_number = all(isinstance(i, (int, float)) for i in item)
+        if is_tuple_or_list and is_three and is_number:
+            points.append(item)
+        else:
+            try:
+                points.append(get_position(item))
+            except Exception as e:
+                print(e)
+                return ""
+
+    if not closed_curve:
+        result = pm.curve(ep=points, d=degree, n=curve_name)
+    else:
+        spans = len(points)
+        result = pm.circle(nr=(0,1,0), ch=1, d=degree, n=curve_name, s=spans)
+        result = result[0]
+        for i, pos in enumerate(points):
+            pm.move(f"{result}.cv[{i}]", pos, ws=True)
+
+    return result
+
+
+@use_selection
+def create_aimed_curve(
+        start_obj_or_vtx: str, 
+        end_obj_or_vtx: str, 
+        world_up_object: str=""
+    ) -> str:
+    """ Create a straight curve between two points and aim it at the end point.
+
+    The curve is initially created along the X-axis at the origin and then
+    translated to the 'start_obj_or_vtx' position. It is then aimed at the
+    'end_obj_or_vtx'. An optional 'world_up_object' can be provided to control
+    the world up vector for the aiming constraint. The resulting curve 
+    is rebuilt for smoother interpolation and history is deleted.
+
+    Args:
+        start_obj_or_vtx: 
+            The name of the starting object or vertex 
+            (e.g., 'pSphere1', 'pCube1.vtx[0]').
+        end_obj_or_vtx: 
+            The name of the ending object or vertex.
+        world_up_object: 
+            An optional object to define the world up direction 
+            for the aim constraint. If not provided, 
+            a default world up will be used.
+
+    Returns:
+        str: The name of the newly created and aimed curve.
+
+    Examples:
+    >>> create_aimed_curve(obj1, obj2)
+    >>> create_aimed_curve(obj1, obj2, obj3)
+    >>> create_aimed_curve(obj1.vtx[23], obj2.vtx[99])
+    >>> create_aimed_curve(obj1.vtx[23], obj2.vtx[99], obj3.vtx[36])
+     """
+    positions = [get_position(i) for i in [start_obj_or_vtx, end_obj_or_vtx]]
+    start_point, end_point = positions
+    length_of_curve = get_distance(start_point, end_point)
+
+    result_curve = pm.curve(p=[(0, 0, 0), (length_of_curve, 0, 0)], d=1)
+    pm.xform(result_curve, ws=True, t=start_point)
+
+    end_point_locator = pm.spaceLocator()
+    pm.move(end_point_locator, end_point)
+
+    if not world_up_object:
+        pm.aimConstraint(end_point_locator, result_curve)
+    else:
+        world_up_object_position = get_position(world_up_object)
+        world_up_object_locator = pm.spaceLocator()
+        pm.move(world_up_object_locator, world_up_object_position)
+        pm.aimConstraint(
+            end_point_locator, 
+            result_curve, 
+            worldUpType="object", 
+            worldUpObject=world_up_object_locator
+        )
+        pm.delete(world_up_object_locator)
+
+    pm.rebuildCurve(result_curve, d=3, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
+    pm.delete(result_curve, cn=True)
+    pm.delete(end_point_locator)
+
+    return result_curve
+
+
 @alias(sf="start_frame", ef="end_frame")
 @use_selection
-def create_animation_curves(*obj_or_vtx, **kwargs) -> list:
+def create_animation_curves(
+    *obj_or_vtx, 
+    start_frame: int, 
+    end_frame: int
+) -> list:
     """ Create animation curves 
     from object or vertex positions over a frame range.
 
@@ -703,15 +1155,14 @@ def create_animation_curves(*obj_or_vtx, **kwargs) -> list:
     position of each provided object or vertex at each frame, and then
     creates a 3-degree NURBS curve using these recorded positions.
 
-    obj_or_vtx:
+    Args:
         *obj_or_vtx (pm.PyNode or str): Positional arguments
             representing the objects or vertices for which to record positions.
             Can be PyNode objects or their string names.
-        **kwargs: Keyword arguments for specifying the frame range.
-            - start_frame (int): The starting frame of the animation range.
-                Aliases: 'sf'.
-            - end_frame (int): The ending frame of the animation range.
-                Aliases: 'ef'.
+        start_frame (int): The starting frame of the animation range.
+            Aliases: 'sf'.
+        end_frame (int): The ending frame of the animation range.
+            Aliases: 'ef'.
 
     Returns:
         list: A list of `pymel.core.general.Curve` objects,
@@ -723,16 +1174,9 @@ def create_animation_curves(*obj_or_vtx, **kwargs) -> list:
             are not provided or are not integers.
 
     Examples:
-        >>> create_animation_curves(start_frame=1, end_frame=27)
         >>> create_animation_curves(obj, sf=1, ef=27)
+        >>> create_animation_curves(sf=1, ef=27)
      """
-    start_frame = kwargs.get("start_frame")
-    end_frame = kwargs.get("end_frame")
-
-    if not isinstance(start_frame, int) or not isinstance(end_frame, int):
-        pm.warning("Both start_frame and end_frame must be provided as int.")
-        return []
-
     recorded_positions = {}
     for frame in range(start_frame, end_frame + 1):
         pm.currentTime(frame)
@@ -807,101 +1251,6 @@ def set_key_on_range(
             obj.rotateX.setKey(value=rotation_value.x, time=frame)
             obj.rotateY.setKey(value=rotation_value.y, time=frame)
             obj.rotateZ.setKey(value=rotation_value.z, time=frame)
-
-
-@use_selection
-def create_closed_curve(*obj_or_vtx) -> str:
-    """ Creates a circle that passes through objects or points.
-
-    This function takes any number of objects or vertices names as args.
-    It then creates a NURBS circle and positions its control vertices (CVs)
-    to pass through the specified objects or points.
-
-    Args:
-        *obj_or_vtx: Variable length argument list of objects or vertices.
-                     Each argument should be a string representing the name of
-                     a valid object or vertex in the scene.
-
-    Returns:
-        str: The name of the created NURBS circle object.
-
-    Examples:
-        >>> create_closed_curve("sphere1", "cube2", "pCylinder3")
-        >>> create_closed_curve("obj1.vtx[0]", "obj2.vtx[1]", "obj3.vtx[2]")
-     """
-    positions = [get_position(i) for i in obj_or_vtx]
-    circles = pm.circle(nr=(0, 1, 0), ch=False, s=len(obj_or_vtx))
-    circle = circles[0]
-
-    for idx, pos in enumerate(positions):
-        pm.move(f"{circle}.cv[{idx}]", pos, ws=True)
-
-    return circle
-
-
-@use_selection
-def create_aimed_curve(
-        start_obj_or_vtx: str, 
-        end_obj_or_vtx: str, 
-        world_up_object: str=""
-    ) -> str:
-    """ Create a straight curve between two points and aim it at the end point.
-
-    The curve is initially created along the X-axis at the origin and then
-    translated to the 'start_obj_or_vtx' position. It is then aimed at the
-    'end_obj_or_vtx'. An optional 'world_up_object' can be provided to control
-    the world up vector for the aiming constraint. The resulting curve 
-    is rebuilt for smoother interpolation and history is deleted.
-
-    Args:
-        start_obj_or_vtx: 
-            The name of the starting object or vertex 
-            (e.g., 'pSphere1', 'pCube1.vtx[0]').
-        end_obj_or_vtx: 
-            The name of the ending object or vertex.
-        world_up_object: 
-            An optional object to define the world up direction 
-            for the aim constraint. If not provided, 
-            a default world up will be used.
-
-    Returns:
-        str: The name of the newly created and aimed curve.
-
-    Examples:
-    >>> create_aimed_curve(obj1, obj2)
-    >>> create_aimed_curve(obj1, obj2, obj3)
-    >>> create_aimed_curve(obj1.vtx[23], obj2.vtx[99])
-    >>> create_aimed_curve(obj1.vtx[23], obj2.vtx[99], obj3.vtx[36])
-     """
-    positions = [get_position(i) for i in [start_obj_or_vtx, end_obj_or_vtx]]
-    start_point, end_point = positions
-    length_of_curve = get_distance(start_point, end_point)
-
-    result_curve = pm.curve(p=[(0, 0, 0), (length_of_curve, 0, 0)], d=1)
-    pm.xform(result_curve, ws=True, t=start_point)
-
-    end_point_locator = pm.spaceLocator()
-    pm.move(end_point_locator, end_point)
-
-    if not world_up_object:
-        pm.aimConstraint(end_point_locator, result_curve)
-    else:
-        world_up_object_position = get_position(world_up_object)
-        world_up_object_locator = pm.spaceLocator()
-        pm.move(world_up_object_locator, world_up_object_position)
-        pm.aimConstraint(
-            end_point_locator, 
-            result_curve, 
-            worldUpType="object", 
-            worldUpObject=world_up_object_locator
-        )
-        pm.delete(world_up_object_locator)
-
-    pm.rebuildCurve(result_curve, d=3, ch=0, s=3, rpo=1, end=1, kr=0, kt=0)
-    pm.delete(result_curve, cn=True)
-    pm.delete(end_point_locator)
-
-    return result_curve
 
 
 @use_selection
@@ -1610,5 +1959,11 @@ def duplicate_with_rename(downstream_path: list, new_names: list) -> list:
 
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
+
+
+def create_new_name(*args, new_name: str="", change_word: str=""):
+    temp = split_by_number(new_name)
+    for original_name in args:
+        pass
 
 
