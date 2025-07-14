@@ -1957,13 +1957,74 @@ def duplicate_with_rename(downstream_path: list, new_names: list) -> list:
     return result
 
 
+@alias(pos="to_position")
+@use_selection
+def move_pivot(*args, position: Union[tuple, list] = (0, 0, 0)) -> None:
+    """ Set the pivot point of multiple objects 
+    to a specified world space position.
+
+    This function iterates through the given PyMEL objects and sets their
+    world space pivot point to the `position` argument. By default, the
+    pivot is set to the world origin (0, 0, 0).
+
+    Args:
+        *args: 
+            PyMEL objects (e.g., `pm.Transform` or `pm.DagNode`) whose
+            pivot points are to be set.
+        position (Union[tuple, list], optional): 
+            The target world space coordinates (x, y, z) for the pivot. 
+            Defaults to (0, 0, 0).
+
+    Raises:
+        TypeError: 
+            If any of the arguments in `*args` are not valid PyMEL objects
+            or if `position` is not a tuple or list of 3 numbers.
+
+    Examples:
+        >>> move_pivot(obj, position=(1, 2, 3))
+        # (1, 2, 3)
+        >>> move_pivot(obj, pos=(4, 5, 6))
+        # (4, 5, 6)
+        >>> move_pivot()
+        # (0, 0, 0)
+
+     """
+    for obj in args:
+        pm.xform(obj, ws=True, piv=position)
+
+
+
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
 
 def create_new_name(*args, new_name: str="", change_word: str=""):
-    temp = split_by_number(new_name)
-    for original_name in args:
+    name_slice = split_by_number(new_name)
+    print(name_slice)
+    # number_of_digits = len(args)
+    result = []
+    if any([i.isdigit() for i in list(name_slice.values())]):
         pass
+    else:
+        for idx, original_name in enumerate(args):
+            result_name = new_name + "%s" % (idx if idx else "")
+            original_name = pm.PyNode(original_name)
+            # new_name = pm.PyNode(new_name)
+            long_original_name = original_name.fullPath()
+            front_slice, rear_slice = long_original_name.rsplit("|", 1)
+            pm.rename(long_original_name, front_slice + "|" + new_name)
+            # if pm.objExists(result_name):
+            #     pm.warning(f"<<{result_name}>> name is aleady exists.")
+            #     return result
+            # else:
+            #     pm.rename(original_name, result_name)
+            #     result.append(result_name)
+    
+    return result
 
 
+sel = pm.selected()
+a = create_new_name(*sel, new_name="ball", change_word="")
+print(a)
+
+# pm.rename("|group2|pSphere", "apple")
