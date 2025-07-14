@@ -2000,26 +2000,21 @@ def move_pivot(*args, position: Union[tuple, list] = (0, 0, 0)) -> None:
 
 def create_new_name(*args, new_name: str="", change_word: str=""):
     name_slice = split_by_number(new_name)
-    print(name_slice)
-    # number_of_digits = len(args)
+    is_numbers = any([i.isdigit() for i in list(name_slice.values())])
+
     result = []
-    if any([i.isdigit() for i in list(name_slice.values())]):
+    if is_numbers:
         pass
     else:
-        for idx, original_name in enumerate(args):
-            result_name = new_name + "%s" % (idx if idx else "")
-            original_name = pm.PyNode(original_name)
-            # new_name = pm.PyNode(new_name)
-            long_original_name = original_name.fullPath()
-            front_slice, rear_slice = long_original_name.rsplit("|", 1)
-            pm.rename(long_original_name, front_slice + "|" + new_name)
-            # if pm.objExists(result_name):
-            #     pm.warning(f"<<{result_name}>> name is aleady exists.")
-            #     return result
-            # else:
-            #     pm.rename(original_name, result_name)
-            #     result.append(result_name)
-    
+        for idx, org_name in enumerate(args):
+            org_name = pm.PyNode(org_name)
+            long_org_name = org_name.fullPath()
+            temp = long_org_name.split("|")
+            temp[-1] = new_name + "%s" % (idx if idx else "")
+            result_name = "|".join(temp)
+            result_name = pm.rename(long_org_name, result_name)
+            result.append(result_name)
+
     return result
 
 
