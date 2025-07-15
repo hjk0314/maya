@@ -2004,7 +2004,18 @@ def create_new_name(*args, new_name: str="", change_word: str=""):
 
     result = []
     if is_numbers:
-        pass
+        number_only = {k: v for k, v in name_slice.items() if v.isdigit()}
+        last_number_idx = max([i for i in number_only.keys()])
+        num = name_slice[last_number_idx]
+        for idx, org_name in enumerate(args):
+            org_name = pm.PyNode(org_name)
+            long_org_name = org_name.fullPath()
+            temp = long_org_name.split("|")
+            name_slice[last_number_idx] = f"%0{len(num)}d" % (int(num) + idx)
+            temp[-1] = new_name + "%s" % ()
+            result_name = "|".join(temp)
+            result_name = pm.rename(long_org_name, result_name)
+            result.append(result_name)
     else:
         for idx, org_name in enumerate(args):
             org_name = pm.PyNode(org_name)
@@ -2019,7 +2030,7 @@ def create_new_name(*args, new_name: str="", change_word: str=""):
 
 
 sel = pm.selected()
-a = create_new_name(*sel, new_name="ball", change_word="")
+a = create_new_name(*sel, new_name="ball_003", change_word="")
 print(a)
 
 # pm.rename("|group2|pSphere", "apple")
