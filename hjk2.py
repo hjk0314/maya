@@ -1,7 +1,7 @@
 """ These functions were created to speed up rigging in Maya. """
 
 
-from typing import Iterable, Optional, Union, List, Tuple
+from typing import Iterable, Optional, Union, Dict, List, Tuple
 import functools
 import math
 import re
@@ -13,7 +13,61 @@ import maya.api.OpenMaya as om2
 
 __version__ = "Python 3.7.9"
 __author__ = "HONG JINKI <hjk0314@gmail.com>"
-__all__ = []
+__all__ = [
+    'get_position', 
+    'get_bounding_box_position', 
+    'get_bounding_box_size', 
+    'get_flatten_list', 
+    'get_distance', 
+    'get_referenced_list', 
+    'get_downstream_path', 
+
+    'orient_joints', 
+    'create_pole_vector_joints', 
+    'set_joint_style', 
+    'create_annotation', 
+
+    'parent_in_sequence', 
+    'group_with_pivot', 
+    'move_pivot', 
+
+    'create_curve_from_points', 
+    'create_motion_path_joints', 
+    'create_chain_joint', 
+    'create_curve', 
+    'create_aimed_curve', 
+    'create_animation_curves', 
+    'set_key_on_range', 
+
+    'get_deformed_shape', 
+    'get_uv_coordinates', 
+    'get_uv_coordinates_closet_object', 
+    'create_follicle', 
+
+    'create_setRange_node', 
+    'create_blendColor_node', 
+    'create_attributes', 
+
+    'select_only', 
+
+    'add_affixes', 
+    'duplicate_with_rename', 
+    'extract_number', 
+    're_name', 
+
+    # createCurveNormalDirection
+    # createIKHandle
+    # createPaintWeightToOne
+    # createJointScaleExpression
+    # selectVerticesAffectedJoint
+    # softSelection
+    # mirrorCopy
+    # lineUpCurvePointsToStraightLine
+    # lineUpObjectsOnOnePlane
+    # colorize
+    # deletePlugins
+    # check_duplicatedNames
+    ]
 
 
 class Data:
@@ -632,23 +686,6 @@ def get_downstream_path(start: str, end: str) -> list:
 
 
 @use_selection
-def split_by_number(name: str) -> dict:
-    """ If the name contains a number, 
-    it returns a dict with the number and index.
-
-    Examples
-    --------
-    >>> split_by_number("vhcl_car123_rig_v0123")
-    >>> {0: 'vhcl_car', 1: '123', 2: '_rig_v', 3: '0123'}
-     """
-    name_slices = re.split(r'(\d+)', name)
-    names = [i for i in name_slices if i]
-    result = {idx: name for idx, name in enumerate(names)}
-
-    return result
-
-
-@use_selection
 def orient_joints(*joints, **kwargs) -> None:
     """ Select joints and don't put anything in the argument, 
     it will be oriented with the Maya default settings.
@@ -984,7 +1021,7 @@ def create_chain_joint(*obj_or_vtx) -> list:
 
     Examples
     --------
-    >>> create_joint_chain_on_curve(obj1, obj2, obj3, ...)
+    >>> create_chain_joint(obj1, obj2, obj3, ...)
     >>> ["joint1", "joint2", "joint3", ...]
      """
     result = []
@@ -1993,44 +2030,146 @@ def move_pivot(*args, position: Union[tuple, list] = (0, 0, 0)) -> None:
         pm.xform(obj, ws=True, piv=position)
 
 
+@alias(pos="last_position_of_number")
+@use_selection
+def extract_number(
+    text: str, 
+    last_position_of_number: bool=True
+) -> Tuple[Dict[int, str], bool, Union[int, None], str]:
+    """ Split a string by numbers and extract relevant information.
+
+    This function splits the input string based on the presence of
+    numerical sequences. It returns a dictionary mapping indices to the
+    split parts (both text and numbers), a boolean indicating if any
+    numbers were found, a dictionary containing only the numerical parts
+    and their original indices, the index of the first or last number found,
+    and the corresponding numerical string.
+
+    Parameters
+    ----------
+    text : str
+        The input string to be processed.
+    last_position_of_number : bool, optional
+        If True (default), the function returns the last occurring number's
+        position and string. If False, it returns the first occurring
+        number's position and string.
+
+    Returns
+    -------
+    Tuple[Dict[int, str], bool, Dict[int, str], Union[int, None], str]
+        - {0: 'vhcl_car', 1: '123', 2: '_rig_v', 3: '0123'}
+        - True
+        - 1 or 3
+        - '123' or '0123'
+
+    Examples
+    --------
+    >>> extract_numbers("a012_v3456")
+    ({0: 'a', 1: '012', 2: '_v', 3: '3456'}, True, 3, '3456')
+    >>> extract_numbers("a012_v3456", pos=False)
+    ({0: 'a', 1: '012', 2: '_v', 3: '3456'}, True, 1, '012')
+    >>> extract_numbers("no_numbers_here")
+    ({0: 'no_numbers_here'}, False, {}, None, '')
+    >>> extract_numbers()
+    ({0: 'no_numbers_here'}, False, {}, None, '')
+     """
+    split_text = re.split(r'(\d+)', text)
+    text_list = [i for i in split_text if i]
+    text_dict = {idx: name for idx, name in enumerate(text_list)}
+    is_exist_num = any([i.isdigit() for i in text_list])
+    only_num_dict = {k: v for k, v in text_dict.items() if v.isdigit()}
+    position_of_num = None
+    num_str = ""
+
+    if only_num_dict:
+        if last_position_of_number:
+            position_of_num = max(only_num_dict.keys())
+        else:
+            position_of_num = min(only_num_dict.keys())
+        num_str = text_dict[position_of_num]
+
+    return text_dict, is_exist_num, position_of_num, num_str
+
+
+@alias(nn="new_name", cw="change_word")
+@use_selection
+def re_name(*args, new_name: str="", change_word: str=""):
+    """ Renames Maya nodes based on the provided new name or by 
+    changing a specific word.
+
+    This function iterates through a list of PyNode objects and renames them.
+    There are two primary modes of operation:
+    1.  **Setting a new name**: 
+            If `new_name` is provided and `change_word` is empty, the nodes 
+            will be renamed to `new_name`. If `new_name` contains a trailing
+            number, subsequent nodes will have that number incremented. 
+            Otherwise, an index will be appended (e.g., "newName1", "newName2")
+    2.  **Changing a specific word**: 
+            If both `new_name` and `change_word` are provided, the function 
+            will search for `new_name` within the existing node name and 
+            replace it with `change_word`. If `new_name` is not found, 
+            the node is skipped.
+
+    Args:
+        *args: 
+            Variable length argument list of PyNode objects to be renamed.
+        new_name (str, optional): 
+            The base new name for the nodes, or the word to be found 
+            and replaced. Defaults to "".
+        change_word (str, optional): 
+            The word to replace `new_name` with when performing a word change. 
+            Defaults to "".
+
+    Returns:
+        list: A list of the newly renamed PyNode objects.
+
+    Raises:
+        RuntimeError: 
+            If a renaming operation fails (e.g., due to invalid characters or 
+            name conflicts). (Note: This is based on `pm.rename` behavior and 
+            not explicitly handled in the provided snippet's try/except)
+
+    Examples:
+        >>> re_name("apple_01", new_name="banana_23")
+        # ["banana_23"]
+        >>> re_name(nn="ban", cw="band")
+        # ["bandana_23"]
+        >>> re_name(nn="cherry_0045")
+        # ["cherry_0045", "cherry_0046", "cherry_0047", ...]
+        >>> re_name(new_name="cherry", change_word="cacao")
+        # ["cacao_0045", "cacao_0046", "cacao_0047", ...]
+    """
+    name_slice, is_numbers, num_index, num = extract_number(new_name)
+    
+    result = []
+    for idx, org_name in enumerate(args):
+        if not pm.objExists(org_name):
+            continue
+        org_name = pm.PyNode(org_name)
+        long_org_name = org_name.fullPath()
+        temp = long_org_name.split("|")
+        if new_name and not change_word:
+            if is_numbers:
+                name_slice[num_index] = f"%0{len(num)}d" % (int(num) + idx)
+                temp[-1] = "".join(name_slice.values())
+            else:
+                temp[-1] = new_name + "%s" % (idx if idx else "")
+        elif new_name and change_word:
+            if new_name in temp[-1]:
+                changed = temp[-1].replace(new_name, change_word)
+                temp[-1] = changed
+            else:
+                continue
+        else:
+            continue
+        result_name = "|".join(temp)
+        result_name = pm.rename(long_org_name, result_name)
+        result.append(result_name.name())
+
+    return result
+
 
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
 
-def create_new_name(*args, new_name: str="", change_word: str=""):
-    name_slice = split_by_number(new_name)
-    is_numbers = any([i.isdigit() for i in list(name_slice.values())])
-
-    result = []
-    if is_numbers:
-        number_only = {k: v for k, v in name_slice.items() if v.isdigit()}
-        last_number_idx = max([i for i in number_only.keys()])
-        num = name_slice[last_number_idx]
-        for idx, org_name in enumerate(args):
-            org_name = pm.PyNode(org_name)
-            long_org_name = org_name.fullPath()
-            temp = long_org_name.split("|")
-            name_slice[last_number_idx] = f"%0{len(num)}d" % (int(num) + idx)
-            temp[-1] = new_name + "%s" % ()
-            result_name = "|".join(temp)
-            result_name = pm.rename(long_org_name, result_name)
-            result.append(result_name)
-    else:
-        for idx, org_name in enumerate(args):
-            org_name = pm.PyNode(org_name)
-            long_org_name = org_name.fullPath()
-            temp = long_org_name.split("|")
-            temp[-1] = new_name + "%s" % (idx if idx else "")
-            result_name = "|".join(temp)
-            result_name = pm.rename(long_org_name, result_name)
-            result.append(result_name)
-
-    return result
-
-
-sel = pm.selected()
-a = create_new_name(*sel, new_name="ball_003", change_word="")
-print(a)
-
-# pm.rename("|group2|pSphere", "apple")
