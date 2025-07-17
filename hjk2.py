@@ -1,8 +1,9 @@
 """ These functions were created to speed up rigging in Maya. """
 
 
-from typing import Iterable, Optional, Union, Dict, List, Tuple
-from collections import Counter
+from typing import Callable, Union, Dict, List, Tuple, Any
+from collections import Counter, defaultdict
+import time
 import functools
 import math
 import re
@@ -503,6 +504,44 @@ def alias(**alias_map):
             return func(*args, **resolved_kwargs)
         return wrapper
     return decorator
+
+
+def compare_execution_time(
+    func1: Callable,
+    func2: Callable,
+    *args: Any,
+    **kwargs: Any
+) -> Tuple[float, float]:
+    """ Measure and compare the execution time of two functions with the 
+    same arguments.
+
+    This function executes `func1` and `func2` in sequence, passing them 
+    the same positional and keyword arguments, and returns their execution 
+    durations in seconds.
+
+    Args:
+        func1 (Callable): The first function to measure.
+        func2 (Callable): The second function to measure.
+        *args: Positional arguments to pass to both functions.
+        **kwargs: Keyword arguments to pass to both functions.
+
+    Returns:
+        tuple[float, float]: 
+            A tuple containing (duration_func1, duration_func2), each in sec.
+
+    Example:
+        >>> compare_execution_time(func1, func2, "pSphere1.vtx[257])
+        # (0.05010910000055446, 0.03423800000018673)
+     """
+    start1 = time.perf_counter()
+    func1(*args, **kwargs)
+    end1 = time.perf_counter()
+
+    start2 = time.perf_counter()
+    func2(*args, **kwargs)
+    end2 = time.perf_counter()
+
+    return (end1 - start1, end2 - start2)
 
 
 @use_selection
@@ -2031,7 +2070,7 @@ def move_pivot(*args, position: Union[tuple, list] = (0, 0, 0)) -> None:
 
 @alias(pos="last_position_of_number")
 @use_selection
-def extract_number(
+def extract_numbers(
     text: str, 
     last_position_of_number: bool=True
 ) -> Tuple[Dict[int, str], bool, Union[int, None], str]:
@@ -2138,7 +2177,7 @@ def re_name(*args, new_name: str="", change_word: str=""):
         >>> re_name(new_name="cherry", change_word="cacao")
         # ["cacao_0045", "cacao_0046", "cacao_0047", ...]
     """
-    name_slice, is_numbers, num_index, num = extract_number(new_name)
+    name_slice, is_numbers, num_index, num = extract_numbers(new_name)
     
     result = []
     for idx, org_name in enumerate(args):
@@ -2249,77 +2288,73 @@ def delete_unused_plugins() -> list:
 
 @alias(tol="tolerance")
 @use_selection
-def find_mirror_vertices(*args, tolerance: float=0.005) -> dict:
-    """ Finds mirror vertices for the given mesh vertices based on the X-axis.
-
-    This function takes one or more mesh vertices as input and attempts to 
-    find their mirror counterparts across the YZ-plane (where X=0). 
-    It returns a dictionary mapping the input vertex names to their 
-    corresponding mirror vertex names. If a mirror vertex cannot be found 
-    within the specified tolerance, or if the input vertex is on or to the 
-    left of the YZ-plane (X <= 0), its mirror will be None.
+def get_symmetric_vertex(
+    *vertex_strings: str, 
+    axis: str = 'x', 
+    tolerance: float = 0.005
+) -> dict:
+    """ Returns a mapping of each input vertex to its symmetric counterpart 
+    across the given axis.
 
     Args:
-        *args: 
-            Variable-length argument list of mesh vertices (or objects that can
-            be converted to pm.MeshVertex using pm.PyNode).
+        *vertex_strings (str): 
+            Vertex names as strings (e.g., 'pCube1.vtx[123]').
+        axis (str, optional): 
+            Axis of symmetry. One of {'x', 'y', 'z'}. Defaults to 'x'.
         tolerance (float, optional): 
-            The maximum distance an existing vertex can be from the calculated 
-            mirror position to be considered a match. Defaults to 0.005.
+            Maximum allowed distance to consider two vertices symmetric. 
+            Defaults to 0.005.
 
     Returns:
-        dict: 
-            A dictionary where keys are the names of the input vertices and 
-            values are the names of their corresponding mirror vertices. 
-            If no mirror is found for a vertex, its value will be None.
+        dict: A mapping {source_vertex: symmetric_vertex}.
 
-    Examples:
-        >>> find_mirror_vertices('pSphereShape1.vtx[277]')
-        # {'pSphereShape1.vtx[277]': 'pSphereShape1.vtx[271]'}
-        >>> find_mirror_vertices('pSphereShape1.vtx[277]', tol=0.001)
-        # {'pSphereShape1.vtx[277]': None}
+    Example:
+        >>> get_symmetric_vertex('pSphere1.vtx[257]')
+        >>> get_symmetric_vertex(tol=0.001)
+        >>> get_symmetric_vertex()
+        # {'pSphere1.vtx[257]': 'pSphere1.vtx[251]'}
      """
-    verts = []
-    for arg in args:
-        vtx = pm.PyNode(arg)
-        if isinstance(vtx, pm.MeshVertex):
-            verts.append(vtx)
-        else:
-            pm.warning(f"{vtx} is not a MeshVertex.")
-
-    if not verts:
-        pm.warning("Nothing Selected.")
-        return {}
-
-    obj_shape = verts[0].node()
-    all_verts = obj_shape.vtx
-    positions = [vtx.getPosition(space="world") for vtx in all_verts]
-
     result = {}
-    for vtx in verts:
-        key = vtx.name()
-        pos = vtx.getPosition(space="world")
+    axis_indices = {'x': 0, 'y': 1, 'z': 2}
+    if axis not in axis_indices:
+        raise ValueError(f"Invalid axis '{axis}'. Choose from 'x', 'y', 'z'")
 
-        if pos.x <= 0:
-            result[key] = None
+    axis_idx = axis_indices[axis]
+    vertex_pattern = re.compile(r"(.+)\.vtx\[(\d+)\]")
+
+    for vertex_str in vertex_strings:
+        match = vertex_pattern.match(vertex_str)
+        if not match:
             continue
 
-        mirror_pos = pm.datatypes.Point(-pos.x, pos.y, pos.z)
+        mesh_name = match.group(1)
+        vtx_index = int(match.group(2))
 
-        min_idx, min_dist = None, float("inf")
-        for idx, point in enumerate(positions):
-            dx = point.x - mirror_pos.x
-            dy = point.y - mirror_pos.y
-            dz = point.z - mirror_pos.z
-            dist2 = dx*dx + dy*dy + dz*dz
+        shape = pm.PyNode(mesh_name)
+        if shape.type() != 'mesh':
+            shape = shape.getShape()
+        verts = shape.vtx
 
-            if dist2 < min_dist:
-                min_idx, min_dist = idx, dist2
+        if vtx_index >= len(verts):
+            continue
 
-        if min_dist > tolerance**2:
-            result[key] = None
-        else:
-            result[key] = all_verts[min_idx].name()
+        src_vertex = verts[vtx_index]
+        src_pos = src_vertex.getPosition(space='world')
+
+        mirror_pos = list(src_pos)
+        mirror_pos[axis_idx] *= -1
+
+        mirror_index = None
+        for i, v in enumerate(verts):
+            pos = v.getPosition(space='world')
+            if all(abs(pos[j] - mirror_pos[j]) < tolerance for j in range(3)):
+                mirror_index = i
+                break
+
+        if mirror_index is not None:
+            source_name = f"{mesh_name}.vtx[{vtx_index}]"
+            mirror_name = f"{mesh_name}.vtx[{mirror_index}]"
+            result[source_name] = mirror_name
 
     return result
 
@@ -2358,16 +2393,3 @@ def get_vertex_weights(*vertices):
     return result
 
 
-
-# a = get_vertex_weights()
-# vtx = list(a.keys())
-
-# result = find_mirror_vertices(*vtx)
-# pm.select(result.values(), tgl=True)
-
-# pm.select(cl=True)
-# pm.symmetricModelling(symmetry=1, axis='x')
-pm.select("char_tigerA_mdl_v9999:tigerA_body.vtx[7931]", r=True)
-pm.select(sym=True, sys=-1)
-# a= pm.ls(selection=True, flatten=True)
-# print(a)
