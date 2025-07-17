@@ -781,7 +781,7 @@ class Character(QWidget):
         # IK
         ctrl = Controllers()
         ccLegs_IK = ctrl.createControllers(scapula=ccPelvis_IK, 
-                                           sphere=ccKnee_IK, foot2=ccFoot_IK)
+                                           sphere=ccKnee_IK, foot1=ccFoot_IK)
         ccPelvis_IK, ccKnee_IK, ccFoot_IK = ccLegs_IK
         for i in ccLegs_IK:
             pm.scale(i, (scaleRatio, )*3)
@@ -1342,12 +1342,12 @@ class Character(QWidget):
                 parentHierarchically(parents, joints[0])
 
 
-# if __name__ == "__main__":
-#     try:
-#         char.close()
-#         char.deleteLater()
-#     except:
-#         pass
-#     char = Character()
-#     char.show()
+if __name__ == "__main__":
+    try:
+        char.close()
+        char.deleteLater()
+    except:
+        pass
+    char = Character()
+    char.show()
 
