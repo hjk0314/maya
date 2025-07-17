@@ -2,6 +2,7 @@
 
 
 from typing import Iterable, Optional, Union, Dict, List, Tuple
+from collections import Counter
 import functools
 import math
 import re
@@ -65,8 +66,6 @@ __all__ = [
     # lineUpCurvePointsToStraightLine
     # lineUpObjectsOnOnePlane
     # colorize
-    # deletePlugins
-    # check_duplicatedNames
     ]
 
 
@@ -2169,7 +2168,115 @@ def re_name(*args, new_name: str="", change_word: str=""):
     return result
 
 
+@alias(to="transform_only")
+def find_duplicated_names(transform_only: bool=False) -> list:
+    """ Finds and returns a list of PyMEL objects with duplicated short names 
+    in the current Maya scene.
+
+    This function identifies objects that share the same short name 
+    (the part of their full path after the last '|' character). 
+    It can optionally limit the search to only 'transform' nodes.
+
+    Args:
+        transform_only (bool, optional): 
+            If True, the function will only search for duplicated names 
+            among 'transform' nodes. If False, it will search among all types 
+            of DAG (Directed Acyclic Graph) objects. Defaults to False.
+
+    Returns:
+        list: 
+            A list of `pymel.core.general.PyNode` objects that have duplicated
+            short names. If no duplicates are found, an empty list is returned.
+
+    Examples:
+        >>> find_duplicated_names()
+        >>> result = [
+        ... nt.Transform('group1|pCube1'), 
+        ... nt.Transform('|pCube1'), 
+        ... nt.Mesh('group1|pCube1|pCubeShape1'), 
+        ... nt.Mesh('|pCube1|pCubeShape1')
+        ... ]
+
+        >>> find_duplicated_names(to=True)
+        >>> [nt.Transform('group1|pCube1'), nt.Transform('|pCube1')]
+     """
+    if transform_only:
+        long_names = pm.ls(type=["transform"], dag=True, long=True)
+    else:
+        long_names = pm.ls(dag=True, long=True)
+
+    short_names = [ln.rsplit("|", 1)[-1] for ln in long_names]
+    counts = Counter(short_names)
+    duplicates = [name for name, cnt in counts.items() if cnt > 1]
+
+    result = pm.ls(f"*{i}" for i in duplicates)
+
+    return result
+
+
+def delete_unused_plugins() -> list:
+    """ Deletes unknown nodes and attempts to remove unused plugins.
+
+    This function first identifies and deletes all 'unknown' type nodes,
+    which often result from missing plugins.
+    Then, it queries for any unknown plugins loaded in the scene and
+    attempts to unload each of them. A message is printed indicating whether 
+    unknown plugins were found and removed.
+     """
+    unknown_nodes = pm.ls(type="unknown")
+    if unknown_nodes:
+        pm.delete(unknown_nodes)
+        print(f"Deleted {len(unknown_nodes)} unknown nodes.")
+    else:
+        print("No unknown nodes found.")
+
+    unknown_plugins = pm.unknownPlugin(query=True, list=True)
+    result = []
+    if not unknown_plugins:
+        print("No unknown plugins found to remove.")
+    else:
+        print("\nAttempting to remove the following unknown plugins:")
+        for i, plugin_name in enumerate(unknown_plugins):
+            try:
+                pm.unknownPlugin(plugin_name, remove=True)
+                print(f"  {i+1}. Successfully removed '{plugin_name}'.")
+                result.append(plugin_name)
+            except RuntimeError as e:
+                print(f"  {i+1}. Failed to remove '{plugin_name}': {e}")
+    
+    return result
+
+
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
+@use_selection
+def test(*args):
+    # verts = pm.ls(selection=True, flatten=True)
+    verts = [pm.PyNode(i) for i in args]
+    mesh = verts[0].node()
+    all_verts = mesh.vtx
+    
+    positions = [v.getPosition(space="world") for v in all_verts]
+    
 
+    result = []
+    for vtx in verts:
+        pos = vtx.getPosition(space="world")
+        if pos.x <= 0:
+            continue
+        mirror_pos = pm.datatypes.Point(-pos.x, pos.y, pos.z)
+
+        min_idx, min_dist = None, float("inf")
+        for i, pt in enumerate(positions):
+            dx, dy, dz = pt.x - mirror_pos.x, pt.y - mirror_pos.y, pt.z - mirror_pos.z
+            dist = dx*dx + dy*dy + dz*dz
+            if dist < min_dist:
+                min_idx, min_dist = i, dist
+        target_v = all_verts[min_idx]
+        result.append(target_v)
+
+    return result
+
+a = test()
+pm.select(a, tgl=True)
