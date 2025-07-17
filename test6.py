@@ -1,59 +1,47 @@
 import pymel.core as pm
 
-def find_mirror_vertices(*args, tolerance=0.001):
+def get_vertex_weights(*vertices):
     """
-    주어진 X>0 버텍스들에 대응하는 X<0 버텍스를 찾되,
-    미러 위치와의 거리가 tolerance를 넘으면 무시합니다.
+    주어진 버텍스 각각에 대해 영향을 주는 조인트와 가중치를 반환합니다.
 
     Args:
-        *args: 버텍스 이름(str) 혹은 MeshVertex(PyNode)들.
-        tolerance (float): 미러 위치까지의 최대 허용 오차 (world 단위).
-    
+        *vertices (str or MeshVertex): 
+            "pSphere1.vtx[11]" 같은 문자열 또는 MeshVertex(PyNode)를 
+            여러 개 넘겨줄 수 있습니다.
+
     Returns:
-        dict: {원본버텍스: 대응버텍스 or None} 형태의 딕셔너리.
+        dict[str, dict[str, float]]: 
+            {
+                "pSphere1.vtx[11]": {"leftjoint": 0.3, "rightjoint": 0.3, "centerjoint": 0.4},
+                "pSphere1.vtx[12]": { … }
+            }
     """
-    # 입력을 MeshVertex 객체로 통일
-    verts = []
-    for v in args:
-        node = pm.PyNode(v)
-        if isinstance(node, pm.MeshVertex):
-            verts.append(node)
-        else:
-            pm.warning(f"{v}는 MeshVertex가 아닙니다. 무시합니다.")
-    if not verts:
-        pm.warning("처리할 버텍스가 없습니다.")
-        return {}
-
-    mesh = verts[0].node()
-    all_verts = mesh.vtx
-    positions = [vtx.getPosition(space="world") for vtx in all_verts]
-
-    results = {}
-    tol2 = tolerance ** 2
-
-    for src in verts:
-        pos = src.getPosition(space="world")
-        # X>0 만 처리
-        if pos.x <= 0:
-            results[src] = None
+    result = {}
+    for v in vertices:
+        try:
+            mv = pm.PyNode(v)
+        except RuntimeError:
+            pm.warning(f"'{v}' 를 PyNode로 변환할 수 없습니다. 무시합니다.")
             continue
 
-        mirror_pos = pm.datatypes.Point(-pos.x, pos.y, pos.z)
+        if not isinstance(mv, pm.MeshVertex):
+            pm.warning(f"{mv}는 MeshVertex가 아닙니다. 무시합니다.")
+            continue
 
-        # 최소 거리 계산
-        min_idx, min_dist = None, float("inf")
-        for i, pt in enumerate(positions):
-            dx = pt.x - mirror_pos.x
-            dy = pt.y - mirror_pos.y
-            dz = pt.z - mirror_pos.z
-            dist2 = dx*dx + dy*dy + dz*dz
-            if dist2 < min_dist:
-                min_idx, min_dist = i, dist2
+        mesh = mv.node()
+        skins = pm.listHistory(mesh, type='skinCluster')
+        if not skins:
+            pm.warning(f"{mesh}에 연결된 skinCluster가 없습니다.")
+            result[mv.name()] = {}
+            continue
 
-        # 허용 오차 넘으면 무시
-        if min_dist > tol2:
-            results[src] = None
-        else:
-            results[src] = all_verts[min_idx]
+        sc = skins[0]
+        weight_map = {}
+        for inf in sc.getInfluence():
+            w = sc.getWeight(vtx=mv, influence=inf)
+            if w > 0.0:
+                weight_map[inf.name()] = w
 
-    return results
+        result[mv.name()] = weight_map
+
+    return result
