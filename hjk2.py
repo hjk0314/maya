@@ -2328,3 +2328,46 @@ def find_mirror_vertices(*args, tolerance: float=0.005) -> dict:
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
 
+@use_selection
+def get_vertex_weights(*vertices):
+    # vertices = pm.ls(vertices, fl=True)
+    result = {}
+    for vtx in vertices:
+        mesh_vtx = pm.PyNode(vtx)
+        if not isinstance(mesh_vtx, pm.MeshVertex):
+            pm.warning(f"{mesh_vtx} is not a MeshVertex.")
+            result[mesh_vtx.name()] = {}
+            continue
+
+        mesh = mesh_vtx.node()
+        skin = pm.listHistory(mesh, type='skinCluster')[0]
+
+        if not skin:
+            pm.warning("There is no skinCluster.")
+            result[mesh_vtx.name()] = {}
+            continue
+
+        influences = skin.getInfluence()
+        weights = pm.skinPercent(skin, mesh_vtx, query=True, value=True)
+        weights_map = {
+            inf.name(): w for inf, w in zip(influences, weights) if w > 0.0
+        }
+
+        result[mesh_vtx.name()] = weights_map
+
+    return result
+
+
+
+# a = get_vertex_weights()
+# vtx = list(a.keys())
+
+# result = find_mirror_vertices(*vtx)
+# pm.select(result.values(), tgl=True)
+
+# pm.select(cl=True)
+# pm.symmetricModelling(symmetry=1, axis='x')
+pm.select("char_tigerA_mdl_v9999:tigerA_body.vtx[7931]", r=True)
+pm.select(sym=True, sys=-1)
+# a= pm.ls(selection=True, flatten=True)
+# print(a)
