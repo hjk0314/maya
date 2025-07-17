@@ -2247,36 +2247,84 @@ def delete_unused_plugins() -> list:
     return result
 
 
-# Limit all lines to a maximum of 79 characters. ==============================
-# Docstrings or Comments, limit the line length to 72 characters. ======
-
+@alias(tol="tolerance")
 @use_selection
-def test(*args):
-    # verts = pm.ls(selection=True, flatten=True)
-    verts = [pm.PyNode(i) for i in args]
-    mesh = verts[0].node()
-    all_verts = mesh.vtx
-    
-    positions = [v.getPosition(space="world") for v in all_verts]
-    
+def find_mirror_vertices(*args, tolerance: float=0.005) -> dict:
+    """ Finds mirror vertices for the given mesh vertices based on the X-axis.
 
-    result = []
+    This function takes one or more mesh vertices as input and attempts to 
+    find their mirror counterparts across the YZ-plane (where X=0). 
+    It returns a dictionary mapping the input vertex names to their 
+    corresponding mirror vertex names. If a mirror vertex cannot be found 
+    within the specified tolerance, or if the input vertex is on or to the 
+    left of the YZ-plane (X <= 0), its mirror will be None.
+
+    Args:
+        *args: 
+            Variable-length argument list of mesh vertices (or objects that can
+            be converted to pm.MeshVertex using pm.PyNode).
+        tolerance (float, optional): 
+            The maximum distance an existing vertex can be from the calculated 
+            mirror position to be considered a match. Defaults to 0.005.
+
+    Returns:
+        dict: 
+            A dictionary where keys are the names of the input vertices and 
+            values are the names of their corresponding mirror vertices. 
+            If no mirror is found for a vertex, its value will be None.
+
+    Examples:
+        >>> find_mirror_vertices('pSphereShape1.vtx[277]')
+        # {'pSphereShape1.vtx[277]': 'pSphereShape1.vtx[271]'}
+        >>> find_mirror_vertices('pSphereShape1.vtx[277]', tol=0.001)
+        # {'pSphereShape1.vtx[277]': None}
+     """
+    verts = []
+    for arg in args:
+        vtx = pm.PyNode(arg)
+        if isinstance(vtx, pm.MeshVertex):
+            verts.append(vtx)
+        else:
+            pm.warning(f"{vtx} is not a MeshVertex.")
+
+    if not verts:
+        pm.warning("Nothing Selected.")
+        return {}
+
+    obj_shape = verts[0].node()
+    all_verts = obj_shape.vtx
+    positions = [vtx.getPosition(space="world") for vtx in all_verts]
+
+    result = {}
     for vtx in verts:
+        key = vtx.name()
         pos = vtx.getPosition(space="world")
+
         if pos.x <= 0:
+            result[key] = None
             continue
+
         mirror_pos = pm.datatypes.Point(-pos.x, pos.y, pos.z)
 
         min_idx, min_dist = None, float("inf")
-        for i, pt in enumerate(positions):
-            dx, dy, dz = pt.x - mirror_pos.x, pt.y - mirror_pos.y, pt.z - mirror_pos.z
-            dist = dx*dx + dy*dy + dz*dz
-            if dist < min_dist:
-                min_idx, min_dist = i, dist
-        target_v = all_verts[min_idx]
-        result.append(target_v)
+        for idx, point in enumerate(positions):
+            dx = point.x - mirror_pos.x
+            dy = point.y - mirror_pos.y
+            dz = point.z - mirror_pos.z
+            dist2 = dx*dx + dy*dy + dz*dz
+
+            if dist2 < min_dist:
+                min_idx, min_dist = idx, dist2
+
+        if min_dist > tolerance**2:
+            result[key] = None
+        else:
+            result[key] = all_verts[min_idx].name()
 
     return result
 
-a = test()
-pm.select(a, tgl=True)
+
+# Limit all lines to a maximum of 79 characters. ==============================
+# Docstrings or Comments, limit the line length to 72 characters. ======
+
+
