@@ -970,7 +970,7 @@ def create_curve_from_points(*obj_or_vtx) -> str:
         points.append(pos)
 
     if points[0] != points[-1]:
-        result = pm.curve(ep=points, d=3)
+        result = pm.curve(p=points, d=3)
     else:
         result = pm.circle(nr=(0, 1, 0), ch=False, s=len(points)-1)[0]
         for i, pos in enumerate(points[:-1]):
