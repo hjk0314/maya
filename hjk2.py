@@ -2359,13 +2359,42 @@ def get_symmetric_vertex(
     return result
 
 
-# Limit all lines to a maximum of 79 characters. ==============================
-# Docstrings or Comments, limit the line length to 72 characters. ======
-
-
 @use_selection
 def get_vertex_weights(*vertices):
-    # vertices = pm.ls(vertices, fl=True)
+    """ Retrieves skin weights for one or more Maya mesh vertices.
+
+    For each given vertex, the function locates the skin cluster connected to 
+    the mesh the vertex belongs to. It then extracts the weights for 
+    each joint influence on that vertex, returning only weights greater than 0.
+
+    Parameters:
+        *vertices (str or pm.MeshVertex): 
+            One or more vertex names (string) or PyNode objects for 
+            which to query weights.
+
+    Returns:
+        dict: 
+            A nested dictionary where keys are vertex names (string) and 
+            values are another dictionary mapping joint influence names(string)
+            to their corresponding skin weights (float).
+            Example:
+            {
+                "pCube1.vtx[0]": {"joint1": 0.5, "joint2": 0.3, "joint3": 0.2}, 
+                "pSphere1.vtx[10]": {"jointA": 0.7,"jointB": 0.3}, 
+            }
+
+    Warnings:
+    ---------
+        - If an input item is not a `pm.MeshVertex`, a warning is issued 
+        and an empty dictionary is returned for that item.
+        - If the mesh to which a vertex belongs has no `skinCluster` connected,
+        a warning is issued and an empty dictionary is returned for that vertex.
+    
+    Examples:
+        >>> get_vertex_weights("pCube1.vtx[0]")
+        >>> get_vertex_weights()
+        # "pCube1.vtx[0]": {"joint1": 0.5, "joint2": 0.3, "joint3": 0.2}, 
+     """
     result = {}
     for vtx in vertices:
         mesh_vtx = pm.PyNode(vtx)
@@ -2376,7 +2405,6 @@ def get_vertex_weights(*vertices):
 
         mesh = mesh_vtx.node()
         skin = pm.listHistory(mesh, type='skinCluster')[0]
-
         if not skin:
             pm.warning("There is no skinCluster.")
             result[mesh_vtx.name()] = {}
@@ -2391,5 +2419,9 @@ def get_vertex_weights(*vertices):
         result[mesh_vtx.name()] = weights_map
 
     return result
+
+
+# Limit all lines to a maximum of 79 characters. ==============================
+# Docstrings or Comments, limit the line length to 72 characters. ======
 
 
