@@ -56,6 +56,10 @@ __all__ = [
     'duplicate_with_rename', 
     'extract_number', 
     're_name', 
+    'check_duplicated_names', 
+    'delete_unused_plugins', 
+    'get_symmetric_vertex', 
+    'get_vertex_weights', 
 
     # createCurveNormalDirection
     # createIKHandle
@@ -2208,7 +2212,7 @@ def re_name(*args, new_name: str="", change_word: str=""):
 
 
 @alias(to="transform_only")
-def find_duplicated_names(transform_only: bool=False) -> list:
+def check_duplicated_names(transform_only: bool=False) -> list:
     """ Finds and returns a list of PyMEL objects with duplicated short names 
     in the current Maya scene.
 
@@ -2228,7 +2232,7 @@ def find_duplicated_names(transform_only: bool=False) -> list:
             short names. If no duplicates are found, an empty list is returned.
 
     Examples:
-        >>> find_duplicated_names()
+        >>> check_duplicated_names()
         >>> result = [
         ... nt.Transform('group1|pCube1'), 
         ... nt.Transform('|pCube1'), 
@@ -2236,7 +2240,7 @@ def find_duplicated_names(transform_only: bool=False) -> list:
         ... nt.Mesh('|pCube1|pCubeShape1')
         ... ]
 
-        >>> find_duplicated_names(to=True)
+        >>> check_duplicated_names(to=True)
         >>> [nt.Transform('group1|pCube1'), nt.Transform('|pCube1')]
      """
     if transform_only:
@@ -2425,3 +2429,5 @@ def get_vertex_weights(*vertices):
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
 
+def colorize():
+    pass
