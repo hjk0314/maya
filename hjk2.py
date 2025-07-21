@@ -2431,70 +2431,36 @@ def get_vertex_weights(*vertices):
 
 def colorize():
     color_index = {
-        "Default":[0, (0.0, 0.0, 0.0)], 
-        "Black":[1, (0.0, 0.0, 0.0)], 
-        "Dark_Grey":[2, (0.247, 0.247, 0.247)], 
-        "Grey":[3, (0.498, 0.498, 0.498)], 
-        "Light_Grey":[4, (0.75, 0.75, 0.75)], 
-        "Dark_Red":[5, (0.607, 0.0, 0.157)], 
-        "Blue":[6, (0.0, 0.016, 0.376)], 
-        "Dark_Green":[7, (0.0, 0.275, 0.094)], 
-        "Purple":[8, (0.376, 0.0, 0.376)], 
-        "Pink":[9, (0.627, 0.0, 0.376)], 
-        "Brown":[10, (0.376, 0.19, 0.0)], 
-        "Dark_Blue":[11, (0.0, 0.263, 0.376)], 
-        "Light_Blue":[12, (0.157, 0.0, 0.376)], 
-        "Red":[13, (0.376, 0.0, 0.094)], 
-        "Green":[14, (0.094, 0.376, 0.094)], 
-        "Cyan":[15, (0.094, 0.376, 0.376)], 
-        "Light_Green":[16, (0.627, 0.375, 0.188)], 
-        "Yellow":[17, (0.376, 0.376, 0.094)], 
-        "Blue2":[18, (0.0, 0.094, 0.376)], 
-        "Light_Brown":[19, (0.094, 0.188, 0.376)], 
-        "Light_Pink":[20, (0.157, 0.0, 0.188)], 
-        "Red2":[21, (0.376, 0.094, 0.094)], 
-        "Olive":[22, (0.627, 0.627, 0.188)], 
-        "Green2":[23, (0.376, 0.627, 0.188)], 
-        "Cyan2":[24, (0.188, 0.627, 0.627)], 
-        "Yellow2":[25, (0.627, 0.376, 0.376)], 
-        "Light_Cyan":[26, (0.188, 0.188, 0.376)], 
-        "Light_Orange":[27, (0.188, 0.376, 0.188)], 
-        "Light_Yellow":[28, (0.376, 0.376, 0.188)], 
-        "Pale_Pink":[29, (0.627, 0.188, 0.376)], 
-        "Very_Light_Grey":[30, (0.376, 0.376, 0.376)], 
-        "White":[31, (1.0, 1.0, 1.0)], 
+        "index": 0, "color": "Default Gray", "rgb": (0, 0, 0), 
+        "index": 1, "color": "Black", "rgb": (0, 0, 0), 
+        "index": 2, "color": "Dark Gray", "rgb": (0, 0, 0), 
+        "index": 3, "color": "Gray", "rgb": (0, 0, 0), 
+        "index": 4, "color": "Maroon", "rgb": (0, 0, 0), 
+        "index": 5, "color": "Indigo", "rgb": (0, 0, 0), 
+        "index": 6, "color": "Blue", "rgb": (0, 0, 0), 
+        "index": 7, "color": "Dark Green", "rgb": (0, 0, 0), 
+        "index": 8, "color": "Purple", "rgb": (0, 0, 0), 
+        "index": 9, "color": "Pink", "rgb": (0, 0, 0), 
+        "index": 10, "color": "Brown", "rgb": (0, 0, 0), 
+        "index": 11, "color": "Olive", "rgb": (0, 0, 0), 
+        "index": 12, "color": "Orange", "rgb": (0, 0, 0), 
+        "index": 13, "color": "Red", "rgb": (0, 0, 0), 
+        "index": 14, "color": "Green", "rgb": (0, 0, 0), 
+        "index": 15, "color": "Navy Blue", "rgb": (0, 0, 0), 
+        "index": 16, "color": "White", "rgb": (0, 0, 0), 
+        "index": 17, "color": "Yellow", "rgb": (0, 0, 0), 
+        "index": 18, "color": "Cyan", "rgb": (0, 0, 0), 
+        "index": 19, "color": "Teal", "rgb": (0, 0, 0), 
+        "index": 20, "color": "Salmon", "rgb": (0, 0, 0), 
+        "index": 21, "color": "Tan", "rgb": (0, 0, 0), 
+        "index": 22, "color": "Chartreuse", "rgb": (0, 0, 0), 
+        "index": 23, "color": "Forest Green", "rgb": (0, 0, 0), 
+        "index": 24, "color": "Dark Brown", "rgb": (0, 0, 0), 
+        "index": 25, "color": "Olive Drab", "rgb": (0, 0, 0), 
+        "index": 26, "color": "green_algae", "rgb": (0, 0, 0), 
+        "index": 27, "color": "dark_mint", "rgb": (0, 0, 0), 
+        "index": 28, "color": "Dark Teal", "rgb": (0, 0, 0), 
+        "index": 29, "color": "light_navy_blue", "rgb": (0, 0, 0), 
+        "index": 30, "color": "Dark Purple", "rgb": (0, 0, 0), 
+        "index": 31, "color": "Dark Magenta", "rgb": (0, 0, 0), 
     }
-    maya_color_index = {
- 0: "Default Gray",    # 0 = default wireframe color (gray):contentReference[oaicite:0]{index=0}
- 1: "Black",           # pure black:contentReference[oaicite:1]{index=1}
- 2: "Dark Gray",       # 25% gray (very dark gray):contentReference[oaicite:2]{index=2}
- 3: "Gray",            # ~60% gray (light/medium gray):contentReference[oaicite:3]{index=3}
- 4: "Maroon",          # deep red (maroon/burgundy tone):contentReference[oaicite:4]{index=4}
- 5: "Indigo",          # indigo (violet-blue) tone:contentReference[oaicite:5]{index=5}:contentReference[oaicite:6]{index=6}
- 6: "Blue",            # pure blue:contentReference[oaicite:7]{index=7}
- 7: "Dark Green",      # dark green (dull/olive green):contentReference[oaicite:8]{index=8}:contentReference[oaicite:9]{index=9}
- 8: "Purple",          # purple (violet):contentReference[oaicite:10]{index=10}
- 9: "Pink",            # magenta (hot pink):contentReference[oaicite:11]{index=11}
- 10: "Brown",          # brown:contentReference[oaicite:12]{index=12}
- 11: "Olive",          # olive green (brownish green):contentReference[oaicite:13]{index=13}
- 12: "Orange",         # orange:contentReference[oaicite:14]{index=14}
- 13: "Red",            # bright red:contentReference[oaicite:15]{index=15}:contentReference[oaicite:16]{index=16}
- 14: "Green",          # bright green:contentReference[oaicite:17]{index=17}:contentReference[oaicite:18]{index=18}
- 15: "Navy Blue",      # navy blue (dark blue):contentReference[oaicite:19]{index=19}
- 16: "White",          # pure white:contentReference[oaicite:20]{index=20}
- 17: "Yellow",         # bright yellow:contentReference[oaicite:21]{index=21}:contentReference[oaicite:22]{index=22}
- 18: "Cyan",           # cyan (bright aqua):contentReference[oaicite:23]{index=23}:contentReference[oaicite:24]{index=24}
- 19: "Teal",           # teal (blue-green):contentReference[oaicite:25]{index=25}
- 20: "Sky Blue",       # sky blue (light bluish-cyan):contentReference[oaicite:26]{index=26}
- 21: "Chartreuse",     # chartreuse (yellow-green):contentReference[oaicite:27]{index=27}
- 22: "Olive Drab",     # olive drab (dark yellow-green):contentReference[oaicite:28]{index=28}
- 23: "Forest Green",   # forest green (extra dark green):contentReference[oaicite:29]{index=29}
- 24: "Dark Teal",      # dark teal
- 25: "Tan",            # tan (light brown)
- 26: "Salmon",         # salmon pink (pink-orange)
- 27: "Violet",         # violet (light purple)
- 28: "Crimson",        # crimson (deep red)
- 29: "Dark Brown",     # dark brown
- 30: "Dark Purple",    # deep purple
- 31: "Dark Magenta"    # dark magenta (wine color):contentReference[oaicite:30]{index=30}
-}
