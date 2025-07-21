@@ -2464,3 +2464,37 @@ def colorize():
         "Very_Light_Grey":[30, (0.376, 0.376, 0.376)], 
         "White":[31, (1.0, 1.0, 1.0)], 
     }
+    maya_color_index = {
+ 0: "Default Gray",    # 0 = default wireframe color (gray):contentReference[oaicite:0]{index=0}
+ 1: "Black",           # pure black:contentReference[oaicite:1]{index=1}
+ 2: "Dark Gray",       # 25% gray (very dark gray):contentReference[oaicite:2]{index=2}
+ 3: "Gray",            # ~60% gray (light/medium gray):contentReference[oaicite:3]{index=3}
+ 4: "Maroon",          # deep red (maroon/burgundy tone):contentReference[oaicite:4]{index=4}
+ 5: "Indigo",          # indigo (violet-blue) tone:contentReference[oaicite:5]{index=5}:contentReference[oaicite:6]{index=6}
+ 6: "Blue",            # pure blue:contentReference[oaicite:7]{index=7}
+ 7: "Dark Green",      # dark green (dull/olive green):contentReference[oaicite:8]{index=8}:contentReference[oaicite:9]{index=9}
+ 8: "Purple",          # purple (violet):contentReference[oaicite:10]{index=10}
+ 9: "Pink",            # magenta (hot pink):contentReference[oaicite:11]{index=11}
+ 10: "Brown",          # brown:contentReference[oaicite:12]{index=12}
+ 11: "Olive",          # olive green (brownish green):contentReference[oaicite:13]{index=13}
+ 12: "Orange",         # orange:contentReference[oaicite:14]{index=14}
+ 13: "Red",            # bright red:contentReference[oaicite:15]{index=15}:contentReference[oaicite:16]{index=16}
+ 14: "Green",          # bright green:contentReference[oaicite:17]{index=17}:contentReference[oaicite:18]{index=18}
+ 15: "Navy Blue",      # navy blue (dark blue):contentReference[oaicite:19]{index=19}
+ 16: "White",          # pure white:contentReference[oaicite:20]{index=20}
+ 17: "Yellow",         # bright yellow:contentReference[oaicite:21]{index=21}:contentReference[oaicite:22]{index=22}
+ 18: "Cyan",           # cyan (bright aqua):contentReference[oaicite:23]{index=23}:contentReference[oaicite:24]{index=24}
+ 19: "Teal",           # teal (blue-green):contentReference[oaicite:25]{index=25}
+ 20: "Sky Blue",       # sky blue (light bluish-cyan):contentReference[oaicite:26]{index=26}
+ 21: "Chartreuse",     # chartreuse (yellow-green):contentReference[oaicite:27]{index=27}
+ 22: "Olive Drab",     # olive drab (dark yellow-green):contentReference[oaicite:28]{index=28}
+ 23: "Forest Green",   # forest green (extra dark green):contentReference[oaicite:29]{index=29}
+ 24: "Dark Teal",      # dark teal
+ 25: "Tan",            # tan (light brown)
+ 26: "Salmon",         # salmon pink (pink-orange)
+ 27: "Violet",         # violet (light purple)
+ 28: "Crimson",        # crimson (deep red)
+ 29: "Dark Brown",     # dark brown
+ 30: "Dark Purple",    # deep purple
+ 31: "Dark Magenta"    # dark magenta (wine color):contentReference[oaicite:30]{index=30}
+}
