@@ -857,7 +857,6 @@ def group_with_pivot(*args, **kwargs) -> list:
     ----------
     - *args : Variable list of PyNodes or names of objects to group.
     - null (bool, optional): adds an extra null group inside the main group.
-    - n (str, optional): Custom base name for the group and null.
 
     Returns
     -------
@@ -1470,7 +1469,7 @@ def get_uv_coordinates_closet_object(
     return u, v
 
 
-def create_follicle(obj: str, UVCoordinates: tuple, uv_set="map1") -> str:
+def create_follicle(mesh: str, UVCoordinates: tuple, uv_set="map1") -> str:
     """ Create ``follicles`` on mesh at the positions of ``UVCoordinates``.
 
     Parameters
@@ -1490,8 +1489,8 @@ def create_follicle(obj: str, UVCoordinates: tuple, uv_set="map1") -> str:
     --------
     >>> create_follicle("tigerA", (0.8, 0.8), )
      """
-    mesh = pm.PyNode(obj)
-    deformed_shape = get_deformed_shape(obj)[-1]
+    mesh = pm.PyNode(mesh)
+    deformed_shape = get_deformed_shape(mesh)[-1]
     follicle_shape = pm.createNode("follicle")
     follicle_node = follicle_shape.getParent()
 
@@ -1658,12 +1657,12 @@ def create_blendColor_node(
     return result
 
 
-@alias(ft="float_type", bt="bool_type", et="enum_type", it="integer_type", 
-       p="source_ctrl_for_proxy")
+@alias(cn="ctrl_name", an="attr_name", proxy="source_to_proxy", k="keyable", 
+       ft="float_type", bt="bool_type", et="enum_type", it="integer_type")
 def create_attributes(
     ctrl_name: str,
     attr_name: str,
-    source_ctrl_for_proxy: str = "",
+    source_to_proxy: str = "",
     keyable: bool = True,
     float_type: dict = None,
     bool_type: dict = None,
@@ -1680,7 +1679,7 @@ def create_attributes(
         The name of the attribute to create.
     keyable : bool, optional 
         Whether the attribute is keyable. Defaults to True.
-    source_ctrl_for_proxy : str, optional
+    source_to_proxy : str, optional
         The name of the source controller for a proxy attribute. 
         Defaults to an empty string.
     float_type : dict, optional
@@ -1734,8 +1733,10 @@ def create_attributes(
     elif integer_type:
         kwargs.update(integer_type)
 
-    if source_ctrl_for_proxy:
-        kwargs["proxy"] = f"{source_ctrl_for_proxy}.{attr_name}"
+    if source_to_proxy:
+        if not pm.attributeQuery(attr_name, n=source_to_proxy, ex=True):
+            pm.addAttr(source_to_proxy, **kwargs)
+        kwargs["proxy"] = f"{source_to_proxy}.{attr_name}"
 
     if pm.attributeQuery(attr_name, node=ctrl_name, exists=True):
         pm.deleteAttr(f"{ctrl_name}.{attr_name}")
@@ -2464,3 +2465,5 @@ def colorize():
         "index": 30, "color": "Dark Purple", "rgb": (0, 0, 0), 
         "index": 31, "color": "Dark Magenta", "rgb": (0, 0, 0), 
     }
+
+
