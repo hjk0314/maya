@@ -375,6 +375,40 @@ class Data:
                 ], 
         }
         self.char_joints = {}
+        self.color_index = {
+            "gray": [0, (0.534, 0.534, 0.534)], 
+            "black": [1, (0.0, 0.0, 0.0)], 
+            "dark_gray": [2, (0.332, 0.332, 0.332)], 
+            "medium_gray": [3, (0.662, 0.662, 0.662)], 
+            "brick_red": [4, (0.607, 0.258, 0.234)], 
+            "indigo": [5, (0.17, 0.095, 0.44)], 
+            "blue": [6, (0.0, 0.0, 1.0)], 
+            "olive_green": [7, (0.242, 0.345, 0.184)], 
+            "dark_violet": [8, (0.209, 0.096, 0.334)], 
+            "light_purple": [9, (0.744, 0.33, 0.871)], 
+            "brown": [10, (0.55, 0.384, 0.287)], 
+            "dark_brown": [11, (0.299, 0.217, 0.189)], 
+            "rust": [12, (0.595, 0.297, 0.118)], 
+            "red": [13, (1.0, 0.0, 0.0)], 
+            "lime_green": [14, (0.0, 1.0, 0.0)], 
+            "periwinkle": [15, (0.295, 0.336, 0.645)], 
+            "white": [16, (1.0, 1.0, 1.0)], 
+            "yellow": [17, (1.0, 1.0, 0.0)], 
+            "light_cyan": [18, (0.673, 1.0, 1.0)], 
+            "pale_green": [19, (0.616, 1.0, 0.648)], 
+            "light_pink": [20, (1.0, 0.78, 0.761)], 
+            "peach": [21, (1.0, 0.76, 0.545)], 
+            "chartreuse": [22, (0.840, 1.0, 0.0)], 
+            "forest_green": [23, (0.443, 0.645, 0.426)], 
+            "tan": [24, (0.631, 0.497, 0.291)], 
+            "khaki": [25, (0.675, 0.693, 0.324)], 
+            "sage_green": [26, (0.548, 0.683, 0.324)], 
+            "moss_green": [27, (0.476, 0.679, 0.455)], 
+            "teal_blue": [28, (0.49, 0.68, 0.695)], 
+            "slate_blue": [29, (0.392, 0.469, 0.683)], 
+            "lavender_gray": [30, (0.468, 0.304, 0.678)], 
+            "rose": [31, (0.608, 0.333, 0.478)], 
+        }
 
 
 def use_selection(func):
@@ -2431,39 +2465,6 @@ def get_vertex_weights(*vertices):
 
 
 def colorize():
-    color_index = {
-        "index": 0, "color": "Default Gray", "rgb": (0, 0, 0), 
-        "index": 1, "color": "Black", "rgb": (0, 0, 0), 
-        "index": 2, "color": "Dark Gray", "rgb": (0, 0, 0), 
-        "index": 3, "color": "Gray", "rgb": (0, 0, 0), 
-        "index": 4, "color": "Maroon", "rgb": (0, 0, 0), 
-        "index": 5, "color": "Indigo", "rgb": (0, 0, 0), 
-        "index": 6, "color": "Blue", "rgb": (0, 0, 0), 
-        "index": 7, "color": "Dark Green", "rgb": (0, 0, 0), 
-        "index": 8, "color": "Purple", "rgb": (0, 0, 0), 
-        "index": 9, "color": "Pink", "rgb": (0, 0, 0), 
-        "index": 10, "color": "Brown", "rgb": (0, 0, 0), 
-        "index": 11, "color": "Olive", "rgb": (0, 0, 0), 
-        "index": 12, "color": "Orange", "rgb": (0, 0, 0), 
-        "index": 13, "color": "Red", "rgb": (0, 0, 0), 
-        "index": 14, "color": "Green", "rgb": (0, 0, 0), 
-        "index": 15, "color": "Navy Blue", "rgb": (0, 0, 0), 
-        "index": 16, "color": "White", "rgb": (0, 0, 0), 
-        "index": 17, "color": "Yellow", "rgb": (0, 0, 0), 
-        "index": 18, "color": "Cyan", "rgb": (0, 0, 0), 
-        "index": 19, "color": "Teal", "rgb": (0, 0, 0), 
-        "index": 20, "color": "Salmon", "rgb": (0, 0, 0), 
-        "index": 21, "color": "Tan", "rgb": (0, 0, 0), 
-        "index": 22, "color": "Chartreuse", "rgb": (0, 0, 0), 
-        "index": 23, "color": "Forest Green", "rgb": (0, 0, 0), 
-        "index": 24, "color": "Dark Brown", "rgb": (0, 0, 0), 
-        "index": 25, "color": "Olive Drab", "rgb": (0, 0, 0), 
-        "index": 26, "color": "green_algae", "rgb": (0, 0, 0), 
-        "index": 27, "color": "dark_mint", "rgb": (0, 0, 0), 
-        "index": 28, "color": "Dark Teal", "rgb": (0, 0, 0), 
-        "index": 29, "color": "light_navy_blue", "rgb": (0, 0, 0), 
-        "index": 30, "color": "Dark Purple", "rgb": (0, 0, 0), 
-        "index": 31, "color": "Dark Magenta", "rgb": (0, 0, 0), 
-    }
+    pass
 
 
