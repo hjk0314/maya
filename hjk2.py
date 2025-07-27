@@ -42,6 +42,8 @@ __all__ = [
     'set_key_on_range', 
 
     'get_deformed_shape', 
+    'get_MFnObject', 
+    'get_closest_point_on_mesh', 
     'get_uv_coordinates', 
     'get_uv_coordinates_closet_object', 
     'create_follicle', 
@@ -60,6 +62,10 @@ __all__ = [
     'delete_unused_plugins', 
     'get_symmetric_vertex', 
     'get_vertex_weights', 
+    'colorize', 
+    'ColorPickerUI', 
+    'flatten_to_plane', 
+    'straighten_curve_cvs', 
 
     # createCurveNormalDirection
     # createIKHandle
@@ -68,9 +74,6 @@ __all__ = [
     # selectVerticesAffectedJoint
     # softSelection
     # mirrorCopy
-    # lineUpCurvePointsToStraightLine
-    # lineUpObjectsOnOnePlane
-    # colorize
     ]
 
 
@@ -375,7 +378,7 @@ class Data:
                 ], 
         }
         self.char_joints = {}
-        self.color_table = {
+        self.color_chart = {
             "gray": (0.534, 0.534, 0.534), 
             "black": (0.0, 0.0, 0.0), 
             "dark_gray": (0.332, 0.332, 0.332), 
@@ -1115,6 +1118,74 @@ def create_chain_joint(*obj_or_vtx) -> list:
     return result
 
 
+@use_selection
+def flatten_to_plane(*objects):
+    """ Aligns the given objects to a plane defined by the first three objects.
+
+    The remaining objects (from the fourth onward) are projected onto the 
+    plane formed by the first three objects. Parent relationships are 
+    temporarily removed during the operation and restored afterwards.
+
+    Args:
+        *objects: 
+            Variable number of PyMEL transform nodes. Minimum of 4 required.
+
+    Returns:
+        list[str]: 
+            Names of the objects that were moved.
+    
+    Examples:
+        >>> pos = om2.MVector(1.0, 2.0, 3.0)
+        >>> base = om2.MVector(0.0, 0.0, 0.0)
+        >>> normal = om2.MVector(0.0, 1.0, 0.0)  # Y-axis plane
+        >>> projected = project_point_to_plane(pos, base, normal)
+        >>> <MVector(1.0, 0.0, 3.0)>
+    """
+    if len(objects) < 4:
+        pm.warning("At least 4 objects are required.")
+        return []
+    
+    objects = [pm.PyNode(i) for i in objects]
+
+    parent_map = {}
+    for obj in objects:
+        parent = obj.getParent()
+        parent_map[obj] = parent
+        if parent:
+            pm.parent(obj, world=True)
+
+    moved_objects = []
+
+    try:
+        p1 = om2.MVector(*objects[0].getTranslation(space='world'))
+        p2 = om2.MVector(*objects[1].getTranslation(space='world'))
+        p3 = om2.MVector(*objects[2].getTranslation(space='world'))
+
+        v1 = p2 - p1
+        v2 = p3 - p1
+        normal = v1 ^ v2
+
+        if normal.length() == 0:
+            pm.warning("The first three objects must not be colinear.")
+            return []
+        normal.normalize()
+
+        for obj in objects[3:]:
+            pos = om2.MVector(*obj.getTranslation(space='world'))
+            vec = pos - p1
+            distance = normal * vec
+            projected = pos - normal * distance
+            obj.setTranslation(projected, space='world')
+            moved_objects.append(obj.name())
+
+    finally:
+        for obj, parent in parent_map.items():
+            if parent:
+                pm.parent(obj, parent)
+
+    return moved_objects
+
+
 @alias(d="degree", cn="curve_name", cc="closed_curve")
 @use_selection
 def create_curve(
@@ -1366,7 +1437,7 @@ def set_key_on_range(
 
 
 @use_selection
-def get_deformed_shape(obj: str) -> str:
+def get_deformed_shape(obj: str) -> tuple:
     """ Returns the original shape (including namespace) 
     and the shape resulting from the deformer 
     (without namespace or intermediate) from the transform node.
@@ -1375,6 +1446,11 @@ def get_deformed_shape(obj: str) -> str:
     ----------
     obj : str
         "char_tigerA_mdl_v9999:tigerA_body"
+    
+    Examples
+    --------
+    >>> get_deformed_shape("pSphere1")
+    >>> # ('pSphereShape1Orig', 'pSphereShape1Deformed')
      """
     try:
         transform = pm.PyNode(obj)
@@ -1393,6 +1469,78 @@ def get_deformed_shape(obj: str) -> str:
             deformed_shape = shp
 
     return original_shape, deformed_shape
+
+
+def get_MFnObject(
+    node: Union[str, pm.nt.Transform, pm.nt.Mesh, pm.nt.NurbsCurve]
+) -> Union[om2.MFnMesh, om2.MFnNurbsCurve]:
+    """ Return a suitable MFn object for a given mesh or nurbsCurve node.
+    
+    Args:
+        node (str or pm.PyNode): The mesh or nurbsCurve transform/shape/name.
+        
+    Returns:
+        om2.MFnMesh or om2.MFnNurbsCurve: MFn object for mesh or curve.
+
+    Raises:
+        ValueError: If the node is not a mesh or nurbsCurve.
+     """
+    if isinstance(node, str):
+        node = pm.PyNode(node)
+    if isinstance(node, pm.nt.Transform):
+        shapes = node.getShapes(noIntermediate=True)
+        if not shapes:
+            raise ValueError(f"No shape under transform: {node}")
+        shape = shapes[-1]
+    else:
+        shape = node
+
+    shape_type = shape.type()
+    sel = om2.MSelectionList()
+    sel.add(shape.name())
+    dag_path = sel.getDagPath(0)
+
+    if shape_type == "mesh":
+        return om2.MFnMesh(dag_path)
+    elif shape_type == "nurbsCurve":
+        return om2.MFnNurbsCurve(dag_path)
+    else:
+        raise ValueError(f"{shape} is not mesh or nurbsCurve!: {shape_type})")
+
+
+def get_closest_point_on_mesh(mesh: str, pos: Union[List, Tuple]) -> tuple:
+    """ Compute the closest point on a mesh surface from a 
+    given world-space position.
+
+    This function finds the nearest point on the surface of the 
+    specified mesh to a given position in world space. The result is 
+    returned as an MVector (without the homogeneous 'w' component), 
+    which represents a 3D point.
+
+    Args:
+        mesh (str): 
+            The name of the mesh transform or shape node in the Maya scene.
+        position (Union[List, Tuple]): 
+            The 3D world-space position to query, e.g., [x, y, z] or (x, y, z).
+
+    Returns:
+        om2.MVector: 
+            The closest point on the mesh surface in world space.
+
+    Raises:
+        RuntimeError: If the mesh is invalid or not found.
+
+    Examples:
+        >>> get_closest_point_on_mesh("pSphere1", (1, 2, 3))
+        >>> # (0.254104, 0.566114, 0.782051)
+     """
+    mfn_mesh = get_MFnObject(mesh)
+    world_pos = om2.MPoint(pos)
+    closest_point, _ = mfn_mesh.getClosestPoint(world_pos, om2.MSpace.kWorld)
+
+    result = om2.MVector(closest_point)
+
+    return result
 
 
 @use_selection
@@ -1447,7 +1595,9 @@ def get_uv_coordinates(vtx_edge_face: str) -> tuple:
 
 
 def get_uv_coordinates_closet_object(
-    obj_closet_mesh: str, mesh: str, uv_set: str = "map1"
+    obj_closet_mesh: str, 
+    mesh: str, 
+    uv_set: str = "map1"
 ) -> Tuple[float, float]:
     """ Get UV coordinates from the closest point on a mesh to an object.
 
@@ -1482,22 +1632,11 @@ def get_uv_coordinates_closet_object(
         else pm.PyNode(obj_closet_mesh)
     )
 
-    obj_position = pm.xform(obj, q=True, ws=True, t=True)
-    world_position = om2.MPoint(*obj_position)
+    obj_pos = pm.xform(obj, q=True, ws=True, t=True)
+    world_pos = om2.MPoint(*obj_pos)
+    mfn_mesh = get_MFnObject(mesh)
+    closet_point, _ = mfn_mesh.getClosestPoint(world_pos, om2.MSpace.kWorld)
 
-    mesh_shapes = get_deformed_shape(mesh)
-    mesh_shp = pm.PyNode(mesh_shapes[-1])
-    if not mesh_shp:
-        raise RuntimeError(f"Mesh '{mesh}' has no Shape node.")
-
-    selection = om2.MSelectionList()
-    selection.add(mesh_shp.name())
-    dag_path = selection.getDagPath(0)
-    mfn_mesh = om2.MFnMesh(dag_path)
-
-    closet_point, _ = mfn_mesh.getClosestPoint(
-        world_position, om2.MSpace.kWorld
-    )
     u, v, _= mfn_mesh.getUVAtPoint(closet_point, om2.MSpace.kWorld, uv_set)
 
     return u, v
@@ -2543,7 +2682,7 @@ def colorize(*args, color_idx=None, color_rgb=()) -> None:
                     shp.overrideColorRGB.set(color_rgb)
 
 
-class ShapeColorPaletteUI:
+class ColorPickerUI:
     """ A UI tool for setting the overrideColor index of selected shapes 
     in Maya using a compact and neatly padded RGB palette grid.
 
@@ -2552,46 +2691,14 @@ class ShapeColorPaletteUI:
     >>> palette_ui = ShapeColorPaletteUI()
     >>> palette_ui.show()
      """
-    COLOR_TABLE = {
-        "gray": (0.534, 0.534, 0.534),
-        "black": (0.0, 0.0, 0.0),
-        "dark_gray": (0.332, 0.332, 0.332),
-        "medium_gray": (0.662, 0.662, 0.662),
-        "brick_red": (0.607, 0.258, 0.234),
-        "indigo": (0.17, 0.095, 0.44),
-        "blue": (0.0, 0.0, 1.0),
-        "olive_green": (0.242, 0.345, 0.184),
-        "dark_violet": (0.209, 0.096, 0.334),
-        "light_purple": (0.744, 0.33, 0.871),
-        "brown": (0.55, 0.384, 0.287),
-        "dark_brown": (0.299, 0.217, 0.189),
-        "rust": (0.595, 0.297, 0.118),
-        "red": (1.0, 0.0, 0.0),
-        "lime_green": (0.0, 1.0, 0.0),
-        "periwinkle": (0.295, 0.336, 0.645),
-        "white": (1.0, 1.0, 1.0),
-        "yellow": (1.0, 1.0, 0.0),
-        "light_cyan": (0.673, 1.0, 1.0),
-        "pale_green": (0.616, 1.0, 0.648),
-        "light_pink": (1.0, 0.78, 0.761),
-        "peach": (1.0, 0.76, 0.545),
-        "chartreuse": (0.840, 1.0, 0.0),
-        "forest_green": (0.443, 0.645, 0.426),
-        "tan": (0.631, 0.497, 0.291),
-        "khaki": (0.675, 0.693, 0.324),
-        "sage_green": (0.548, 0.683, 0.324),
-        "moss_green": (0.476, 0.679, 0.455),
-        "teal_blue": (0.49, 0.68, 0.695),
-        "slate_blue": (0.392, 0.469, 0.683),
-        "lavender_gray": (0.468, 0.304, 0.678),
-        "rose": (0.608, 0.333, 0.478),
-        }
-    WINDOW_NAME = "shapeColorPaletteWin"
+    dt = Data()
+    COLOR_CHART = dt.color_chart
+    WINDOW_NAME = "ColorPickerWin"
 
 
     def __init__(self):
         """ Initialize the palette UI and selection state. """
-        self.palette_items = list(self.COLOR_TABLE.items())
+        self.palette_items = list(self.COLOR_CHART.items())
         self.selected_idx = 0
 
 
@@ -2643,7 +2750,7 @@ class ShapeColorPaletteUI:
 
         win = pm.window(
             self.WINDOW_NAME,
-            title="Shape Color Palette",
+            title="Color Picker",
             width=window_w,
             height=window_h,
             sizeable=False
@@ -2672,6 +2779,46 @@ class ShapeColorPaletteUI:
 
         pm.setParent('..')
         pm.setParent('..')
+
+
+@use_selection
+def straighten_curve_cvs(*curves) -> list:
+    """ Align the CVs of the given curves into a straight line 
+    between the first and last CV.
+
+    Args:
+        *curves: Variable number of curve names or PyNodes.
+
+    Returns:
+        list: Duplicated and straightened curves.
+    
+    Example:
+        >>> straighten_curve_cvs()
+        >>> straighten_curve_cvs("curve1", "curve2")
+     """
+    result = []
+    for curve in curves:
+        curve = pm.PyNode(curve)
+        new_curve = pm.duplicate(curve, rr=True)[0]
+        mfn_curve = get_MFnObject(new_curve)
+
+        num_cvs = mfn_curve.numCVs
+        if num_cvs < 2:
+            pm.warning(f"{curve}: Not enough CVs")
+            continue
+
+        p0 = om2.MVector(mfn_curve.cvPosition(0, om2.MSpace.kWorld))
+        p1 = om2.MVector(mfn_curve.cvPosition(num_cvs - 1, om2.MSpace.kWorld))
+
+        dir_vec = (p1 - p0) / (num_cvs - 1)
+
+        new_cvs = [p0 + dir_vec * i for i in range(num_cvs)]
+
+        mfn_curve.setCVPositions(new_cvs, om2.MSpace.kWorld)
+        mfn_curve.updateCurve()
+        result.append(new_curve)
+
+    return result
 
 
 # Limit all lines to a maximum of 79 characters. ==============================
