@@ -376,6 +376,10 @@ class Data:
                 (0, -5, 0), (3.5, -3.5, 0), (5, 0, 0), (3.5, 3.5, 0), 
                 (0, 5, 0)
                 ], 
+            "square": [
+                (25, 0, 25), (25, 0, -25), (-25, 0, -25), 
+                (-25, 0, 25), (25, 0, 25)
+                ], 
         }
         self.char_joints = {}
         self.color_chart = {
@@ -2210,7 +2214,7 @@ def duplicate_with_rename(downstream_path: list, new_names: list) -> list:
     return result
 
 
-@alias(pos="to_position")
+@alias(pos="position")
 @use_selection
 def move_pivot(*args, position: Union[tuple, list] = (0, 0, 0)) -> None:
     """ Set the pivot point of multiple objects 
@@ -2823,5 +2827,29 @@ def straighten_curve_cvs(*curves) -> list:
 
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
+
+
+# cc_main = "cc_main"
+# cc_sub = "cc_sub"
+# cc_body = "cc_body"
+
+# move_pivot(pos=(0, 0, 0))
+
+# create_rig_groups("spearA")
+
+# dt = Data()
+# points = dt.ctrl_shapes["pipe"]
+# create_curve(*points, cn="cc_body")
+
+# group_with_pivot()
+
+# attr_1 = "Geo"
+# bt_dict = {"at": "bool"}
+# create_attributes(cc_main, attr_1, bt=bt_dict)
+# pm.connectAttr(f"{cc_main}.Geo", "MODEL.visibility", f=True)
+
+# colorize(cc_main, idx=17)
+# colorize(cc_sub, idx=9)
+# colorize(cc_body, idx=13)
 
 
