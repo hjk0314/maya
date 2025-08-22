@@ -2688,12 +2688,12 @@ def colorize(*args, color_idx=None, color_rgb=()) -> None:
 
 class ColorPickerUI:
     """ A UI tool for setting the overrideColor index of selected shapes 
-    in Maya using a compact and neatly padded RGB palette grid.
+    in Maya using a compact and neatly padded RGB palette grid. 
 
     Examples
     --------
-    >>> palette_ui = ShapeColorPaletteUI()
-    >>> palette_ui.show()
+    >>> cpu = ColorPickerUI()
+    >>> cpu.show()
      """
     dt = Data()
     COLOR_CHART = dt.color_chart
@@ -2701,7 +2701,14 @@ class ColorPickerUI:
 
 
     def __init__(self):
-        """ Initialize the palette UI and selection state. """
+        """ A UI tool for setting the overrideColor index of selected shapes 
+        in Maya using a compact and neatly padded RGB palette grid. 
+
+        Examples
+        --------
+        >>> cpu = ColorPickerUI()
+        >>> cpu.show()
+         """
         self.palette_items = list(self.COLOR_CHART.items())
         self.selected_idx = 0
 
@@ -2835,7 +2842,7 @@ def straighten_curve_cvs(*curves) -> list:
 
 # move_pivot(pos=(0, 0, 0))
 
-# create_rig_groups("spearA")
+# create_rig_groups("bowA")
 
 # dt = Data()
 # points = dt.ctrl_shapes["pipe"]
@@ -2848,8 +2855,15 @@ def straighten_curve_cvs(*curves) -> list:
 # create_attributes(cc_main, attr_1, bt=bt_dict)
 # pm.connectAttr(f"{cc_main}.Geo", "MODEL.visibility", f=True)
 
-# colorize(cc_main, idx=17)
-# colorize(cc_sub, idx=9)
-# colorize(cc_body, idx=13)
+# cpu = ColorPickerUI()
+# cpu.show()
 
+# sel = pm.selected()
+# for i in sel:
+#     d = f"rig_{i}"
+#     pm.connectAttr(f"{d}.translate", f"{i}.translate", f=True)
+#     pm.connectAttr(f"{d}.rotate", f"{i}.rotate", f=True)
+#     pm.connectAttr(f"{d}.scale", f"{i}.scale", f=True)
 
+# uv = get_uv_coordinates_closet_object("rig_string_straight_8", "dum_string_straight_down")
+# create_follicle("dum_string_straight_down", uv)
