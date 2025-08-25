@@ -2842,13 +2842,13 @@ def straighten_curve_cvs(*curves) -> list:
 
 # move_pivot(pos=(0, 0, 0))
 
-# create_rig_groups("bowA")
+# create_rig_groups("peacockA")
 
 # dt = Data()
-# points = dt.ctrl_shapes["pipe"]
+# points = dt.ctrl_shapes["sphere"]
 # create_curve(*points, cn="cc_body")
 
-# group_with_pivot()
+# group_with_pivot(null=True)
 
 # attr_1 = "Geo"
 # bt_dict = {"at": "bool"}
@@ -2867,3 +2867,26 @@ def straighten_curve_cvs(*curves) -> list:
 
 # uv = get_uv_coordinates_closet_object("rig_string_straight_8", "dum_string_straight_down")
 # create_follicle("dum_string_straight_down", uv)
+
+
+# create_attributes("cc_head_3", "Head", proxy="cc_head_2", bt=bt_dict)
+
+# orient_joints(p="yzx", s="zup")
+# flatten_to_plane()
+# create_pole_vector_joints()
+
+
+# sel = cmds.ls(sl=True)
+# for cuv in sel:
+#     jnt = create_motion_path_joints(10, cuv)
+#     result= []
+#     for i in jnt:
+#         cmds.select(cl=True)
+#         j = cmds.joint(p=(0, 0, 0))
+#         cmds.matchTransform(j, i, pos=True)
+#         result.append(j)
+#     cmds.delete(jnt)
+#     result.sort(reverse=True)
+#     parent_in_sequence(*result)
+#     orient_joints(*result)
+
