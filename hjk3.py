@@ -12,7 +12,7 @@ import maya.cmds as cmds
 __version__ = "Python 3.7.9"
 __author__ = "HONG JINKI <hjk0314@gmail.com>"
 __all__ = [
-    'use_selection', 
+    'put_selection', 
     'alias', 
     'compare_execution_time', 
 
@@ -32,7 +32,7 @@ class Data:
                 arrow_cross, arrow_two_way, arrow_arch, arrow_L_shaped
             - C
                 cap_half_sphere, car_body, car_bottom_sub, car_bottom_main, 
-                circle_octagon, cone_triangle, cone_pyramid, cube, cross, 
+                circle, cone_triangle, cone_pyramid, cube, cross, 
                 cylinder, 
             - D
                 door_front, door_back
@@ -141,7 +141,7 @@ class Data:
                 (193, 0, 200), (193, 0, 0), (193, 0, -200), 
                 (92, 0, -300), (-92, 0, -300)
                 ], 
-            "circle_octagon": [
+            "circle": [
                 (0, 0, -15), (-10, 0, -10), (-15, 0, 0), 
                 (-10, 0, 10), (0, 0, 15), (10, 0, 10), 
                 (15, 0, 0), (10, 0, -10), (0, 0, -15)
@@ -361,7 +361,7 @@ class Data:
         }
 
 
-def use_selection(func):
+def put_selection(func):
     """ Decorator to pass selected objects as item to the wrapped function.
 
     This decorator modifies the behavior of a function 
@@ -424,18 +424,17 @@ def use_selection(func):
             return func(*args, **kwargs)
 
         sel = cmds.ls(fl=True, os=True)
-
         if not sel:
             cmds.warning("Nothing is selected.")
             return
 
         if has_varargs:
             return func(*sel, **kwargs)
-        elif num_positional_arg == 1:
-            result = {}
-            for i in sel:
-                result[i] = func(i, **kwargs)
-            return result
+        # elif num_positional_arg == 1:
+        #     result = {}
+        #     for i in sel:
+        #         result[i] = func(i, **kwargs)
+        #     return result
         else:
             return func(*sel[:num_positional_arg], **kwargs)
 
@@ -520,45 +519,58 @@ def compare_execution_time(
     return (end1 - start1, end2 - start2)
 
 
-def get_position(obj_or_vtx: str) -> tuple:
-    """ Get the coordinates of an object or point. ``**No Decrations.**``
-    
-    Args:
-        obj_or_vtx (str): The name of the object or vertex component (e.g., "pSphere1" or "pSphere1.vtx[317]").
+@put_selection
+def get_position(*args: str) -> List[Tuple[float, float, float]]:
+    """Get the world-space coordinates of multiple objects or vertices.
 
-    Raises:
-        ValueError: If the specified object or vertex does not exist.
-        ValueError: If a transform node is not found for the given object.
+    This function accepts a variable number of object or vertex component names and returns a list of their corresponding world-space coordinates. It handles both transform nodes and component-level positions (e.g., vertices).
 
-    Returns:
-        tuple: A tuple of three floating-point numbers (x, y, z) representing the world-space coordinates.
+    Note
+    ----
+    Decoration : @put_selected_item
 
-    Examples:
-        >>> get_position("pSphere1")
-        (0.0, 0.0, 0.0)
-        >>> get_position("pSphere1.vtx[317]")
-        (64.60261, 67.08806, -62.83971)
+    Args
+    ----
+    *args : str
+        A variable number of object or vertex names (e.g., "pSphere1" or "pSphere1.vtx[317]").
+
+    Returns
+    -------
+    list
+        A list of tuples, where each tuple contains three floating-point numbers
+        (x, y, z) representing the world-space coordinates for each input item.
+
+    Examples
+    --------
+    >>> get_positions()
+    >>> get_positions("test_sphere", "test_sphere.vtx[100]")
+    [(0.0, 0.0, 0.0), (3.63223, 2.59367, -2.59367)]
     """
-    items: List[str] = cmds.ls(obj_or_vtx, flatten=True) or []
-    if not items:
-        raise ValueError(f"Non-existent {obj_or_vtx}")
-    target = items[0]
+    results: List[Tuple[float, float, float]] = []
 
-    def is_component(name: str) -> bool:
-        return ("." in name) and ("[" in name and "]" in name)
+    for obj_or_vtx in args:
+        items: List[str] = cmds.ls(obj_or_vtx, flatten=True) or []
+        if not items:
+            raise ValueError(f"Non-existent {obj_or_vtx}")
+        target = items[0]
 
-    if is_component(target):
-        pos = cmds.pointPosition(target, world=True)
-    else:
-        dag = target
-        if not cmds.objectType(dag, isAType="transform"):
-            parents = cmds.listRelatives(dag, parent=True, path=True) or []
-            if parents and cmds.objectType(parents[0], isAType="transform"):
-                dag = parents[0]
-            else:
-                raise ValueError(f"Transform node not found: {target}")
-        pos = cmds.xform(dag, q=True, ws=True, rp=True)
+        def is_component(name: str) -> bool:
+            return ("." in name) and ("[" in name and "]" in name)
 
-    return tuple(round(float(v), 5) for v in pos)
+        if is_component(target):
+            pos = cmds.pointPosition(target, world=True)
+        else:
+            dag = target
+            if not cmds.objectType(dag, isAType="transform"):
+                parents = cmds.listRelatives(dag, p=True, path=True) or []
+                if parents and cmds.objectType(parents[0], isAType="transform"):
+                    dag = parents[0]
+                else:
+                    raise ValueError(f"Transform node not found: {target}")
+            pos = cmds.xform(dag, q=True, ws=True, rp=True)
+
+        results.append(tuple(round(float(v), 5) for v in pos))
+
+    return results
 
 
