@@ -2836,7 +2836,7 @@ def straighten_curve_cvs(*curves) -> list:
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
 
-# cc_main = "cc_main"
+cc_main = "cc_main"
 # cc_sub = "cc_sub"
 # cc_body = "cc_body"
 
@@ -2848,7 +2848,7 @@ def straighten_curve_cvs(*curves) -> list:
 # points = dt.ctrl_shapes["sphere"]
 # create_curve(*points, cn="cc_body")
 
-# group_with_pivot(null=True)
+# group_with_pivot()
 
 # attr_1 = "Geo"
 # bt_dict = {"at": "bool"}
@@ -2865,8 +2865,11 @@ def straighten_curve_cvs(*curves) -> list:
 #     pm.connectAttr(f"{d}.rotate", f"{i}.rotate", f=True)
 #     pm.connectAttr(f"{d}.scale", f"{i}.scale", f=True)
 
-# uv = get_uv_coordinates_closet_object("rig_string_straight_8", "dum_string_straight_down")
-# create_follicle("dum_string_straight_down", uv)
+# for i in range(13, 26):
+#     obj = "rig_string_%d" % i
+#     poly = "dummy_string_straight_down"
+#     uv = get_uv_coordinates_closet_object(obj, poly)
+#     create_follicle(poly, uv)
 
 
 # create_attributes("cc_head_3", "Head", proxy="cc_head_2", bt=bt_dict)
@@ -2890,3 +2893,31 @@ def straighten_curve_cvs(*curves) -> list:
 #     parent_in_sequence(*result)
 #     orient_joints(*result)
 
+# b = cmds.ls(sl=True)
+# print(b)
+# a = get_bounding_box_position(b[0])
+# # print(a)
+# cmds.select(cl=True)
+# cmds.joint(p=a)
+
+
+# sel = cmds.ls(sl=True)
+# for idx, i in enumerate(sel):
+#     pos = get_position(i)
+#     cmds.select(cl=True)
+#     jnt = cmds.joint(p=pos)
+#     cmds.parent(jnt, i)
+#     for j in ["X", "Y", "Z"]:
+#         cmds.setAttr(f"{jnt}.translate{j}", 0)
+#         cmds.setAttr(f"{jnt}.rotate{j}", 0)
+#     cmds.rename(jnt, "rig_fol_string_straight_down_%d" % (idx + 1))
+
+
+# select_only(constraint=True)
+
+# sel = cmds.ls(sl=True)
+# for i in range(3, 26):
+#     st = f"rig_string_{i}_parentConstraint1.rig_fol_string_straight_up_{i}W1"
+#     cu = f"rig_string_{i}_parentConstraint1.rig_fol_string_curved_{i}W0"
+#     cmds.connectAttr("setRange1.outValueX", st, f=True)
+#     cmds.connectAttr("reverse1.outputX", cu, f=True)
