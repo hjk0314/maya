@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 from typing import Callable, List, Tuple, Any # Union, Dict
 # from collections import Counter
 import time
@@ -572,5 +575,4 @@ def get_position(*args: str) -> List[Tuple[float, float, float]]:
         results.append(tuple(round(float(v), 5) for v in pos))
 
     return results
-
 
