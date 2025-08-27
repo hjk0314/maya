@@ -2848,7 +2848,7 @@ cc_main = "cc_main"
 # points = dt.ctrl_shapes["sphere"]
 # create_curve(*points, cn="cc_body")
 
-# group_with_pivot()
+group_with_pivot(null=True)
 
 # attr_1 = "Geo"
 # bt_dict = {"at": "bool"}
@@ -2921,3 +2921,30 @@ cc_main = "cc_main"
 #     cu = f"rig_string_{i}_parentConstraint1.rig_fol_string_curved_{i}W0"
 #     cmds.connectAttr("setRange1.outValueX", st, f=True)
 #     cmds.connectAttr("reverse1.outputX", cu, f=True)
+
+def make_joints(cuv) -> list:
+    joints = create_motion_path_joints(10, cuv)
+
+    result= []
+    for jnt in joints:
+        cmds.select(cl=True)
+        joint = cmds.joint(p=(0, 0, 0))
+        cmds.matchTransform(joint, jnt, pos=True)
+        result.append(joint)
+    cmds.delete(joints)
+    result.sort(reverse=True)
+    parent_in_sequence(*result)
+    orient_joints(*result)
+
+    return result
+
+# mesh = "char_peacockA_mdl_v9999:peacockA_skin_geo"
+# sel = cmds.ls(sl=True)
+# for i in sel:
+#     uv = get_uv_coordinates_closet_object(i, mesh)
+#     fol = create_follicle(mesh, uv)
+#     joints = make_joints(i)
+#     jnt = joints[0]
+#     pm.parent(jnt, fol)
+
+
