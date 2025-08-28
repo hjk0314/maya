@@ -822,7 +822,7 @@ def orient_joints(*joints, **kwargs) -> None:
         for j in end_joints:
             pm.joint(j, e=True, oj='none', ch=True, zso=True)
 
-
+orient_joints()
 @use_selection
 def create_pole_vector_joints(*joints) -> list:
     """ Put the pole vector joint at 90 degrees to the direction 
@@ -2842,13 +2842,13 @@ cc_main = "cc_main"
 
 # move_pivot(pos=(0, 0, 0))
 
-# create_rig_groups("peacockA")
+# create_rig_groups("arrowBagA")
 
 # dt = Data()
 # points = dt.ctrl_shapes["sphere"]
 # create_curve(*points, cn="cc_body")
 
-group_with_pivot(null=True)
+# group_with_pivot()
 
 # attr_1 = "Geo"
 # bt_dict = {"at": "bool"}
