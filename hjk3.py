@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import Callable, List, Tuple, Any # Union, Dict
+from typing import Callable, List, Tuple, Any, Union, Dict
 # from collections import Counter
 import time
 import functools
-# import math
+import math
 # import re
 import inspect
 import maya.cmds as cmds
@@ -364,74 +364,43 @@ class Data:
         }
 
 
-def put_selection(func):
-    """ Decorator to pass selected objects as item to the wrapped function.
+def with_selection(func):
+    """ Use this function as a decoration when you want to pass the selection as an argument to a function.
 
-    This decorator modifies the behavior of a function 
-    such that if no arguments are explicitly provided when 
-    calling the wrapped function, it attempts to pass the currently 
-    selected objects (from `cmds.ls(fl=True, os=True)`) as arguments.
-
-    The behavior depends on the decorated function's signature:
-    - If the function accepts variable positional arguments (`*args`), 
-      all selected objects will be passed as individual positional arguments.
-    - If the function accepts exactly one positional argument, 
-      it will be called for each selected object, 
-      and the results will be returned in a dictionary where 
-      keys are the selected objects and values are the func's return values.
-    - Otherwise, if the function accepts a fixed number of positional args,
-      the decorator will pass the first `n` selected objects, where
-      `n` is the number of positional arguments the function expects.
-
-    If no objects are selected and no arguments are provided, 
-    a warning will be issued.
-
-    Args:
-        func (callable): The function to be wrapped.
-
-    Returns:
-        callable: The wrapped function with selection handling capabilities.
-
-    Raises:
-        RuntimeWarning: If nothing is selected and no arguments are passed.
-
-    Examples:
-        >>> @use_selection
-        >>> func(*args)
-        ...
-        >>> @use_selection
-        >>> func(obj)
-        ...
-        >>> @use_selection
-        >>> func(item1, item2)
-        ...
-        >>> @use_selection
-        >>> func(arg1, arg2="default")
-     """
+    Examples
+    --------
+    >>> @with_selection
+    >>> func(*args)
+    ...
+    >>> @with_selection
+    >>> func(item1, item2)
+    ...
+    >>> @with_selection
+    >>> func(arg1, arg2="default")
+    """
     sig = inspect.signature(func)
     params = list(sig.parameters.values())
 
-    has_varargs = any(
-        p.kind == inspect.Parameter.VAR_POSITIONAL for p in params
-    )
-    positional_arg = [
-        p 
-        for p in params 
-        if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
-    ]
+
+    is_arg = any(p.kind==inspect.Parameter.VAR_POSITIONAL for p in params)
+    positional_arg = [p for p in params 
+        if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)]
     num_positional_arg = len(positional_arg)
+
 
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         if args:
             return func(*args, **kwargs)
 
+
         sel = cmds.ls(fl=True, os=True)
         if not sel:
             cmds.warning("Nothing is selected.")
             return
 
-        if has_varargs:
+
+        if is_arg:
             return func(*sel, **kwargs)
         # elif num_positional_arg == 1:
         #     result = {}
@@ -445,32 +414,16 @@ def put_selection(func):
 
 
 def alias(**alias_map):
-    """ Decorator to allow aliasing of keyword args when calling a function.
+    """ A decorator that maps aliases to keyword arguments.
 
-    This decorator enables alternate (shortened or customized) 
-    keyword arguments to be mapped to the actual parameter names 
-    defined in the function signature.
-
-    Args
-    ----
-    alias_map : dict
-        A dictionary mapping alias names (str) to actual parameter names. 
-        For example: {'a': 'x', 'b': 'y'}
-
-    Returns
-    -------
-    function : 
-        A wrapped version of the original function that resolves
-        aliases before calling it.
-
-    Example
-    -------
+    Examples
+    --------
     >>> @alias(rx='rangeX', ry='rangeY', rz='rangeZ')
     >>> func(rx=[0, 0, 0, 0], ry=[0, 0, 0, 0])
     ...
     >>> @alias(t="translate", r="rotate", s="sclae", v="visibility")
     >>> func(t=True, r=True, s=True, v=True)
-     """
+    """
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -484,64 +437,37 @@ def alias(**alias_map):
     return decorator
 
 
-def compare_execution_time(
-    func1: Callable,
-    func2: Callable,
-    *args: Any,
-    **kwargs: Any
-) -> Tuple[float, float]:
-    """ Measure and compare the execution time of two functions with the 
-    same arguments.
-
-    This function executes `func1` and `func2` in sequence, passing them 
-    the same positional and keyword arguments, and returns their execution 
-    durations in seconds.
-
-    Args:
-        func1 (Callable): The first function to measure.
-        func2 (Callable): The second function to measure.
-        *args: Positional arguments to pass to both functions.
-        **kwargs: Keyword arguments to pass to both functions.
-
-    Returns:
-        tuple[float, float]: 
-            A tuple containing (duration_func1, duration_func2), each in sec.
+def compare_execution_time(func1, func2, *args, **kwargs) -> Tuple:
+    """ Compare the execution time of two functions with the same arguments.
 
     Examples:
-        >>> compare_execution_time(func1, func2, "pSphere1.vtx[257])
-        (0.05010910000055446, 0.03423800000018673)
-     """
+    >>> compare_execution_time(func1, func2, "pSphere1.vtx[257])
+    (0.0501091, 0.0342380)
+    """
     start1 = time.perf_counter()
     func1(*args, **kwargs)
     end1 = time.perf_counter()
+
 
     start2 = time.perf_counter()
     func2(*args, **kwargs)
     end2 = time.perf_counter()
 
+
     return (end1 - start1, end2 - start2)
 
 
-@put_selection
-def get_position(*args: str) -> List[Tuple[float, float, float]]:
-    """Get the world-space coordinates of multiple objects or vertices.
-
-    This function accepts a variable number of object or vertex component names and returns a list of their corresponding world-space coordinates. It handles both transform nodes and component-level positions (e.g., vertices).
-
-    Note
-    ----
-    Decoration : @put_selected_item
+@with_selection
+def get_position(*args: str) -> List[Tuple]:
+    """ Get the world-space coordinates of multiple objects or vertices.
 
     Args
     ----
-    *args : str
-        A variable number of object or vertex names (e.g., "pSphere1" or "pSphere1.vtx[317]").
+        *args(str) : object or vertex
 
-    Returns
-    -------
-    list
-        A list of tuples, where each tuple contains three floating-point numbers
-        (x, y, z) representing the world-space coordinates for each input item.
+    Notes
+    -----
+        **Decoration** : @with_selection
 
     Examples
     --------
@@ -549,16 +475,17 @@ def get_position(*args: str) -> List[Tuple[float, float, float]]:
     >>> get_positions("test_sphere", "test_sphere.vtx[100]")
     [(0.0, 0.0, 0.0), (3.63223, 2.59367, -2.59367)]
     """
-    results: List[Tuple[float, float, float]] = []
-
+    results = []
     for obj_or_vtx in args:
-        items: List[str] = cmds.ls(obj_or_vtx, flatten=True) or []
+        items = cmds.ls(obj_or_vtx, flatten=True) or []
         if not items:
             raise ValueError(f"Non-existent {obj_or_vtx}")
         target = items[0]
 
+
         def is_component(name: str) -> bool:
             return ("." in name) and ("[" in name and "]" in name)
+
 
         if is_component(target):
             pos = cmds.pointPosition(target, world=True)
@@ -566,7 +493,8 @@ def get_position(*args: str) -> List[Tuple[float, float, float]]:
             dag = target
             if not cmds.objectType(dag, isAType="transform"):
                 parents = cmds.listRelatives(dag, p=True, path=True) or []
-                if parents and cmds.objectType(parents[0], isAType="transform"):
+                is_transform = cmds.objectType(parents[0], isa="transform")
+                if parents and is_transform:
                     dag = parents[0]
                 else:
                     raise ValueError(f"Transform node not found: {target}")
@@ -575,4 +503,288 @@ def get_position(*args: str) -> List[Tuple[float, float, float]]:
         results.append(tuple(round(float(v), 5) for v in pos))
 
     return results
+
+
+@with_selection
+def get_bounding_box_position(*args) -> List[Tuple]:
+    """ Get the coordinates of the center pivot of the boundingBox.
+
+    Notes
+    -----
+        **Decoration** : @with_selection
+
+    Examples
+    --------
+    >>> get_bounding_box_position("pCube1", "pSphere1", "pCylinder1")
+    >>> get_bounding_box_position("pCube1.vtx[5]", "pSphere1.vtx[218]")
+    >>> get_bounding_box_position()
+    (-0.70783, 1.6044, -1.28288)
+    """
+    try:
+        bbox = cmds.exactWorldBoundingBox(args[0])
+    except RuntimeError:
+        print(f"Error: Invalid object name '{args[0]}'")
+        return None
+
+
+    xmin, ymin, zmin, xmax, ymax, zmax = bbox
+    for obj in args[1:]:
+        try:
+            current_bbox = cmds.exactWorldBoundingBox(obj)
+            xmin = min(xmin, current_bbox[0])
+            ymin = min(ymin, current_bbox[1])
+            zmin = min(zmin, current_bbox[2])
+            xmax = max(xmax, current_bbox[3])
+            ymax = max(ymax, current_bbox[4])
+            zmax = max(zmax, current_bbox[5])
+        except RuntimeError:
+            print(f"Warning: Skipping invalid object name '{obj}'")
+            continue
+
+
+    center_x = (xmin + xmax) / 2.0
+    center_y = (ymin + ymax) / 2.0
+    center_z = (zmin + zmax) / 2.0
+
+    result = tuple(round(float(v), 5) for v in [center_x, center_y, center_z])
+    
+    return result
+
+
+@with_selection
+def get_bounding_box_size(*args) -> List[Tuple]:
+    """ Get the size the boundingBox.
+
+    Notes
+    -----
+        **Decoration** : @with_selection
+
+    Examples
+    --------
+    >>> get_bounding_box_size("pCube1", "pSphere1", "pCylinder1")
+    >>> get_bounding_box_size("pCube1.vtx[5]", "pSphere1.vtx[218]")
+    >>> get_bounding_box_size()
+    (64.60261, 67.08806, -62.83971)
+    """
+    try:
+        bbox = cmds.exactWorldBoundingBox(args[0])
+    except RuntimeError:
+        print(f"Error: Invalid object name '{args[0]}'")
+        return None
+
+
+    xmin, ymin, zmin, xmax, ymax, zmax = bbox
+    for obj in args[1:]:
+        try:
+            current_bbox = cmds.exactWorldBoundingBox(obj)
+            xmin = min(xmin, current_bbox[0])
+            ymin = min(ymin, current_bbox[1])
+            zmin = min(zmin, current_bbox[2])
+            xmax = max(xmax, current_bbox[3])
+            ymax = max(ymax, current_bbox[4])
+            zmax = max(zmax, current_bbox[5])
+        except RuntimeError:
+            print(f"Warning: Skipping invalid object name '{obj}'")
+            continue
+
+
+    center_x = (xmax - xmin) / 2.0
+    center_y = (ymax - ymin) / 2.0
+    center_z = (zmax - zmin) / 2.0
+
+    result = tuple(round(float(v), 5) for v in [center_x, center_y, center_z])
+    
+    return result
+
+
+def get_flatten_list(data: Union[dict, list], seen=None) -> list:
+    """ Flattens a list within a list. 
+
+    Notes
+    -----
+        **No Decoration**
+
+    Examples
+    --------
+    >>> get_flatten_list({'a': {'b': {'c': 1}, 'd': 2}})
+    ['a', 'b', 'c', 1, 'd', 2]
+    >>> get_flatten_list(["a", ["b"], ["c"]], [[["d"], "e"], "f"], ...)
+    ['a', 'b', 'c', 'd', 'e', 'f']
+    """
+    if seen is None:
+        seen = set()
+
+
+    result = []
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if key not in seen:
+                seen.add(key)
+                result.append(key)
+            result.extend(get_flatten_list(value, seen))
+    elif isinstance(data, list):
+        for item in data:
+            result.extend(get_flatten_list(item, seen))
+    else:
+        if data not in seen:
+            seen.add(data)
+            result.append(data)
+
+    return result
+
+
+def get_distance(
+        point1: Union[tuple, list], 
+        point2: Union[tuple, list]) -> float:
+    """ Returns the distance between the two coordinates.
+
+    Notes
+    -----
+        **No Decoration**
+    
+    Examples
+    --------
+    >>> get_distance([0,0,0], [1,2,3])
+    3.74166
+     """
+    result = math.sqrt(sum((a - b)**2 for a, b in zip(point1, point2)))
+    result = round(result, 5)
+
+    return result
+
+
+def get_referenced_list() -> list:
+    """ Returns a list of groups of referenced nodes using cmds.
+
+    Notes
+    -----
+        **No Decoration**
+    
+    Examples
+    --------
+    >>> get_referenced_list()
+    ['vhcl_bestaB_mdl_v9999:bestaB', ...]
+    """
+    references = cmds.file(query=True, reference=True)
+    if not references:
+        return []
+
+
+    result = []
+    for ref_path in references:
+        nodes = cmds.referenceQuery(ref_path, nodes=True)
+        if nodes:
+            result.append(nodes[0])
+
+
+    return result
+
+
+@with_selection
+def get_downstream_path(start_jnt: str, end_jnt: str) -> list:
+    """ Get the downstream ``joints`` or ``objects`` 
+    from the start joint to the end joint. The end is included.
+
+    Notes
+    -----
+        **Decoration** : @with_selection
+
+    Structure
+    ---------
+    joint1
+        joint2
+            joint3
+                joint4
+                    joint5
+            joint8
+                joint9
+                    joint10
+                        joint11
+
+    Examples
+    --------
+    >>> get_downstream_path('joint2', 'joint10')
+    ['joint2', 'joint3', 'joint8', 'joint9', 'joint10']
+    """
+    if not cmds.objExists(start_jnt):
+        raise ValueError(f"'{start_jnt}' does not exist.")
+    if not cmds.objExists(end_jnt):
+        raise ValueError(f"'{end_jnt}' does not exist.")
+
+
+    path = []
+    current = end_jnt
+    while current != start_jnt:
+        path.append(current)
+        parent_nodes = cmds.listRelatives(current, p=True, f=False)
+        if not parent_nodes:
+            raise ValueError(f"'{current}' cannot reach '{start_jnt}'.")
+        parent = parent_nodes[0]
+        current = parent
+
+
+    path.append(start_jnt)
+    path.reverse()
+    
+    return path
+
+
+@with_selection
+def orient_joints(*joints, **kwargs) -> None:
+    """ Select joints and don't put anything in the argument, 
+    it will be oriented with the Maya default settings.
+
+    Args
+    ----
+    - joints : str
+        joint1, joint2, joint3 ...
+    - kwargs: 
+        - Maya default: xyz, yup
+        - Mixamo: yzx, zup
+        - Left hand: yxz, zdown
+
+    Examples
+    --------
+    >>> orient_joints()
+    >>> orient_joints("joint1", "joint4")
+    >>> orient_joints("joint1", "joint2", p="yzx", s="zup")
+    >>> orient_joints(*["joint1", "joint2"], p="yzx", s="zup")
+    """
+    valid_primary = {"xyz", "yzx", "zxy", "zyx", "yxz", "xzy", "none"}
+    valid_secondary = {"xup", "xdown", "yup", "ydown", "zup", "zdown", "none"}
+    primary = "xyz"
+    secondary = "yup"
+
+
+    for k, v in kwargs.items():
+        if k in ("primary", "p") and v in valid_primary:
+            primary = v
+        elif k in ("secondary", "s") and v in valid_secondary:
+            secondary = v
+        else:
+            cmds.warning(f"Ignored invalid flag: {k}={v}")
+
+
+    cmds.makeIdentity(joints, apply=True, jointOrient=True, normal=False)
+
+
+    for jnt in joints:
+        cmds.joint(
+            jnt,
+            edit=True,
+            children=False,
+            zeroScaleOrient=True,
+            orientJoint=primary,
+            secondaryAxisOrient=secondary
+        )
+        # all_joints = cmds.listRelatives(jnt, ad=True, type="joint")
+        # end_joints = []
+        # for joint in all_joints:
+        #     if not cmds.listRelatives(joint, children=False, type="joint"):
+        #         end_joints.append(joint)
+        # for j in end_joints:
+        #     cmds.joint(j, e=True, oj='none', ch=True, zso=True)
+
+
+orient_joints(p="yzx", s="zup")
 
