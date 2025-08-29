@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import Callable, List, Tuple, Any, Union, Dict
+from typing import List, Tuple, Union
 # from collections import Counter
 import time
 import functools
@@ -15,7 +15,7 @@ import maya.cmds as cmds
 __version__ = "Python 3.7.9"
 __author__ = "HONG JINKI <hjk0314@gmail.com>"
 __all__ = [
-    'put_selection', 
+    'with_selection', 
     'alias', 
     'compare_execution_time', 
 
@@ -364,6 +364,7 @@ class Data:
         }
 
 
+
 def with_selection(func):
     """ Use this function as a decoration when you want to pass the selection as an argument to a function.
 
@@ -413,6 +414,7 @@ def with_selection(func):
     return wrapper
 
 
+
 def alias(**alias_map):
     """ A decorator that maps aliases to keyword arguments.
 
@@ -437,6 +439,7 @@ def alias(**alias_map):
     return decorator
 
 
+
 def compare_execution_time(func1, func2, *args, **kwargs) -> Tuple:
     """ Compare the execution time of two functions with the same arguments.
 
@@ -455,6 +458,7 @@ def compare_execution_time(func1, func2, *args, **kwargs) -> Tuple:
 
 
     return (end1 - start1, end2 - start2)
+
 
 
 @with_selection
@@ -505,6 +509,7 @@ def get_position(*args: str) -> List[Tuple]:
     return results
 
 
+
 @with_selection
 def get_bounding_box_position(*args) -> List[Tuple]:
     """ Get the coordinates of the center pivot of the boundingBox.
@@ -549,6 +554,7 @@ def get_bounding_box_position(*args) -> List[Tuple]:
     result = tuple(round(float(v), 5) for v in [center_x, center_y, center_z])
     
     return result
+
 
 
 @with_selection
@@ -597,6 +603,7 @@ def get_bounding_box_size(*args) -> List[Tuple]:
     return result
 
 
+
 def get_flatten_list(data: Union[dict, list], seen=None) -> list:
     """ Flattens a list within a list. 
 
@@ -633,6 +640,7 @@ def get_flatten_list(data: Union[dict, list], seen=None) -> list:
     return result
 
 
+
 def get_distance(
         point1: Union[tuple, list], 
         point2: Union[tuple, list]) -> float:
@@ -651,6 +659,7 @@ def get_distance(
     result = round(result, 5)
 
     return result
+
 
 
 def get_referenced_list() -> list:
@@ -678,6 +687,7 @@ def get_referenced_list() -> list:
 
 
     return result
+
 
 
 @with_selection
@@ -729,10 +739,17 @@ def get_downstream_path(start_jnt: str, end_jnt: str) -> list:
     return path
 
 
+
 @with_selection
 def orient_joints(*joints, **kwargs) -> None:
     """ Select joints and don't put anything in the argument, 
     it will be oriented with the Maya default settings.
+    
+    This function orients all joints. Freeze forces all joints below it to zero rotation.
+    
+    Notes
+    -----
+        **Decoration** : @with_selection
 
     Args
     ----
@@ -745,9 +762,12 @@ def orient_joints(*joints, **kwargs) -> None:
 
     Examples
     --------
-    >>> orient_joints()
+    >>> orient_joints(p="yzx", s="zup") # Mixamo
+    >>> orient_joints(p="yxz", s="zdown") # Left hand
+    >>> orient_joints(p="xyz", s="yup") # Default
+    ...
+    >>> orient_joints() # @with_selection
     >>> orient_joints("joint1", "joint4")
-    >>> orient_joints("joint1", "joint2", p="yzx", s="zup")
     >>> orient_joints(*["joint1", "joint2"], p="yzx", s="zup")
     """
     valid_primary = {"xyz", "yzx", "zxy", "zyx", "yxz", "xzy", "none"}
@@ -772,19 +792,289 @@ def orient_joints(*joints, **kwargs) -> None:
         cmds.joint(
             jnt,
             edit=True,
-            children=False,
+            children=True,
             zeroScaleOrient=True,
             orientJoint=primary,
             secondaryAxisOrient=secondary
         )
-        # all_joints = cmds.listRelatives(jnt, ad=True, type="joint")
-        # end_joints = []
-        # for joint in all_joints:
-        #     if not cmds.listRelatives(joint, children=False, type="joint"):
-        #         end_joints.append(joint)
-        # for j in end_joints:
-        #     cmds.joint(j, e=True, oj='none', ch=True, zso=True)
 
 
-orient_joints(p="yzx", s="zup")
+    end_joints = []
+    for j in joints:
+        if not cmds.listRelatives(j, children=False, type="joint"):
+            end_joints.append(j)
+    for ej in end_joints:
+        cmds.joint(ej, e=True, oj='none', ch=True, zso=True)
+
+
+
+@with_selection
+def create_pole_vector_joints(*args) -> list:
+    """ This function finds the pole vector direction of a joint.
+
+    It creates two joints connecting the beginning and end of the three selected joints, rotates them 90 degrees, and places them at the center of the three selected joints.
+
+    Notes
+    -----
+        **Decoration** : @with_selection
+
+    Args
+    ----
+    - joints : str
+        joint1, joint2, joint3, joint4, joint5 ...
+
+    Examples
+    --------
+    >>> create_pole_vector_joints() # @with_selection
+    >>> create_pole_vector_joints("joint1", "joint2", "joint3")
+    >>> create_pole_vector_joints(*["joint1", "joint2", "joint3"])
+    ["joint1", "joint2"]
+    """
+    if len(args) < 3:
+        cmds.warning("At least 3 joints are required.")
+        return
+
+
+    jnt_pos = [cmds.xform(i, q=True, ws=True, rp=True) for i in args]
+    mid_jnt = args[int(len(args)/2)]
+    end_jnt = args[-1]
+
+
+    cmds.select(cl=True)
+    result = []
+    for pos in jnt_pos[::2]:
+        jnt_name = cmds.joint(p=pos) 
+        result.append(jnt_name)
+
+
+    pj = result[0]
+    cmds.joint(pj, e=True, ch=False, zso=True, oj="xyz", sao="yup")
+    cmds.aimConstraint(end_jnt, pj, o=(0, 0, 90), wut='object', wuo=mid_jnt)
+    cmds.delete(pj, cn=True)
+    cmds.matchTransform(pj, mid_jnt, pos=True)
+
+    return result
+
+
+
+@with_selection
+def parent_in_sequence(*args) -> list:
+    """ Parent given nodes hierarchically in sequence.
+
+    If no arguments are provided, use the current selection. Each node will become the parent of the next one in order.
+
+    Notes
+    -----
+        **Decoration** : @with_selection
+
+    Args
+    ----
+    - object : str
+
+    Examples
+    --------
+    >>> parent_in_sequence() # @with_selection
+    >>> parent_in_sequence('joint1', 'joint2', 'joint3', ...)
+    >>> parent_in_sequence(*['joint1', 'joint2', 'joint3', ...])
+    ['joint1', 'joint2', 'joint3', ...]
+    """
+    result = []
+    for obj, child in zip(args, args[1:]):
+        result.append(obj)
+        try:
+            cmds.parent(child, obj)
+        except RuntimeError as e:
+            cmds.warning(e)
+
+
+    if args:
+        result.append(args[-1])
+
+    return result
+
+
+
+@with_selection
+def group_with_pivot(*args, **kwargs) -> List[list]:
+    """ Create a group that includes ownself while maintaining own pivot position.
+
+    Notes
+    -----
+        **Decoration** : @with_selection
+
+    Examples
+    --------
+    >>> group_with_pivot() # @with_selection
+    >>> group_with_pivot('pCube1', 'pCube2', 'pCube3',...)
+    >>> group_with_pivot('p1', 'p2', null=True)
+    [['p1_grp', 'p1_null', 'p1'], ['p2_grp', 'p2_null', 'p2'], ...]
+    """
+    result = []
+    for i in args:
+        grp_name = [f"{i}_grp"]
+        if kwargs.get("null", False):
+            grp_name.append(f"{i}_null")
+
+
+        groups = []
+        for gn in grp_name:
+            gn = "" if cmds.objExists(gn) else gn
+            grp = cmds.group(em=True, n=gn)
+            cmds.matchTransform(grp, i, pos=True, rot=True)
+            groups.append(grp)
+        groups.append(i)
+
+
+        top_group = cmds.listRelatives(i, parent=True, fullPath=False)
+        if top_group:
+            cmds.parent(groups[0], top_group)
+
+
+        parent_in_sequence(*groups)
+        result.append(groups)
+
+    return result
+
+
+@alias(s="style")
+@with_selection
+def set_joint_style(*args, style: str="bone") -> None:
+    """ Set the drawing style of the specified joints.
+
+    Notes
+    -----
+        **Decoration** :
+            - @with_selection
+            - @alias(s="style")
+
+    Args
+    ----
+    - joints : str
+    - style : str, optional
+        - **bone**: (0)
+        - **multiChild as box**: (1)
+        - **none**: (2)
+
+    Examples
+    --------
+    >>> set_joint_style()
+    >>> set_joint_style("joint1", style="bone")
+    >>> set_joint_style(style="none")
+    """
+    style_map = {
+        "bone": 0,
+        "multiChild": 1,
+        "none": 2,
+    }
+
+
+    draw_style = style_map.get(style, 0)
+    for i in args:
+        cmds.setAttr(f"{i}.drawStyle", draw_style)
+
+
+
+@alias(d="degree")
+@with_selection
+def create_curve_from_points(*args, degree=3) -> str:
+    """ If the start and end points are the same, it creates a closed curve.
+
+    Notes
+    -----
+        **Decoration** :
+            - @with_selection
+            - @alias(d="degree")    
+
+    Args
+    ----
+        *args : str
+
+    Returns
+    -------
+        curve name : str
+
+    Examples
+    --------
+    >>> create_curve_from_points()  # @with_selection
+    >>> create_curve_from_points(d=3)
+    >>> create_curve_from_points(p1, p2, p3, d=1)
+    """
+    points = []
+    for i in args:
+        pos = get_position(i)
+        points += pos
+
+
+    if points[0] != points[-1]:
+        result = cmds.curve(p=points, d=degree)
+    else:
+        result = cmds.circle(nr=(0,1,0), ch=False, s=len(points)-1)[0]
+        for idx, pos in enumerate(points[:-1]):
+            x, y, z = pos
+            cmds.move(x, y, z, f"{result}.cv[{idx}]", ws=True)
+
+    return result
+
+
+
+def create_joint_on_motion_path(curve: str, num: int=2) -> list:
+    """ Create joints and distribute them evenly along a curve
+    using Maya's motion path.
+
+    Parameters
+    ----------
+    - num : int
+        The number of joints to create and distribute.
+    - curve : str
+        The name of the curve to follow with motion path.
+
+    Returns
+    -------
+    list
+        List of joints that were created and attached to the motion path.
+
+    Raises
+    ------
+    Warning
+        - If num < 1, the function will warn and return an empty list.
+        - If curve doesn't exist, the func will warn and return an empty list.
+
+    Examples
+    --------
+    >>> create_motion_path_joints(5, "curve1")
+    >>> ["joint1", "joint2", "joint3", "joint4", "joint5"]
+    """
+    if not isinstance(num, int) or num < 1:
+        cmds.warning("Parameter 'num' must be a positive integer.")
+        return []
+
+    if not cmds.objExists(curve):
+        cmds.warning(f"Curve '{curve}' does not exist.")
+        return []
+
+
+    step = 1.0/(num-1) if num > 1 else 0.0
+    result = []
+    for i in range(num):
+        cmds.select(cl=True)
+        jnt = cmds.joint(p=(0, 0, 0))
+        u_value = i * step
+        motion_path = cmds.pathAnimation(
+            jnt,
+            c=curve,
+            fractionMode=True,
+            follow=True,
+            followAxis="x",
+            upAxis="y",
+            worldUpType="vector",
+            worldUpVector=(0, 1, 0),
+        )
+        cmds.cutKey(motion_path, cl=True, at="u")
+        cmds.setAttr(f"{motion_path}.uValue", u_value)
+        result.append(jnt)
+    
+
+    return result
+
+
 
