@@ -822,7 +822,7 @@ def orient_joints(*joints, **kwargs) -> None:
         for j in end_joints:
             pm.joint(j, e=True, oj='none', ch=True, zso=True)
 
-orient_joints()
+
 @use_selection
 def create_pole_vector_joints(*joints) -> list:
     """ Put the pole vector joint at 90 degrees to the direction 
