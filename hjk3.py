@@ -9,7 +9,7 @@ import math
 # import re
 import inspect
 import maya.cmds as cmds
-# import maya.api.OpenMaya as om2
+import maya.api.OpenMaya as om2
 
 
 __version__ = "Python 3.7.9"
@@ -741,7 +741,7 @@ def get_downstream_path(start_jnt: str, end_jnt: str) -> list:
 
 
 @with_selection
-def orient_joints(*joints, **kwargs) -> None:
+def orient_joints(*args, **kwargs) -> None:
     """ Select joints and don't put anything in the argument, 
     it will be oriented with the Maya default settings.
     
@@ -753,12 +753,12 @@ def orient_joints(*joints, **kwargs) -> None:
 
     Args
     ----
-    - joints : str
-        joint1, joint2, joint3 ...
-    - kwargs: 
-        - Maya default: xyz, yup
-        - Mixamo: yzx, zup
-        - Left hand: yxz, zdown
+        - *args : str
+            joint1, joint2, joint3 ...
+        - kwargs: 
+            - Maya default: xyz, yup
+            - Mixamo: yzx, zup
+            - Left hand: yxz, zdown
 
     Examples
     --------
@@ -784,11 +784,9 @@ def orient_joints(*joints, **kwargs) -> None:
         else:
             cmds.warning(f"Ignored invalid flag: {k}={v}")
 
+    cmds.makeIdentity(args, apply=True, jointOrient=True, normal=False)
 
-    cmds.makeIdentity(joints, apply=True, jointOrient=True, normal=False)
-
-
-    for jnt in joints:
+    for jnt in args:
         cmds.joint(
             jnt,
             edit=True,
@@ -798,9 +796,8 @@ def orient_joints(*joints, **kwargs) -> None:
             secondaryAxisOrient=secondary
         )
 
-
     end_joints = []
-    for j in joints:
+    for j in args:
         if not cmds.listRelatives(j, children=False, type="joint"):
             end_joints.append(j)
     for ej in end_joints:
@@ -820,8 +817,8 @@ def create_pole_vector_joints(*args) -> list:
 
     Args
     ----
-    - joints : str
-        joint1, joint2, joint3, joint4, joint5 ...
+        - joints : str
+            joint1, joint2, joint3, joint4, joint5 ...
 
     Examples
     --------
@@ -869,7 +866,7 @@ def parent_in_sequence(*args) -> list:
 
     Args
     ----
-    - object : str
+        - object : str
 
     Examples
     --------
@@ -949,11 +946,11 @@ def set_joint_style(*args, style: str="bone") -> None:
 
     Args
     ----
-    - joints : str
-    - style : str, optional
-        - **bone**: (0)
-        - **multiChild as box**: (1)
-        - **none**: (2)
+        - joints : str
+        - style : str, optional
+            - **bone**: (0)
+            - **multiChild as box**: (1)
+            - **none**: (2)
 
     Examples
     --------
@@ -974,77 +971,58 @@ def set_joint_style(*args, style: str="bone") -> None:
 
 
 
-@alias(d="degree")
 @with_selection
-def create_curve_from_points(*args, degree=3) -> str:
-    """ If the start and end points are the same, it creates a closed curve.
+def get_connected_nodes(node: str) -> list:
+    """ Returns the names of connected nodes.
 
     Notes
     -----
         **Decoration** :
             - @with_selection
-            - @alias(d="degree")    
 
     Args
     ----
-        *args : str
-
-    Returns
-    -------
-        curve name : str
+        - node : str
 
     Examples
     --------
-    >>> create_curve_from_points()  # @with_selection
-    >>> create_curve_from_points(d=3)
-    >>> create_curve_from_points(p1, p2, p3, d=1)
+    >>> get_connected_nodes()
+    >>> get_connected_nodes("joint1", ...)
+    ['addDoubleLinear1', 'addDoubleLinear2', 'motionPath1', ...]
     """
-    points = []
-    for i in args:
-        pos = get_position(i)
-        points += pos
+    if not cmds.objExists(node):
+        return []
 
+    targets = set()
+    conn = cmds.listConnections(node, s=True, d=True) or []
+    for n in conn:
+        if n != node and n != "time1" and not n.startswith("default"):
+            targets.add(n)
 
-    if points[0] != points[-1]:
-        result = cmds.curve(p=points, d=degree)
-    else:
-        result = cmds.circle(nr=(0,1,0), ch=False, s=len(points)-1)[0]
-        for idx, pos in enumerate(points[:-1]):
-            x, y, z = pos
-            cmds.move(x, y, z, f"{result}.cv[{idx}]", ws=True)
-
-    return result
+    return list(targets)
 
 
 
-def create_joint_on_motion_path(curve: str, num: int=2) -> list:
-    """ Create joints and distribute them evenly along a curve
-    using Maya's motion path.
+@alias(c="curve", n="num_of_jnt")
+def create_joint_on_curve_path(curve: str, num_of_jnt: int=1) -> list:
+    """ This function creates a few number of joints on a curve. Using the motion path, finally, it deletes the nodes related to the motion path.
 
-    Parameters
-    ----------
-    - num : int
-        The number of joints to create and distribute.
-    - curve : str
-        The name of the curve to follow with motion path.
+    Notes
+    -----
+        **Decoration** :
+            - @alias(c="curve", n="num_of_jnt")
 
-    Returns
-    -------
-    list
-        List of joints that were created and attached to the motion path.
-
-    Raises
-    ------
-    Warning
-        - If num < 1, the function will warn and return an empty list.
-        - If curve doesn't exist, the func will warn and return an empty list.
+    Args
+    ----
+        - curve : str
+        - num_of_jnt : int
 
     Examples
     --------
-    >>> create_motion_path_joints(5, "curve1")
-    >>> ["joint1", "joint2", "joint3", "joint4", "joint5"]
+    >>> create_joint_on_curve_path("curve", n=5)
+    ["joint1", "joint2", "joint3", ...]
     """
-    if not isinstance(num, int) or num < 1:
+    if not isinstance(num_of_jnt, int) or num_of_jnt < 1:
         cmds.warning("Parameter 'num' must be a positive integer.")
         return []
 
@@ -1052,10 +1030,9 @@ def create_joint_on_motion_path(curve: str, num: int=2) -> list:
         cmds.warning(f"Curve '{curve}' does not exist.")
         return []
 
-
-    step = 1.0/(num-1) if num > 1 else 0.0
+    step = 1.0/(num_of_jnt-1) if num_of_jnt > 1 else 0.0
     result = []
-    for i in range(num):
+    for i in range(num_of_jnt):
         cmds.select(cl=True)
         jnt = cmds.joint(p=(0, 0, 0))
         u_value = i * step
@@ -1071,10 +1048,214 @@ def create_joint_on_motion_path(curve: str, num: int=2) -> list:
         )
         cmds.cutKey(motion_path, cl=True, at="u")
         cmds.setAttr(f"{motion_path}.uValue", u_value)
+
+        jnt_pos = cmds.xform(jnt, q=True, ws=True, translation=True)
+        jnt_rot = cmds.xform(jnt, q=True, ws=True, rotation=True)
+
+        conn_nodes = get_connected_nodes(jnt)
+        cmds.delete(conn_nodes)
+
+        cmds.xform(jnt, translation=jnt_pos, ws=True)
+        cmds.xform(jnt, rotation=jnt_rot, ws=True)
+        
         result.append(jnt)
     
+    return result
+
+
+@with_selection
+def align_object_to_plane(*args):
+    """ Aligns the given objects to a plane defined by the first three objects.
+
+    Notes
+    -----
+        **Decoration** :
+            - @with_selection
+
+    Args
+    ----
+        *args : str
+            Minimum of 4 required.
+    
+    Examples
+    --------
+    >>> align_object_to_plane()
+    >>> align_object_to_plane("joint1", "joint2", "joint3", "joint4", ...)
+    ['joint4']
+    """
+    if len(args) < 4:
+        cmds.warning("At least 4 objects are required.")
+        return []
+
+
+    parent_map = {}
+    for obj in args:
+        if not cmds.objExists(obj):
+            cmds.warning(f"Object '{obj}' does not exist. Skipping.")
+            continue
+        
+        parent = cmds.listRelatives(obj, parent=True, fullPath=False)
+        parent_map[obj] = parent
+        if parent:
+            cmds.parent(obj, world=True)
+
+
+    moved_objects = []
+    try:
+        p1 = om2.MVector(*cmds.xform(args[0], q=True, ws=True, t=True))
+        p2 = om2.MVector(*cmds.xform(args[1], q=True, ws=True, t=True))
+        p3 = om2.MVector(*cmds.xform(args[2], q=True, ws=True, t=True))
+
+        v1 = p2 - p1
+        v2 = p3 - p1
+        normal = v1 ^ v2
+
+        if normal.length() == 0:
+            cmds.warning("The first three objects must not be colinear.")
+            return []
+        normal.normalize()
+
+        for obj in args[3:]:
+            pos = om2.MVector(*cmds.xform(obj, q=True, ws=True, t=True))
+            vec = pos - p1
+            distance = normal * vec
+            projected = pos - normal * distance
+            cmds.xform(obj, ws=True, t=(projected.x, projected.y, projected.z))
+            moved_objects.append(obj)
+
+    finally:
+        for obj, parent in parent_map.items():
+            if parent:
+                cmds.parent(obj, parent)
+
+    return moved_objects
+
+
+@alias(cn="curve_name", d="degree", cl="closed_curve")
+def create_curve_from_points(
+    *points: List[Tuple[float, float, float]], 
+    curve_name: str = "", 
+    degree: int = 1, 
+    closed_curve: bool = False
+) -> str:
+    """ If the start and end points are the same, it creates a closed curve.
+
+    Notes
+    -----
+        **Decoration** :
+            - @alias(cn="curve_name", d="degree", cl="closed_curve")    
+
+    Args
+    ----
+        *points : tuple
+            - (0, 1, 2), (3, 4, 5), (6, 7, 8), ...
+        curve_name : str
+        degree : int
+        closed_curve: bool
+
+    Returns
+    -------
+        curve name : str
+
+    Examples
+    --------
+    >>> points = get_position(cmds.ls(sl=True))
+    >>> create_curve_from_points(*points, cn="curve_name", d=3)
+    >>> create_curve_from_points((0, 1, 2), (3, 4, 5), ..., d=1, cl=True)
+    "curve1"
+    """
+    if not closed_curve:
+        result = cmds.curve(p=points, d=degree, n=curve_name)
+    else:
+        points += points[:1]
+        if degree == 1:
+            result = cmds.curve(p=points, d=degree, n=curve_name)
+        else:
+            result = cmds.circle(nr=(0,1,0), s=len(points)-1, n=curve_name)
+            result = result[0]
+            for idx, pos in enumerate(points[:-1]):
+                x, y, z = pos
+                cmds.move(x, y, z, f"{result}.cv[{idx}]", ws=True)
 
     return result
 
+
+@with_selection
+def create_curve_aim(
+    start_obj_or_vtx: str,
+    end_obj_or_vtx: str,
+    world_up_object: str = ""
+) -> str:
+    """ This function creates a curve connecting a start and an end. It can take objects or vertices as arguments.
+
+    Notes
+    -----
+        **Decoration** :
+            - @with_selection   
+
+    Args
+    ----
+        start_obj_or_vtx : str
+        end_obj_or_vtx : str
+        world_up_object : str
+
+    Returns
+    -------
+        curve name : str
+
+    Examples
+    --------
+    >>> create_curve_aim() # @with_selection
+    >>> create_curve_aim("pCube1", "pCube2")
+    >>> create_curve_aim("pCube1", "pCube2", "locator1")
+    >>> create_curve_aim("pCube1.vtx[0]", "pCube2.vtx[3]", "locator1")
+    "curve1"
+    """
+    start = get_position(start_obj_or_vtx)[0]
+    end = get_position(end_obj_or_vtx)[0]
+    len = get_distance(start, end)
+    if len <= 1e-8:
+        raise ValueError("Start and End are the same (length 0).")
+
+    cuv = cmds.curve(p=[(0, 0, 0), (len, 0, 0)], d=1)
+    cmds.xform(cuv, ws=True, t=start)
+
+    end_loc = cmds.spaceLocator()[0]
+    cmds.xform(end_loc, ws=True, t=end)
+
+    if world_up_object:
+        up_pos = get_position(world_up_object)[0]
+        up_loc = cmds.spaceLocator()[0]
+        cmds.xform(up_loc, ws=True, t=up_pos)
+        aim_constraint = cmds.aimConstraint(
+            end_loc, 
+            cuv,
+            aimVector=(1, 0, 0),
+            upVector=(0, 1, 0),
+            worldUpType="object",
+            worldUpObject=up_loc
+        )[0]
+        cmds.delete(aim_constraint, up_loc)
+    else:
+        aim_constraint = cmds.aimConstraint(
+            end_loc, 
+            cuv,
+            aimVector=(1, 0, 0),
+            upVector=(0, 1, 0),
+            worldUpType="vector",
+            worldUpVector=(0, 1, 0)
+        )[0]
+        cmds.delete(aim_constraint)
+
+    cmds.delete(end_loc)
+    cmds.rebuildCurve(cuv, d=3, s=3, rpo=1, ch=0, end=1, kr=0, kt=0)
+    cmds.delete(cuv, ch=True)
+
+    return cuv
+
+
+
+def create_curve_animation():
+    pass
 
 
