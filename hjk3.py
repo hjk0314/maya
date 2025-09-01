@@ -1259,3 +1259,76 @@ def create_curve_animation():
     pass
 
 
+
+def create_group_for_rig(group_name: str) -> list:
+    """ This function creates a group for the rig.
+
+    Notes
+    -----
+        **No Decoration** :
+
+    Args
+    ----
+        group_name : str
+
+    Returns
+    -------
+        created_group : str
+            ["group_name", "rig", "MODEL", "controllers", "skeletons", "geoForBind", "extraNodes", "bindBones", "rigBones"]
+
+    Examples
+    --------
+    >>> create_group_for_rig("butterflyA")
+    ['butterflyA', 'rig', 'MODEL', 'controllers', 'skeletons', 'geoForBind', 'extraNodes', 'bindBones', 'rigBones']
+    """
+    if not group_name:
+        return []
+    
+    names_of_all_groups = {
+        group_name: ["rig", "MODEL"], 
+        "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
+        "skeletons": ["bindBones", "rigBones"]
+    }
+
+    result = [
+        group_name, 
+        "rig", 
+        "MODEL", 
+        "controllers", 
+        "skeletons", 
+        "geoForBind", 
+        "extraNodes", 
+        "bindBones", 
+        "rigBones"
+    ]
+
+    for parents, children in names_of_all_groups.items():
+        if not cmds.objExists(parents):
+            cmds.group(em=True, n=parents)
+        for child in children:
+            if not cmds.objExists(child):
+                cmds.group(em=True, n=child)
+            cmds.parent(child, parents)
+
+    return result
+
+
+# a = get_bounding_box_position()
+# loc = cmds.spaceLocator()
+# cmds.xform(loc, t=a, ws=True)
+
+
+# joints = create_joint_on_curve_path("curve2", n=4)
+# jnt = parent_in_sequence(*joints)
+# orient_joints(*jnt)
+
+
+# create_curve_aim("joint1", "joint14")
+
+
+# sel = cmds.ls(sl=True)
+# pos = get_position(*sel)
+# cuv = create_curve_from_points(*pos, d=3)
+# joints = create_joint_on_curve_path(cuv, n=6)
+# jnt = parent_in_sequence(*joints)
+# orient_joints(*jnt)
