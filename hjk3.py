@@ -1318,17 +1318,41 @@ def create_group_for_rig(group_name: str) -> list:
 # cmds.xform(loc, t=a, ws=True)
 
 
-# joints = create_joint_on_curve_path("curve2", n=4)
+# joints = create_joint_on_curve_path("curve2", n=6)
 # jnt = parent_in_sequence(*joints)
 # orient_joints(*jnt)
 
 
-# create_curve_aim("joint1", "joint14")
+# create_curve_aim()
+
+
+# sel = cmds.ls(sl=True, fl=True)
+# pos = get_position(*sel)
+# for i in pos:
+#     cmds.select(cl=True)
+#     jnt = cmds.joint(p=(0,0,0))
+#     cmds.xform(jnt, t=i, ws=True)
+
+
+# cuv = create_curve_from_points(*pos, d=3, cl=True)
+# joints = create_joint_on_curve_path("curve1", n=7)
+# jnt = parent_in_sequence(*joints)
+# orient_joints(*jnt)
 
 
 # sel = cmds.ls(sl=True)
-# pos = get_position(*sel)
-# cuv = create_curve_from_points(*pos, d=3)
-# joints = create_joint_on_curve_path(cuv, n=6)
-# jnt = parent_in_sequence(*joints)
-# orient_joints(*jnt)
+# orient_joints()
+
+
+# a = get_bounding_box_position()
+# cmds.select(cl=True)
+# jnt = cmds.joint(p=(0,0,0))
+# loc = cmds.spaceLocator()
+# cmds.xform(loc, t=a, ws=True)
+
+
+# b = parent_in_sequence()
+# orient_joints(*b)
+
+
+# orient_joints()
