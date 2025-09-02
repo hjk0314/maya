@@ -2938,13 +2938,13 @@ def make_joints(cuv) -> list:
 
     return result
 
-# mesh = "char_peacockA_mdl_v9999:peacockA_skin_geo"
+# mesh = "polySurface1"
 # sel = cmds.ls(sl=True)
 # for i in sel:
 #     uv = get_uv_coordinates_closet_object(i, mesh)
 #     fol = create_follicle(mesh, uv)
-#     joints = make_joints(i)
-#     jnt = joints[0]
-#     pm.parent(jnt, fol)
+    # joints = make_joints(i)
+    # jnt = joints[0]
+    # pm.parent(jnt, fol)
 
 
