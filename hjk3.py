@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import List, Tuple, Union
+from typing import Iterable, Any, Set, Dict, List, Tuple, Union, Optional
 # from collections import Counter
 import time
 import functools
@@ -775,7 +775,6 @@ def orient_joints(*args, **kwargs) -> None:
     primary = "xyz"
     secondary = "yup"
 
-
     for k, v in kwargs.items():
         if k in ("primary", "p") and v in valid_primary:
             primary = v
@@ -1361,10 +1360,343 @@ def create_group_for_rig(group_name: str) -> list:
 
 
 # b = parent_in_sequence()
-orient_joints()
+# orient_joints()
 
 
 # orient_joints(p="yxz", s="zdown")
 # group_with_pivot(null=True)
 
 # create_pole_vector_joints()
+
+
+
+
+
+def extract_hierarchy_range(
+    start: str,
+    end: str,
+    target_group: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    [start → end] 경로에 속한 노드만 원 트리에서 '깨끗하게 분리'하고,
+    복원에 필요한 메타 정보를 반환한다.
+
+    Notes
+    -----
+    - 경로 밖의 분기 자식들은 일시적으로 start의 원래 부모(경로 밖)로 이동
+    - 모든 리패런트는 월드 변환을 보존
+
+    Parameters
+    ----------
+    start : str
+        구간 시작 노드
+    end : str
+        구간 끝 노드 (start의 하위여야 함)
+    target_group : Optional[str]
+        분리된 경로를 담을 그룹 이름(없거나 존재하지 않으면 자동 생성)
+
+    Returns
+    -------
+    Dict[str, Any]
+        restore_hierarchy_range(meta)로 복원 가능한 메타 데이터
+    """
+    # --- local helpers -------------------------------------------------------
+    def _xform_world_matrix(node: str) -> List[float]:
+        return cmds.xform(node, q=True, m=True, ws=True)
+
+    def _parent_preserve_world(child: str, new_parent: Optional[str]) -> None:
+        wm = _xform_world_matrix(child)
+        if new_parent:
+            cmds.parent(child, new_parent)
+        else:
+            cmds.parent(child, w=True)
+        cmds.xform(child, m=wm, ws=True)
+    # -------------------------------------------------------------------------
+
+    # 1) 경로 계산/검증 (사용자 제공 함수)
+    path: List[str] = get_downstream_path(start, end)
+    path_set = set(path)
+
+    # start의 '경로 밖' 부모
+    outside_parents = cmds.listRelatives(start, p=True, f=False) or []
+    outside_parent = outside_parents[0] if outside_parents else None
+
+    # 다음 노드 매핑(경로 유지용)
+    next_of = {n: (path[i + 1] if i < len(path) - 1 else None) for i, n in enumerate(path)}
+
+    # 2) 경로가 아닌 분기 자식들을 outside_parent로 임시 이동
+    moved_children: List[Dict[str, str]] = []
+    for node in path:
+        children = cmds.listRelatives(node, c=True, type="transform", f=False) or []
+        keep_child = next_of[node]
+        for ch in children:
+            if ch == keep_child:
+                continue
+            if ch in path_set:
+                continue
+            _parent_preserve_world(ch, outside_parent)
+            moved_children.append({"child": ch, "original_parent": node})
+
+    # 3) start를 target_group로 이동 → 경로만 딱 분리됨
+    if target_group and cmds.objExists(target_group):
+        extract_grp = target_group
+    else:
+        extract_grp = cmds.group(em=True, n=target_group or f"{start}_to_{end}_EXTRACT_GRP")
+    _parent_preserve_world(start, extract_grp)
+
+    # 4) 메타 반환
+    return {
+        "version": 1,
+        "start": start,
+        "end": end,
+        "path": path,
+        "extracted_group": extract_grp,
+        "outside_parent": outside_parent,
+        "moved_children": moved_children,
+    }
+
+
+def restore_hierarchy_range(meta: Dict[str, Any], delete_empty_group: bool = True) -> None:
+    """
+    extract_hierarchy_range()가 반환한 메타로 원래 트리 구조를 복원한다.
+
+    Parameters
+    ----------
+    meta : Dict[str, Any]
+        extract_hierarchy_range()의 반환값
+    delete_empty_group : bool
+        복원 후 추출 그룹이 비어 있으면 삭제할지 여부
+    """
+    # --- local helpers -------------------------------------------------------
+    def _xform_world_matrix(node: str) -> List[float]:
+        return cmds.xform(node, q=True, m=True, ws=True)
+
+    def _parent_preserve_world(child: str, new_parent: Optional[str]) -> None:
+        wm = _xform_world_matrix(child)
+        if new_parent:
+            cmds.parent(child, new_parent)
+        else:
+            cmds.parent(child, w=True)
+        cmds.xform(child, m=wm, ws=True)
+    # -------------------------------------------------------------------------
+
+    required = {"start", "outside_parent", "moved_children", "extracted_group"}
+    if not required.issubset(meta.keys()):
+        raise ValueError("Invalid meta: missing required keys.")
+
+    start = meta["start"]
+    outside_parent = meta["outside_parent"]
+    moved_children = meta["moved_children"]
+    extract_grp = meta["extracted_group"]
+
+    if not cmds.objExists(start):
+        raise ValueError(f"'{start}' does not exist in the scene.")
+
+    # 1) start를 원래 부모로 복귀(월드 좌표 유지)
+    _parent_preserve_world(start, outside_parent)
+
+    # 2) 임시로 밖에 빼두었던 분기 자식들 복귀
+    for rec in moved_children:
+        ch = rec.get("child")
+        orig_parent = rec.get("original_parent")
+        if not ch or not orig_parent:
+            continue
+        if not (cmds.objExists(ch) and cmds.objExists(orig_parent)):
+            # 씬 변경으로 사라졌을 수 있음 → 조용히 스킵
+            continue
+        _parent_preserve_world(ch, orig_parent)
+
+    # 3) 추출 그룹 정리
+    if delete_empty_group and cmds.objExists(extract_grp):
+        if not cmds.listRelatives(extract_grp, c=True):
+            try:
+                cmds.delete(extract_grp)
+            except RuntimeError:
+                pass
+
+
+
+
+def orient_joint(*args: str, **kwargs) -> None:
+    """
+    Orient joints cleanly with predictable results.
+
+    Notes
+    -----
+        - 인자가 없으면 현재 선택에서 joint만 사용(Decorator 없이도 안전).
+        - 기본 동작: freeze→체인별 재지향→말단 none 정리.
+        - Mixamo 예: orient_joints(p="yzx", s="zup")
+        - 왼손잡이 예: orient_joints(p="yxz", s="zdown")
+
+    Args (kwargs)
+    -------------
+    p | primary : {"xyz","yzx","zxy","zyx","yxz","xzy","none"} = "xyz"
+        orientJoint의 primary axis
+    s | secondary : {"xup","xdown","yup","ydown","zup","zdown","none"} = "yup"
+        secondaryAxisOrient
+    ch | children : bool = True
+        시작 joint 이하 모든 자식을 포함해 체인 단위로 지향
+    freeze : bool = True
+        재지향 전에 rotate를 0으로 정리(makeIdentity -r -jo)
+    end_none : bool = True
+        말단 joint는 oj='none'으로 정리
+    ro | rotationOrder : {"xyz","yzx","zxy","xzy","yxz","zyx"} | None = None
+        회전 순서 지정(선택)
+    """
+    # ---------- parse flags ----------
+    valid_primary = {"xyz", "yzx", "zxy", "zyx", "yxz", "xzy", "none"}
+    valid_secondary = {"xup", "xdown", "yup", "ydown", "zup", "zdown", "none"}
+    valid_ro = {"xyz", "yzx", "zxy", "xzy", "yxz", "zyx"}
+
+    primary = kwargs.get("primary", kwargs.get("p", "xyz"))
+    secondary = kwargs.get("secondary", kwargs.get("s", "yup"))
+    include_children = kwargs.get("children", kwargs.get("ch", True))
+    freeze = bool(kwargs.get("freeze", True))
+    end_none = bool(kwargs.get("end_none", True))
+    ro = kwargs.get("rotationOrder", kwargs.get("ro", None))
+
+    if primary not in valid_primary:
+        cmds.error(f"Invalid primary(p): {primary}")
+        return
+    if secondary not in valid_secondary:
+        cmds.error(f"Invalid secondary(s): {secondary}")
+        return
+    if ro is not None and ro not in valid_ro:
+        cmds.error(f"Invalid rotationOrder(ro): {ro}")
+        return
+
+    # ---------- gather joints ----------
+    def _as_joints(seq: Iterable[str]) -> List[str]:
+        out: List[str] = []
+        for n in seq:
+            if not cmds.objExists(n):
+                cmds.warning(f"Skipped non-existent: {n}")
+                continue
+            if cmds.nodeType(n) != "joint":
+                continue
+            out.append(n)
+        return out
+
+    if args:
+        seeds = _as_joints(args)
+    else:
+        seeds = _as_joints(cmds.ls(sl=True) or [])
+
+    if not seeds:
+        cmds.warning("No joints to orient.")
+        return
+
+    # expand children if requested
+    all_set: Set[str] = set()
+    def _collect_chain(root: str) -> List[str]:
+        chain = [root]
+        if include_children:
+            desc = cmds.listRelatives(root, ad=True, type="joint") or []
+            # ad는 보통 leaf-first 이므로 parent-first를 위해 뒤집기
+            desc = list(reversed(desc))
+            chain.extend(desc)
+        return chain
+
+    for r in seeds:
+        for j in _collect_chain(r):
+            all_set.add(j)
+
+    # sort parent-first for deterministic behavior
+    def _depth(n: str) -> int:
+        d = 0
+        cur = n
+        while True:
+            p = cmds.listRelatives(cur, p=True, f=False)
+            if not p:
+                break
+            d += 1
+            cur = p[0]
+        return d
+
+    all_joints = sorted(all_set, key=_depth)  # 부모가 먼저
+
+    # pick roots among the working set (parent not in set)
+    working_set = set(all_joints)
+    roots = [j for j in all_joints
+             if not (cmds.listRelatives(j, p=True, f=False) and
+                     cmds.listRelatives(j, p=True, f=False)[0] in working_set)]
+
+    # ---------- helpers ----------
+    def _unlock_temporarily(node: str, attrs: Iterable[str]) -> Dict[str, bool]:
+        """Unlock attrs if locked; return original lock map."""
+        state: Dict[str, bool] = {}
+        for a in attrs:
+            plug = f"{node}.{a}"
+            if not cmds.objExists(plug):
+                continue
+            locked = cmds.getAttr(plug, l=True)
+            state[a] = bool(locked)
+            if locked:
+                try:
+                    cmds.setAttr(plug, l=False)
+                except Exception:
+                    pass
+        return state
+
+    def _relock(node: str, state: Dict[str, bool]) -> None:
+        for a, locked in state.items():
+            plug = f"{node}.{a}"
+            if not cmds.objExists(plug):
+                continue
+            try:
+                cmds.setAttr(plug, l=locked)
+            except Exception:
+                pass
+
+    # ---------- optional rotation order ----------
+    if ro:
+        for j in all_joints:
+            try:
+                cmds.setAttr(f"{j}.rotateOrder", valid_ro.index(ro))
+            except Exception:
+                pass
+
+    # ---------- freeze (rotate→JO) ----------
+    if freeze:
+        # 잠금 해제 후 freeze, 끝나면 복구
+        for j in all_joints:
+            st = _unlock_temporarily(j, ("rx", "ry", "rz", "jointOrientX", "jointOrientY", "jointOrientZ"))
+            try:
+                cmds.makeIdentity(j, apply=True, r=True, jo=True, n=False)
+            except Exception:
+                pass
+            _relock(j, st)
+
+    # ---------- orient per root (once) ----------
+    # 먼저 기존 스케일 오리엔트 정리(zso), 그리고 지정 축으로 재지향
+    for r in roots:
+        st = _unlock_temporarily(r, ("jointOrientX", "jointOrientY", "jointOrientZ"))
+        try:
+            # children=True 로 체인 한 번에 처리
+            cmds.joint(r, e=True,
+                       zeroScaleOrient=True,
+                       orientJoint=primary,
+                       secondaryAxisOrient=secondary,
+                       children=True)
+        except Exception as e:
+            cmds.warning(f"Orient failed at root '{r}': {e}")
+        _relock(r, st)
+
+    # ---------- end joints: oj='none' ----------
+    if end_none:
+        for j in all_joints:
+            kids = cmds.listRelatives(j, c=True, type="joint") or []
+            if not kids:
+                st = _unlock_temporarily(j, ("jointOrientX", "jointOrientY", "jointOrientZ"))
+                try:
+                    cmds.joint(j, e=True, oj="none", zso=True, ch=False)
+                except Exception:
+                    pass
+                _relock(j, st)
+
+
+a = extract_hierarchy_range("joint1", "joint13")
+
+orient_joint("joint1", p="yxz", s="zdown")
+
+restore_hierarchy_range(a, delete_empty_group=True)
