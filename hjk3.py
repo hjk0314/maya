@@ -798,7 +798,7 @@ def orient_joints(*args, **kwargs) -> None:
 
     end_joints = []
     for j in args:
-        if not cmds.listRelatives(j, children=False, type="joint"):
+        if not cmds.listRelatives(j, children=True, type="joint"):
             end_joints.append(j)
     for ej in end_joints:
         cmds.joint(ej, e=True, oj='none', ch=True, zso=True)
@@ -908,21 +908,30 @@ def group_with_pivot(*args, **kwargs) -> List[list]:
     """
     result = []
     for i in args:
-        grp_name = [f"{i}_grp"]
+        if cmds.nodeType(i) == 'transform':
+            node = i
+        else:
+            parent = cmds.listRelatives(i, parent=True, fullPath=False)
+            if parent:
+                node = parent[0]
+            else:
+                continue
+
+        grp_name = [f"{node}_grp"]
         if kwargs.get("null", False):
-            grp_name.append(f"{i}_null")
+            grp_name.append(f"{node}_null")
 
 
         groups = []
         for gn in grp_name:
             gn = "" if cmds.objExists(gn) else gn
             grp = cmds.group(em=True, n=gn)
-            cmds.matchTransform(grp, i, pos=True, rot=True)
+            cmds.matchTransform(grp, node, pos=True, rot=True)
             groups.append(grp)
-        groups.append(i)
+        groups.append(node)
 
 
-        top_group = cmds.listRelatives(i, parent=True, fullPath=False)
+        top_group = cmds.listRelatives(node, parent=True, fullPath=False)
         if top_group:
             cmds.parent(groups[0], top_group)
 
@@ -1334,8 +1343,8 @@ def create_group_for_rig(group_name: str) -> list:
 #     cmds.xform(jnt, t=i, ws=True)
 
 
-# cuv = create_curve_from_points(*pos, d=3, cl=True)
-# joints = create_joint_on_curve_path("curve1", n=7)
+# cuv = create_curve_from_points(*pos, d=1)
+# joints = create_joint_on_curve_path(cuv, n=3)
 # jnt = parent_in_sequence(*joints)
 # orient_joints(*jnt)
 
@@ -1352,7 +1361,10 @@ def create_group_for_rig(group_name: str) -> list:
 
 
 # b = parent_in_sequence()
-# orient_joints(*b)
+orient_joints()
 
 
-# orient_joints()
+# orient_joints(p="yxz", s="zdown")
+# group_with_pivot(null=True)
+
+# create_pole_vector_joints()
