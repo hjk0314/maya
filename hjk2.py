@@ -2844,9 +2844,9 @@ cc_main = "cc_main"
 
 # create_rig_groups("arrowBagA")
 
-# dt = Data()
-# points = dt.ctrl_shapes["sphere"]
-# create_curve(*points, cn="cc_body")
+dt = Data()
+points = dt.ctrl_shapes["sphere"]
+create_curve(*points, cn="cc_leg_LF_IK_1")
 
 # group_with_pivot()
 
@@ -2922,29 +2922,36 @@ cc_main = "cc_main"
 #     cmds.connectAttr("setRange1.outValueX", st, f=True)
 #     cmds.connectAttr("reverse1.outputX", cu, f=True)
 
-def make_joints(cuv) -> list:
-    joints = create_motion_path_joints(10, cuv)
+# def make_joints(cuv) -> list:
+#     joints = create_motion_path_joints(10, cuv)
 
-    result= []
-    for jnt in joints:
-        cmds.select(cl=True)
-        joint = cmds.joint(p=(0, 0, 0))
-        cmds.matchTransform(joint, jnt, pos=True)
-        result.append(joint)
-    cmds.delete(joints)
-    result.sort(reverse=True)
-    parent_in_sequence(*result)
-    orient_joints(*result)
+#     result= []
+#     for jnt in joints:
+#         cmds.select(cl=True)
+#         joint = cmds.joint(p=(0, 0, 0))
+#         cmds.matchTransform(joint, jnt, pos=True)
+#         result.append(joint)
+#     cmds.delete(joints)
+#     result.sort(reverse=True)
+#     parent_in_sequence(*result)
+#     orient_joints(*result)
 
-    return result
+#     return result
 
-# mesh = "polySurface1"
-# sel = cmds.ls(sl=True)
+# mesh = "dummy_wing_LF"
+# sel = cmds.ls(sl=True, fl=True)
 # for i in sel:
+#     # uv = get_uv_coordinates(i)
 #     uv = get_uv_coordinates_closet_object(i, mesh)
 #     fol = create_follicle(mesh, uv)
-    # joints = make_joints(i)
-    # jnt = joints[0]
-    # pm.parent(jnt, fol)
+#     cmds.select(cl=True)
+#     jnt = cmds.joint(p=(0, 0, 0))
+#     cmds.parent(jnt, "%s" % fol)
+#     cmds.setAttr(f"{jnt}.translateX", 0)
+#     cmds.setAttr(f"{jnt}.translateY", 0)
+#     cmds.setAttr(f"{jnt}.translateZ", 0)
+#     cmds.setAttr(f"{jnt}.rotateX", 0)
+#     cmds.setAttr(f"{jnt}.rotateY", 0)
+#     cmds.setAttr(f"{jnt}.rotateZ", 0)
 
 
