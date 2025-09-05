@@ -2836,7 +2836,7 @@ def straighten_curve_cvs(*curves) -> list:
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
 
-cc_main = "cc_main"
+# cc_main = "cc_main"
 # cc_sub = "cc_sub"
 # cc_body = "cc_body"
 
@@ -2844,9 +2844,9 @@ cc_main = "cc_main"
 
 # create_rig_groups("arrowBagA")
 
-dt = Data()
-points = dt.ctrl_shapes["sphere"]
-create_curve(*points, cn="cc_leg_LF_IK_1")
+# dt = Data()
+# points = dt.ctrl_shapes["sphere"]
+# create_curve(*points, cn="cc_leg_LF_IK_1")
 
 # group_with_pivot()
 
