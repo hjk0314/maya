@@ -1391,7 +1391,7 @@ def extract_range_path(start: str, end: str) -> Dict[str, List]:
     parent_in_sequence(*get_path)
 
     return meta_data
-    
+
 
 
 def restore_range_path(meta_data: Dict[str, List]) -> None:
@@ -1418,78 +1418,546 @@ def restore_range_path(meta_data: Dict[str, List]) -> None:
 
 
 
+def split_numbers(text: str) -> Dict[int, str]:
+    """ This function splits numbers and letters.
 
+    Notes
+    -----
+        **No Decoration**
 
+    Args
+    ----
+        text : str
+            - 'vhcl_car123_rig_v0123'
+            - "a0123_v2345"
 
-
-
-def rename_objects(new_name: str="", change_word: str="", objects: list=None) -> list:
+    Examples
+    --------
+    >>> split_numbers('vhcl_car123_rig_v0123')
+    {0: 'vhcl_car', 1: '123', 2: '_rig_v', 3: '0123'}
     """
-    Renames multiple Maya objects, including those with duplicate names and within a hierarchy,
-    based on a new name pattern or a string replacement.
+    split_text = re.split(r'(\d+)', text)
+    remove_blank = [i for i in split_text if i]
+    result = {idx: name for idx, name in enumerate(remove_blank)}
+
+    return result
+
+
+
+@alias(p="prefix", s="suffix")
+@with_selection
+def add_affixes(*args, prefix: str = "", suffix: str = "") -> list:
+    """ Add a prefix and/or suffix to each input string.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(p="prefix", s="suffix")
+            - @with_selection
+
+    Args
+    ----
+        - args : str
+        - prefix : str, optional 
+        - suffix : str, optional 
+
+    Examples
+    --------
+    >>> add_affixes("item1", "item2", prefix="pre_", suffix="_ctrl")
+    ['pre_item1_ctrl', 'pre_item2_ctrl']
     """
-    if objects is None:
-        objects = cmds.ls(selection=True, long=True)
+    result = []
+    for input_string in args:
+        if prefix and suffix:
+            result_string = f"{prefix}{input_string}{suffix}"
+        elif prefix and not suffix:
+            result_string = f"{prefix}{input_string}"
+        elif not prefix and suffix:
+            result_string = f"{input_string}{suffix}"
+        else:
+            result_string = f"{input_string}"
+        result.append(result_string)
 
-    if not objects:
-        print("No objects selected or provided.")
-        return []
+    return result
 
-    objects.sort(key=len, reverse=True)
-    renamed_objects = []
 
-    # Case 1: Replace a specific word
-    if new_name and change_word:
-        for obj in objects:
-            short_name = obj.split('|')[-1]
-            if change_word in short_name:
-                new_short_name = short_name.replace(change_word, new_name)
-                renamed_obj = cmds.rename(obj, new_short_name)
-                renamed_objects.append(renamed_obj)
-            else:
-                print(f"'{change_word}' not found in object '{short_name}'. Skipping.")
-        return renamed_objects
 
-    # Case 2: Rename with a new name and optional sequential numbering
-    if new_name:
-        numbers = re.findall(r'\d+', new_name)
+@alias(n="name", p="prefix", s="suffix")
+@with_selection
+def re_name(*args, name: str="", prefix: str="", suffix: str=""):
+    """ This function changes a name. 
+    
+    - Duplicate names are allowed. 
+    - You can add a ``prefix`` and ``suffix`` to a name. 
+    - Rename in the order you select.
+    - Process in the reverse order of selection.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(n="name", p="prefix", s="suffix")
+            - @with_selection
+
+    Args
+    ----
+        - args(str) : Base name
+        - name(str) : Name to change
+        - prefix : str, optional
+        - suffix : str, optional 
+
+    Examples
+    --------
+    >>> re_name(n="tail_1", p="rig_", s="_FK")
+    >>> re_name(p="rig_", s="_FK")
+    >>> re_name("joint1", "joint2", n="tail_1", p="rig_", s="_FK")
+    ['rig_tail_1_FK', 'rig_tail_2_FK', ...]
+    """
+    name_slice = split_numbers(name)
+    number_only = {k: v for k, v in name_slice.items() if v.isdigit()}
+    number_idx = max(number_only.keys()) if number_only else None
+
+
+    org_name = {}
+    new_name = []
+    for idx, org in enumerate(args):
+        name_slice_copy = name_slice.copy()
+        if number_idx:
+            num = name_slice_copy[number_idx]
+            name_slice_copy[number_idx] = f"%0{len(num)}d" % (int(num)+idx)
+            new = "".join(name_slice_copy.values())
+        else:
+            new = name + "%s" % idx if name else org.split("|")[-1]
+        org_name[org] = cmds.ls(org, long=True)[0]
+        new_name.append(new)
+
+
+    org_name_copy = list(org_name.values()).copy()
+    org_name_copy.sort(key=lambda x: x.count('|'), reverse=True)
+    new_name_affix = add_affixes(*new_name, p=prefix, s=suffix)
+
+
+    result = {}
+    for org in org_name_copy:
+        org_idx = list(org_name.values()).index(org)
+        new = new_name_affix[org_idx]
+        final_name = cmds.rename(org, new)
+        result[org] = final_name
+
+
+    reorder = []
+    for arg in args:
+        arg_long = org_name[arg]
+        reorder.append(result[arg_long])
+
+    return reorder
+
+
+
+@alias(s="search", r="replace_name")
+@with_selection
+def replace_name(*args, search: str, replace_name: str):
+    """ This function replaces ``search`` with ``replace_name``.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(s="search", r="replace_name")
+            - @with_selection
+
+    Args
+    ----
+        - args(str) : Base name
+        - search : str
+        - replace_name : str
+
+    Examples
+    --------
+    >>> replace_name(s="FK", r="IK")
+    ['rig_spine_1_IK', 'rig_spine_2_IK', ...]
+
+    """
+    org_name = {}
+    new_name = []
+    for org in args:
+        org_long = cmds.ls(org, long=True)[0]
+        org_long_end = org_long.split("|")[-1]
+        new = org_long_end.replace(search, replace_name)
+        org_name[org] = org_long
+        new_name.append(new)
+
+
+    org_name_copy = list(org_name.values()).copy()
+    org_name_copy.sort(key=lambda x: x.count('|'), reverse=True)
+    
+
+    result = {}
+    for org in org_name_copy:
+        org_idx = list(org_name.values()).index(org)
+        new = new_name[org_idx]
+        final_name = cmds.rename(org, new)
+        result[org] = final_name
+
+
+    reorder = []
+    for arg in args:
+        arg_long = org_name[arg]
+        reorder.append(result[arg_long])
+
+    return reorder
+
+
+
+@alias(obj="object", grp="group", con="constraint", loc="locator", 
+       jnt="joint", clt="cluster", cuv="nurbsCurve", ikh="ikhandle")
+@with_selection
+def select_only(*args, **kwargs) -> list:
+    """ Select objects that match one or more specified filter types.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(obj="object", grp="group", con="constraint", loc="locator", jnt="joint", clt="cluster", cuv="nurbsCurve", ikh="ikhandle")
+            - @with_selection
+
+    Args
+    ----
+        *args: str 
+
+        **kwargs : dict
+            - joint
+            - ikhandle
+            - constraint
+            - group
+            - object (mesh/nurbsSurface)
+            - cluster
+            - locator
+            - nurbsCurve
+
+    Examples
+    --------
+    >>> select_only(joint=True)
+    >>> select_only(jnt=True, loc=True)
+    >>> select_only('obj1', 'obj2', group=True, constraint=True)
+    """
+    filters = {
+        "joint": kwargs.get("joint", False),
+        "ikhandle": kwargs.get("ikhandle", False),
+        "constraint": kwargs.get("constraint", False),
+        "group": kwargs.get("group", False),
+        "object": kwargs.get("object", False),
+        "cluster": kwargs.get("cluster", False),
+        "locator": kwargs.get("locator", False),
+        "nurbsCurve": kwargs.get("nurbsCurve", False),
+    }
+    if not any(filters.values()):
+        raise ValueError("At least one filter must be set to True.")
+
+
+    result = set()
+
+    if filters["object"]:
+        shapes = cmds.ls(args, dag=True, type=['mesh', 'nurbsSurface'])
+        result.update(i.getParent() for i in shapes)
+    if filters["nurbsCurve"]:
+        curves = cmds.ls(args, dag=True, type=['nurbsCurve'])
+        result.update(i.getParent() for i in curves)
+
+
+    if args: 
+        sel = cmds.ls(args, dag=True, typ="transform") 
+    else:
+        sel = cmds.ls(sl=True, dag=True, typ="transform")
+
+
+    for obj in sel:
+        obj_type = cmds.objectType(obj)
+        shapes = cmds.listRelatives(obj, s=True)
+        node_type = cmds.nodeType(shapes[0]) if shapes else None
+    
+        if filters["joint"] and obj_type == "joint":
+            result.add(obj)
+        if filters["ikhandle"] and obj_type == "ikHandle":
+            result.add(obj)
+        if filters["constraint"] and "Constraint" in obj_type and not shapes:
+            result.add(obj)
+        if filters["group"]:
+            is_constraint = "Constraint" in obj_type
+            is_special = obj_type in ['joint', 'ikEffector', 'ikHandle']
+            if not (shapes or is_constraint or is_special):
+                result.add(obj)
+        if filters["cluster"] and node_type == "clusterHandle":
+            result.add(obj)
+        if filters["locator"] and node_type == "locator":
+            result.add(obj)
+    
+    cmds.select(result)
+
+    return list(result)
+
+
+
+def get_deformed_shape(obj: str) -> tuple:
+    """ Returns the original shape (including namespace) and the shape resulting from the deformer (without namespace or intermediate) from the transform node.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        obj(str) : "char_tigerA_mdl_v9999:tigerA_body"
+            
+    Examples
+    --------
+    >>> get_deformed_shape("pSphere1")
+    ('pSphereShape1Orig', 'pSphereShape1Deformed')
+    """
+    shapes = cmds.listRelatives(obj, shapes=True, fullPath=True)
+    original_shape = None
+    deformed_shape = None
+
+    for shp in shapes:
+        if cmds.getAttr(f"{shp}.intermediateObject"):
+            original_shape = shp
+        else:
+            deformed_shape = shp
+
+    return original_shape, deformed_shape
+
+
+
+def get_MFnObject(node: str) -> Union[om2.MFnMesh, om2.MFnNurbsCurve]:
+    """ Return a suitable MFn object for a given mesh or nurbsCurve node.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        node : str
         
-        # We need to map the original index to the new index after sorting.
-        # This ensures the sequence is correct (e.g., object_01, object_02).
-        original_objects = sorted(objects)
-        
-        for idx, obj in enumerate(original_objects):
-            base_name = new_name
-            # --- 수정된 부분 ---
-            if numbers:
-                last_number_str = numbers[-1]
-                try:
-                    start_num = int(last_number_str)
-                    formatted_num = f"{start_num + idx:0{len(last_number_str)}d}"
-                    
-                    # Ensure the split part is a valid list before joining
-                    split_name = re.split(f'({re.escape(last_number_str)})', base_name)
-                    if len(split_name) >= 3:
-                        base_name = "".join(split_name[:-2] + [formatted_num] + split_name[-1:])
-                    else:
-                        base_name = f"{new_name}_{idx}"
-                except ValueError:
-                    base_name = f"{new_name}_{idx}"
-            # --- 수정된 부분 끝 ---
-            elif len(objects) > 1:
-                base_name = f"{new_name}_{idx}"
+    Returns
+    -------
+        ``om2.MFnMesh`` or ``om2.MFnNurbsCurve``
 
-            try:
-                current_path = cmds.ls(obj, long=True)[0]
-                renamed_obj = cmds.rename(current_path, base_name)
-                renamed_objects.append(renamed_obj)
-            except RuntimeError as e:
-                print(f"Error renaming object '{obj}': {e}")
-                
-        return renamed_objects
-
-    # Case 3: No valid renaming parameters provided
-    print("Invalid parameters. Please provide 'new_name' or both 'change_word' and 'new_name'.")
-    return []
+    Examples
+    --------
+    >>> get_MFnObject("pCube1")
+    <OpenMaya.MFnMesh object at 0x00000274AC86B0F0>
+    """
+    shape = None
+    if cmds.nodeType(node) == "transform":
+        shapes = cmds.listRelatives(node, shapes=True, noIntermediate=True)
+        if not shapes:
+            raise ValueError(f"No shape under transform: {node}")
+        shape = shapes[-1]
+    else:
+        shape = node
 
 
+    shape_type = cmds.nodeType(shape)
+    sel = om2.MSelectionList()
+    sel.add(shape)
+    dag_path = sel.getDagPath(0)
+
+
+    if shape_type == "mesh":
+        return om2.MFnMesh(dag_path)
+    elif shape_type == "nurbsCurve":
+        return om2.MFnNurbsCurve(dag_path)
+    else:
+        raise ValueError(f"{shape} is not mesh or nurbsCurve!: {shape_type})")
+
+
+
+def get_closest_point_on_mesh(mesh: str, pos: Union[List, Tuple]) -> tuple:
+    """ Compute the closest point on a mesh surface from a 
+    given world-space position.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        mesh : str
+        position : Union[List, Tuple]
+
+    Examples
+    --------
+    >>> get_closest_point_on_mesh("pSphere1", (1, 2, 3))
+    (0.254104, 0.566114, 0.782051)
+    """
+    mfn_mesh = get_MFnObject(mesh)
+    world_pos = om2.MPoint(pos)
+    closest_point, _ = mfn_mesh.getClosestPoint(world_pos, om2.MSpace.kWorld)
+
+    result = om2.MVector(closest_point)
+
+    return result
+
+
+
+@with_selection
+def get_uv_coordinates(vtx_edge_face: str) -> tuple:
+    """ Get the average UV coordinates for a given mesh component.
+
+    Notes
+    -----
+        **Decoration**
+            - @with_selection
+
+    Args
+    ----
+        vtx_edge_face : str
+
+    Examples
+    --------
+    >>> get_uv_coordinates(pSphere1.vtx[23])
+    >>> get_uv_coordinates(pSphere1.f[10])
+    >>> get_uv_coordinates(pSphere1.e[34])
+    (0.24225, 0.30892)
+    """
+    sel = om2.MSelectionList()
+    sel.add(vtx_edge_face)
+    dag, comp = sel.getComponent(0)
+    if dag.node().hasFn(om2.MFn.kTransform):
+        dag.extendToShape()
+
+
+    fn = om2.MFnMesh(dag)
+    uv_sets = fn.getUVSetNames()
+    if not uv_sets:
+        cmds.warning("Mesh has no UV sets.")
+        return ()
+    uvset = uv_sets[0]
+
+
+    uvs = []
+    api_t = comp.apiType()
+    if api_t == om2.MFn.kMeshVertComponent:
+        u_arr, v_arr = fn.getUVs(uvset)
+        it_v = om2.MItMeshVertex(dag, comp)
+        while not it_v.isDone():
+            idx = it_v.index()
+            uvs.append((u_arr[idx], v_arr[idx]))
+            it_v.next()
+    elif api_t == om2.MFn.kMeshEdgeComponent:
+        u_arr, v_arr = fn.getUVs(uvset)
+        it_e = om2.MItMeshEdge(dag, comp)
+        while not it_e.isDone():
+            a = it_e.vertexId(0)
+            b = it_e.vertexId(1)
+            uvs.append((u_arr[a], v_arr[a]))
+            uvs.append((u_arr[b], v_arr[b]))
+            it_e.next()
+    elif api_t == om2.MFn.kMeshPolygonComponent:
+        it_f = om2.MItMeshPolygon(dag, comp)
+        while not it_f.isDone():
+            f_idx = it_f.index()
+            face_verts = fn.getPolygonVertices(f_idx)
+            for i in range(len(face_verts)):
+                u, v = fn.getPolygonUV(f_idx, i, uvset)
+                uvs.append((u, v))
+            it_f.next()
+    else:
+        cmds.warning("Not a mesh component.")
+        return ()
+
+
+    if not uvs:
+        return ()
+
+
+    avg_u = sum(u for u, _ in uvs) / float(len(uvs))
+    avg_v = sum(v for _, v in uvs) / float(len(uvs))
+
+    return round(avg_u, 5), round(avg_v, 5)
+
+
+
+def get_uv_coordinates_closet_object(
+    obj_closet_mesh: str, 
+    mesh: str, 
+    uv_set: str = "map1"
+) -> Tuple[float, float]:
+    """ Get UV coordinates from the closest point on a mesh to an object.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        obj_closet_mesh : str
+        mesh : str
+        uv_set : str, optional
+
+    Examples
+    --------
+    >>> get_uv_coordinates_closet_object("locator1", "pSphere1")
+    (0.123, 0.414)
+    """
+    obj_pos = cmds.xform(obj_closet_mesh, q=True, ws=True, t=True)
+    world_pos = om2.MPoint(*obj_pos)
+    mfn_mesh = get_MFnObject(mesh)
+    closet_point, _ = mfn_mesh.getClosestPoint(world_pos, om2.MSpace.kWorld)
+
+    u, v, _= mfn_mesh.getUVAtPoint(closet_point, om2.MSpace.kWorld, uv_set)
+
+    return u, v
+
+
+
+def create_follicle(mesh: str, UVCoordinates: tuple) -> str:
+    """ Create ``follicles`` on mesh at the positions of ``UVCoordinates``.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        mesh : str
+        UVCoordinates : tuple
+
+    Examples
+    --------
+    >>> create_follicle("tigerA", (0.8, 0.8))
+    "follicle1"
+    """
+    deformed_shape = get_deformed_shape(mesh)[-1]
+    follicle_shape = cmds.createNode("follicle")
+    follicle_node = cmds.listRelatives(follicle_shape, parent=True)[0]
+
+    cmds.connectAttr(
+        f"{follicle_shape}.outTranslate", 
+        f"{follicle_node}.translate", 
+        f=True
+    )
+    cmds.connectAttr(
+        f"{follicle_shape}.outRotate", 
+        f"{follicle_node}.rotate", 
+        f=True
+    )
+    cmds.connectAttr(
+        f"{deformed_shape}.outMesh", 
+        f"{follicle_shape}.inputMesh", 
+        f=True
+    )
+    cmds.connectAttr(
+        f"{mesh}.worldMatrix[0]", 
+        f"{follicle_shape}.inputWorldMatrix", 
+        f=True
+    )
+    u, v = UVCoordinates
+    cmds.setAttr(f"{follicle_shape}.parameterU", u)
+    cmds.setAttr(f"{follicle_shape}.parameterV", v)
+
+    return follicle_node
+
+
+
+# re_name(n="rig_feeler_guide_L_1")
+# parent_in_sequence()
