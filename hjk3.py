@@ -1961,3 +1961,84 @@ def create_follicle(mesh: str, UVCoordinates: tuple) -> str:
 
 # re_name(n="rig_feeler_guide_L_1")
 # parent_in_sequence()
+
+
+
+def get_uv_coordinates(vtx_edge_face: Union[str, object]) -> tuple:
+    """Get the (average) UV coordinates for a mesh component.
+
+    This function calculates the average UV coordinates for a mesh vertex,
+    edge, or face. For edges and faces, it averages the UVs of their
+    connected vertices. (Active UV set is used.)
+
+    Parameters
+    ----------
+    vtx_edge_face : str | object
+        Component name like "pCube1.vtx[0]", "pCube1.e[3]", "pCube1.f[12]".
+        (If a PyNode or other object is passed, it will be coerced via str().)
+
+    Returns
+    -------
+    tuple
+        (u, v) rounded to 5 decimals. Returns () if invalid or no UVs.
+
+    Examples
+    --------
+    >>> get_uv_coordinates("pCube1.vtx[0]")
+    (0.125, 0.375)
+    >>> get_uv_coordinates("pCube1.e[10]")
+    (0.51234, 0.23112)
+    >>> get_uv_coordinates("pCube1.f[2]")
+    (0.33333, 0.66667)
+    """
+    # 1) 안전하게 문자열로 변환
+    comp = str(vtx_edge_face).strip()
+    if not comp or "." not in comp:
+        cmds.warning("No valid component string (e.g. pCube1.vtx[0]).")
+        return ()
+
+    # 2) 타입 판별 (vertex=31, edge=32, face=34)
+    is_vertex = bool(cmds.filterExpand(comp, selectionMask=31) or [])
+    is_edge   = bool(cmds.filterExpand(comp, selectionMask=32) or [])
+    is_face   = bool(cmds.filterExpand(comp, selectionMask=34) or [])
+
+    if not (is_vertex or is_edge or is_face):
+        cmds.warning("Argument must be a mesh vertex/edge/face component.")
+        return ()
+
+    # 3) 대상 컴포넌트를 UV로 변환 (polygon map = 35)
+    uv_comps = cmds.polyListComponentConversion(comp, toUV=True) or []
+    uv_comps = cmds.filterExpand(uv_comps, selectionMask=35) or []
+
+    if not uv_comps:
+        cmds.warning("No UVs found on the given component (check UV set).")
+        return ()
+
+    # 유틸: 단일/다중 입력 모두에서 U/V를 리스트로 추출
+    def _query_uvs(uvs) -> Tuple[list, list]:
+        u_list = cmds.polyEditUV(uvs, q=True, u=True) or []
+        v_list = cmds.polyEditUV(uvs, q=True, v=True) or []
+        # 단일 컴포넌트일 경우 float로 반환될 수 있으니 리스트화
+        if not isinstance(u_list, (list, tuple)):
+            u_list = [u_list]
+        if not isinstance(v_list, (list, tuple)):
+            v_list = [v_list]
+        return list(map(float, u_list)), list(map(float, v_list))
+
+    # 4) 버텍스: 첫 번째 UV만 사용 (PyMEL의 getUV() 동작과 유사)
+    if is_vertex:
+        u_list, v_list = _query_uvs(uv_comps[0])
+        if not u_list or not v_list:
+            return ()
+        u, v = u_list[0], v_list[0]
+        return round(u, 5), round(v, 5)
+
+    # 5) 엣지/페이스: 연결된 모든 UV 평균
+    u_list, v_list = _query_uvs(uv_comps)
+    if not u_list or not v_list or len(u_list) != len(v_list):
+        cmds.warning("Failed to read UVs for the component.")
+        return ()
+
+    avg_u = sum(u_list) / len(u_list)
+    avg_v = sum(v_list) / len(v_list)
+    return round(avg_u, 5), round(avg_v, 5)
