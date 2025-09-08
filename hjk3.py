@@ -1131,7 +1131,7 @@ def align_object_to_plane(*args):
 
 
 
-@alias(cn="curve_name", d="degree", cl="closed_curve")
+@alias(n="curve_name", d="degree", cl="closed_curve")
 def create_curve_from_points(
     *points: List[Tuple[float, float, float]], 
     curve_name: str = "", 
@@ -1143,7 +1143,7 @@ def create_curve_from_points(
     Notes
     -----
         **Decoration** :
-            - @alias(cn="curve_name", d="degree", cl="closed_curve")    
+            - @alias(n="curve_name", d="degree", cl="closed_curve")    
 
     Args
     ----
@@ -2032,5 +2032,287 @@ def create_follicle(mesh: str, UVCoordinates: tuple) -> str:
 
     return follicle_node
 
+
+@alias(rx="rangeX", ry="rangeY", rz="rangeZ")
+def create_setRange_node(
+    ctrl: str, 
+    ctrl_attr: str, 
+    rangeX: list=[0, 0, 0, 0], 
+    rangeY: list=[0, 0, 0, 0], 
+    rangeZ: list=[0, 0, 0, 0], 
+) -> list:
+    """ Create and configure a setRange node connected to a controller's attribute.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(rx="rangeX", ry="rangeY", rz="rangeZ")
+
+    Args
+    ----
+        ctrl : str
+        ctrl_attr : str
+        rangeX(list) : [old_min, old_max, min, max]
+        rangeY(list) : [old_min, old_max, min, max]
+        rangeZ(list) : [old_min, old_max, min, max]
+
+    Examples
+    --------
+    >>> create_setRange_node("ctrl", "IK0_FK1", [0, 10, 0, 1])
+    ['setRange1', 'outValueX', 'outValueY', 'outValueZ']
+    """
+    inputs = ['valueX', 'valueY', 'valueZ']
+    outputs = ['outValueX', 'outValueY', 'outValueZ']
+    range_attrs = {
+        'X': ["oldMinX", "oldMaxX", "minX", "maxX"],
+        'Y': ["oldMinY", "oldMaxY", "minY", "maxY"],
+        'Z': ["oldMinZ", "oldMaxZ", "minZ", "maxZ"]
+    }
+    ranges = {
+        'X': rangeX,
+        'Y': rangeY,
+        'Z': rangeZ
+    }
+
+
+    setRange_node = cmds.shadingNode("setRange", au=True)
+    for inp in inputs:
+        cmds.connectAttr(f"{ctrl}.{ctrl_attr}", f"{setRange_node}.{inp}", f=True)
+    for axis, attrs in range_attrs.items():
+        for attr, num in zip(attrs, ranges[axis]):
+            cmds.setAttr(f"{setRange_node}.{attr}", num)
+
+    result_attr = [setRange_node]
+    result_attr += outputs
+
+    return result_attr
+
+
+@alias(t="translate", r="rotate", s="sclae", v="visibility")
+def create_blendColor_node(
+    ctrl: str, 
+    ctrl_attr: str, 
+    fk_joint: str, 
+    ik_joint: str,
+    translate: bool=False, 
+    rotate: bool=False, 
+    scale: bool=False, 
+    visibility: bool=False
+) -> list:
+    """ Create blendColors nodes to blend attributes between two joints.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(t="translate", r="rotate", s="sclae", v="visibility")
+
+    Args
+    ----
+        ctrl : str
+        ctrl_attr : str
+        fk_joint : str
+        ik_joint : str
+        translate : bool
+        rotate : bool
+        scale : bool
+        visibility : bool
+
+    Examples
+    --------
+    >>> create_blendColor_node(
+    >>> output = create_setRange_node("cc_arm_L", "IK0_FK1", rx=[0, 10, 0, 1])
+    ['setRange1', 'outValueX', 'outValueY', 'outValueZ']
+    >>> create_blendColor_node(output[0], output[1], fk_joint, ik_joint, t=True, r=True)
+    ['blendColors1', 'blendColors2', 'blendColors3', 'output']
+    """
+    attrs = {
+        "translate": translate,
+        "rotate": rotate,
+        "scale": scale,
+        "visibility": visibility
+    }
+    blend_attrs = [key for key, value in attrs.items() if value]
+
+    result = []
+    for attr in blend_attrs:
+        blend_node = cmds.shadingNode("blendColors", au=True)
+        cmds.connectAttr(
+            f"{ctrl}.{ctrl_attr}", f"{blend_node}.blender", force=True)
+        cmds.connectAttr(
+            f"{fk_joint}.{attr}", f"{blend_node}.color1", force=True)
+        cmds.connectAttr(
+            f"{ik_joint}.{attr}", f"{blend_node}.color2", force=True)
+        result.append(blend_node)
+    
+    result.append("output")
+
+    return result
+
+
+@alias(cn="ctrl_name", an="attr_name", proxy="source_to_proxy", k="keyable", 
+       ft="float_type", bt="bool_type", et="enum_type", it="integer_type")
+def create_attributes(
+    ctrl_name: str,
+    attr_name: str,
+    source_to_proxy: str = "",
+    keyable: bool = True,
+    float_type: dict = None,
+    bool_type: dict = None,
+    enum_type: dict = None,
+    integer_type: dict = None,
+) -> None:
+    """ Creates attributes on a given controller.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(cn="ctrl_name", an="attr_name", proxy="source_to_proxy", k="keyable", ft="float_type", bt="bool_type", et="enum_type", it="integer_type")
+
+    Args
+    ----
+        ctrl_name : str
+        attr_name : str
+        keyable : bool, optional 
+        source_to_proxy : str, optional
+        float_type : dict, optional
+        bool_type : dict, optional
+        enum_type : dict, optional
+        integer_type : dict, optional
+
+    Examples
+    --------
+    >>> ctrl_1 = "nurbsCircle1"
+    >>> ctrl_2 = "nurbsCircle2"
+    >>> attr = "FK1_IK0"
+    ...
+    >>> ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+    >>> bt_dict = {"at": "bool"}
+    >>> et_dict = {"at": "enum", "enumName": "World:Hips:Chest"}
+    >>> it_dict = {"at": "long", "dv": 0}
+    ...
+    >>> create_attributes(ctrl_1, attr, ft=ft_dict)
+    >>> create_attributes(ctrl_2, attr, ft=ft_dict, p=ctrl_1)
+    ...
+    >>> create_attributes(ctrl_2, attr, ft=ft_dict, p=ctrl_1)
+    >>> create_attributes(ctrl_2, attr, bt=bt_dict)
+    >>> create_attributes(ctrl_2, attr, et=et_dict)
+    >>> create_attributes(ctrl_2, attr, it=it_dict)
+    """
+    kwargs = {
+        "ln": attr_name,
+        "k": keyable,
+    }
+
+    if float_type:
+        kwargs.update(float_type)
+    elif bool_type:
+        kwargs.update(bool_type)
+    elif enum_type:
+        kwargs.update(enum_type)
+    elif integer_type:
+        kwargs.update(integer_type)
+
+    if source_to_proxy:
+        if not cmds.attributeQuery(attr_name, n=source_to_proxy, ex=True):
+            cmds.addAttr(source_to_proxy, **kwargs)
+        kwargs["proxy"] = f"{source_to_proxy}.{attr_name}"
+
+    if cmds.attributeQuery(attr_name, node=ctrl_name, exists=True):
+        cmds.deleteAttr(f"{ctrl_name}.{attr_name}")
+
+    cmds.addAttr(ctrl_name, **kwargs)
+
+    return ctrl_name, attr_name
+
+
+
+
+sel = cmds.ls(sl=True)
+
+
+# pos = [get_position(i)[0] for i in sel]
+# create_curve_from_points(*pos, cn="cuv_tail_guide_R_1", d=3)
+
+
+# a = re_name(n="rig_tail_follicle_guide_1")
+# parent_in_sequence(*a)
+
+
+# mesh = "poly_tail_guide"
+# for i in sel:
+#     uv = get_uv_coordinates_closet_object(i, mesh)
+#     create_follicle(mesh, uv)
+
+
+# for p, c in zip(sel[:3], sel[3:]):
+#     cmds.parentConstraint(p, c, mo=True, w=1.0)
+
+
+# dt = Data()
+# points = dt.ctrl_shapes["sphere"]
+# create_curve_from_points(*points, d=1, n="cc_wing_bend_LB")
+
+
+# names = re_name(n="cc_leg_RB_FK_1")
+# names_grp = group_with_pivot(*sel)
+# for i in range(len(names_grp)):
+#     if i+1 < len(names_grp):
+#         cmds.parent(names_grp[i+1][0], names_grp[i][-1])
+#     if i == 0:
+#         try:
+#             cmds.parent(names_grp[i][0], w=True)
+#         except Exception as e:
+#             print(e)
+
+
+# replace_name(s="_IK", r="")
+
+
+# group_with_pivot(null=True)
+
+
+
+# ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+# attr_name = "IK0_FK1"
+# for i in ["LM", "LB", "RF", "RM", "RB"]:
+#     cc = f"cc_foot_{i}"
+#     joints = [f'rig_leg_{i}_{n}' for n in range(2, 6)]
+#     fk_joints = [f'rig_leg_{i}_FK_{n}' for n in range(2, 6)]
+#     ik_joints = [f'rig_leg_{i}_IK_{n}' for n in range(2, 6)]
+#     create_attributes(cn=cc, an=attr_name, ft=ft_dict)
+#     set_range_out = create_setRange_node(cc, attr_name, rx=[0, 10, 0, 1])
+#     for jnt, fk_jnt, ik_jnt in zip(joints, fk_joints, ik_joints):
+#         blend_node = create_blendColor_node(set_range_out[0], set_range_out[1], fk_jnt, ik_jnt, t=True, r=True)
+#         cmds.connectAttr(f"{blend_node[0]}.{blend_node[-1]}", f"{jnt}.translate", f=True)
+#         cmds.connectAttr(f"{blend_node[1]}.{blend_node[-1]}", f"{jnt}.rotate", f=True)
+
+
+
+# ft_dict = {"at": "double", "dv": 0}
+# attr_name = "Toe_Rotate_Z"
+# for i in ["LF", "LM", "LB", "RF", "RM", "RB"]:
+#     cc = f"cc_foot_{i}"
+#     toe = f"cc_toe_{i}_grp"
+#     create_attributes(cc, attr_name, ft=ft_dict)
+#     cmds.connectAttr(f"{cc}.{attr_name}", f"{toe}.rotateZ", f=True)
+
+
+
+# ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+# attr_name = "IK0_FK1"
+# for i in ["LF", "LM", "LB", "RF", "RM", "RB"]:
+#     cc1 = f"cc_leg_{i}_FK_1"
+#     cc2 = f"cc_leg_{i}_FK_2"
+#     create_attributes(cc1, attr_name, ft=ft_dict)
+#     create_attributes(cc2, attr_name, ft=ft_dict, proxy=cc1)
+#     create_attributes(cc3, attr_name, ft=ft_dict, proxy=cc2)
+
+
+
+# ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+# attr_name = "IK0_FK1"
+# for i in ["LF", "LM", "LB", "RF", "RM", "RB"]:
+#     cc3 = f"cc_leg_{i}_FK_3"
+#     create_attributes(f"cc_foot_{i}", attr_name, ft=ft_dict, proxy=cc3)
 
 
