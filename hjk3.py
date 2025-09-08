@@ -2042,3 +2042,166 @@ def get_uv_coordinates(vtx_edge_face: Union[str, object]) -> tuple:
     avg_u = sum(u_list) / len(u_list)
     avg_v = sum(v_list) / len(v_list)
     return round(avg_u, 5), round(avg_v, 5)
+
+
+
+from typing import Tuple, Union
+import maya.api.OpenMaya as om2
+
+
+def get_uv_coordinates(vtx_edge_face: Union[str, object]) -> tuple:
+    """Get the (average) UV coordinates for a mesh component using OM2.
+
+    This function calculates the average UV coordinates for a mesh vertex,
+    edge, or face using maya.api.OpenMaya only. For edges and faces, it
+    averages the UVs of all related face-vertices. (Uses the first UV set.)
+
+    Parameters
+    ----------
+    vtx_edge_face : str | object
+        Component name like "pCube1.vtx[0]", "pCube1.e[3]", "pCube1.f[12]".
+        (Any object will be coerced via str().)
+
+    Returns
+    -------
+    tuple
+        (u, v) rounded to 5 decimals. Returns () if invalid or no UVs.
+
+    Examples
+    --------
+    >>> get_uv_coordinates("pCube1.vtx[0]")
+    (0.125, 0.375)
+    >>> get_uv_coordinates("pCube1.e[10]")
+    (0.51234, 0.23112)
+    >>> get_uv_coordinates("pCube1.f[2]")
+    (0.33333, 0.66667)
+    """
+    comp_str = str(vtx_edge_face).strip()
+    if not comp_str or "." not in comp_str:
+        om2.MGlobal.displayWarning("Pass a mesh component like 'pCube1.vtx[0]'.")
+        return ()
+
+    # Resolve to (dagPath, component)
+    sel = om2.MSelectionList()
+    try:
+        sel.add(comp_str)
+    except Exception:
+        om2.MGlobal.displayWarning("Invalid component: %s" % comp_str)
+        return ()
+
+    dag, comp = sel.getComponent(0)
+    if dag.node().hasFn(om2.MFn.kTransform):
+        try:
+            dag.extendToShape()
+        except Exception:
+            om2.MGlobal.displayWarning("Could not resolve mesh shape from transform.")
+            return ()
+
+    fn = om2.MFnMesh(dag)
+
+    # Choose UV set (first one if current cannot be queried)
+    try:
+        # Some Maya versions provide currentUVSetName(); fall back if absent.
+        uv_set = fn.currentUVSetName()  # type: ignore[attr-defined]
+    except Exception:
+        uv_sets = fn.getUVSetNames()
+        if not uv_sets:
+            om2.MGlobal.displayWarning("Mesh has no UV sets.")
+            return ()
+        uv_set = uv_sets[0]
+
+    uvs: list[Tuple[float, float]] = []
+    api_t = comp.apiType()
+
+    # ---- Vertex: pick the first available face-vertex UV for the vertex ----
+    if api_t == om2.MFn.kMeshVertComponent:
+        v_it = om2.MItMeshVertex(dag, comp)
+        if v_it.isDone():
+            return ()
+        v_id = v_it.index()
+        face_ids = list(v_it.getConnectedFaces() or [])
+        if not face_ids:
+            om2.MGlobal.displayWarning("Vertex has no connected faces.")
+            return ()
+
+        poly_it = om2.MItMeshPolygon(dag)
+        first_uv = None
+        for f_id in face_ids:
+            try:
+                poly_it.setIndex(f_id)
+            except Exception:
+                continue
+            verts = list(poly_it.getVertices() or [])
+            try:
+                local_idx = verts.index(v_id)
+            except ValueError:
+                continue
+            try:
+                u, v = poly_it.getUV(local_idx, uv_set)
+                first_uv = (float(u), float(v))
+                break  # match PyMEL's getUV() behavior: first found
+            except Exception:
+                continue
+
+        if first_uv is None:
+            om2.MGlobal.displayWarning("No UV for the given vertex in the UV set.")
+            return ()
+        return round(first_uv[0], 5), round(first_uv[1], 5)
+
+    # ---- Edge: average UVs for both endpoints across all connected faces ----
+    elif api_t == om2.MFn.kMeshEdgeComponent:
+        e_it = om2.MItMeshEdge(dag, comp)
+        if e_it.isDone():
+            return ()
+        v0 = e_it.vertexId(0)
+        v1 = e_it.vertexId(1)
+        face_ids = list(e_it.getConnectedFaces() or [])
+        poly_it = om2.MItMeshPolygon(dag)
+
+        for f_id in face_ids:
+            try:
+                poly_it.setIndex(f_id)
+            except Exception:
+                continue
+            verts = list(poly_it.getVertices() or [])
+            for v_id in (v0, v1):
+                try:
+                    local_idx = verts.index(v_id)
+                except ValueError:
+                    continue
+                try:
+                    u, v = poly_it.getUV(local_idx, uv_set)
+                    uvs.append((float(u), float(v)))
+                except Exception:
+                    continue
+
+        if not uvs:
+            om2.MGlobal.displayWarning("No UVs for the given edge in the UV set.")
+            return ()
+
+    # ---- Face: average UVs of all its corner face-vertices ----
+    elif api_t == om2.MFn.kMeshPolygonComponent:
+        poly_it = om2.MItMeshPolygon(dag, comp)
+        if poly_it.isDone():
+            return ()
+        # Use the first face in the component
+        vtx_count = poly_it.polygonVertexCount()
+        for i in range(vtx_count):
+            try:
+                u, v = poly_it.getUV(i, uv_set)
+                uvs.append((float(u), float(v)))
+            except Exception:
+                continue
+
+        if not uvs:
+            om2.MGlobal.displayWarning("No UVs for the given face in the UV set.")
+            return ()
+
+    else:
+        om2.MGlobal.displayWarning("Argument must be a mesh vertex/edge/face component.")
+        return ()
+
+    # Average (for edge/face)
+    avg_u = sum(u for u, _ in uvs) / len(uvs)
+    avg_v = sum(v for _, v in uvs) / len(uvs)
+    return round(avg_u, 5), round(avg_v, 5)
