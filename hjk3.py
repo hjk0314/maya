@@ -2226,6 +2226,236 @@ def create_attributes(
 
 
 
+@alias(idx="color_idx", rgb="color_rgb")
+@with_selection
+def colorize(*args, color_idx=None, color_rgb=()) -> None: 
+    """ Applies color overrides to Maya nodes.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(idx="color_idx", rgb="color_rgb")
+            - @with_selection
+
+    Args
+    ----
+        - args : str
+        - color_idx : int
+        - color_rgb : tuple
+    
+    Color Table
+    -----------
+        0. gray: (0.534, 0.534, 0.534)
+        1. black: (0, 0, 0)
+        2. dark_gray: (0.332, 0.332, 0.332)
+        3. medium_gray: (0.662, 0.662, 0.662)
+        4. brick_red: (0.607, 0.258, 0.234)
+        5. indigo: (0.17, 0.095, 0.44)
+        6. blue: (0, 0, 1)
+        7. olive_green: (0.242, 0.345, 0.184)
+        8. dark_violet: (0.209, 0.096, 0.334)
+        9. light_purple: (0.744, 0.33, 0.871)
+        10. brown: (0.55, 0.384, 0.287)
+        11. dark_brown: (0.299, 0.217, 0.189)
+        12. rust: (0.595, 0.297, 0.118)
+        13. red: (1, 0, 0)
+        14. lime_green: (0, 1, 0)
+        15. periwinkle: (0.295, 0.336, 0.645)
+        16. white: (1, 1, 1)
+        17. yellow: (1, 1, 0)
+        18. light_cyan: (0.673, 1, 1)
+        19. pale_green: (0.616, 1, 0.648)
+        20. light_pink: (1, 0.78, 0.761)
+        21. peach: (1, 0.76, 0.545)
+        22. chartreuse: (0.840, 1, 0)
+        23. forest_green: (0.443, 0.645, 0.426)
+        24. tan: (0.631, 0.497, 0.291)
+        25. khaki: (0.675, 0.693, 0.324)
+        26. sage_green: (0.548, 0.683, 0.324)
+        27. moss_green: (0.476, 0.679, 0.455)
+        28. teal_blue: (0.49, 0.68, 0.695)
+        29. slate_blue: (0.392, 0.469, 0.683)
+        30. lavender_gray: (0.468, 0.304, 0.678)
+        31. rose: (0.608, 0.333, 0.478)
+
+    Examples
+    --------
+    >>> colorize("sphere1", color_idx=15) # periwinkle
+    >>> colorize("sphere1", color_rgb=(0.631, 0.497, 0.291)) # tan
+    >>> colorize(idx=13) # red
+    >>> colorize(idx=6) # blue
+    >>> colorize(idx=17) # yellow
+    >>> colorize(idx=9) # light_purple
+    >>> colorize(idx=18) # light_cyan
+    >>> colorize(idx=20) # light_pink
+    """
+    def _shapes_for(node_name):
+        node_name = str(node_name)
+        if not cmds.objExists(node_name):
+            return []
+        if cmds.objectType(node_name, isAType="shape"):
+            shapes = [node_name]
+        else:
+            shapes = cmds.listRelatives(
+                node_name, shapes=True, noIntermediate=True, fullPath=True
+            ) or []
+
+
+        valid = []
+        for s in shapes:
+            if not cmds.attributeQuery("overrideEnabled", node=s, exists=True):
+                continue
+            if cmds.attributeQuery("intermediateObject", node=s, exists=True):
+                if cmds.getAttr(f"{s}.intermediateObject"):
+                    continue
+            if cmds.attributeQuery("visibility", node=s, exists=True):
+                if not cmds.getAttr(f"{s}.visibility"):
+                    continue
+            valid.append(s)
+
+        return valid
+
+
+    use_index = color_idx is not None
+    use_rgb = (not use_index) and bool(color_rgb) and len(color_rgb) == 3
+
+
+    if not (use_index or use_rgb):
+        return
+
+
+    r = g = b = None
+    if use_rgb:
+        r, g, b = [max(0.0, min(1.0, float(c))) for c in color_rgb]
+
+
+    for arg in args:
+        for shp in _shapes_for(arg):
+            # Enable overrides
+            cmds.setAttr(f"{shp}.overrideEnabled", 1)
+            if use_index:
+                cmds.setAttr(f"{shp}.overrideRGBColors", 0)
+                cmds.setAttr(f"{shp}.overrideColor", int(color_idx))
+            else:  # use_rgb
+                cmds.setAttr(f"{shp}.overrideRGBColors", 1)
+                cmds.setAttr(f"{shp}.overrideColorRGB", r, g, b)
+
+
+
+
+
+class ColorPickerUI:
+    """ A UI tool for setting the overrideColor index of selected shapes 
+    in Maya using a compact and neatly padded RGB palette grid. 
+
+    Examples
+    --------
+    >>> cpu = ColorPickerUI()
+    >>> cpu.show()
+     """
+    dt = Data()
+    COLOR_CHART = dt.color_chart
+    WINDOW_NAME = "ColorPickerWin"
+
+
+    def __init__(self):
+        """ A UI tool for setting the overrideColor index of selected shapes 
+        in Maya using a compact and neatly padded RGB palette grid. 
+
+        Examples
+        --------
+        >>> cpu = ColorPickerUI()
+        >>> cpu.show()
+         """
+        self.palette_items = list(self.COLOR_CHART.items())
+        self.selected_idx = 0
+
+
+    def select_color(self, idx, *args):
+        """ Set the currently selected palette color index.
+
+        Args:
+            idx (int): The palette color index.
+        """
+        self.selected_idx = idx
+
+
+    def apply_color(self, *args):
+        """ Apply the selected color index to the overrideColor 
+        of all selected shapes in Maya.
+         """
+        sel = cmds.ls(selection=True) or []
+        if not sel:
+            cmds.warning("Please select a controller.")
+            return
+
+        colorize(*sel, color_idx=self.selected_idx)
+        try:
+            cmds.inViewMessage(amg="Color index applied.", pos="topCenter", fade=True)
+        except Exception:
+            # inViewMessage may not be available in some environments; ignore gracefully
+            pass
+
+
+    def close(self, *args):
+        """ Close the palette UI window. """
+        if cmds.window(self.WINDOW_NAME, exists=True):
+            cmds.deleteUI(self.WINDOW_NAME)
+
+
+    def show(self):
+        """ Display the color palette UI with balanced padding. """
+        if cmds.window(self.WINDOW_NAME, exists=True):
+            cmds.deleteUI(self.WINDOW_NAME)
+
+        grid_rows = 4
+        grid_cols = 8
+        grid_btn_h = 20
+        grid_btn_w = 26
+        btn_h = 22
+        side_padding = 4
+        top_padding = 2
+        bottom_padding = 10
+
+        window_w = (grid_cols * grid_btn_w) + (side_padding * 2)
+        window_h = (grid_rows * grid_btn_h) + (2 * btn_h)
+        window_h += top_padding + bottom_padding + 18
+
+        win = cmds.window(
+            self.WINDOW_NAME,
+            title="Color Picker",
+            widthHeight=(window_w, window_h),
+            sizeable=False
+        )
+        cmds.showWindow(win)
+        cmds.setParent(win)
+        cmds.columnLayout(adjustableColumn=True, rowSpacing=3, columnAttach=("both", side_padding))
+        cmds.separator(h=top_padding, style='none')
+
+        cmds.frameLayout(labelVisible=False, marginWidth=0, marginHeight=0, borderVisible=False)
+        cmds.gridLayout(numberOfColumns=grid_cols, cellWidthHeight=(grid_btn_w, grid_btn_h))
+
+        for idx, (name, rgb) in enumerate(self.palette_items):
+            # Capture current idx with default arg to avoid late-binding in lambdas
+            cmds.button(
+                label="",
+                backgroundColor=rgb,
+                command=(lambda _=None, i=idx: self.select_color(i)),
+                annotation=f"{name}: index={idx}, rgb={rgb}"
+            )
+
+        cmds.setParent('..')
+        cmds.setParent('..')
+
+        cmds.separator(h=8, style='none')
+        cmds.button(label="Apply", height=btn_h, command=self.apply_color)
+        cmds.button(label="Close", height=btn_h, command=self.close)
+        cmds.separator(h=10, style='none')
+
+        cmds.setParent('..')
+        cmds.setParent('..')
+
+
 
 sel = cmds.ls(sl=True)
 
