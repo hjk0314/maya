@@ -2342,8 +2342,6 @@ def colorize(*args, color_idx=None, color_rgb=()) -> None:
 
 
 
-
-
 class ColorPickerUI:
     """ A UI tool for setting the overrideColor index of selected shapes 
     in Maya using a compact and neatly padded RGB palette grid. 
@@ -2474,13 +2472,13 @@ sel = cmds.ls(sl=True)
 #     create_follicle(mesh, uv)
 
 
-# for p, c in zip(sel[:3], sel[3:]):
-#     cmds.parentConstraint(p, c, mo=True, w=1.0)
+# for p, c in zip(sel[:11], sel[11:]):
+#     cmds.pointConstraint(p, c, mo=True, w=1.0)
 
 
 # dt = Data()
-# points = dt.ctrl_shapes["sphere"]
-# create_curve_from_points(*points, d=1, n="cc_wing_bend_LB")
+# points = dt.ctrl_shapes["cube"]
+# create_curve_from_points(*points, d=1, n="cc_wing_LF_2")
 
 
 # names = re_name(n="cc_leg_RB_FK_1")
@@ -2498,7 +2496,9 @@ sel = cmds.ls(sl=True)
 # replace_name(s="_IK", r="")
 
 
-# group_with_pivot(null=True)
+# a = parent_in_sequence()
+# group_with_pivot(*a)
+# group_with_pivot()
 
 
 
@@ -2546,3 +2546,20 @@ sel = cmds.ls(sl=True)
 #     create_attributes(f"cc_foot_{i}", attr_name, ft=ft_dict, proxy=cc3)
 
 
+
+# cpu = ColorPickerUI()
+# cpu.show()
+
+
+# select_only(ikh=True)
+
+
+# replace_name(s="rig_", r="")
+
+
+# for i in sel:
+#     target = "rig_" + i
+#     # cmds.connectAttr(f"{target}.translate", f"{i}.translate", f=True)
+#     # cmds.connectAttr(f"{target}.rotate", f"{i}.rotate", f=True)
+#     cmds.disconnectAttr(f"{target}.translate", f"{i}.translate")
+#     cmds.disconnectAttr(f"{target}.rotate", f"{i}.rotate")
