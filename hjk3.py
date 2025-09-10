@@ -2640,46 +2640,56 @@ def create_ikSplineHandle(
     if scaleZ:
         scales.append("Z")
 
-        
     curve_info = cmds.shadingNode("curveInfo", au=True)
     cmds.connectAttr(f"{curve_name}.worldSpace[0]", f"{curve_info}.inputCurve", f=True)
+
     curve_length = cmds.getAttr(f"{curve_info}.arcLength")
+
     multiplyDivide_node = cmds.shadingNode("multiplyDivide", au=True)
     cmds.setAttr(f"{multiplyDivide_node}.operation", 2)
     cmds.setAttr(f"{multiplyDivide_node}.input2X", curve_length)
     cmds.connectAttr(f"{curve_info}.arcLength", f"{multiplyDivide_node}.input1X", f=True)
+
     for jnt in joints:
         for scl in scales:
             cmds.connectAttr(f"{multiplyDivide_node}.outputX", f"{jnt}.scale{scl}", f=True)
 
-
+    cmds.ikHandle(
+        startJoint=joints[0], 
+        endEffector=joints[-1], 
+        curve=curve_name, 
+        solver="ikSplineSolver", 
+        rootOnCurve=True, 
+        createCurve=False, 
+        parentCurve=False, 
+    )
 
 # points = get_position(*sel)
 # cuv = create_curve_from_points(*points, n="cuv", d=3)
 
 
 @with_selection
-def test(*joints, scaleX=True, scaleY=True, scaleZ=True):
+def create_curve_ikSpline(*joints) -> dict:
     joint_points = get_position(*joints)
     curve_name = cmds.curve(d=3, editPoint=joint_points)
     curve_shape = cmds.listRelatives(curve_name, shapes=True)[0]
     cp_count = cmds.getAttr(curve_shape + ".controlPoints", size=True)
+
+    locators = []
     for i in range(cp_count):
         locator = cmds.spaceLocator()
         cp_pos = get_position(f"{curve_name}.cv[{i}]")[0]
         cmds.xform(locator, translation=cp_pos, ws=True)
+
         locator_shape = cmds.listRelatives(locator, shapes=True)[0]
         cmds.connectAttr(f"{locator_shape}.worldPosition[0]", f"{curve_shape}.controlPoints[{i}]", f=True)
 
-    cmds.ikHandle(
-        sj=joints[0], 
-        ee=joints[-1], 
-        curve=curve_name, 
-        sol="ikSplineSolver", 
-        rootOnCurve=True, 
-        createCurve=False, 
-        parentCurve=False, 
-    )
+        locators.append(locator)
+
+    return {curve_name: locators}
+
+    
+
     
     
 
