@@ -2033,10 +2033,10 @@ def create_follicle(mesh: str, UVCoordinates: tuple) -> str:
     return follicle_node
 
 
+
 @alias(rx="rangeX", ry="rangeY", rz="rangeZ")
 def create_setRange_node(
-    ctrl: str, 
-    ctrl_attr: str, 
+    node_attr: str, 
     rangeX: list=[0, 0, 0, 0], 
     rangeY: list=[0, 0, 0, 0], 
     rangeZ: list=[0, 0, 0, 0], 
@@ -2050,16 +2050,15 @@ def create_setRange_node(
 
     Args
     ----
-        ctrl : str
-        ctrl_attr : str
+        node_attr : str
         rangeX(list) : [old_min, old_max, min, max]
         rangeY(list) : [old_min, old_max, min, max]
         rangeZ(list) : [old_min, old_max, min, max]
 
     Examples
     --------
-    >>> create_setRange_node("ctrl", "IK0_FK1", [0, 10, 0, 1])
-    ['setRange1', 'outValueX', 'outValueY', 'outValueZ']
+    >>> create_setRange_node("ctrl.IK0_FK1", rx=[0, 10, 0, 1])
+    ['setRange1.outValueX', 'setRange1.outValueY', 'setRange1.outValueZ']
     """
     inputs = ['valueX', 'valueY', 'valueZ']
     outputs = ['outValueX', 'outValueY', 'outValueZ']
@@ -2074,42 +2073,38 @@ def create_setRange_node(
         'Z': rangeZ
     }
 
-
     setRange_node = cmds.shadingNode("setRange", au=True)
-    for inp in inputs:
-        cmds.connectAttr(f"{ctrl}.{ctrl_attr}", f"{setRange_node}.{inp}", f=True)
+    for i in inputs:
+        cmds.connectAttr(f"{node_attr}", f"{setRange_node}.{i}", f=True)
     for axis, attrs in range_attrs.items():
         for attr, num in zip(attrs, ranges[axis]):
             cmds.setAttr(f"{setRange_node}.{attr}", num)
 
-    result_attr = [setRange_node]
-    result_attr += outputs
+    result = ["%s.%s" % (setRange_node, out) for out in outputs]
 
-    return result_attr
+    return result
 
 
-@alias(t="translate", r="rotate", s="sclae", v="visibility")
+
+@alias(t="translate", r="rotate", s="sclae")
 def create_blendColor_node(
-    ctrl: str, 
-    ctrl_attr: str, 
+    node_attr: str, 
     fk_joint: str, 
     ik_joint: str,
     translate: bool=False, 
     rotate: bool=False, 
     scale: bool=False, 
-    visibility: bool=False
 ) -> list:
     """ Create blendColors nodes to blend attributes between two joints.
 
     Notes
     -----
         **Decoration**
-            - @alias(t="translate", r="rotate", s="sclae", v="visibility")
+            - @alias(t="translate", r="rotate", s="sclae")
 
     Args
     ----
-        ctrl : str
-        ctrl_attr : str
+        node_attr : str
         fk_joint : str
         ik_joint : str
         translate : bool
@@ -2119,17 +2114,18 @@ def create_blendColor_node(
 
     Examples
     --------
-    >>> create_blendColor_node(
-    >>> output = create_setRange_node("cc_arm_L", "IK0_FK1", rx=[0, 10, 0, 1])
-    ['setRange1', 'outValueX', 'outValueY', 'outValueZ']
-    >>> create_blendColor_node(output[0], output[1], fk_joint, ik_joint, t=True, r=True)
-    ['blendColors1', 'blendColors2', 'blendColors3', 'output']
+    >>> node_attr = "cc_arm_L.IK0_FK1"
+    >>> outputs = create_setRange_node(node_attr, rx=[0, 10, 0, 1])
+    outputs = ['setRange1.outValueX', 'setRange1.outValueY', ...]
+    >>> fk = "rig_arm_L_FK"
+    >>> ik = "rig_arm_L_IK"
+    >>> create_blendColor_node(outputs[0], fk, ik, t=True, r=True)
+    ['blendColors1.output', 'blendColors2.output', ...]
     """
     attrs = {
         "translate": translate,
         "rotate": rotate,
         "scale": scale,
-        "visibility": visibility
     }
     blend_attrs = [key for key, value in attrs.items() if value]
 
@@ -2137,71 +2133,67 @@ def create_blendColor_node(
     for attr in blend_attrs:
         blend_node = cmds.shadingNode("blendColors", au=True)
         cmds.connectAttr(
-            f"{ctrl}.{ctrl_attr}", f"{blend_node}.blender", force=True)
+            node_attr, f"{blend_node}.blender", force=True)
         cmds.connectAttr(
             f"{fk_joint}.{attr}", f"{blend_node}.color1", force=True)
         cmds.connectAttr(
             f"{ik_joint}.{attr}", f"{blend_node}.color2", force=True)
-        result.append(blend_node)
-    
-    result.append("output")
+        result.append(f"{blend_node}.output")
 
     return result
 
 
-@alias(cn="ctrl_name", an="attr_name", proxy="source_to_proxy", k="keyable", 
+
+@alias(tc="target_ctrl", an="attr_name", k="keyable", 
        ft="float_type", bt="bool_type", et="enum_type", it="integer_type")
 def create_attributes(
-    ctrl_name: str,
+    target_ctrl: str,
     attr_name: str,
-    source_to_proxy: str = "",
     keyable: bool = True,
     float_type: dict = None,
     bool_type: dict = None,
     enum_type: dict = None,
     integer_type: dict = None,
-) -> None:
+) -> dict:
     """ Creates attributes on a given controller.
 
     Notes
     -----
         **Decoration**
-            - @alias(cn="ctrl_name", an="attr_name", proxy="source_to_proxy", k="keyable", ft="float_type", bt="bool_type", et="enum_type", it="integer_type")
+            - @alias(tc="target_ctrl", an="attr_name", k="keyable", ft="float_type", bt="bool_type", et="enum_type", it="integer_type")
 
     Args
     ----
-        ctrl_name : str
+        target_ctrl : str
         attr_name : str
-        keyable : bool, optional 
-        source_to_proxy : str, optional
-        float_type : dict, optional
-        bool_type : dict, optional
-        enum_type : dict, optional
-        integer_type : dict, optional
+        keyable : bool
+        float_type : dict
+        bool_type : dict
+        enum_type : dict
+        integer_type : dict
 
     Examples
     --------
     >>> ctrl_1 = "nurbsCircle1"
     >>> ctrl_2 = "nurbsCircle2"
-    >>> attr = "FK1_IK0"
+    >>> attr = "IK0_FK1"
     ...
     >>> ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+    >>> ft_dict = {"at": "double", "dv": 0}
     >>> bt_dict = {"at": "bool"}
     >>> et_dict = {"at": "enum", "enumName": "World:Hips:Chest"}
     >>> it_dict = {"at": "long", "dv": 0}
     ...
     >>> create_attributes(ctrl_1, attr, ft=ft_dict)
-    >>> create_attributes(ctrl_2, attr, ft=ft_dict, p=ctrl_1)
-    ...
-    >>> create_attributes(ctrl_2, attr, ft=ft_dict, p=ctrl_1)
     >>> create_attributes(ctrl_2, attr, bt=bt_dict)
     >>> create_attributes(ctrl_2, attr, et=et_dict)
     >>> create_attributes(ctrl_2, attr, it=it_dict)
     """
     kwargs = {
-        "ln": attr_name,
-        "k": keyable,
+        "longName": attr_name,
+        "keyable": keyable,
     }
+
 
     if float_type:
         kwargs.update(float_type)
@@ -2212,17 +2204,55 @@ def create_attributes(
     elif integer_type:
         kwargs.update(integer_type)
 
-    if source_to_proxy:
-        if not cmds.attributeQuery(attr_name, n=source_to_proxy, ex=True):
-            cmds.addAttr(source_to_proxy, **kwargs)
-        kwargs["proxy"] = f"{source_to_proxy}.{attr_name}"
 
-    if cmds.attributeQuery(attr_name, node=ctrl_name, exists=True):
-        cmds.deleteAttr(f"{ctrl_name}.{attr_name}")
+    if cmds.attributeQuery(attr_name, node=target_ctrl, exists=True):
+        cmds.deleteAttr(f"{target_ctrl}.{attr_name}")
+    cmds.addAttr(target_ctrl, **kwargs)
 
-    cmds.addAttr(ctrl_name, **kwargs)
 
-    return ctrl_name, attr_name
+    return kwargs
+
+
+
+@alias(sc="source_ctrl", tc="target_ctrl", an="attr_name", k="keyable", 
+       ft="float_type", bt="bool_type", et="enum_type", it="integer_type")
+def create_attributes_proxy(
+    source_ctrl: str, 
+    target_ctrl: str, 
+    attr_name: str, 
+    keyable: bool = True,
+    float_type: dict = None,
+    bool_type: dict = None,
+    enum_type: dict = None,
+    integer_type: dict = None,
+) -> dict:
+    kwargs = {
+        "longName": attr_name,
+        "keyable": keyable,
+    }
+
+
+    if float_type:
+        kwargs.update(float_type)
+    elif bool_type:
+        kwargs.update(bool_type)
+    elif enum_type:
+        kwargs.update(enum_type)
+    elif integer_type:
+        kwargs.update(integer_type)
+
+
+    if cmds.attributeQuery(attr_name, node=source_ctrl, ex=True):
+        cmds.deleteAttr(f"{source_ctrl}.{attr_name}")
+    cmds.addAttr(source_ctrl, **kwargs)
+
+
+    kwargs["proxy"] = "%s.%s" % (source_ctrl, attr_name)
+    if cmds.attributeQuery(attr_name, node=target_ctrl, ex=True):
+        cmds.deleteAttr(f"{target_ctrl}.{attr_name}")
+    cmds.addAttr(target_ctrl, **kwargs)
+
+    return kwargs
 
 
 
@@ -2563,3 +2593,95 @@ sel = cmds.ls(sl=True)
 #     # cmds.connectAttr(f"{target}.rotate", f"{i}.rotate", f=True)
 #     cmds.disconnectAttr(f"{target}.translate", f"{i}.translate")
 #     cmds.disconnectAttr(f"{target}.rotate", f"{i}.rotate")
+
+
+# for i in sel:
+#     grp = cmds.group(em=True)
+#     cmds.parent(grp, i)
+#     cmds.setAttr(f"{grp}.translateX", 0)
+#     cmds.setAttr(f"{grp}.translateY", 0)
+#     cmds.setAttr(f"{grp}.translateZ", 0)
+#     cmds.setAttr(f"{grp}.rotateX", 0)
+#     cmds.setAttr(f"{grp}.rotateY", 0)
+#     cmds.setAttr(f"{grp}.rotateZ", 0)
+
+
+
+# ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+# create_attributes("ctrl", "IK0_FK1", ft=ft_dict)
+
+
+# node_attr = "ctrl.IK0_FK1"
+# setRange_node = create_setRange_node(node_attr, rx=[0, 10, 0, 1])
+# print(setRange_node)
+
+
+# for jnt in ["joint2", "joint3", "joint4"]:
+#     blendColor_node = create_blendColor_node(setRange_node[0], f"{jnt}_FK", f"{jnt}_IK", t=True, r=True)
+#     print(blendColor_node)
+#     for j, k in zip(blendColor_node, ["translate", "rotate"]):
+#         cmds.connectAttr(j, f"{jnt}.{k}", f=True)
+
+
+
+@alias(sx="scaleX", sy="scaleY", sz="scaleZ")
+def create_ikSplineHandle(
+    curve_name: str, 
+    joints: list, 
+    scaleX=False, 
+    scaleY=False, 
+    scaleZ=False
+) -> None:
+    scales = []
+    if scaleX:
+        scales.append("X")
+    if scaleY:
+        scales.append("Y")
+    if scaleZ:
+        scales.append("Z")
+
+        
+    curve_info = cmds.shadingNode("curveInfo", au=True)
+    cmds.connectAttr(f"{curve_name}.worldSpace[0]", f"{curve_info}.inputCurve", f=True)
+    curve_length = cmds.getAttr(f"{curve_info}.arcLength")
+    multiplyDivide_node = cmds.shadingNode("multiplyDivide", au=True)
+    cmds.setAttr(f"{multiplyDivide_node}.operation", 2)
+    cmds.setAttr(f"{multiplyDivide_node}.input2X", curve_length)
+    cmds.connectAttr(f"{curve_info}.arcLength", f"{multiplyDivide_node}.input1X", f=True)
+    for jnt in joints:
+        for scl in scales:
+            cmds.connectAttr(f"{multiplyDivide_node}.outputX", f"{jnt}.scale{scl}", f=True)
+
+
+
+# points = get_position(*sel)
+# cuv = create_curve_from_points(*points, n="cuv", d=3)
+
+
+@with_selection
+def test(*joints, scaleX=True, scaleY=True, scaleZ=True):
+    joint_points = get_position(*joints)
+    curve_name = cmds.curve(d=3, editPoint=joint_points)
+    curve_shape = cmds.listRelatives(curve_name, shapes=True)[0]
+    cp_count = cmds.getAttr(curve_shape + ".controlPoints", size=True)
+    for i in range(cp_count):
+        locator = cmds.spaceLocator()
+        cp_pos = get_position(f"{curve_name}.cv[{i}]")[0]
+        cmds.xform(locator, translation=cp_pos, ws=True)
+        locator_shape = cmds.listRelatives(locator, shapes=True)[0]
+        cmds.connectAttr(f"{locator_shape}.worldPosition[0]", f"{curve_shape}.controlPoints[{i}]", f=True)
+
+    cmds.ikHandle(
+        sj=joints[0], 
+        ee=joints[-1], 
+        curve=curve_name, 
+        sol="ikSplineSolver", 
+        rootOnCurve=True, 
+        createCurve=False, 
+        parentCurve=False, 
+    )
+    
+    
+
+
+
