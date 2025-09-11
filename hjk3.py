@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Any
 # from collections import Counter
 import time
 import functools
@@ -1063,6 +1063,39 @@ def create_joint_on_curve_path(curve: str, num_of_jnt: int=1) -> list:
 
 
 @with_selection
+def create_joint_IKFK(*joints) -> List[list]:
+    """ Duplicate the joint to create an ``IK joint`` and an ``FK joint``.
+
+    Notes
+    -----
+        **Decoration**
+            - @with_selection
+
+    Args
+    ----
+        *joints : str
+
+    Examples
+    --------
+    >>> joints = ["joint1", "joint2", "joint3", ...]
+    >>> create_joint_IKFK(*joints)
+    [['joint1_FK', 'joint2_FK', ...], ['joint1_IK', 'joint2_IK', ...]]
+    """
+    result = []
+    for i in ["_FK", "_IK"]:
+        copied_jnt = []
+        duplicated_jnt = cmds.duplicate(joints, po=True)
+        for org_jnt, dup_jnt in zip(joints, duplicated_jnt):
+            renamed_jnt = re_name(dup_jnt, n=org_jnt, s=i)
+            copied_jnt.append(renamed_jnt[0])
+
+        result.append(copied_jnt)
+    
+    return result
+
+
+
+@with_selection
 def align_object_to_plane(*args):
     """ Aligns the given objects to a plane defined by the first three objects.
 
@@ -1258,6 +1291,45 @@ def create_curve_aim(
 
 def create_curve_animation():
     pass
+
+
+
+@with_selection
+def create_curve_ikSpline(*joints: Any) -> Dict[str, list]:
+    """ Create a curve that passes through the joint to create an **ikSplineHandle**. Use the ``editPoint`` option for the curve, and replace the ``control vertex`` with a ``locator``.
+
+    Notes
+    -----
+        **Decoration**
+            - @with_selection
+
+    Args
+    ----
+        *joints : str
+
+    Examples
+    --------
+    >>> joints = ["joint1", "joint2", "joint3", ...]
+    >>> create_curve_ikSpline(*joints)
+    {'curve1': ['locator1', 'locator2', 'locator3', ...]}
+    """
+    joint_points = get_position(*joints)
+    curve_name = cmds.curve(d=3, editPoint=joint_points)
+    curve_shape = cmds.listRelatives(curve_name, shapes=True)[0]
+    cp_count = cmds.getAttr(curve_shape + ".controlPoints", size=True)
+
+    locators = []
+    for i in range(cp_count):
+        locator = cmds.spaceLocator()
+        cp_pos = get_position(f"{curve_name}.cv[{i}]")[0]
+        cmds.xform(locator, translation=cp_pos, ws=True)
+
+        locator_shape = cmds.listRelatives(locator, shapes=True)[0]
+        cmds.connectAttr(f"{locator_shape}.worldPosition[0]", f"{curve_shape}.controlPoints[{i}]", f=True)
+
+        locators.append(locator[0])
+
+    return {curve_name: locators}
 
 
 
@@ -2256,6 +2328,79 @@ def create_attributes_proxy(
 
 
 
+@alias(sx="scaleX", sy="scaleY", sz="scaleZ")
+def create_ikSplineHandle(
+    curve_name: str, 
+    joints: list, 
+    scaleX=False, 
+    scaleY=False, 
+    scaleZ=False
+) -> List[str]:
+    """ Create an **ikSplineHandle** using a spline joint and a curve. As the curve stretches, the joint scales too. A **condition node** is created to connect ``condition1.firstTerm`` -> ``stretch on/off switch``
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(sx="scaleX", sy="scaleY", sz="scaleZ")
+
+    Args
+    ----
+        curve_name : str
+        joints : list
+        scaleX : bool
+        scaleY : bool
+        scaleZ : bool
+
+    Examples
+    --------
+    >>> joints = ["joint1", "joint2", "joint3", ...]
+    >>> create_ikSplineHandle("curve1", joints, sx=True, sy=True, ...)
+    ['curveInfo1', 'condition1', 'multiplyDivide1']
+    """
+    scales = []
+    if scaleX:
+        scales.append("X")
+    if scaleY:
+        scales.append("Y")
+    if scaleZ:
+        scales.append("Z")
+
+    curve_info = cmds.shadingNode("curveInfo", au=True)
+    cmds.connectAttr(f"{curve_name}.worldSpace[0]", f"{curve_info}.inputCurve", f=True)
+
+    curve_length = cmds.getAttr(f"{curve_info}.arcLength")
+
+    multiplyDivide_node = cmds.shadingNode("multiplyDivide", au=True)
+    cmds.setAttr(f"{multiplyDivide_node}.operation", 2)
+    cmds.setAttr(f"{multiplyDivide_node}.input2X", curve_length)
+
+    condition_node = cmds.shadingNode("condition", au=True)
+    cmds.setAttr(f"{condition_node}.firstTerm", 1)
+    cmds.setAttr(f"{condition_node}.secondTerm", 1)
+    cmds.connectAttr(f"{curve_info}.arcLength", f"{condition_node}.colorIfTrueR", f=True)
+    cmds.setAttr(f"{condition_node}.colorIfFalseR", curve_length)
+    cmds.connectAttr(f"{condition_node}.outColorR", f"{multiplyDivide_node}.input1X", f=True)
+
+    cmds.ikHandle(
+        startJoint=joints[0], 
+        endEffector=joints[-1], 
+        curve=curve_name, 
+        solver="ikSplineSolver", 
+        rootOnCurve=True, 
+        createCurve=False, 
+        parentCurve=False, 
+    )
+
+    for jnt in joints:
+        for scl in scales:
+            cmds.connectAttr(f"{multiplyDivide_node}.outputX", f"{jnt}.scale{scl}", f=True)
+
+    result = [curve_info, condition_node, multiplyDivide_node]
+
+    return result
+
+
+
 @alias(idx="color_idx", rgb="color_rgb")
 @with_selection
 def colorize(*args, color_idx=None, color_rgb=()) -> None: 
@@ -2484,214 +2629,63 @@ class ColorPickerUI:
         cmds.setParent('..')
 
 
-
+######################
 sel = cmds.ls(sl=True)
-
-
-# pos = [get_position(i)[0] for i in sel]
-# create_curve_from_points(*pos, cn="cuv_tail_guide_R_1", d=3)
-
-
-# a = re_name(n="rig_tail_follicle_guide_1")
-# parent_in_sequence(*a)
-
-
-# mesh = "poly_tail_guide"
-# for i in sel:
-#     uv = get_uv_coordinates_closet_object(i, mesh)
-#     create_follicle(mesh, uv)
-
-
-# for p, c in zip(sel[:11], sel[11:]):
-#     cmds.pointConstraint(p, c, mo=True, w=1.0)
-
-
-# dt = Data()
-# points = dt.ctrl_shapes["cube"]
-# create_curve_from_points(*points, d=1, n="cc_wing_LF_2")
-
-
-# names = re_name(n="cc_leg_RB_FK_1")
-# names_grp = group_with_pivot(*sel)
-# for i in range(len(names_grp)):
-#     if i+1 < len(names_grp):
-#         cmds.parent(names_grp[i+1][0], names_grp[i][-1])
-#     if i == 0:
-#         try:
-#             cmds.parent(names_grp[i][0], w=True)
-#         except Exception as e:
-#             print(e)
-
-
-# replace_name(s="_IK", r="")
-
-
-# a = parent_in_sequence()
-# group_with_pivot(*a)
-# group_with_pivot()
+######################
 
 
 
-# ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
-# attr_name = "IK0_FK1"
-# for i in ["LM", "LB", "RF", "RM", "RB"]:
-#     cc = f"cc_foot_{i}"
-#     joints = [f'rig_leg_{i}_{n}' for n in range(2, 6)]
-#     fk_joints = [f'rig_leg_{i}_FK_{n}' for n in range(2, 6)]
-#     ik_joints = [f'rig_leg_{i}_IK_{n}' for n in range(2, 6)]
-#     create_attributes(cn=cc, an=attr_name, ft=ft_dict)
-#     set_range_out = create_setRange_node(cc, attr_name, rx=[0, 10, 0, 1])
-#     for jnt, fk_jnt, ik_jnt in zip(joints, fk_joints, ik_joints):
-#         blend_node = create_blendColor_node(set_range_out[0], set_range_out[1], fk_jnt, ik_jnt, t=True, r=True)
-#         cmds.connectAttr(f"{blend_node[0]}.{blend_node[-1]}", f"{jnt}.translate", f=True)
-#         cmds.connectAttr(f"{blend_node[1]}.{blend_node[-1]}", f"{jnt}.rotate", f=True)
+def get_orient_joint_direction(joint: str) -> Dict[str, tuple]:
+    """ Get the orientation of the joint.
 
+    Notes
+    -----
+        **No Decoration**
 
+    Args
+    ----
+        joint : list
 
-# ft_dict = {"at": "double", "dv": 0}
-# attr_name = "Toe_Rotate_Z"
-# for i in ["LF", "LM", "LB", "RF", "RM", "RB"]:
-#     cc = f"cc_foot_{i}"
-#     toe = f"cc_toe_{i}_grp"
-#     create_attributes(cc, attr_name, ft=ft_dict)
-#     cmds.connectAttr(f"{cc}.{attr_name}", f"{toe}.rotateZ", f=True)
+    Examples
+    --------
+    >>> get_orient_joint_direction("joint1")
+    {"X": (0, 1, 0)}
+    """
+    try:
+        selection_list = om2.MSelectionList()
+        selection_list.add(joint)
+        dag_path = selection_list.getDagPath(0)
+        
+        child_count = dag_path.childCount()
+        if child_count == 0:
+            print(f"'{joint}' has no children.")
+            return None
+        
+        child_dag_path = dag_path.child(0)
+        child_fn = om2.MFnTransform(child_dag_path)
 
-
-
-# ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
-# attr_name = "IK0_FK1"
-# for i in ["LF", "LM", "LB", "RF", "RM", "RB"]:
-#     cc1 = f"cc_leg_{i}_FK_1"
-#     cc2 = f"cc_leg_{i}_FK_2"
-#     create_attributes(cc1, attr_name, ft=ft_dict)
-#     create_attributes(cc2, attr_name, ft=ft_dict, proxy=cc1)
-#     create_attributes(cc3, attr_name, ft=ft_dict, proxy=cc2)
-
-
-
-# ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
-# attr_name = "IK0_FK1"
-# for i in ["LF", "LM", "LB", "RF", "RM", "RB"]:
-#     cc3 = f"cc_leg_{i}_FK_3"
-#     create_attributes(f"cc_foot_{i}", attr_name, ft=ft_dict, proxy=cc3)
-
-
-
-# cpu = ColorPickerUI()
-# cpu.show()
-
-
-# select_only(ikh=True)
-
-
-# replace_name(s="rig_", r="")
-
-
-# for i in sel:
-#     target = "rig_" + i
-#     # cmds.connectAttr(f"{target}.translate", f"{i}.translate", f=True)
-#     # cmds.connectAttr(f"{target}.rotate", f"{i}.rotate", f=True)
-#     cmds.disconnectAttr(f"{target}.translate", f"{i}.translate")
-#     cmds.disconnectAttr(f"{target}.rotate", f"{i}.rotate")
-
-
-# for i in sel:
-#     grp = cmds.group(em=True)
-#     cmds.parent(grp, i)
-#     cmds.setAttr(f"{grp}.translateX", 0)
-#     cmds.setAttr(f"{grp}.translateY", 0)
-#     cmds.setAttr(f"{grp}.translateZ", 0)
-#     cmds.setAttr(f"{grp}.rotateX", 0)
-#     cmds.setAttr(f"{grp}.rotateY", 0)
-#     cmds.setAttr(f"{grp}.rotateZ", 0)
-
-
-
-# ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
-# create_attributes("ctrl", "IK0_FK1", ft=ft_dict)
-
-
-# node_attr = "ctrl.IK0_FK1"
-# setRange_node = create_setRange_node(node_attr, rx=[0, 10, 0, 1])
-# print(setRange_node)
-
-
-# for jnt in ["joint2", "joint3", "joint4"]:
-#     blendColor_node = create_blendColor_node(setRange_node[0], f"{jnt}_FK", f"{jnt}_IK", t=True, r=True)
-#     print(blendColor_node)
-#     for j, k in zip(blendColor_node, ["translate", "rotate"]):
-#         cmds.connectAttr(j, f"{jnt}.{k}", f=True)
-
-
-
-@alias(sx="scaleX", sy="scaleY", sz="scaleZ")
-def create_ikSplineHandle(
-    curve_name: str, 
-    joints: list, 
-    scaleX=False, 
-    scaleY=False, 
-    scaleZ=False
-) -> None:
-    scales = []
-    if scaleX:
-        scales.append("X")
-    if scaleY:
-        scales.append("Y")
-    if scaleZ:
-        scales.append("Z")
-
-    curve_info = cmds.shadingNode("curveInfo", au=True)
-    cmds.connectAttr(f"{curve_name}.worldSpace[0]", f"{curve_info}.inputCurve", f=True)
-
-    curve_length = cmds.getAttr(f"{curve_info}.arcLength")
-
-    multiplyDivide_node = cmds.shadingNode("multiplyDivide", au=True)
-    cmds.setAttr(f"{multiplyDivide_node}.operation", 2)
-    cmds.setAttr(f"{multiplyDivide_node}.input2X", curve_length)
-    cmds.connectAttr(f"{curve_info}.arcLength", f"{multiplyDivide_node}.input1X", f=True)
-
-    for jnt in joints:
-        for scl in scales:
-            cmds.connectAttr(f"{multiplyDivide_node}.outputX", f"{jnt}.scale{scl}", f=True)
-
-    cmds.ikHandle(
-        startJoint=joints[0], 
-        endEffector=joints[-1], 
-        curve=curve_name, 
-        solver="ikSplineSolver", 
-        rootOnCurve=True, 
-        createCurve=False, 
-        parentCurve=False, 
-    )
-
-# points = get_position(*sel)
-# cuv = create_curve_from_points(*points, n="cuv", d=3)
-
-
-@with_selection
-def create_curve_ikSpline(*joints) -> dict:
-    joint_points = get_position(*joints)
-    curve_name = cmds.curve(d=3, editPoint=joint_points)
-    curve_shape = cmds.listRelatives(curve_name, shapes=True)[0]
-    cp_count = cmds.getAttr(curve_shape + ".controlPoints", size=True)
-
-    locators = []
-    for i in range(cp_count):
-        locator = cmds.spaceLocator()
-        cp_pos = get_position(f"{curve_name}.cv[{i}]")[0]
-        cmds.xform(locator, translation=cp_pos, ws=True)
-
-        locator_shape = cmds.listRelatives(locator, shapes=True)[0]
-        cmds.connectAttr(f"{locator_shape}.worldPosition[0]", f"{curve_shape}.controlPoints[{i}]", f=True)
-
-        locators.append(locator)
-
-    return {curve_name: locators}
-
-    
-
-    
-    
+        local_translation = child_fn.translation(om2.MSpace.kTransform)
+        
+        max_val = 0
+        alignment_axis = {}
+        
+        if abs(local_translation.x) > max_val:
+            max_val = abs(local_translation.x)
+            alignment_axis['X'] = (1, 0, 0)
+        
+        if abs(local_translation.y) > max_val:
+            max_val = abs(local_translation.y)
+            alignment_axis['Y'] = (0, 1, 0)
+            
+        if abs(local_translation.z) > max_val:
+            max_val = abs(local_translation.z)
+            alignment_axis['Z'] = (0, 0, 1)
+            
+        return alignment_axis
+        
+    except RuntimeError as e:
+        print(e)
+        return {}
 
 
 
