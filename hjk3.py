@@ -2688,4 +2688,30 @@ def get_orient_joint_direction(joint: str) -> Dict[str, tuple]:
         return {}
 
 
+@alias(i="interval")
+@with_selection
+def offset_keyframes(*objects: Any, interval: int=1) -> None:
+    """ Offsets the object's keyframes at intervals. A negative number can be used to return them to their original position.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(i="interval")
+            - @with_selection
+
+    Args
+    ----
+        *objects : str
+
+    Examples
+    --------
+    >>> offset_keyframes()
+    >>> offset_keyframes("pCube1", "pCube2", i=4)
+    >>> offset_keyframes(*sel, i=-4) # return to original position
+    """
+    for idx, obj in enumerate(objects):
+        cmds.keyframe(obj, e=True, r=True, tc=idx*interval)
+
+
+
 
