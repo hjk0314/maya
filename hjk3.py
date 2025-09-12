@@ -511,7 +511,7 @@ def get_position(*args: str) -> List[Tuple]:
 
 
 @with_selection
-def get_bounding_box_position(*args) -> List[Tuple]:
+def get_bounding_box_position(*args) -> Tuple[float]:
     """ Get the coordinates of the center pivot of the boundingBox.
 
     Notes
@@ -529,7 +529,7 @@ def get_bounding_box_position(*args) -> List[Tuple]:
         bbox = cmds.exactWorldBoundingBox(args[0])
     except RuntimeError:
         print(f"Error: Invalid object name '{args[0]}'")
-        return None
+        return ()
 
 
     xmin, ymin, zmin, xmax, ymax, zmax = bbox
