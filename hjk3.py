@@ -2401,6 +2401,86 @@ def create_ikSplineHandle(
 
 
 
+def get_orient_joint_direction(joint: str) -> Dict[str, tuple]:
+    """ Get the orientation of the joint.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        joint : list
+
+    Examples
+    --------
+    >>> get_orient_joint_direction("joint1")
+    {"X": (0, 1, 0)}
+    """
+    try:
+        selection_list = om2.MSelectionList()
+        selection_list.add(joint)
+        dag_path = selection_list.getDagPath(0)
+        
+        child_count = dag_path.childCount()
+        if child_count == 0:
+            print(f"'{joint}' has no children.")
+            return None
+        
+        child_dag_path = dag_path.child(0)
+        child_fn = om2.MFnTransform(child_dag_path)
+
+        local_translation = child_fn.translation(om2.MSpace.kTransform)
+        
+        max_val = 0
+        alignment_axis = {}
+        
+        if abs(local_translation.x) > max_val:
+            max_val = abs(local_translation.x)
+            alignment_axis['X'] = (1, 0, 0)
+        
+        if abs(local_translation.y) > max_val:
+            max_val = abs(local_translation.y)
+            alignment_axis['Y'] = (0, 1, 0)
+            
+        if abs(local_translation.z) > max_val:
+            max_val = abs(local_translation.z)
+            alignment_axis['Z'] = (0, 0, 1)
+            
+        return alignment_axis
+        
+    except RuntimeError as e:
+        print(e)
+        return {}
+
+
+
+@alias(i="interval")
+@with_selection
+def offset_keyframes(*objects: Any, interval: int=1) -> None:
+    """ Offsets the object's keyframes at intervals. A negative number can be used to return them to their original position.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(i="interval")
+            - @with_selection
+
+    Args
+    ----
+        *objects : str
+
+    Examples
+    --------
+    >>> offset_keyframes()
+    >>> offset_keyframes("pCube1", "pCube2", i=4)
+    >>> offset_keyframes(*sel, i=-4) # return to original position
+    """
+    for idx, obj in enumerate(objects):
+        cmds.keyframe(obj, e=True, r=True, tc=idx*interval)
+
+
+
 @alias(idx="color_idx", rgb="color_rgb")
 @with_selection
 def colorize(*args, color_idx=None, color_rgb=()) -> None: 
@@ -2629,89 +2709,33 @@ class ColorPickerUI:
         cmds.setParent('..')
 
 
+
 ######################
 sel = cmds.ls(sl=True)
 ######################
 
 
-
-def get_orient_joint_direction(joint: str) -> Dict[str, tuple]:
-    """ Get the orientation of the joint.
-
-    Notes
-    -----
-        **No Decoration**
-
-    Args
-    ----
-        joint : list
-
-    Examples
-    --------
-    >>> get_orient_joint_direction("joint1")
-    {"X": (0, 1, 0)}
-    """
-    try:
-        selection_list = om2.MSelectionList()
-        selection_list.add(joint)
-        dag_path = selection_list.getDagPath(0)
-        
-        child_count = dag_path.childCount()
-        if child_count == 0:
-            print(f"'{joint}' has no children.")
-            return None
-        
-        child_dag_path = dag_path.child(0)
-        child_fn = om2.MFnTransform(child_dag_path)
-
-        local_translation = child_fn.translation(om2.MSpace.kTransform)
-        
-        max_val = 0
-        alignment_axis = {}
-        
-        if abs(local_translation.x) > max_val:
-            max_val = abs(local_translation.x)
-            alignment_axis['X'] = (1, 0, 0)
-        
-        if abs(local_translation.y) > max_val:
-            max_val = abs(local_translation.y)
-            alignment_axis['Y'] = (0, 1, 0)
-            
-        if abs(local_translation.z) > max_val:
-            max_val = abs(local_translation.z)
-            alignment_axis['Z'] = (0, 0, 1)
-            
-        return alignment_axis
-        
-    except RuntimeError as e:
-        print(e)
-        return {}
+# orient_joint(*sel, p="yxz", s="zdown")
+# select_only(jnt=True)
+# group_with_pivot(null=True)
+# group_with_pivot()
+# replace_name(s="middle", r="pinky")
+# align_object_to_plane()
 
 
-@alias(i="interval")
-@with_selection
-def offset_keyframes(*objects: Any, interval: int=1) -> None:
-    """ Offsets the object's keyframes at intervals. A negative number can be used to return them to their original position.
-
-    Notes
-    -----
-        **Decoration**
-            - @alias(i="interval")
-            - @with_selection
-
-    Args
-    ----
-        *objects : str
-
-    Examples
-    --------
-    >>> offset_keyframes()
-    >>> offset_keyframes("pCube1", "pCube2", i=4)
-    >>> offset_keyframes(*sel, i=-4) # return to original position
-    """
-    for idx, obj in enumerate(objects):
-        cmds.keyframe(obj, e=True, r=True, tc=idx*interval)
+def create_locator_from_box_position():
+    bbpos = get_bounding_box_position()
+    loc = cmds.spaceLocator()
+    cmds.xform(loc, translation=bbpos, worldSpace=True)
+    return loc
+# create_locator_from_box_position()
 
 
+def create_controller(ctrl_shape: str):
+    dt = Data()
+    cuv_shape = dt.ctrl_shapes[ctrl_shape]
+    cuv = create_curve_from_points(*cuv_shape, d=1)
+    return cuv
+# create_controller("foot_box_type")
 
 
