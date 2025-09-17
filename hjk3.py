@@ -889,7 +889,7 @@ def parent_in_sequence(*args) -> list:
 
 
 @with_selection
-def group_with_pivot(*args, **kwargs) -> List[list]:
+def group_with_pivot(*args, null=False, null_only=False) -> List[list]:
     """ Create a group that includes ownself while maintaining own pivot position.
 
     Notes
@@ -905,9 +905,15 @@ def group_with_pivot(*args, **kwargs) -> List[list]:
     """
     result = []
     for i in args:
-        grp_name = [f"{i}_grp"]
-        if kwargs.get("null", False):
+        grp_name = []
+        if null_only:
             grp_name.append(f"{i}_null")
+        else:
+            if null:
+                grp_name.append(f"{i}_grp")
+                grp_name.append(f"{i}_null")
+            else:
+                grp_name.append(f"{i}_grp")
 
 
         groups = []
@@ -1443,6 +1449,7 @@ def extract_range_path(start: str, end: str) -> Dict[str, List]:
     Examples
     --------
     >>> meta_data = extract_range_path("joint2", "joint15")
+    {"joint2": ["joint2_parents", "joint2_child"], ...}
     >>> orient_joint("joint2")
     >>> restore_range_path(meta_data)
     """
@@ -2710,6 +2717,105 @@ class ColorPickerUI:
 
 
 
+##############################################################################
+##############################################################################
+
+
+
+def create_locator_from_box_position():
+    bbpos = get_bounding_box_position()
+    loc = cmds.spaceLocator()
+    cmds.xform(loc, translation=bbpos, worldSpace=True)
+    return loc
+
+
+def create_controller(ctrl_shape: str):
+    dt = Data()
+    cuv_shape = dt.ctrl_shapes[ctrl_shape]
+    cuv = create_curve_from_points(*cuv_shape, d=1)
+    return cuv
+
+
+def create_FK_ctrl(ctrl: list, jnt: list) -> List[str]:
+    if len(ctrl) != len(jnt):
+        print("The number of controllers and joints must be the same.")
+        return []
+
+
+    new_ctrl = []
+    for c, j in zip(ctrl, jnt):
+        cmds.matchTransform(c, j, pos=True, rot=True)
+        cmds.makeIdentity(c, a=True, t=0, r=0, s=1, n=0, pn=1)
+        cmds.delete(c, ch=True)
+        cc_name = j.replace("rig_", "cc_")
+        cc_new = cmds.rename(c, cc_name)
+        cmds.parentConstraint(cc_new, j, mo=True, w=1.0)
+        new_ctrl.append(cc_new)
+
+
+    new_ctrl = parent_in_sequence(*new_ctrl)
+    for idx, cc in enumerate(new_ctrl):
+        if idx == 0:
+            print(group_with_pivot(cc, null=True))
+        else:
+            group_with_pivot(cc)
+    
+    return new_ctrl
+
+
+@with_selection
+def set_rotate_order(
+    *args: Any, 
+    xyz: bool = False, 
+    yzx: bool = False, 
+    zxy: bool = False, 
+    xzy: bool = False, 
+    yxz: bool = False, 
+    zyx: bool = False
+) -> None:
+    """ 이 함수는 rotation order를 셋팅한다.
+
+    Notes
+    -----
+        **Decoration**
+            - @with_selection
+
+    Args
+    ----
+        - args : str
+        - xyz : bool
+        - yzx : bool
+        - zxy : bool
+        - xzy : bool
+        - yxz : bool
+        - zyx : bool
+
+    Examples
+    --------
+    >>> set_rotate_order("sphere1", yzx=True)
+    >>> set_rotate_order(yzx=True)
+    """
+    if xyz:
+        rotate_order_value = 0
+    elif yzx:
+        rotate_order_value = 1
+    elif zxy:
+        rotate_order_value = 2
+    elif xzy:
+        rotate_order_value = 3
+    elif yxz:
+        rotate_order_value = 4
+    elif zyx:
+        rotate_order_value = 5
+    else:
+        rotate_order_value = 0
+
+
+    for i in args:
+        cmds.setAttr(f"{i}.rotateOrder", rotate_order_value)
+
+
+
 ######################
 sel = cmds.ls(sl=True)
 ######################
@@ -2719,23 +2825,52 @@ sel = cmds.ls(sl=True)
 # select_only(jnt=True)
 # group_with_pivot(null=True)
 # group_with_pivot()
-# replace_name(s="middle", r="pinky")
+# joints = select_only(jnt=True)
+# replace_name(s="_L", r="_L_IK")
 # align_object_to_plane()
 
-
-def create_locator_from_box_position():
-    bbpos = get_bounding_box_position()
-    loc = cmds.spaceLocator()
-    cmds.xform(loc, translation=bbpos, worldSpace=True)
-    return loc
 # create_locator_from_box_position()
 
-
-def create_controller(ctrl_shape: str):
-    dt = Data()
-    cuv_shape = dt.ctrl_shapes[ctrl_shape]
-    cuv = create_curve_from_points(*cuv_shape, d=1)
-    return cuv
 # create_controller("foot_box_type")
+
+# set_rotate_order(zxy=True)
+
+# ft_dict = {"at": "double", "dv": 0}
+# create_attributes("cc_ankle_L", "Ball", ft=ft_dict)
+# create_attributes("cc_ankle_L", "Heel_Rot_X", ft=ft_dict)
+# create_attributes("cc_ankle_L", "Heel_Rot_Y", ft=ft_dict)
+# create_attributes("cc_ankle_L", "Heel_Rot_Z", ft=ft_dict)
+# create_attributes("cc_ankle_L", "Toe_Rot_X", ft=ft_dict)
+# create_attributes("cc_ankle_L", "Toe_Rot_Y", ft=ft_dict)
+# create_attributes("cc_ankle_L", "Toe_Rot_Z", ft=ft_dict)
+
+# create_pole_vector_joints()
+
+# dt = Data()
+# shape = dt.ctrl_shapes["sphere"]
+# create_curve_from_points(*shape)
+
+# num = int(len(sel)/2)
+# ctrl = sel[:num]
+# jnt = sel[num:]
+# create_FK_ctrl(ctrl, jnt)
+
+
+
+# ctrl = "cc_ankle_L_IK"
+# attr = "IK0_FK1"
+# ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+# FKs = ['rig_leg_L_FK', 'rig_knee_L_FK', 'rig_ankle_L_FK']
+# IKs = ['rig_leg_L_IK', 'rig_knee_L_IK', 'rig_ankle_L_IK']
+# ORG = ['rig_leg_L', 'rig_knee_L', 'rig_ankle_L']
+
+# create_attributes(ctrl, attr_name=attr, ft=ft_dict)
+# setRange_out = create_setRange_node(f"{ctrl}.{attr}", rx=[0, 10, 0, 1])
+# for f, i, o in zip(FKs, IKs, ORG):
+#     blendColor_out = create_blendColor_node(setRange_out[0], f, i, t=True)
+#     cmds.connectAttr(blendColor_out[0], f"{o}.translate", f=True)
+#     blendColor_out = create_blendColor_node(setRange_out[0], f, i, r=True)
+#     cmds.connectAttr(blendColor_out[0], f"{o}.rotate", f=True)
+
 
 
