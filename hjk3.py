@@ -1751,8 +1751,12 @@ def select_only(*args, **kwargs) -> list:
     for obj in sel:
         obj_type = cmds.objectType(obj)
         shapes = cmds.listRelatives(obj, s=True)
-        node_type = cmds.nodeType(shapes[0]) if shapes else None
-    
+        try:
+            node_type = cmds.nodeType(shapes[0])
+        except Exception:
+            node_type = None
+
+
         if filters["joint"] and obj_type == "joint":
             result.add(obj)
         if filters["ikhandle"] and obj_type == "ikHandle":
@@ -2773,7 +2777,7 @@ def set_rotate_order(
     yxz: bool = False, 
     zyx: bool = False
 ) -> None:
-    """ 이 함수는 rotation order를 셋팅한다.
+    """ This function sets the rotation order.
 
     Notes
     -----
@@ -2815,18 +2819,62 @@ def set_rotate_order(
         cmds.setAttr(f"{i}.rotateOrder", rotate_order_value)
 
 
+def get_weights_by_distance(
+    ctrl_A: str, 
+    ctrl_B: str, 
+    target: str
+) -> List[float]:
+    """ This function returns the distance-based weights between ``ctrl_A`` and ``ctrl_B``.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        - ctrl_A : str
+        - ctrl_B : str
+        - target : str
+
+    Examples
+    --------
+    >>> get_weights_by_distance("cc_neck_1", "cc_neck_3", "cc_neck_2")
+    [0.333, 0.667]
+    """
+    ctrl_A_pos = get_position(ctrl_A)[0]
+    ctrl_B_pos = get_position(ctrl_B)[0]
+    target_pos = get_position(target)[0]
+
+    a = get_distance(ctrl_B_pos, target_pos)
+    b = get_distance(ctrl_A_pos, target_pos)
+    c = get_distance(ctrl_A_pos, ctrl_B_pos)
+
+    if c == 0:
+        return []
+
+    AH = (c**2 + b**2 - a**2) / (2 * c)
+    HB = (c**2 + a**2 - b**2) / (2 * c)
+
+    result = [1-(AH/c), 1-(HB/c)]
+
+    return result
+
+
 
 ######################
 sel = cmds.ls(sl=True)
 ######################
+print(sel)
+######################
 
 
 # orient_joint(*sel, p="yxz", s="zdown")
-# select_only(jnt=True)
+# select_only(con=True)
 # group_with_pivot(null=True)
 # group_with_pivot()
 # joints = select_only(jnt=True)
 # replace_name(s="_L", r="_L_IK")
+# re_name(n="rig_tail_1")
 # align_object_to_plane()
 
 # create_locator_from_box_position()
@@ -2847,7 +2895,7 @@ sel = cmds.ls(sl=True)
 # create_pole_vector_joints()
 
 # dt = Data()
-# shape = dt.ctrl_shapes["sphere"]
+# shape = dt.ctrl_shapes["head"]
 # create_curve_from_points(*shape)
 
 # num = int(len(sel)/2)
@@ -2863,6 +2911,9 @@ sel = cmds.ls(sl=True)
 # FKs = ['rig_leg_L_FK', 'rig_knee_L_FK', 'rig_ankle_L_FK']
 # IKs = ['rig_leg_L_IK', 'rig_knee_L_IK', 'rig_ankle_L_IK']
 # ORG = ['rig_leg_L', 'rig_knee_L', 'rig_ankle_L']
+# FKs += ['rig_ball_L_FK', 'rig_toe_L_FK']
+# IKs += ['rig_ball_L_IK', 'rig_toe_L_IK']
+# ORG += ['rig_ball_L', 'rig_toe_L']
 
 # create_attributes(ctrl, attr_name=attr, ft=ft_dict)
 # setRange_out = create_setRange_node(f"{ctrl}.{attr}", rx=[0, 10, 0, 1])
@@ -2872,5 +2923,35 @@ sel = cmds.ls(sl=True)
 #     blendColor_out = create_blendColor_node(setRange_out[0], f, i, r=True)
 #     cmds.connectAttr(blendColor_out[0], f"{o}.rotate", f=True)
 
+
+# neck_joint = [
+#     'rig_neck_1_IK', 'rig_neck_2_IK', 'rig_neck_3_IK', 'rig_neck_4_IK', 'rig_neck_5_IK', 'rig_neck_6_IK', 'rig_neck_7_IK', 'rig_neck_8_IK', 'rig_neck_end_IK'
+#     ]
+# curve_info = create_curve_ikSpline(*neck_joint)
+# cuv = next(iter(curve_info))
+# nodes = create_ikSplineHandle(cuv, neck_joint, scaleY=True)
+
+
+def constraintParent_by_distance():
+    ctrl_A = "cc_neck_1_IK"
+    ctrl_B = "cc_neck_3_IK"
+    locators = ['locator1', 'locator2', 'locator3', 'locator4']
+
+    # ctrl_A = "cc_neck_3_IK"
+    # ctrl_B = "cc_neck_5_IK"
+    # locators = ['locator5', 'locator6']
+
+    # ctrl_A = "cc_neck_5_IK"
+    # ctrl_B = "cc_neck_7_IK"
+    # locators = ['locator7', 'locator8']
+
+    # ctrl_A = "cc_neck_7_IK"
+    # ctrl_B = "cc_head"
+    # locators = ['locator9', 'locator10', 'locator11']
+
+    for loc in locators:
+        A_loc, B_loc = get_weights_by_distance(ctrl_A, ctrl_B, loc)
+        cmds.parentConstraint(ctrl_A, loc, mo=True, w=A_loc)
+        cmds.parentConstraint(ctrl_B, loc, mo=True, w=B_loc)
 
 
