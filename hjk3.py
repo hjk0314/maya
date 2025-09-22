@@ -2309,6 +2309,41 @@ def create_attributes_proxy(
     enum_type: dict = None,
     integer_type: dict = None,
 ) -> dict:
+    """ Creates proxy attributes on a given controller.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(sc="source_ctrl", tc="target_ctrl", an="attr_name", k="keyable", ft="float_type", bt="bool_type", et="enum_type", it="integer_type")
+
+    Args
+    ----
+        source_ctrl : str
+        target_ctrl : str
+        attr_name : str
+        keyable : bool
+        float_type : dict
+        bool_type : dict
+        enum_type : dict
+        integer_type : dict
+
+    Examples
+    --------
+    >>> ctrl_1 = "nurbsCircle1"
+    >>> ctrl_2 = "nurbsCircle2"
+    >>> attr = "IK0_FK1"
+    ...
+    >>> ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+    >>> ft_dict = {"at": "double", "dv": 0}
+    >>> bt_dict = {"at": "bool"}
+    >>> et_dict = {"at": "enum", "enumName": "World:Hips:Chest"}
+    >>> it_dict = {"at": "long", "dv": 0}
+    ...
+    >>> create_attributes_proxy(ctrl_1, ctrl_2, attr, ft=ft_dict)
+    >>> create_attributes_proxy(ctrl_2, ctrl_2, attr, bt=bt_dict)
+    >>> create_attributes_proxy(ctrl_2, ctrl_2, attr, et=et_dict)
+    >>> create_attributes_proxy(ctrl_2, ctrl_2, attr, it=it_dict)
+    """
     kwargs = {
         "longName": attr_name,
         "keyable": keyable,
@@ -2325,9 +2360,8 @@ def create_attributes_proxy(
         kwargs.update(integer_type)
 
 
-    if cmds.attributeQuery(attr_name, node=source_ctrl, ex=True):
-        cmds.deleteAttr(f"{source_ctrl}.{attr_name}")
-    cmds.addAttr(source_ctrl, **kwargs)
+    if not cmds.attributeQuery(attr_name, node=source_ctrl, ex=True):
+        cmds.addAttr(source_ctrl, **kwargs)
 
 
     kwargs["proxy"] = "%s.%s" % (source_ctrl, attr_name)
@@ -2905,15 +2939,20 @@ print(sel)
 
 
 
-# ctrl = "cc_ankle_L_IK"
-# attr = "IK0_FK1"
-# ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+ctrl = "cc_neck_1_IK"
+attr = "IK0_FK1"
+ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
 # FKs = ['rig_leg_L_FK', 'rig_knee_L_FK', 'rig_ankle_L_FK']
 # IKs = ['rig_leg_L_IK', 'rig_knee_L_IK', 'rig_ankle_L_IK']
 # ORG = ['rig_leg_L', 'rig_knee_L', 'rig_ankle_L']
 # FKs += ['rig_ball_L_FK', 'rig_toe_L_FK']
 # IKs += ['rig_ball_L_IK', 'rig_toe_L_IK']
 # ORG += ['rig_ball_L', 'rig_toe_L']
+
+FKs = ['rig_neck_1_FK', 'rig_neck_2_FK', 'rig_neck_3_FK', 'rig_neck_4_FK', 'rig_neck_5_FK', 'rig_neck_6_FK', 'rig_neck_7_FK', 'rig_neck_8_FK', 'rig_neck_end_FK']
+IKs = ['rig_neck_1_IK', 'rig_neck_2_IK', 'rig_neck_3_IK', 'rig_neck_4_IK', 'rig_neck_5_IK', 'rig_neck_6_IK', 'rig_neck_7_IK', 'rig_neck_8_IK', 'rig_neck_end_IK']
+ORG = ['rig_neck_1', 'rig_neck_2', 'rig_neck_3', 'rig_neck_4', 'rig_neck_5', 'rig_neck_6', 'rig_neck_7', 'rig_neck_8', 'rig_neck_end']
+
 
 # create_attributes(ctrl, attr_name=attr, ft=ft_dict)
 # setRange_out = create_setRange_node(f"{ctrl}.{attr}", rx=[0, 10, 0, 1])
@@ -2933,9 +2972,9 @@ print(sel)
 
 
 def constraintParent_by_distance():
-    ctrl_A = "cc_neck_1_IK"
-    ctrl_B = "cc_neck_3_IK"
-    locators = ['locator1', 'locator2', 'locator3', 'locator4']
+    # ctrl_A = "cc_neck_1_IK"
+    # ctrl_B = "cc_neck_3_IK"
+    # locators = ['locator1', 'locator2', 'locator3', 'locator4']
 
     # ctrl_A = "cc_neck_3_IK"
     # ctrl_B = "cc_neck_5_IK"
@@ -2945,13 +2984,27 @@ def constraintParent_by_distance():
     # ctrl_B = "cc_neck_7_IK"
     # locators = ['locator7', 'locator8']
 
-    # ctrl_A = "cc_neck_7_IK"
-    # ctrl_B = "cc_head"
-    # locators = ['locator9', 'locator10', 'locator11']
+    ctrl_A = "cc_neck_7_IK"
+    ctrl_B = "cc_head"
+    locators = ['locator9', 'locator10', 'locator11']
 
     for loc in locators:
         A_loc, B_loc = get_weights_by_distance(ctrl_A, ctrl_B, loc)
-        cmds.parentConstraint(ctrl_A, loc, mo=True, w=A_loc)
-        cmds.parentConstraint(ctrl_B, loc, mo=True, w=B_loc)
+        cmds.parentConstraint(ctrl_A, f"{loc}_grp", mo=True, w=A_loc)
+        cmds.parentConstraint(ctrl_B, f"{loc}_grp", mo=True, w=B_loc)
+# constraintParent_by_distance()
+
+
+
+# for i in range(2, 12):
+#     cmds.connectAttr("curveShape2.worldSpace[0]", f"pointOnCurveInfo{i}.inputCurve", f=True)
+
+
+# for i in range(2, 12):
+#     cmds.connectAttr(f"locator{i+11}.translateX", f"locator{i}_null.translateX", f=True)
+
+
+# create_attributes_proxy(sc="cc_neck_1_IK", tc="cc_neck_1_FK", an="IK0_FK1", ft={"at": "double", "dv": 0, "min": 0, "max": 10})
+# create_attributes_proxy(sc="cc_neck_1_IK", tc="cc_head", an="Neck_Sub_Ctrl", bt={"at": "bool"})
 
 
