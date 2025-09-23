@@ -2526,6 +2526,101 @@ def offset_keyframes(*objects: Any, interval: int=1) -> None:
 
 
 
+@with_selection
+def set_rotate_order(
+    *args: Any, 
+    xyz: bool = False, 
+    yzx: bool = False, 
+    zxy: bool = False, 
+    xzy: bool = False, 
+    yxz: bool = False, 
+    zyx: bool = False
+) -> None:
+    """ This function sets the rotation order.
+
+    Notes
+    -----
+        **Decoration**
+            - @with_selection
+
+    Args
+    ----
+        - args : str
+        - xyz : bool
+        - yzx : bool
+        - zxy : bool
+        - xzy : bool
+        - yxz : bool
+        - zyx : bool
+
+    Examples
+    --------
+    >>> set_rotate_order("sphere1", yzx=True)
+    >>> set_rotate_order(yzx=True)
+    """
+    if xyz:
+        rotate_order_value = 0
+    elif yzx:
+        rotate_order_value = 1
+    elif zxy:
+        rotate_order_value = 2
+    elif xzy:
+        rotate_order_value = 3
+    elif yxz:
+        rotate_order_value = 4
+    elif zyx:
+        rotate_order_value = 5
+    else:
+        rotate_order_value = 0
+
+
+    for i in args:
+        cmds.setAttr(f"{i}.rotateOrder", rotate_order_value)
+
+
+
+def get_constraint_weight_by_distance(
+    ctrl_A: str, 
+    ctrl_B: str, 
+    ctrl_C: str
+) -> List[float]:
+    """ This function returns the ``ctrl_C`` **distance-based constraint weights** between ``ctrl_A`` and ``ctrl_B``.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        - ctrl_A : str
+        - ctrl_B : str
+        - ctrl_C : str
+
+    Examples
+    --------
+    >>> get_weights_by_distance("cc_neck_1", "cc_neck_3", "cc_neck_2")
+    [0.333, 0.667]
+    """
+    ctrl_A_pos = get_position(ctrl_A)[0]
+    ctrl_B_pos = get_position(ctrl_B)[0]
+    ctrl_C_pos = get_position(ctrl_C)[0]
+
+    a = get_distance(ctrl_B_pos, ctrl_C_pos)
+    b = get_distance(ctrl_A_pos, ctrl_C_pos)
+    c = get_distance(ctrl_A_pos, ctrl_B_pos)
+
+    if c == 0:
+        return []
+
+    AH = (c**2 + b**2 - a**2) / (2 * c)
+    HB = (c**2 + a**2 - b**2) / (2 * c)
+
+    result = [1-(AH/c), 1-(HB/c)]
+
+    return result
+
+
+
 @alias(idx="color_idx", rgb="color_rgb")
 @with_selection
 def colorize(*args, color_idx=None, color_rgb=()) -> None: 
@@ -2774,7 +2869,7 @@ def create_controller(ctrl_shape: str):
     return cuv
 
 
-def create_FK_ctrl(ctrl: list, jnt: list) -> List[str]:
+def create_FK_ctrl(ctrl: list, jnt: list, parent=False) -> List[str]:
     if len(ctrl) != len(jnt):
         print("The number of controllers and joints must be the same.")
         return []
@@ -2787,7 +2882,8 @@ def create_FK_ctrl(ctrl: list, jnt: list) -> List[str]:
         cmds.delete(c, ch=True)
         cc_name = j.replace("rig_", "cc_")
         cc_new = cmds.rename(c, cc_name)
-        cmds.parentConstraint(cc_new, j, mo=True, w=1.0)
+        if parent:
+            cmds.parentConstraint(cc_new, j, mo=True, w=1.0)
         new_ctrl.append(cc_new)
 
 
@@ -2799,99 +2895,6 @@ def create_FK_ctrl(ctrl: list, jnt: list) -> List[str]:
             group_with_pivot(cc)
     
     return new_ctrl
-
-
-@with_selection
-def set_rotate_order(
-    *args: Any, 
-    xyz: bool = False, 
-    yzx: bool = False, 
-    zxy: bool = False, 
-    xzy: bool = False, 
-    yxz: bool = False, 
-    zyx: bool = False
-) -> None:
-    """ This function sets the rotation order.
-
-    Notes
-    -----
-        **Decoration**
-            - @with_selection
-
-    Args
-    ----
-        - args : str
-        - xyz : bool
-        - yzx : bool
-        - zxy : bool
-        - xzy : bool
-        - yxz : bool
-        - zyx : bool
-
-    Examples
-    --------
-    >>> set_rotate_order("sphere1", yzx=True)
-    >>> set_rotate_order(yzx=True)
-    """
-    if xyz:
-        rotate_order_value = 0
-    elif yzx:
-        rotate_order_value = 1
-    elif zxy:
-        rotate_order_value = 2
-    elif xzy:
-        rotate_order_value = 3
-    elif yxz:
-        rotate_order_value = 4
-    elif zyx:
-        rotate_order_value = 5
-    else:
-        rotate_order_value = 0
-
-
-    for i in args:
-        cmds.setAttr(f"{i}.rotateOrder", rotate_order_value)
-
-
-def get_weights_by_distance(
-    ctrl_A: str, 
-    ctrl_B: str, 
-    target: str
-) -> List[float]:
-    """ This function returns the distance-based weights between ``ctrl_A`` and ``ctrl_B``.
-
-    Notes
-    -----
-        **No Decoration**
-
-    Args
-    ----
-        - ctrl_A : str
-        - ctrl_B : str
-        - target : str
-
-    Examples
-    --------
-    >>> get_weights_by_distance("cc_neck_1", "cc_neck_3", "cc_neck_2")
-    [0.333, 0.667]
-    """
-    ctrl_A_pos = get_position(ctrl_A)[0]
-    ctrl_B_pos = get_position(ctrl_B)[0]
-    target_pos = get_position(target)[0]
-
-    a = get_distance(ctrl_B_pos, target_pos)
-    b = get_distance(ctrl_A_pos, target_pos)
-    c = get_distance(ctrl_A_pos, ctrl_B_pos)
-
-    if c == 0:
-        return []
-
-    AH = (c**2 + b**2 - a**2) / (2 * c)
-    HB = (c**2 + a**2 - b**2) / (2 * c)
-
-    result = [1-(AH/c), 1-(HB/c)]
-
-    return result
 
 
 
@@ -2910,12 +2913,8 @@ print(sel)
 # replace_name(s="_L", r="_L_IK")
 # re_name(n="rig_tail_1")
 # align_object_to_plane()
-
 # create_locator_from_box_position()
-
 # create_controller("foot_box_type")
-
-# set_rotate_order(zxy=True)
 
 # ft_dict = {"at": "double", "dv": 0}
 # create_attributes("cc_ankle_L", "Ball", ft=ft_dict)
@@ -2938,37 +2937,31 @@ print(sel)
 # create_FK_ctrl(ctrl, jnt)
 
 
-
-ctrl = "cc_neck_1_IK"
-attr = "IK0_FK1"
-ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
-# FKs = ['rig_leg_L_FK', 'rig_knee_L_FK', 'rig_ankle_L_FK']
-# IKs = ['rig_leg_L_IK', 'rig_knee_L_IK', 'rig_ankle_L_IK']
-# ORG = ['rig_leg_L', 'rig_knee_L', 'rig_ankle_L']
-# FKs += ['rig_ball_L_FK', 'rig_toe_L_FK']
-# IKs += ['rig_ball_L_IK', 'rig_toe_L_IK']
-# ORG += ['rig_ball_L', 'rig_toe_L']
-
-FKs = ['rig_neck_1_FK', 'rig_neck_2_FK', 'rig_neck_3_FK', 'rig_neck_4_FK', 'rig_neck_5_FK', 'rig_neck_6_FK', 'rig_neck_7_FK', 'rig_neck_8_FK', 'rig_neck_end_FK']
-IKs = ['rig_neck_1_IK', 'rig_neck_2_IK', 'rig_neck_3_IK', 'rig_neck_4_IK', 'rig_neck_5_IK', 'rig_neck_6_IK', 'rig_neck_7_IK', 'rig_neck_8_IK', 'rig_neck_end_IK']
-ORG = ['rig_neck_1', 'rig_neck_2', 'rig_neck_3', 'rig_neck_4', 'rig_neck_5', 'rig_neck_6', 'rig_neck_7', 'rig_neck_8', 'rig_neck_end']
-
-
-# create_attributes(ctrl, attr_name=attr, ft=ft_dict)
-# setRange_out = create_setRange_node(f"{ctrl}.{attr}", rx=[0, 10, 0, 1])
-# for f, i, o in zip(FKs, IKs, ORG):
-#     blendColor_out = create_blendColor_node(setRange_out[0], f, i, t=True)
-#     cmds.connectAttr(blendColor_out[0], f"{o}.translate", f=True)
-#     blendColor_out = create_blendColor_node(setRange_out[0], f, i, r=True)
-#     cmds.connectAttr(blendColor_out[0], f"{o}.rotate", f=True)
+def blend_node_create():
+    ctrl = "cc_neck_1_IK"
+    attr = "IK0_FK1"
+    ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+    FKs = ['rig_neck_1_FK', 'rig_neck_2_FK', 'rig_neck_3_FK', 'rig_neck_4_FK', 'rig_neck_5_FK', 'rig_neck_6_FK', 'rig_neck_7_FK', 'rig_neck_8_FK', 'rig_neck_end_FK']
+    IKs = ['rig_neck_1_IK', 'rig_neck_2_IK', 'rig_neck_3_IK', 'rig_neck_4_IK', 'rig_neck_5_IK', 'rig_neck_6_IK', 'rig_neck_7_IK', 'rig_neck_8_IK', 'rig_neck_end_IK']
+    ORG = ['rig_neck_1', 'rig_neck_2', 'rig_neck_3', 'rig_neck_4', 'rig_neck_5', 'rig_neck_6', 'rig_neck_7', 'rig_neck_8', 'rig_neck_end']
+    create_attributes(ctrl, attr_name=attr, ft=ft_dict)
+    setRange_out = create_setRange_node(f"{ctrl}.{attr}", rx=[0, 10, 0, 1])
+    for f, i, o in zip(FKs, IKs, ORG):
+        blendColor_out = create_blendColor_node(setRange_out[0], f, i, t=True)
+        cmds.connectAttr(blendColor_out[0], f"{o}.translate", f=True)
+        blendColor_out = create_blendColor_node(setRange_out[0], f, i, r=True)
+        cmds.connectAttr(blendColor_out[0], f"{o}.rotate", f=True)
+# blend_node_create()
 
 
-# neck_joint = [
-#     'rig_neck_1_IK', 'rig_neck_2_IK', 'rig_neck_3_IK', 'rig_neck_4_IK', 'rig_neck_5_IK', 'rig_neck_6_IK', 'rig_neck_7_IK', 'rig_neck_8_IK', 'rig_neck_end_IK'
-#     ]
-# curve_info = create_curve_ikSpline(*neck_joint)
-# cuv = next(iter(curve_info))
-# nodes = create_ikSplineHandle(cuv, neck_joint, scaleY=True)
+def create_ikSpline_curve_and_ikSpline_handle():
+    neck_joint = [
+        'rig_neck_1_IK', 'rig_neck_2_IK', 'rig_neck_3_IK', 'rig_neck_4_IK', 'rig_neck_5_IK', 'rig_neck_6_IK', 'rig_neck_7_IK', 'rig_neck_8_IK', 'rig_neck_end_IK'
+        ]
+    curve_info = create_curve_ikSpline(*neck_joint)
+    cuv = next(iter(curve_info))
+    create_ikSplineHandle(cuv, neck_joint, scaleY=True)
+# create_ikSpline_curve_and_ikSpline_handle()
 
 
 def constraintParent_by_distance():
@@ -2989,22 +2982,9 @@ def constraintParent_by_distance():
     locators = ['locator9', 'locator10', 'locator11']
 
     for loc in locators:
-        A_loc, B_loc = get_weights_by_distance(ctrl_A, ctrl_B, loc)
+        A_loc, B_loc = get_constraint_weight_by_distance(ctrl_A, ctrl_B, loc)
         cmds.parentConstraint(ctrl_A, f"{loc}_grp", mo=True, w=A_loc)
         cmds.parentConstraint(ctrl_B, f"{loc}_grp", mo=True, w=B_loc)
 # constraintParent_by_distance()
-
-
-
-# for i in range(2, 12):
-#     cmds.connectAttr("curveShape2.worldSpace[0]", f"pointOnCurveInfo{i}.inputCurve", f=True)
-
-
-# for i in range(2, 12):
-#     cmds.connectAttr(f"locator{i+11}.translateX", f"locator{i}_null.translateX", f=True)
-
-
-# create_attributes_proxy(sc="cc_neck_1_IK", tc="cc_neck_1_FK", an="IK0_FK1", ft={"at": "double", "dv": 0, "min": 0, "max": 10})
-# create_attributes_proxy(sc="cc_neck_1_IK", tc="cc_head", an="Neck_Sub_Ctrl", bt={"at": "bool"})
 
 
