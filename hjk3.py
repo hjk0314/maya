@@ -2169,7 +2169,7 @@ def create_setRange_node(
 
 
 
-@alias(t="translate", r="rotate", s="sclae")
+@alias(t="translate", r="rotate", s="scale")
 def create_blendColor_node(
     node_attr: str, 
     fk_joint: str, 
@@ -2928,7 +2928,7 @@ print(sel)
 # create_pole_vector_joints()
 
 # dt = Data()
-# shape = dt.ctrl_shapes["head"]
+# shape = dt.ctrl_shapes["scapula"]
 # create_curve_from_points(*shape)
 
 # num = int(len(sel)/2)
@@ -2949,8 +2949,10 @@ def blend_node_create():
     for f, i, o in zip(FKs, IKs, ORG):
         blendColor_out = create_blendColor_node(setRange_out[0], f, i, t=True)
         cmds.connectAttr(blendColor_out[0], f"{o}.translate", f=True)
-        blendColor_out = create_blendColor_node(setRange_out[0], f, i, r=True)
-        cmds.connectAttr(blendColor_out[0], f"{o}.rotate", f=True)
+        # blendColor_out = create_blendColor_node(setRange_out[0], f, i, r=True)
+        # cmds.connectAttr(blendColor_out[0], f"{o}.rotate", f=True)
+        blendColor_out = create_blendColor_node('setRange2.outValueX', f, i, s=True)
+        cmds.connectAttr(blendColor_out[0], f"{o}.scale", f=True)
 # blend_node_create()
 
 
