@@ -851,6 +851,33 @@ def create_pole_vector_joints(*args) -> list:
 
 
 
+def create_annotation(polevector_ctrl: str, knee_jnt: str) -> str:
+    """ Create a annotation from the knee joint to the pole vector control.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        polevector_ctrl : str
+        knee_jnt : str
+
+    Examples
+    --------
+    >>> create_annotation("cc_knee_L_IK", "rig_knee_L_IK")
+    "annotation1"
+    """
+    knee_jnt_pos = get_position(knee_jnt)[0]
+    annotation_shape = cmds.annotate(polevector_ctrl, tx="", p=knee_jnt_pos)
+    annotation_transform = cmds.listRelatives(annotation_shape, parent=True)[0]
+    cmds.setAttr(f"{annotation_transform}.overrideEnabled", 1)
+    cmds.setAttr(f"{annotation_transform}.overrideDisplayType", 1)
+
+    return annotation_transform
+
+
+
 @with_selection
 def parent_in_sequence(*args) -> list:
     """ Parent given nodes hierarchically in sequence.
@@ -2936,6 +2963,7 @@ print(sel)
 # jnt = sel[num:]
 # create_FK_ctrl(ctrl, jnt)
 
+# create_annotation("cc_knee_L_IK", "rig_knee_L_IK")
 
 def blend_node_create():
     ctrl = "cc_neck_1_IK"
