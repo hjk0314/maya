@@ -2961,26 +2961,29 @@ print(sel)
 # num = int(len(sel)/2)
 # ctrl = sel[:num]
 # jnt = sel[num:]
-# create_FK_ctrl(ctrl, jnt)
+# create_FK_ctrl(ctrl, jnt, parent=True)
 
 # create_annotation("cc_knee_L_IK", "rig_knee_L_IK")
 
 def blend_node_create():
-    ctrl = "cc_neck_1_IK"
+    ctrl = "cc_ankle_L_IK"
     attr = "IK0_FK1"
     ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
-    FKs = ['rig_neck_1_FK', 'rig_neck_2_FK', 'rig_neck_3_FK', 'rig_neck_4_FK', 'rig_neck_5_FK', 'rig_neck_6_FK', 'rig_neck_7_FK', 'rig_neck_8_FK', 'rig_neck_end_FK']
-    IKs = ['rig_neck_1_IK', 'rig_neck_2_IK', 'rig_neck_3_IK', 'rig_neck_4_IK', 'rig_neck_5_IK', 'rig_neck_6_IK', 'rig_neck_7_IK', 'rig_neck_8_IK', 'rig_neck_end_IK']
-    ORG = ['rig_neck_1', 'rig_neck_2', 'rig_neck_3', 'rig_neck_4', 'rig_neck_5', 'rig_neck_6', 'rig_neck_7', 'rig_neck_8', 'rig_neck_end']
+    FKs = ['rig_thigh_L_FK', 'rig_leg_L_FK', 'rig_knee_L_FK', 'rig_ankle_L_FK', 'rig_ball_L_FK', 'rig_toe_L_FK']
+
+    IKs = ['rig_thigh_L_IK', 'rig_leg_L_IK', 'rig_knee_L_IK', 'rig_ankle_L_IK', 'rig_ball_L_IK', 'rig_toe_L_IK']
+
+    ORG = ['rig_thigh_L', 'rig_leg_L', 'rig_knee_L', 'rig_ankle_L', 'rig_ball_L', 'rig_toe_L']
+
     create_attributes(ctrl, attr_name=attr, ft=ft_dict)
     setRange_out = create_setRange_node(f"{ctrl}.{attr}", rx=[0, 10, 0, 1])
     for f, i, o in zip(FKs, IKs, ORG):
         blendColor_out = create_blendColor_node(setRange_out[0], f, i, t=True)
         cmds.connectAttr(blendColor_out[0], f"{o}.translate", f=True)
-        # blendColor_out = create_blendColor_node(setRange_out[0], f, i, r=True)
-        # cmds.connectAttr(blendColor_out[0], f"{o}.rotate", f=True)
-        blendColor_out = create_blendColor_node('setRange2.outValueX', f, i, s=True)
-        cmds.connectAttr(blendColor_out[0], f"{o}.scale", f=True)
+        blendColor_out = create_blendColor_node(setRange_out[0], f, i, r=True)
+        cmds.connectAttr(blendColor_out[0], f"{o}.rotate", f=True)
+        # blendColor_out = create_blendColor_node('setRange2.outValueX', f, i, s=True)
+        # cmds.connectAttr(blendColor_out[0], f"{o}.scale", f=True)
 # blend_node_create()
 
 
@@ -3018,3 +3021,9 @@ def constraintParent_by_distance():
 # constraintParent_by_distance()
 
 
+# ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
+# create_attributes_proxy(sc="cc_ankle_L_FK", tc="cc_ball_L_FK", an="IK0_FK1", ft=ft_dict)
+
+
+# cpu = ColorPickerUI()
+# cpu.show()
