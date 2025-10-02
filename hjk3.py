@@ -1197,7 +1197,7 @@ def align_object_to_plane(*args):
 
 
 
-@alias(n="curve_name", d="degree", cl="closed_curve")
+@alias(cn="curve_name", d="degree", cl="closed_curve")
 def create_curve_from_points(
     *points: List[Tuple[float, float, float]], 
     curve_name: str = "", 
@@ -3027,3 +3027,61 @@ def constraintParent_by_distance():
 
 # cpu = ColorPickerUI()
 # cpu.show()
+
+
+
+def get_curve_cv_count(curve: str) -> int:
+    """ This function returns the ``number of curve control vertices``.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        - curve : str
+
+    Examples
+    --------
+    >>> get_curve_cv_count("nurbsCircle1")
+    8
+    """
+    cvs = cmds.getAttr(f"{curve}.cv[*]")
+    num_of_cvs = len(cvs)
+
+    return num_of_cvs
+
+
+
+def duplicate_ctrl(ctrl: str, new_ctrl: str="") -> str:
+    """ This function creates a new ctrl and matches it to the pivot position.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        - ctrl : str
+        - new_ctrl : str
+
+    Examples
+    --------
+    >>> duplicate_ctrl("cc_ankle_L_IK")
+    >>> duplicate_ctrl("cc_ankle_L_IK", "cc_ankle_R_IK")
+    cc_ankle_R_IK
+    """
+    num_of_cvs = get_curve_cv_count(ctrl)
+    cvs = [f"{ctrl}.cv[{i}]" for i in range(num_of_cvs)]
+    cvs_pos = get_position(*cvs)
+    result = create_curve_from_points(*cvs_pos, cn=new_ctrl)
+    ctrl_piv = cmds.xform(ctrl, q=True, ws=True, rp=True)
+    cmds.xform(result, piv=ctrl_piv, os=True)
+    cmds.parent(result, ctrl)
+    cmds.makeIdentity(result, a=True, t=True, r=True, n=0, pn=1)
+    cmds.parent(result, w=True)
+
+    return result
+
+
+
