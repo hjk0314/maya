@@ -2966,14 +2966,14 @@ print(sel)
 # create_annotation("cc_knee_L_IK", "rig_knee_L_IK")
 
 def blend_node_create():
-    ctrl = "cc_ankle_L_IK"
+    ctrl = "cc_ankle_R_IK"
     attr = "IK0_FK1"
     ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
-    FKs = ['rig_thigh_L_FK', 'rig_leg_L_FK', 'rig_knee_L_FK', 'rig_ankle_L_FK', 'rig_ball_L_FK', 'rig_toe_L_FK']
+    FKs = ['rig_thigh_R_FK', 'rig_leg_R_FK', 'rig_knee_R_FK', 'rig_ankle_R_FK', 'rig_ball_R_FK', 'rig_toe_R_FK']
 
-    IKs = ['rig_thigh_L_IK', 'rig_leg_L_IK', 'rig_knee_L_IK', 'rig_ankle_L_IK', 'rig_ball_L_IK', 'rig_toe_L_IK']
+    IKs = ['rig_thigh_R_IK', 'rig_leg_R_IK', 'rig_knee_R_IK', 'rig_ankle_R_IK', 'rig_ball_R_IK', 'rig_toe_R_IK']
 
-    ORG = ['rig_thigh_L', 'rig_leg_L', 'rig_knee_L', 'rig_ankle_L', 'rig_ball_L', 'rig_toe_L']
+    ORG = ['rig_thigh_R', 'rig_leg_R', 'rig_knee_R', 'rig_ankle_R', 'rig_ball_R', 'rig_toe_R']
 
     create_attributes(ctrl, attr_name=attr, ft=ft_dict)
     setRange_out = create_setRange_node(f"{ctrl}.{attr}", rx=[0, 10, 0, 1])
@@ -3022,7 +3022,7 @@ def constraintParent_by_distance():
 
 
 # ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
-# create_attributes_proxy(sc="cc_ankle_L_FK", tc="cc_ball_L_FK", an="IK0_FK1", ft=ft_dict)
+# create_attributes_proxy(sc="cc_ankle_R_FK", tc="cc_ball_R_FK", an="IK0_FK1", ft=ft_dict)
 
 
 # cpu = ColorPickerUI()
