@@ -2955,7 +2955,7 @@ print(sel)
 # create_pole_vector_joints()
 
 # dt = Data()
-# shape = dt.ctrl_shapes["scapula"]
+# shape = dt.ctrl_shapes["cube"]
 # create_curve_from_points(*shape)
 
 # num = int(len(sel)/2)
@@ -3084,4 +3084,10 @@ def duplicate_ctrl(ctrl: str, new_ctrl: str="") -> str:
     return result
 
 
-
+# joints = [
+#     "rig_root_IK", 
+#     "rig_spine_1_IK", 
+#     "rig_spine_2_IK", 
+#     "rig_spine_end_IK"
+#     ]
+# create_ikSplineHandle("cuv_spine", joints, sz=True)
