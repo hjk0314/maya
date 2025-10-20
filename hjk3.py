@@ -2955,7 +2955,7 @@ print(sel)
 # create_pole_vector_joints()
 
 # dt = Data()
-# shape = dt.ctrl_shapes["cube"]
+# shape = dt.ctrl_shapes["plane_square"]
 # create_curve_from_points(*shape)
 
 # num = int(len(sel)/2)
@@ -2966,14 +2966,13 @@ print(sel)
 # create_annotation("cc_knee_L_IK", "rig_knee_L_IK")
 
 def blend_node_create():
-    ctrl = "cc_ankle_R_IK"
+    ctrl = "cc_body_IK"
     attr = "IK0_FK1"
     ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
-    FKs = ['rig_thigh_R_FK', 'rig_leg_R_FK', 'rig_knee_R_FK', 'rig_ankle_R_FK', 'rig_ball_R_FK', 'rig_toe_R_FK']
 
-    IKs = ['rig_thigh_R_IK', 'rig_leg_R_IK', 'rig_knee_R_IK', 'rig_ankle_R_IK', 'rig_ball_R_IK', 'rig_toe_R_IK']
-
-    ORG = ['rig_thigh_R', 'rig_leg_R', 'rig_knee_R', 'rig_ankle_R', 'rig_ball_R', 'rig_toe_R']
+    FKs = ['rig_root_FK', 'rig_spine_1_FK', 'rig_spine_2_FK', 'rig_spine_end_FK']
+    IKs = ['rig_root_IK', 'rig_spine_1_IK', 'rig_spine_2_IK', 'rig_spine_end_IK']
+    ORG = ['rig_root', 'rig_spine_1', 'rig_spine_2', 'rig_spine_end']
 
     create_attributes(ctrl, attr_name=attr, ft=ft_dict)
     setRange_out = create_setRange_node(f"{ctrl}.{attr}", rx=[0, 10, 0, 1])
@@ -2982,7 +2981,7 @@ def blend_node_create():
         cmds.connectAttr(blendColor_out[0], f"{o}.translate", f=True)
         blendColor_out = create_blendColor_node(setRange_out[0], f, i, r=True)
         cmds.connectAttr(blendColor_out[0], f"{o}.rotate", f=True)
-        # blendColor_out = create_blendColor_node('setRange2.outValueX', f, i, s=True)
+        # blendColor_out = create_blendColor_node('setRange8.outValueX', f, i, s=True)
         # cmds.connectAttr(blendColor_out[0], f"{o}.scale", f=True)
 # blend_node_create()
 
@@ -3022,7 +3021,8 @@ def constraintParent_by_distance():
 
 
 # ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
-# create_attributes_proxy(sc="cc_ankle_R_FK", tc="cc_ball_R_FK", an="IK0_FK1", ft=ft_dict)
+# bt_dict = {"at": "bool"}
+# create_attributes_proxy(sc="cc_body_IK", tc="cc_spine_IK", an="Spine_Stretch", ft=bt_dict)
 
 
 # cpu = ColorPickerUI()
@@ -3091,3 +3091,6 @@ def duplicate_ctrl(ctrl: str, new_ctrl: str="") -> str:
 #     "rig_spine_end_IK"
 #     ]
 # create_ikSplineHandle("cuv_spine", joints, sz=True)
+
+
+# replace_name(s="_IK", r="")
