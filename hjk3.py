@@ -2955,7 +2955,7 @@ print(sel)
 # create_pole_vector_joints()
 
 # dt = Data()
-# shape = dt.ctrl_shapes["plane_square"]
+# shape = dt.ctrl_shapes["circle"]
 # create_curve_from_points(*shape)
 
 # num = int(len(sel)/2)
@@ -2966,14 +2966,12 @@ print(sel)
 # create_annotation("cc_knee_L_IK", "rig_knee_L_IK")
 
 def blend_node_create():
-    ctrl = "cc_body_IK"
+    ctrl = "cc_tail_2_IK"
     attr = "IK0_FK1"
     ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
-
-    FKs = ['rig_root_FK', 'rig_spine_1_FK', 'rig_spine_2_FK', 'rig_spine_end_FK']
-    IKs = ['rig_root_IK', 'rig_spine_1_IK', 'rig_spine_2_IK', 'rig_spine_end_IK']
-    ORG = ['rig_root', 'rig_spine_1', 'rig_spine_2', 'rig_spine_end']
-
+    FKs = ['rig_tail_1_FK', 'rig_tail_2_FK', 'rig_tail_3_FK', 'rig_tail_4_FK', 'rig_tail_5_FK']
+    IKs = ['rig_tail_1_IK', 'rig_tail_2_IK', 'rig_tail_3_IK', 'rig_tail_4_IK', 'rig_tail_5_IK']
+    ORG = ['rig_tail_1', 'rig_tail_2', 'rig_tail_3', 'rig_tail_4', 'rig_tail_5']
     create_attributes(ctrl, attr_name=attr, ft=ft_dict)
     setRange_out = create_setRange_node(f"{ctrl}.{attr}", rx=[0, 10, 0, 1])
     for f, i, o in zip(FKs, IKs, ORG):
@@ -2981,18 +2979,21 @@ def blend_node_create():
         cmds.connectAttr(blendColor_out[0], f"{o}.translate", f=True)
         blendColor_out = create_blendColor_node(setRange_out[0], f, i, r=True)
         cmds.connectAttr(blendColor_out[0], f"{o}.rotate", f=True)
-        # blendColor_out = create_blendColor_node('setRange8.outValueX', f, i, s=True)
-        # cmds.connectAttr(blendColor_out[0], f"{o}.scale", f=True)
+        blendColor_out = create_blendColor_node(setRange_out[0], f, i, s=True)
+        cmds.connectAttr(blendColor_out[0], f"{o}.scale", f=True)
 # blend_node_create()
 
 
 def create_ikSpline_curve_and_ikSpline_handle():
-    neck_joint = [
-        'rig_neck_1_IK', 'rig_neck_2_IK', 'rig_neck_3_IK', 'rig_neck_4_IK', 'rig_neck_5_IK', 'rig_neck_6_IK', 'rig_neck_7_IK', 'rig_neck_8_IK', 'rig_neck_end_IK'
+    tail_joint = [
+        'rig_tail_2_IK', 
+        'rig_tail_3_IK', 
+        'rig_tail_4_IK', 
+        'rig_tail_5_IK'
         ]
-    curve_info = create_curve_ikSpline(*neck_joint)
+    curve_info = create_curve_ikSpline(*tail_joint)
     cuv = next(iter(curve_info))
-    create_ikSplineHandle(cuv, neck_joint, scaleY=True)
+    create_ikSplineHandle(cuv, tail_joint, scaleZ=True)
 # create_ikSpline_curve_and_ikSpline_handle()
 
 
@@ -3022,7 +3023,7 @@ def constraintParent_by_distance():
 
 # ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
 # bt_dict = {"at": "bool"}
-# create_attributes_proxy(sc="cc_body_IK", tc="cc_spine_IK", an="Spine_Stretch", ft=bt_dict)
+# create_attributes_proxy(sc="cc_wing_2_R_FK", tc="cc_wing_3_R_FK", an="Fold", ft=ft_dict)
 
 
 # cpu = ColorPickerUI()
