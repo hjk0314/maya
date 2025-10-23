@@ -604,6 +604,29 @@ def get_bounding_box_size(*args) -> List[Tuple]:
 
 
 
+def get_curve_cv_count(curve: str) -> int:
+    """ This function returns the ``number of curve control vertices``.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        - curve : str
+
+    Examples
+    --------
+    >>> get_curve_cv_count("nurbsCircle1")
+    8
+    """
+    cvs = cmds.getAttr(f"{curve}.cv[*]")
+    num_of_cvs = len(cvs)
+
+    return num_of_cvs
+
+
+
 def get_flatten_list(data: Union[dict, list], seen=None) -> list:
     """ Flattens a list within a list. 
 
@@ -2993,7 +3016,7 @@ def create_ikSpline_curve_and_ikSpline_handle():
         ]
     curve_info = create_curve_ikSpline(*tail_joint)
     cuv = next(iter(curve_info))
-    create_ikSplineHandle(cuv, tail_joint, scaleZ=True)
+    create_ikSplineHandle(cuv, tail_joint, scaleX=True)
 # create_ikSpline_curve_and_ikSpline_handle()
 
 
@@ -3028,30 +3051,6 @@ def constraintParent_by_distance():
 
 # cpu = ColorPickerUI()
 # cpu.show()
-
-
-
-def get_curve_cv_count(curve: str) -> int:
-    """ This function returns the ``number of curve control vertices``.
-
-    Notes
-    -----
-        **No Decoration**
-
-    Args
-    ----
-        - curve : str
-
-    Examples
-    --------
-    >>> get_curve_cv_count("nurbsCircle1")
-    8
-    """
-    cvs = cmds.getAttr(f"{curve}.cv[*]")
-    num_of_cvs = len(cvs)
-
-    return num_of_cvs
-
 
 
 def duplicate_ctrl(ctrl: str, new_ctrl: str="") -> str:
@@ -3093,5 +3092,3 @@ def duplicate_ctrl(ctrl: str, new_ctrl: str="") -> str:
 #     ]
 # create_ikSplineHandle("cuv_spine", joints, sz=True)
 
-
-# replace_name(s="_IK", r="")
