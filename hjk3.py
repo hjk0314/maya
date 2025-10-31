@@ -1232,7 +1232,7 @@ def create_curve_from_points(
     Notes
     -----
         **Decoration** :
-            - @alias(n="curve_name", d="degree", cl="closed_curve")    
+            - @alias(cn="curve_name", d="degree", cl="closed_curve")    
 
     Args
     ----
