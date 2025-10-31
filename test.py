@@ -107,3 +107,32 @@ def duplicate_ctrl(ctrl: str, new_ctrl: str="") -> str:
     return result
 
 
+
+dt = hjk.Data()
+# pt = dt.ctrl_shapes["sphere"]
+pt = dt.ctrl_shapes["cube"]
+
+joint = "rig_wing_3_L_FK"
+
+# for cuv in sel:
+#     cc = hjk.create_curve_from_points(*pt, cn=f"cc_{cuv}")
+#     cmds.xform(cc, scale=[0.165, 0.165, 0.165], relative=True)
+#     cmds.makeIdentity(cc, scale=True, a=True, n=False, pn=True)
+#     cmds.matchTransform(cc, cuv, pos=True, rot=True)
+#     cc_grp = hjk.group_with_pivot(cc, null=True)
+#     cc_grp = cc_grp[0][0]
+#     cmds.parentConstraint(joint, cc_grp, mo=True, w=1.0)
+#     mdl_grp = cuv.replace("_curve", "_grp")
+#     cmds.parentConstraint(cc, mdl_grp, mo=True, w=1.0)
+
+
+# for org_cuv in sel:
+#     shd_cuv = org_cuv.split(":")[-1]
+#     cc = hjk.create_curve_from_points(*pt, cn=f"cc_{shd_cuv}")
+#     cmds.xform(cc, scale=[0.1, 0.1, 0.1], relative=True)
+#     cmds.makeIdentity(cc, scale=True, a=True, n=False, pn=True)
+#     cmds.matchTransform(cc, org_cuv, pos=True, rot=True)
+#     cc_grp = hjk.group_with_pivot(cc, null=True)
+#     cc_grp = cc_grp[0][0]
+#     cmds.parentConstraint(joint, cc_grp, mo=True, w=1.0)
+#     cmds.parentConstraint(cc, org_cuv, mo=True, w=1.0)
