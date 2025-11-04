@@ -15,29 +15,38 @@ bones = ['root', 'chest', 'head', 'head_end', 'eye_L', 'eye_L_end', 'eye_R', 'ey
 
 
 # hjk.create_curve_ikSpline(*sel)
-joints = ['rig_tail_1', 'rig_tail_2', 'rig_tail_3', 'rig_tail_4', 'rig_tail_5', 'rig_tail_6', 'rig_tail_7', 'rig_tail_8']
-# hjk.create_ikSplineHandle("cuv_tail", joints, sx=True)
+# hjk.create_ikSplineHandle("cuv_wing_LF", sel, sx=True)
 
 
 # hjk.group_with_pivot()
 
 
-# for loc in ['locator12', 'locator13', 'locator14', 'locator15']:
-#     locs = hjk.get_constraint_weight_by_distance("cc_tail_1", "cc_tail_3", loc)
-#     A_loc, B_loc = locs
-#     cmds.parentConstraint("cc_tail_1", f"{loc}_grp", mo=True, w=A_loc)
-#     cmds.parentConstraint("cc_tail_3", f"{loc}_grp", mo=True, w=B_loc)
+# dt = hjk.Data()
+# cc = dt.ctrl_shapes["sphere"]
+# hjk.create_curve_from_points(*cc)
 
 
+# for i in sel[1:-1]:
+#     locs_weights = hjk.get_constraint_weight_by_distance(sel[0], sel[-1], i)
+#     weights_A, weights_B = locs_weights
+#     cmds.parentConstraint(sel[0], f"{i}_grp", mo=True, w=weights_A)
+#     cmds.parentConstraint(sel[-1], f"{i}_grp", mo=True, w=weights_B)
 
-# for loc in ['locator16', 'locator17', 'locator18']:
-#     locs = hjk.get_constraint_weight_by_distance("cc_tail_3", "cc_tail_5", loc)
-#     A_loc, B_loc = locs
-#     cmds.parentConstraint("cc_tail_3", f"{loc}_grp", mo=True, w=A_loc)
-#     cmds.parentConstraint("cc_tail_5", f"{loc}_grp", mo=True, w=B_loc)
+
+# bt_dict = {"at": "bool"}
+# hjk.create_attributes_proxy("cc_feeler_R_7", "cc_feeler_R_10", "Stretch", bt=bt_dict)
 
 
-# locs = hjk.get_constraint_weight_by_distance("cc_tail_1", "cc_tail_5", "cc_tail_3")
-# A_loc, B_loc = locs
-# cmds.parentConstraint("cc_tail_1", "cc_tail_3_grp", mo=True, w=A_loc)
-# cmds.parentConstraint("cc_tail_5", "cc_tail_3_grp", mo=True, w=B_loc)
+# bt_dict = {"at": "bool"}
+# hjk.create_attributes_proxy("cc_tail_3", "cc_tail_5", "Stretch", bt=bt_dict)
+
+
+# cpu = hjk.ColorPickerUI()
+# cpu.show()
+
+
+# for i in sel:
+#     cmds.connectAttr(f"rig_{i}.translate", f"{i}.translate", f=True)
+#     cmds.connectAttr(f"rig_{i}.rotate", f"{i}.rotate", f=True)
+
+
