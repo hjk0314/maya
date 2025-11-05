@@ -15,7 +15,7 @@ bones = ['root', 'chest', 'head', 'head_end', 'eye_L', 'eye_L_end', 'eye_R', 'ey
 
 
 # hjk.create_curve_ikSpline(*sel)
-# hjk.create_ikSplineHandle("cuv_wing_LF", sel, sx=True)
+# hjk.create_ikSplineHandle("cuv_wing_RB", sel, sx=True)
 
 
 # hjk.group_with_pivot()
@@ -38,7 +38,8 @@ bones = ['root', 'chest', 'head', 'head_end', 'eye_L', 'eye_L_end', 'eye_R', 'ey
 
 
 # bt_dict = {"at": "bool"}
-# hjk.create_attributes_proxy("cc_tail_3", "cc_tail_5", "Stretch", bt=bt_dict)
+# hjk.create_attributes_proxy(sel[0], sel[1], "Stretch", bt=bt_dict)
+# hjk.create_attributes_proxy(sel[1], sel[2], "Stretch", bt=bt_dict)
 
 
 # cpu = hjk.ColorPickerUI()
@@ -49,4 +50,7 @@ bones = ['root', 'chest', 'head', 'head_end', 'eye_L', 'eye_L_end', 'eye_R', 'ey
 #     cmds.connectAttr(f"rig_{i}.translate", f"{i}.translate", f=True)
 #     cmds.connectAttr(f"rig_{i}.rotate", f"{i}.rotate", f=True)
 
+# for i in sel:
+#     cmds.disconnectAttr(f"rig_{i}.translate", f"{i}.translate")
+#     cmds.disconnectAttr(f"rig_{i}.rotate", f"{i}.rotate")
 
