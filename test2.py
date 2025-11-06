@@ -18,7 +18,7 @@ bones = ['root', 'chest', 'head', 'head_end', 'eye_L', 'eye_L_end', 'eye_R', 'ey
 # hjk.create_ikSplineHandle("cuv_wing_RB", sel, sx=True)
 
 
-# hjk.group_with_pivot()
+# hjk.group_with_pivot(null=True)
 
 
 # dt = hjk.Data()
@@ -34,7 +34,9 @@ bones = ['root', 'chest', 'head', 'head_end', 'eye_L', 'eye_L_end', 'eye_R', 'ey
 
 
 # bt_dict = {"at": "bool"}
-# hjk.create_attributes_proxy("cc_feeler_R_7", "cc_feeler_R_10", "Stretch", bt=bt_dict)
+# for attr in ["Sub_Ctrl"]:
+#     hjk.create_attributes_proxy("cc_feeler_R_1", "cc_feeler_R_6", attr, bt=bt_dict)
+#     hjk.create_attributes_proxy("cc_feeler_R_6", "cc_feeler_R_10", attr, bt=bt_dict)
 
 
 # bt_dict = {"at": "bool"}
@@ -47,8 +49,9 @@ bones = ['root', 'chest', 'head', 'head_end', 'eye_L', 'eye_L_end', 'eye_R', 'ey
 
 
 # for i in sel:
-#     cmds.connectAttr(f"rig_{i}.translate", f"{i}.translate", f=True)
-#     cmds.connectAttr(f"rig_{i}.rotate", f"{i}.rotate", f=True)
+    # cmds.connectAttr(f"rig_{i}.translate", f"{i}.translate", f=True)
+    # cmds.connectAttr(f"rig_{i}.rotate", f"{i}.rotate", f=True)
+    # cmds.connectAttr(f"rig_{i}.scale", f"{i}.scale", f=True)
 
 # for i in sel:
 #     cmds.disconnectAttr(f"rig_{i}.translate", f"{i}.translate")
