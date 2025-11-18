@@ -18,7 +18,7 @@ bones = ['root', 'chest', 'head', 'head_end', 'eye_L', 'eye_L_end', 'eye_R', 'ey
 # hjk.create_ikSplineHandle("cuv_wing_LB", sel, sx=True)
 
 
-# hjk.group_with_pivot(null=True)
+# hjk.group_with_pivot()
 
 
 dt = hjk.Data()
@@ -40,8 +40,8 @@ dt = hjk.Data()
 
 
 # bt_dict = {"at": "bool"}
-# hjk.create_attributes_proxy(sel[0], sel[1], "IK0_FK1", bt=bt_dict)
-# hjk.create_attributes_proxy(sel[1], sel[2], "IK0_FK1", bt=bt_dict)
+# hjk.create_attributes_proxy(sel[0], sel[1], "Tail_Stretch", bt=bt_dict)
+# hjk.create_attributes_proxy(sel[1], sel[2], "Tail_Stretch", bt=bt_dict)
 # ft_dict = {"at": "double", "dv": 0, "min": 0, "max": 10}
 # hjk.create_attributes_proxy(sel[0], sel[1], "IK0_FK1", ft=ft_dict)
 # hjk.create_attributes_proxy(sel[1], sel[2], "IK0_FK1", ft=ft_dict)
@@ -69,3 +69,5 @@ dt = hjk.Data()
 #     target = i.replace(A, B)
 #     i_pos = hjk.get_position(target)[0]
 #     cmds.xform(i, translation=i_pos, ws=True, a=True)
+
+
