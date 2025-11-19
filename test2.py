@@ -71,3 +71,9 @@ dt = hjk.Data()
 #     cmds.xform(i, translation=i_pos, ws=True, a=True)
 
 
+for org in sel:
+    cmds.select(cl=True)
+    new = org.replace("rig_", "")
+    jnt = cmds.joint(p=(0, 0, 0), n=new)
+    cmds.matchTransform(jnt, org, pos=True, rot=True)
+
