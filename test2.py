@@ -71,9 +71,26 @@ dt = hjk.Data()
 #     cmds.xform(i, translation=i_pos, ws=True, a=True)
 
 
-for org in sel:
-    cmds.select(cl=True)
-    new = org.replace("rig_", "")
-    jnt = cmds.joint(p=(0, 0, 0), n=new)
-    cmds.matchTransform(jnt, org, pos=True, rot=True)
+# for org in sel:
+#     cmds.select(cl=True)
+#     new = org.replace("rig_", "")
+#     jnt = cmds.joint(p=(0, 0, 0), n=new)
+#     cmds.matchTransform(jnt, org, pos=True, rot=True)
 
+
+
+for i in sel:
+    rig = f"rig_{i}"
+    # cmds.parentConstraint(rig, i, mo=True, w=1.0)
+    # cmds.scaleConstraint(rig, i, mo=True, w=1.0)
+    # cmds.connectAttr(f"{rig}.rotate", f"{i}.rotate", f=True)
+    # cmds.connectAttr(f"{rig}.scale", f"{i}.scale", f=True)
+
+
+bind_bones = ['root', 'spine_1', 'spine_2', 'neck_1', 'neck_2', 'neck_3', 'neck_4', 'neck_5', 'neck_6', 'neck_7', 'neck_8', 'head_1', 'jaw', 'wing_1_L_FK', 'wing_2_L_FK', 'wing_3_L_FK', 'wing_1_R_FK', 'wing_2_R_FK', 'wing_3_R_FK', 'tail_2', 'tail_3', 'tail_4', 'thigh_L', 'leg_L', 'knee_L', 'ankle_L', 'thumb_1_L', 'thumb_2_L', 'index_1_L', 'index_2_L', 'index_3_L', 'index_4_L', 'middle_1_L', 'middle_2_L', 'middle_3_L', 'middle_4_L', 'pinky_1_L', 'pinky_2_L', 'pinky_3_L', 'pinky_4_L', 'thigh_R', 'leg_R', 'knee_R', 'ankle_R', 'thumb_1_R', 'thumb_2_R', 'index_1_R', 'index_2_R', 'index_3_R', 'index_4_R', 'middle_1_R', 'middle_2_R', 'middle_3_R', 'middle_4_R', 'pinky_1_R', 'pinky_2_R', 'pinky_3_R', 'pinky_4_R']
+
+# cmds.select(cl=True)
+# cmds.select(bind_bones)
+
+
+# hjk.select_only(joint=True)
