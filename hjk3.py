@@ -2496,6 +2496,46 @@ def create_ikSplineHandle(
 
 
 
+def get_pointOnCurve_parameter(curve_name: str, target_name: str):
+    """ Return the parameter value of the pointOnCurve node.
+
+    Notes
+    -----
+        **No Decoration**
+
+    Args
+    ----
+        curve_name : str
+        target_name : str
+
+    Examples
+    --------
+    >>> get_pointOnCurve_parameter("curve1", "joint1")
+    14.2517
+    """
+    try:
+        selection_list = om2.MSelectionList()
+        selection_list.add(curve_name)
+        curve_dag_path = selection_list.getDagPath(0)
+        curve_fn = om2.MFnNurbsCurve(curve_dag_path)
+        target_pos_cmds = cmds.xform(
+            target_name, 
+            query=True, 
+            translation=True, 
+            worldSpace=True
+            )
+        target_point = om2.MPoint(target_pos_cmds)
+        _, parameter = curve_fn.closestPoint(
+            target_point, 
+            space=om2.MSpace.kWorld
+            )
+        return parameter
+    except Exception as e:
+        print(e)
+        return None
+
+
+
 def get_orient_joint_direction(joint: str) -> Dict[str, tuple]:
     """ Get the orientation of the joint.
 
