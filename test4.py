@@ -1,5 +1,6 @@
 import maya.cmds as cmds
 import hjk3
+import math
 
 
 
@@ -23,10 +24,6 @@ bind_bones += ['index_1_R', 'index_2_R', 'index_3_R', 'index_4_R', ]
 bind_bones += ['middle_1_R', 'middle_2_R', 'middle_3_R', 'middle_4_R', ]
 bind_bones += ['pinky_1_R', 'pinky_2_R', 'pinky_3_R', 'pinky_4_R']
 
-
-
-def get_target_name(a):
-    pass
 
 
 
@@ -60,6 +57,7 @@ def create_joints_on_curve(selected_curve, number_of_joints):
 
 
 sel = cmds.ls(sl=True)
+dt = hjk3.Data()
 print(sel)
 
 
@@ -75,31 +73,78 @@ print(sel)
 # cpu.show()
 
 
-dt = hjk3.Data()
-for sig_cuv in sel:
-    _ = sig_cuv.split(":")[-1]
-    _ = _.replace("peacockA_", "cc_")
-    ctrl_name = _.replace("_curve", "_1")
+
+def temp_cc_for_hlkim():
+    for sig_cuv in sel:
+        _ = sig_cuv.split(":")[-1]
+        _ = _.replace("peacockA_", "cc_")
+        ctrl_name = _.replace("_curve", "_1")
 
 
-    ctrl_pos = dt.ctrl_shapes["sphere"]
-    cc = hjk3.create_curve_from_points(*ctrl_pos, curve_name=ctrl_name)
+        ctrl_pos = dt.ctrl_shapes["pointer_rhombus"]
+        cc = hjk3.create_curve_from_points(*ctrl_pos, curve_name=ctrl_name)
 
 
-    cmds.matchTransform(cc, sig_cuv, pos=True, rot=True)
-    hjk3.group_with_pivot(cc, null=True)
-
-
-    obj_grp = sig_cuv.replace("_curve", "_grp")
-    cmds.parentConstraint(cc, obj_grp, mo=True, w=1.0)
-    cmds.scaleConstraint(cc, obj_grp, mo=True, w=1.0)
-    cmds.parentConstraint(cc, sig_cuv, mo=True, w=1.0)
-    cmds.scaleConstraint(cc, sig_cuv, mo=True, w=1.0)
+        cmds.matchTransform(cc, sig_cuv, pos=True, rot=True)
+        hjk3.group_with_pivot(cc, null=True)
 
 
 
+        obj_grp = sig_cuv.replace("_curve", "_grp")
+        cmds.parentConstraint(cc, obj_grp, mo=True, w=1.0)
+        cmds.scaleConstraint(cc, obj_grp, mo=True, w=1.0)
+        cmds.parentConstraint(cc, sig_cuv, mo=True, w=1.0)
+        cmds.scaleConstraint(cc, sig_cuv, mo=True, w=1.0)
+# temp_cc_for_hlkim()
 
 
-['char_peacockA_mdl_v9999:peacockA_signature_v_01_grp', 'char_peacockA_mdl_v9999:peacockA_signature_v_01_curve']
+
+def get_new_name_1(in_name):
+    tmp = in_name.split(":")[-1]
+    tmp = tmp.replace("peacockA_", "rig_")
+    out_name = tmp.replace("_curve", "")
+    return out_name
+    
+
+
+def create_joints_on_ref_cuv(ref_cuv):
+    cuv_info = cmds.shadingNode("curveInfo", asUtility=True)
+    cmds.connectAttr(f"{ref_cuv}.worldSpace[0]", f"{cuv_info}.inputCurve", f=True)
+    ref_cuv_len = cmds.getAttr(f"{cuv_info}.arcLength")
+    ref_cuv_len = math.floor(ref_cuv_len * 1000) / 1000
+    num_jnt = ref_cuv_len // 1.574
+    num_jnt = int(num_jnt)
+    cmds.delete(cuv_info)
+    
+
+    joints = hjk3.create_joint_on_curve_path(c=ref_cuv, n=num_jnt)
+    joints.reverse()
+
+
+    rig_name = get_new_name_1(ref_cuv)
+    rig_joints = []
+    for idx, jnt in enumerate(joints):
+        cmds.matchTransform(jnt, ref_cuv, rot=True)
+        new_name = rig_name + f"_{idx+1}"
+        cmds.rename(jnt, new_name)
+        rig_joints.append(new_name)
+    hjk3.parent_in_sequence(*rig_joints)
+    cmds.makeIdentity(rig_joints[0], t=1, r=1, s=1, n=0, pn=1, a=True)
+
+
+    return rig_joints
+
+
+
+
+for i in sel:
+    result = create_joints_on_ref_cuv(i)
+    print(result)
+
+
+
+# hjk3.create_joint_IKFK
+# hjk3.create_curve_ikSpline
+
 
 
