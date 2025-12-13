@@ -1374,19 +1374,29 @@ def create_curve_ikSpline(*joints: Any) -> Dict[str, list]:
     curve_shape = cmds.listRelatives(curve_name, shapes=True)[0]
     cp_count = cmds.getAttr(curve_shape + ".controlPoints", size=True)
 
+
     locators = []
     for i in range(cp_count):
         locator = cmds.spaceLocator()
         cp_pos = get_position(f"{curve_name}.cv[{i}]")[0]
         cmds.xform(locator, translation=cp_pos, ws=True)
-
         locator_shape = cmds.listRelatives(locator, shapes=True)[0]
         cmds.connectAttr(f"{locator_shape}.worldPosition[0]", f"{curve_shape}.controlPoints[{i}]", f=True)
-
         locators.append(locator[0])
+    
+
+    try:
+        for jnt in locators[:2]:
+            cmds.matchTransform(jnt, joints[0], rot=True)
+        for idx, jnt in enumerate(locators[2:cp_count-2]):
+            cmds.matchTransform(jnt, joints[idx+1], rot=True)
+        for jnt in locators[cp_count-2:cp_count]:
+            cmds.matchTransform(jnt, joints[idx+1], rot=True)
+    except Exception as e:
+        print(e)
+
 
     return {curve_name: locators}
-
 
 
 def create_group_for_rig(group_name: str) -> list:
@@ -2112,7 +2122,11 @@ def get_uv_coordinates_closet_object(
     mfn_mesh = get_MFnObject(mesh)
     closet_point, _ = mfn_mesh.getClosestPoint(world_pos, om2.MSpace.kWorld)
 
+
     u, v, _= mfn_mesh.getUVAtPoint(closet_point, om2.MSpace.kWorld, uv_set)
+    u = math.floor(u * 1000) / 1000
+    v = math.floor(v * 1000) / 1000
+
 
     return u, v
 
