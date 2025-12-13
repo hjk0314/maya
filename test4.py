@@ -58,7 +58,7 @@ def create_joints_on_curve(selected_curve, number_of_joints):
 
 sel = cmds.ls(sl=True)
 dt = hjk3.Data()
-print(sel)
+
 
 
 # hjk3.group_with_pivot()
@@ -112,12 +112,14 @@ def create_joints_on_ref_cuv(ref_cuv):
     cmds.connectAttr(f"{ref_cuv}.worldSpace[0]", f"{cuv_info}.inputCurve", f=True)
     ref_cuv_len = cmds.getAttr(f"{cuv_info}.arcLength")
     ref_cuv_len = math.floor(ref_cuv_len * 1000) / 1000
-    num_jnt = ref_cuv_len // 1.574
+    num_jnt = ref_cuv_len // (1.574 * 8)
     num_jnt = int(num_jnt)
     cmds.delete(cuv_info)
     
 
     joints = hjk3.create_joint_on_curve_path(c=ref_cuv, n=num_jnt)
+    ##### curve_reverse_option #####
+    ##### curve_reverse_option #####
     joints.reverse()
 
 
@@ -137,14 +139,92 @@ def create_joints_on_ref_cuv(ref_cuv):
 
 
 
-for i in sel:
-    result = create_joints_on_ref_cuv(i)
-    print(result)
+def create_ikfk_joints(rig_joints):
+    fk_joints, ik_joints = hjk3.create_joint_IKFK(*rig_joints)
+    grp_name = rig_joints[0].rsplit("_", 1)[0] + "_grp"
+    cmds.group(rig_joints[0], fk_joints[0], ik_joints[0], n=grp_name)
+    return [fk_joints, ik_joints]
 
 
 
-# hjk3.create_joint_IKFK
-# hjk3.create_curve_ikSpline
+
+def create_fk_ctrls(fk_joints: list):
+    num_fk = len(fk_joints)
+
+    ctrls = []
+    for idx, fk_jnt in enumerate(fk_joints):
+        if idx + 1 >= num_fk:
+            continue
+        else:
+            ctrl_name = fk_jnt.replace("rig_", "cc_")
+            cc = cmds.circle(nr=(0, 0, 1), n=ctrl_name, ch=False)[0]
+            size_up = 1.2
+            cmds.scale(size_up, size_up, size_up, cc, r=True)
+            cmds.makeIdentity(cc, t=0, r=0, s=1, n=0, pn=1)
+            cmds.matchTransform(cc, fk_jnt, pos=True, rot=True)
+            ctrls.append(cc)
+    hjk3.parent_in_sequence(*ctrls)
+    hjk3.group_with_pivot(*ctrls, null=True)
+
+    for cc, jnt in zip(ctrls, fk_joints[:-1]):
+        cmds.parentConstraint(cc, jnt, mo=True, w=1.0)
+
+
+
+
+def create_spline_curve_and_locators(ik_joints):
+    slices =  ik_joints[0].rsplit("_", 2)
+    slice = slices[0]
+    splcuv = slice.replace("rig_", "splcuv_")
+
+    cuv_and_locators = hjk3.create_curve_ikSpline(*ik_joints)
+    _ = iter(cuv_and_locators.keys())
+    ikspline_cuv = next(_)
+    if cmds.objExists(splcuv):
+        print("Spline Curve name is exists.")
+        return
+    cmds.rename(ikspline_cuv, splcuv)
+    cmds.group(splcuv, n=splcuv+"_grp")
+
+    locators = cuv_and_locators[ikspline_cuv]
+    loc_forehead = splcuv.replace("splcuv_", "splloc_")
+    renamed_loc = []
+    for idx, loc in enumerate(locators):
+        cmds.matchTransform(loc, ik_joints[0], rot=True)
+        new_loc = loc_forehead + f"_{idx+1}"
+        cmds.rename(loc, new_loc)
+        renamed_loc.append(new_loc)
+    splloc_grp_name = renamed_loc[0].rsplit("_", 1)[0] + "_grp"
+    splloc_grp = cmds.group(em=True, n=splloc_grp_name)
+    for i in renamed_loc:
+        cmds.parent(i, splloc_grp)
+    
+    return splcuv, renamed_loc
+
+
+
+
+def create_ik_ctrls(ik_joints):
+    splcuv, splloc = create_spline_curve_and_locators(ik_joints)
+    hjk3.create_ikSplineHandle(splcuv, ik_joints, sz=True)
+    
+
+
+
+
+
+
+for sel_cuv in sel:
+    rig_joints = create_joints_on_ref_cuv(sel_cuv)
+    fk_joints, ik_joints = create_ikfk_joints(rig_joints)
+    # create_fk_ctrls(fk_joints)
+    create_ik_ctrls(ik_joints)
+
+    
+    
+
+
+
 
 
 
