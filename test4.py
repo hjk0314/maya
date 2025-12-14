@@ -112,7 +112,7 @@ def create_joints_on_ref_cuv(ref_cuv):
     cmds.connectAttr(f"{ref_cuv}.worldSpace[0]", f"{cuv_info}.inputCurve", f=True)
     ref_cuv_len = cmds.getAttr(f"{cuv_info}.arcLength")
     ref_cuv_len = math.floor(ref_cuv_len * 1000) / 1000
-    num_jnt = ref_cuv_len // (1.574 * 8)
+    num_jnt = ref_cuv_len // (1.574 * 6)
     num_jnt = int(num_jnt)
     cmds.delete(cuv_info)
     
@@ -206,7 +206,36 @@ def create_spline_curve_and_locators(ik_joints):
 
 def create_ik_ctrls(ik_joints):
     splcuv, splloc = create_spline_curve_and_locators(ik_joints)
-    hjk3.create_ikSplineHandle(splcuv, ik_joints, sz=True)
+    cuvinfo, condi, multi = hjk3.create_ikSplineHandle(splcuv, ik_joints, sz=True)
+
+    first_jnt = ik_joints[0]
+    start_ctrl_name = first_jnt.replace("rig_", "cc_")
+    ctrl_pos = dt.ctrl_shapes["pointer_rhombus"]
+    start_ctrl = hjk3.create_curve_from_points(*ctrl_pos, curve_name=start_ctrl_name)
+    cmds.matchTransform(start_ctrl, first_jnt, pos=True, rot=True)
+    hjk3.group_with_pivot(start_ctrl, null=True)
+
+    end_jnt = ik_joints[-1]
+    end_ctrl_name = end_jnt.replace("rig_", "cc_")
+    ctrl_pos = dt.ctrl_shapes["circle"]
+    end_ctrl = hjk3.create_curve_from_points(*ctrl_pos, curve_name=end_ctrl_name)
+    cmds.matchTransform(end_ctrl, end_jnt, pos=True, rot=True)
+    cmds.scale(0.4, 0.4, 0.4, end_ctrl, r=True)
+    cmds.makeIdentity(end_ctrl, t=0, r=0, s=1, jo=0, n=0, pn=1, a=True)
+    hjk3.group_with_pivot(end_ctrl, null=True)
+
+    mid_jnt_num = len(ik_joints) // 2
+    mid_jnt = ik_joints[mid_jnt_num]
+    mid_ctrl_name = mid_jnt.replace("rig_", "cc_")
+    ctrl_pos = dt.ctrl_shapes["sphere"]
+    mid_ctrl = hjk3.create_curve_from_points(*ctrl_pos, curve_name=mid_ctrl_name)
+    cmds.scale(0.6, 0.6, 0.6, mid_ctrl, r=True)
+    cmds.makeIdentity(mid_ctrl, t=0, r=0, s=1, jo=0, n=0, pn=1, a=True)
+    mid_ctrl_grp, _, mid_ctrl = hjk3.group_with_pivot(mid_ctrl, null=True)[0]
+    cmds.parentConstraint(start_ctrl, mid_ctrl_grp, mo=False, w=0.5)
+    cmds.parentConstraint(end_ctrl, mid_ctrl_grp, mo=False, w=0.5)
+    
+
     
 
 
