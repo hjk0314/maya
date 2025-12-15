@@ -1351,7 +1351,7 @@ def create_curve_animation():
 
 
 @with_selection
-def create_curve_ikSpline(*joints: Any) -> Dict[str, list]:
+def create_curve_ikSpline(*joints: Any, edit_point=True) -> Dict[str, list]:
     """ Create a curve that passes through the joint to create an **ikSplineHandle**. Use the ``editPoint`` option for the curve, and replace the ``control vertex`` with a ``locator``.
 
     Notes
@@ -1362,6 +1362,7 @@ def create_curve_ikSpline(*joints: Any) -> Dict[str, list]:
     Args
     ----
         *joints : str
+        edit_point : bool
 
     Examples
     --------
@@ -1370,7 +1371,10 @@ def create_curve_ikSpline(*joints: Any) -> Dict[str, list]:
     {'curve1': ['locator1', 'locator2', 'locator3', ...]}
     """
     joint_points = get_position(*joints)
-    curve_name = cmds.curve(d=3, editPoint=joint_points)
+    if edit_point:
+        curve_name = cmds.curve(d=3, editPoint=joint_points)
+    else:
+        curve_name = cmds.curve(d=3, point=joint_points)
     curve_shape = cmds.listRelatives(curve_name, shapes=True)[0]
     cp_count = cmds.getAttr(curve_shape + ".controlPoints", size=True)
 
@@ -1397,6 +1401,7 @@ def create_curve_ikSpline(*joints: Any) -> Dict[str, list]:
 
 
     return {curve_name: locators}
+
 
 
 def create_group_for_rig(group_name: str) -> list:
@@ -1898,19 +1903,19 @@ def get_MFnObject(node: str) -> Union[om2.MFnMesh, om2.MFnNurbsCurve]:
     else:
         shape = node
 
-
-    shape_type = cmds.nodeType(shape)
+    # shape_type = cmds.nodeType(shape)
     sel = om2.MSelectionList()
     sel.add(shape)
     dag_path = sel.getDagPath(0)
 
 
-    if shape_type == "mesh":
-        return om2.MFnMesh(dag_path)
-    elif shape_type == "nurbsCurve":
-        return om2.MFnNurbsCurve(dag_path)
-    else:
-        raise ValueError(f"{shape} is not mesh or nurbsCurve!: {shape_type})")
+    # if shape_type == "mesh":
+    #     return om2.MFnMesh(dag_path)
+    # elif shape_type == "nurbsCurve":
+    #     return om2.MFnNurbsCurve(dag_path)
+    # else:
+    #     raise ValueError(f"{shape} is not mesh or nurbsCurve!: {shape_type})")
+    return om2.MFnMesh(dag_path)
 
 
 
@@ -2464,7 +2469,7 @@ def create_ikSplineHandle(
     --------
     >>> joints = ["joint1", "joint2", "joint3", ...]
     >>> create_ikSplineHandle("curve1", joints, sx=True, sy=True, ...)
-    ['curveInfo1', 'condition1', 'multiplyDivide1']
+    ['curveInfo1', 'condition1', 'multiplyDivide1', 'ikHandle_name']
     """
     scales = []
     if scaleX:
@@ -2490,7 +2495,7 @@ def create_ikSplineHandle(
     cmds.setAttr(f"{condition_node}.colorIfFalseR", curve_length)
     cmds.connectAttr(f"{condition_node}.outColorR", f"{multiplyDivide_node}.input1X", f=True)
 
-    cmds.ikHandle(
+    ikHandle_name = cmds.ikHandle(
         startJoint=joints[0], 
         endEffector=joints[-1], 
         curve=curve_name, 
@@ -2499,12 +2504,13 @@ def create_ikSplineHandle(
         createCurve=False, 
         parentCurve=False, 
     )
+    ikHandle_name = ikHandle_name[0]
 
     for jnt in joints:
         for scl in scales:
             cmds.connectAttr(f"{multiplyDivide_node}.outputX", f"{jnt}.scale{scl}", f=True)
 
-    result = [curve_info, condition_node, multiplyDivide_node]
+    result = [curve_info, condition_node, multiplyDivide_node, ikHandle_name]
 
     return result
 
