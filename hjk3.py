@@ -1896,26 +1896,25 @@ def get_MFnObject(node: str) -> Union[om2.MFnMesh, om2.MFnNurbsCurve]:
     """
     shape = None
     if cmds.nodeType(node) == "transform":
-        shapes = cmds.listRelatives(node, shapes=True, noIntermediate=True)
+        shapes = cmds.listRelatives(node, shapes=True, noIntermediate=True, fullPath=True)
         if not shapes:
             raise ValueError(f"No shape under transform: {node}")
         shape = shapes[-1]
     else:
         shape = node
 
-    # shape_type = cmds.nodeType(shape)
+    shape_type = cmds.nodeType(shape)
     sel = om2.MSelectionList()
     sel.add(shape)
     dag_path = sel.getDagPath(0)
 
 
-    # if shape_type == "mesh":
-    #     return om2.MFnMesh(dag_path)
-    # elif shape_type == "nurbsCurve":
-    #     return om2.MFnNurbsCurve(dag_path)
-    # else:
-    #     raise ValueError(f"{shape} is not mesh or nurbsCurve!: {shape_type})")
-    return om2.MFnMesh(dag_path)
+    if shape_type == "mesh":
+        return om2.MFnMesh(dag_path)
+    elif shape_type == "nurbsCurve":
+        return om2.MFnNurbsCurve(dag_path)
+    else:
+        raise ValueError(f"{shape} is not mesh or nurbsCurve!: {shape_type})")
 
 
 
