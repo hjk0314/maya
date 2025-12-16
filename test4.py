@@ -60,9 +60,6 @@ def create_joints_on_curve(selected_curve, number_of_joints):
 
 
 
-
-
-
 # hjk3.group_with_pivot()
 # joints = hjk3.create_joint_on_curve_path("curve2", 8)
 # hjk3.parent_in_sequence(*joints)
@@ -109,12 +106,12 @@ def get_new_name_1(in_name):
     
 
 
-def create_joints_on_ref_cuv(ref_cuv):
+def create_joints_on_ref_cuv(ref_cuv, density_of_joints: float):
     cuv_info = cmds.shadingNode("curveInfo", asUtility=True)
     cmds.connectAttr(f"{ref_cuv}.worldSpace[0]", f"{cuv_info}.inputCurve", f=True)
     ref_cuv_len = cmds.getAttr(f"{cuv_info}.arcLength")
     ref_cuv_len = math.floor(ref_cuv_len * 1000) / 1000
-    num_jnt = ref_cuv_len // (1.574 * 6)
+    num_jnt = ref_cuv_len // (1.574 * density_of_joints)
     num_jnt = int(num_jnt)
     cmds.delete(cuv_info)
     
@@ -143,8 +140,6 @@ def create_joints_on_ref_cuv(ref_cuv):
 
 def create_ikfk_joints(rig_joints):
     fk_joints, ik_joints = hjk3.create_joint_IKFK(*rig_joints)
-    grp_name = rig_joints[0].rsplit("_", 1)[0] + "_grp"
-    cmds.group(rig_joints[0], fk_joints[0], ik_joints[0], n=grp_name)
     return [fk_joints, ik_joints]
 
 
@@ -188,7 +183,7 @@ def create_spline_curve_and_locators(ik_joints):
         print("Spline Curve name is exists.")
         return
     cmds.rename(ikspline_cuv, splcuv)
-    cmds.group(splcuv, n=splcuv+"_grp")
+    splcuv_grp = cmds.group(splcuv, n=splcuv+"_grp")
 
     locators = cuv_and_locators[ikspline_cuv]
     loc_forehead = splcuv.replace("splcuv_", "splloc_")
@@ -203,7 +198,7 @@ def create_spline_curve_and_locators(ik_joints):
     for i in renamed_loc:
         cmds.parent(i, splloc_grp)
     
-    return splcuv, renamed_loc
+    return splcuv, splcuv_grp, renamed_loc, splloc_grp
 
 
 
@@ -395,26 +390,38 @@ def create_follicle(mesh: str, UVCoordinates: tuple) -> str:
 
 
 
-for sel_cuv in sel:
+
+def create_signature_git(sel_cuv, dens: float):
     # Create Joints
-    rig_joints = create_joints_on_ref_cuv(sel_cuv)
+    rig_joints = create_joints_on_ref_cuv(sel_cuv, dens)
     fk_jnt, ik_jnt = create_ikfk_joints(rig_joints)
+    grp_name = rig_joints[0].rsplit("_", 1)[0] + "_grp"
+    jnt_grp_name = cmds.group(rig_joints[0], fk_jnt[0], ik_jnt[0], n=grp_name)
     # Create FK Ctrls
     cc_fk_lists = create_fk_ctrls(fk_jnt)
+    cc_fk_1_grp, cc_fk_1_null, cc_fk_1 = cc_fk_lists[0]
     # Create Curve and Locators
-    splcuv, splloc = create_spline_curve_and_locators(ik_jnt)
+    cscal_nodes = create_spline_curve_and_locators(ik_jnt)
+    splcuv, splcuv_grp, splloc, splloc_top_grp = cscal_nodes
     splloc_lists = hjk3.group_with_pivot(*splloc, null=True)
     splloc_grp = []
     for lst in splloc_lists:
         splloc_grp.append(lst[0])
     ikSpline_result = hjk3.create_ikSplineHandle(splcuv, ik_jnt, sz=1)
     cuvinfo, condi, multi, ikHandle = ikSpline_result
-    print(ikHandle)
     # Create IK Ctrls
     ik_ctrls = create_ik_ctrls(ik_jnt)
     cc_s_lst, cc_sm_lst, cc_m_lst, cc_me_lst, cc_e_lst = ik_ctrls
     cc_s_grp, cc_s_null, cc_s = cc_s_lst
+    cc_sm_grp, cc_sm_null, cc_sm = cc_sm_lst
+    cc_m_grp, cc_m_null, cc_m = cc_m_lst
+    cc_me_grp, cc_me_null, cc_me = cc_me_lst
     cc_e_grp, cc_e_null, cc_e = cc_e_lst
+    hjk3.colorize(cc_s, idx=9)
+    hjk3.colorize(cc_sm, idx=20)
+    hjk3.colorize(cc_m, idx=18)
+    hjk3.colorize(cc_me, idx=20)
+    hjk3.colorize(cc_e, idx=17)
     # Constraint Locator to Ctrl
     constraint_loc_to_ctrl(ik_ctrls, splloc_grp)
     cmds.connectAttr(f"{cc_s}.Stretch", f"{condi}.firstTerm", f=True)
@@ -437,17 +444,120 @@ for sel_cuv in sel:
     cmds.setAttr(f"{ikHandle}.dForwardAxis", 5)
     cmds.connectAttr(f"{cc_s}.worldMatrix[0]", f"{ikHandle}.dWorldUpMatrix", f=True)
     cmds.connectAttr(f"{cc_e}.worldMatrix[0]", f"{ikHandle}.dWorldUpMatrixEnd", f=True)
-
-
+    # Create follicle
     mesh = "char_peacockA_mdl_v9999:peacockA_skin_geo"
     uv = hjk3.get_uv_coordinates_closet_object(cc_s, mesh)
-    # cc_pos = hjk3.get_position(cc_s)[0]
-    # cc_pos_on_mesh = hjk3.get_closest_point_on_mesh(mesh, cc_pos)
-    # cc_pos_closet_mesh = hjk3.get_uv_coordinates_closet_object(cc_s, mesh)
-
-    # print(cc_pos_closet_mesh)
     follicle_name = create_follicle(mesh, uv)
-    print(follicle_name)
+    fol_name = cc_s.replace("cc_", "fol_")
+    fol_name = cmds.rename(follicle_name, fol_name)
+    # Skin Weights
+
+    # Final Touch
+    cc_group_name = cc_s.rsplit("_", 1)[0] + "_grp"
+    cc_group_name = cmds.group(em=True, n=cc_group_name)
+    cmds.matchTransform(cc_group_name, cc_s, pos=True, rot=True)
+    cmds.parent(cc_s_grp, cc_group_name)
+    cmds.parent(cc_fk_1_grp, cc_group_name)
+    cmds.parentConstraint(fol_name, cc_group_name, mo=True, w=1.0)
+    cmds.scaleConstraint("cc_sub", cc_group_name, mo=True, w=1.0)
+    cmds.parent(cc_group_name, "cc_signature_grp")
+    cmds.parent(jnt_grp_name, "rig_signature_grp")
+    ikH_grp = splcuv_grp.split("_")
+    ikH_grp[0] = "ikH"
+    ikH_grp_name = "_".join(ikH_grp)
+    ikH = cmds.group([splcuv_grp, splloc_top_grp, ikHandle], n=ikH_grp_name)
+    if not cmds.objExists("ikH_signature_grp"):
+        new_ikH = cmds.group(em=True, n="ikH_signature_grp")
+        cmds.parent(new_ikH, "extraNodes")
+    cmds.parent(ikH, "ikH_signature_grp")
+    if not cmds.objExists("fol_signature_grp"):
+        new_fol = cmds.group(em=True, n="fol_signature_grp")
+        cmds.parent(new_fol, "extraNodes")
+    cmds.parent(fol_name, "fol_signature_grp")
+        
+
+    tmp_sel_cuv = sel_cuv.split("_")
+    tmp_sel_cuv[-1] = "grp"
+    smooth_obj = "_".join(tmp_sel_cuv)
+    obj_children = cmds.listRelatives(smooth_obj, children=True, fullPath=True)
+    skin_obj = []
+    for i in obj_children:
+        if cmds.getAttr(f"{i}.visibility"):
+            skin_obj.append(i)
+    for j in skin_obj:
+        if "rachii" in j:
+            cmds.skinCluster(rig_joints[0], j, toSelectedBones=False, bindMethod=0, skinMethod=0, normalizeWeights=1, wd=0, mi=3, foc=True)
+        else:
+            cmds.skinCluster(rig_joints[-1], j, toSelectedBones=True, bindMethod=0, skinMethod=0, normalizeWeights=1, wd=0, mi=1, foc=True)
+
+
+
+
+
+v_dens = 9.5
+v_curve = []
+for i in range(1, 41):
+    v = "char_peacockA_mdl_v9999:peacockA_signature_v_%02d_curve" % i
+    v_curve.append(v)
+
+for vc in v_curve:
+    create_signature_git(vc, v_dens)
+
+
+eye_curve = [
+    'char_peacockA_mdl_v9999:peacockA_signature_eye_a_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_a_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_a_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_a_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_a_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_a_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_a_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_a_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_b_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_b_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_b_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_b_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_b_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_b_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_b_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_b_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_b_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_c_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_c_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_c_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_c_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_c_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_c_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_c_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_c_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_c_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_c_10_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_d_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_d_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_d_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_d_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_d_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_d_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_d_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_d_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_d_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_d_10_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_d_11_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_10_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_11_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_e_12_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_10_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_11_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_12_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_f_13_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_10_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_11_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_12_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_13_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_g_14_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_10_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_11_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_12_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_13_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_14_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_h_15_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_10_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_11_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_12_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_13_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_14_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_15_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_i_16_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_10_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_11_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_12_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_13_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_14_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_15_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_16_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_j_17_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_10_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_11_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_12_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_13_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_14_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_15_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_16_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_17_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_k_18_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_10_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_11_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_12_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_13_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_14_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_15_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_16_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_17_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_18_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_l_19_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_01_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_02_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_03_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_04_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_05_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_06_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_07_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_08_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_09_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_10_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_11_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_12_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_13_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_14_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_15_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_16_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_17_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_18_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_19_curve', 'char_peacockA_mdl_v9999:peacockA_signature_eye_m_20_curve']
+
+
+for i in eye_curve:
+    if "_a_" in i:
+        dens = 0.7
+    elif "_b_" in i:
+        dens = 1.5
+    elif "_c_" in i:
+        dens = 2.2
+    elif "_d_" in i:
+        dens = 3.5
+    elif "_e_" in i:
+        dens = 4.8
+    elif "_f_" in i:
+        dens = 6.0
+    elif "_g_" in i:
+        dens = 6.5
+    elif "_h_" in i:
+        dens = 7.0
+    elif "_i_" in i:
+        dens = 7.5
+    elif "_j_" in i:
+        dens = 8.0
+    elif "_k_" in i:
+        dens = 8.5
+    elif "_l_" in i:
+        dens = 9.0
+    elif "_m_" in i:
+        dens = 9.5
+    else:
+        continue
+    create_signature_git(i, dens)
+
+
+
+
+p_curve = []
+for i in range(1, 27):
+    p = "char_peacockA_mdl_v9999:peacockA_signature_p_%02d_curve" % i
+    p_curve.append(p)
+
+L_p_curve = p_curve[:13]
+R_p_curve = p_curve[13:]
+dens_lst = [9.5, 9.0, 8.5, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 4.5, 3.5, 3.0, 2.2]
+for cuv, d in zip(L_p_curve, dens_lst):
+    create_signature_git(cuv, d)
+
+dens_lst.reverse()
+for cuv, d in zip(R_p_curve, dens_lst):
+    create_signature_git(cuv, d)
+
+
 
 
 
