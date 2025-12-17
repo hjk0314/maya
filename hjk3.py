@@ -2958,3 +2958,69 @@ class ColorPickerUI:
         cmds.setParent('..')
 
 
+
+@alias(ja="joint_axis", cs="ctrl_size", ds="down_step", ec="end_ctrl", p="prefix", s="suffix")
+@with_selection
+def create_FK_ctrls(
+    *joints: Any, 
+    joint_axis: tuple=(0, 1, 0), 
+    ctrl_size: float=1, 
+    down_step: float = 0, 
+    end_ctrl: bool=False, 
+    prefix: str="cc", 
+    suffix: str="" # suffix: str="_FK"
+) -> list:
+    """ The function creates an FK ctrl with the same local axis as the joint.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(ja="joint_axis", cs="ctrl_size", ds="down_step", ec="end_ctrl", pr="prefix", su="suffix")
+            - @with_selection
+
+    Args
+    ----
+    - joints : list
+    - joint_axis : tuple 
+    - ctrl_size : float 
+    - down_step : float
+    - end_ctrl : bool 
+    - prefix : str 
+    - suffix: str
+
+    Examples
+    --------
+    >>> create_FK_ctrls(*joints, ja=(1, 0, 0), cs=2, ds=0.125)
+    >>> create_FK_ctrls(ja=(0, 1, 0), s="_FK")
+    >>> create_FK_ctrls(ja=(0, 1, 0), p="cc", s="_FK")
+    >>> create_FK_ctrls(ja=(1, 0, 0), ctrl_size=2, down_step=0.125, ec=True)
+    ['cc_joint1_FK', 'cc_joint2_FK', 'cc_joint3_FK', 'cc_joint4_FK']
+    """
+    result = []
+    for idx, jnt in enumerate(joints):
+        if not end_ctrl and idx >= (len(joints) - 1):
+            continue
+
+        cc_name = ""
+        slices_jnt = jnt.split("_")
+        if prefix:
+            if "rig" == slices_jnt[0]:
+                slices_jnt[0] = prefix
+                cc_name = "_".join(slices_jnt)
+            else:
+                cc_name = add_affixes(jnt, p=prefix)[0]
+        if suffix:
+            cc_name = add_affixes(cc_name, s=suffix)[0]
+
+        cc = cmds.circle(nr=joint_axis, ch=False, n=cc_name)[0]
+        size = ctrl_size * (1 - idx*down_step)
+        cmds.scale(size, size, size, cc)
+        cmds.makeIdentity(cc, t=0, r=0, s=1, n=0, pn=1, a=True)
+        cmds.matchTransform(cc, jnt, pos=True, rot=True)
+        result.append(cc)
+
+    parent_in_sequence(*result)
+
+    return result
+
+
