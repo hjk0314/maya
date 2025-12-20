@@ -2548,7 +2548,8 @@ def get_pointOnCurve_parameter(curve_name: str, target_name: str):
             target_point, 
             space=om2.MSpace.kWorld
             )
-        return parameter
+        result = math.floor(parameter*1000) / 1000
+        return result
     except Exception as e:
         print(e)
         return None
