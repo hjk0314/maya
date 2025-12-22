@@ -4,6 +4,73 @@ import hjk3
 
 
 
+
+
+def get_deepest_child(obj: str):
+    descendants = cmds.listRelatives(obj, ad=True, f=True) or []
+    if not descendants:
+        return
+
+    deepest = max(descendants, key=lambda x: x.count('|'))
+    result = cmds.listRelatives(deepest, p=True)[0]
+    return result
+
+
+
+def create_attributes_to_ctrl(mdl_curve: str=""):
+    slices = mdl_curve.split(":")[-1]
+    cc_name = slices.replace("peacockA_", "cc_")
+    cc_name = cc_name.replace("_curve", "_1_IK")
+
+    cc_name_end = get_deepest_child(cc_name)
+
+    attrs = {
+        'Amplitude': {"at": "double", "dv": 0}, 
+        'Wavelength': {"at": "double", "dv": 0.7, "min": 0.001}, 
+        'Offset': {"at": "double", "dv": 0}, 
+        'High_Bound': {"at": "double", "dv": 4.5, "min": 0}, 
+    }
+    for attr, dic in attrs.items():
+        hjk3.create_attributes_proxy(sc=cc_name, tc=cc_name_end, an=attr, ft=dic)
+
+    return cc_name, cc_name_end, list(attrs.keys())
+
+
+
+def create_animCurve_and_set_key(
+        tl=False, ta=False, tu=False, tt=False, keys={}, node_name=""):
+    """ in tangent type : ["spline", "linear", "fast", "slow", "flat", "step", "stepnext", "fixed", "clamped", "plateau", "auto", "autoease", "automix", "autocustom"]
+    """
+
+    if tl:
+        typ = "animCurveTL"
+    elif ta:
+        typ = "animCurveTA"
+    elif tu:
+        typ = "animCurveTU"
+    elif tt:
+        typ = "animCurveTT"
+    else:
+        typ = ""
+
+    if not typ or not keys:
+        return
+
+    animCurve = cmds.createNode(typ, name=node_name)
+
+    key_region = []
+    for key, val in keys.items():
+        cmds.setKeyframe(animCurve, t=key, v=val)
+        key_region.append((key, val))
+
+    for i in key_region:
+        cmds.keyTangent(animCurve, t=i, edit=True, itt='linear', ott='linear')
+
+
+    return f"{animCurve}.input", f"{animCurve}.output"
+
+
+
 def create_sign_deform(mdl_curve) -> Tuple[str, list, list]:
     """ 모델링에 있는 시그니처 커브를 선택하고, 이 함수를 실행.
     커브를 복사하고, sign deformer를 적용한 후, 
@@ -65,6 +132,26 @@ def create_pointOnCurveNode_and_settings(mdl_cuv):
     cmds.parent(dup_cuv, signDeform_grp)
 
     sign_parameter, sign_transform = sign_nodes
+
+    cc_start, cc_end, attrs = create_attributes_to_ctrl(mdl_cuv)
+
+
+    animCurve_name = cc_end.replace("cc_", "animCurve_")
+    animCurve_name += "_offset"
+    animCurve_in, animCurve_out = create_animCurve_and_set_key(tl=True, keys={0: 10, 10: -10}, node_name=animCurve_name)
+
+    sign_attrs = ['amplitude', 'wavelength', 'offset', 'highBound']
+    for at, s_at in zip(attrs, sign_attrs):
+        if at == "Offset":
+            cmds.connectAttr(f"{cc_end}.{at}", f"{animCurve_in}", f=True)
+            cmds.connectAttr(f"{animCurve_out}", f"{sign_parameter}.{s_at}", f=True)
+            continue
+        cmds.connectAttr(f"{cc_end}.{at}", f"{sign_parameter}.{s_at}", f=True)
+    cmds.setInfinity(sign_parameter, pri='cycle', poi="cycle")
+
+
+
+
     cmds.parent(sign_transform, signDeform_grp)
 
     # pointOnCurve 연결
@@ -103,37 +190,19 @@ def create_pointOnCurveNode_and_settings(mdl_cuv):
 
 
 
-
-def create_animCurve_and_set_key(tl=False, ta=False, tu=False, tt=True, keys={}, node_name=""):
-    """ in tangent type : ["spline", "linear", "fast", "slow", "flat", "step", "stepnext", "fixed", "clamped", "plateau", "auto", "autoease", "automix", "autocustom"]
-    """
-
-    if tl:
-        typ = "animCurveTL"
-    elif ta:
-        typ = "animCurveTA"
-    elif tu:
-        typ = "animCurveTU"
-    elif tt:
-        typ = "animCurveTT"
-    else:
-        typ = ""
-    
-
-    if not typ:
-        return
+# sel = cmds.ls(sl=True)
+# print(sel)
+# a = [
+#     'char_peacockA_rig_v0107:char_peacockA_mdl_v9999:peacockA_signature_v_10_grp', 'char_peacockA_rig_v0107:cc_signature_v_10_1_grp']
+# cmds.select(cl=True)
+# cmds.select(a)
 
 
-    animCurve = cmds.createNode(typ, name=node_name)
+# ['cc_signature_v_11_11_IK', 'char_peacockA_mdl_v9999:peacockA_signature_v_11_grp']
 
-
-    for key, val in keys.items():
-        cmds.setKeyframe(animCurve, t=key, v=val)
-
-
-    cmds.keyTangent(node_name, edit=True, itt='linear', ott='linear')
-
-
-
-
-
+# for cc in sel:
+#     temp = cc.replace("cc_", "peacockA_")
+#     poly_name = temp.split("_")[:-2]
+#     poly_name = "char_peacockA_mdl_v9999:" + "_".join(poly_name) + "_grp"
+#     cmds.select(cl=True)
+#     cmds.select(cc, poly_name)
