@@ -62,8 +62,8 @@ dt = hjk.Data()
 
 
 
-# A = "Mouth_Open"
-# B = "MOopen_full"
+# A = "Ankle_Down_R"
+# B = "_Ankle_Down_R"
 
 # for i in sel:
 #     target = i.replace(A, B)
@@ -79,8 +79,8 @@ dt = hjk.Data()
 
 
 
-for i in sel:
-    rig = f"rig_{i}"
+# for i in sel:
+#     rig = f"rig_{i}"
     # cmds.parentConstraint(rig, i, mo=True, w=1.0)
     # cmds.scaleConstraint(rig, i, mo=True, w=1.0)
     # cmds.connectAttr(f"{rig}.rotate", f"{i}.rotate", f=True)
