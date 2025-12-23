@@ -1781,6 +1781,7 @@ def select_only(*args, **kwargs) -> list:
     --------
     >>> select_only(joint=True)
     >>> select_only(jnt=True, loc=True)
+    >>> select_only(*joints, group=True, constraint=True)
     >>> select_only('obj1', 'obj2', group=True, constraint=True)
     """
     filters = {
@@ -1801,10 +1802,10 @@ def select_only(*args, **kwargs) -> list:
 
     if filters["object"]:
         shapes = cmds.ls(args, dag=True, type=['mesh', 'nurbsSurface'])
-        result.update(i.getParent() for i in shapes)
+        result.update(cmds.listRelatives(i, p=True)[0] for i in shapes)
     if filters["nurbsCurve"]:
         curves = cmds.ls(args, dag=True, type=['nurbsCurve'])
-        result.update(i.getParent() for i in curves)
+        result.update(cmds.listRelatives(i, p=True)[0] for i in curves)
 
 
     if args: 
@@ -2966,7 +2967,7 @@ def create_FK_ctrls(
     *joints: Any, 
     joint_axis: tuple=(0, 1, 0), 
     ctrl_size: float=1, 
-    down_step: float = 0, 
+    down_step: float=0, 
     end_ctrl: bool=False, 
     prefix: str="cc", 
     suffix: str="" # suffix: str="_FK"
@@ -3025,3 +3026,64 @@ def create_FK_ctrls(
     return result
 
 
+
+def create_keyed_animCurve(
+        time_linear=False, 
+        time_angular=False, 
+        time_unitless=False, 
+        time_time=False, 
+        keys={}, 
+        name="", 
+        in_tangent_type: str="linear", 
+        out_tangent_type: str="linear"
+) -> Tuple[str, str]:
+    """ The function creates an animCurve node with a key.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(tl="time_linear", ta="time_angular", tu="time_unitless", tt="time_time", k="keys", n="name", itt="in_tangent_type", ott="out_tangent_type")
+
+    Args
+    ----
+    - tl : bool = translate
+    - ta : bool = rotate
+    - tu : bool = scale, visibility
+    - tt : bool = time warp, etc
+    - k : dict = {0: 0, ...} = {0-Frame: 0-Value, ...},
+    - itt : str = spline, linear, fast, slow, flat, step, auto, ...
+    - ott : str = stepnext, fixed, clamped, plateau, autoease, automix, ...
+
+    Examples
+    --------
+    >>> create_keyed_animCurve(tl=True, k={0: 0, 10: 10})
+    >>> create_keyed_animCurve(ta=True, k={0: 0, 10: 10}, n="animCurve_node")
+    >>> create_keyed_animCurve(ta=True, k={0: 0, 10: 1}, itt="step", ott="step")
+    ("animCurve_node.input", "animcurve_node.output")
+    """
+
+    if time_linear:
+        typ = "animCurveTL"
+    elif time_angular:
+        typ = "animCurveTA"
+    elif time_unitless:
+        typ = "animCurveTU"
+    elif time_time:
+        typ = "animCurveTT"
+    else:
+        typ = ""
+
+    if not typ or not keys:
+        return
+
+    animCurve = cmds.createNode(typ, n=name)
+    key_region = []
+    for key, val in keys.items():
+        cmds.setKeyframe(animCurve, t=key, v=val)
+        key_region.append((key, val))
+
+    for i in key_region:
+        cmds.keyTangent(animCurve, t=i, edit=True, itt=in_tangent_type, ott=out_tangent_type)
+
+
+    return f"{animCurve}.input", f"{animCurve}.output"
