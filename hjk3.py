@@ -504,10 +504,10 @@ def get_position(*args: str) -> List[Tuple]:
                     raise ValueError(f"Transform node not found: {target}")
             pos = cmds.xform(dag, q=True, ws=True, rp=True)
 
-        results.append(tuple(round(float(v), 5) for v in pos))
+        # results.append(tuple(round(float(v), 5) for v in pos))
+        results.append(tuple(math.floor(v*100000)/100000 for v in pos))
 
     return results
-
 
 
 @with_selection
