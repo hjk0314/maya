@@ -3087,3 +3087,54 @@ def create_keyed_animCurve(
 
 
     return f"{animCurve}.input", f"{animCurve}.output"
+
+
+
+def copy_key(
+        source: str, 
+        target: str, 
+        time_range: tuple, 
+        all: bool=False, 
+        translate: bool=False, 
+        rotate: bool=False, 
+        scale: bool=False, 
+        translateX: bool=False, 
+        translateY: bool=False, 
+        translateZ: bool=False, 
+        rotateX: bool=False, 
+        rotateY: bool=False, 
+        rotateZ: bool=False, 
+        scaleX: bool=False, 
+        scaleY: bool=False, 
+        scalezZ: bool=False, 
+        visibility: bool=False
+    ):
+    attributes = [
+        'translateX', 'translateY', 'translateZ', 
+        'rotateX', 'rotateY', 'rotateZ', 
+        'scaleX', 'scaleY', 'scaleZ', 
+        'visibility'
+        ]
+    if all:
+        attrs += attributes
+    elif translate:
+        attrs += attributes[:3]
+    elif rotate:
+        attrs
+    for attr in attributes:
+        source_attr = f"{source}.{attr}"
+        key_times = cmds.keyframe(source_attr, time=time_range, q=True, timeChange=True)
+        if key_times:
+            key_times = sorted(list(set(key_times)))
+            for t in key_times:
+                values = cmds.keyframe(source_attr, time=(t, t), q=True, valueChange=True)
+                if values:
+                    val = values[0]
+                    # condition
+                    if attr in ["translateX", "rotateY", "rotateZ"]:
+                        val = val * -1
+                    # condition
+                    cmds.setKeyframe(target, attribute=attr, time=t, value=val)
+
+
+# copy_key("pSphere1", "pCube1", time=(0, 35), translateX=True)
