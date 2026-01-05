@@ -3090,6 +3090,7 @@ def create_keyed_animCurve(
 
 
 
+@alias(tr="time_range", pos="translate", rot="rotate", scl="scale", vis="visibility", tx="translateX", ty="translateY", tz="translateZ", rx="rotateX", ry="rotateY", rz="rotateZ", sx="scaleX", sy="scaleY", sz="scaleZ")
 def copy_key(
         source: str, 
         target: str, 
@@ -3106,35 +3107,215 @@ def copy_key(
         rotateZ: bool=False, 
         scaleX: bool=False, 
         scaleY: bool=False, 
-        scalezZ: bool=False, 
+        scaleZ: bool=False, 
         visibility: bool=False
-    ):
+    ) -> list:
+    """ This function copies the key values of the source to the target.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(tr="time_range", pos="translate", rot="rotate", scl="scale", vis="visibility", tx="translateX", ty="translateY", tz="translateZ", rx="rotateX", ry="rotateY", rz="rotateZ", sx="scaleX", sy="scaleY", sz="scaleZ")
+
+    Args
+    ----
+     - source: str, 
+     - target: str, 
+     - time_range: tuple, 
+     - all: bool=False, 
+     - translate: bool=False, 
+     - rotate: bool=False, 
+     - scale: bool=False, 
+     - translateX: bool=False, 
+     - translateY: bool=False, 
+     - translateZ: bool=False, 
+     - rotateX: bool=False, 
+     - rotateY: bool=False, 
+     - rotateZ: bool=False, 
+     - scaleX: bool=False, 
+     - scaleY: bool=False, 
+     - scaleZ: bool=False, 
+     - visibility: bool=False
+
+    Examples
+    --------
+    >>> copy_key("pCube1", "pSphere1", tr=(0, 60), all=True)
+    >>> copy_key("pCube1", "pSphere1", tr=(0, 60), pos=True, rot=True)
+    >>> copy_key("pCube1", "pSphere1", tr=(0, 60), vis=True)
+    >>> copy_key("pCube1", "pSphere1", tr=(0, 60), tx=True, ty=True)
+    >>> copy_key("pCube1", "pSphere1", tr=(0, 60), ty=True, rot=True, scl=True)
+    >>> copy_key("pCube1", "pSphere1", tr=(0, 60), tx=True, ry=True, sz=True)
+    ["pSphere1_translateX", "pSphere1_rotateY", "pSphere1_scaleZ", ...]
+    """
     attributes = [
         'translateX', 'translateY', 'translateZ', 
         'rotateX', 'rotateY', 'rotateZ', 
         'scaleX', 'scaleY', 'scaleZ', 
         'visibility'
         ]
+    attrs = []
     if all:
         attrs += attributes
-    elif translate:
-        attrs += attributes[:3]
-    elif rotate:
-        attrs
-    for attr in attributes:
+    else:
+        if translate:
+            attrs += attributes[:3]
+        else:
+            if translateX:
+                attrs += attributes[:1]
+            if translateY:
+                attrs += attributes[1:2]
+            if translateZ:
+                attrs += attributes[2:3]
+        if rotate:
+            attrs += attributes[3:6]
+        else:
+            if rotateX:
+                attrs += attributes[3:4]
+            if rotateY:
+                attrs += attributes[4:5]
+            if rotateZ:
+                attrs += attributes[5:6]
+        if scale:
+            attrs += attributes[6:9]
+        else:
+            if scaleX:
+                attrs += attributes[6:7]
+            if scaleY:
+                attrs += attributes[7:8]
+            if scaleZ:
+                attrs += attributes[8:9]
+        if visibility:
+            attrs += attributes[9:]
+
+
+    result = []
+    for attr in attrs:
         source_attr = f"{source}.{attr}"
-        key_times = cmds.keyframe(source_attr, time=time_range, q=True, timeChange=True)
+        target_attr = f"{target}.{attr}"
+        key_times = cmds.keyframe(source_attr, t=time_range, q=1, timeChange=1)
         if key_times:
             key_times = sorted(list(set(key_times)))
-            for t in key_times:
-                values = cmds.keyframe(source_attr, time=(t, t), q=True, valueChange=True)
+            for kt in key_times:
+                values = cmds.keyframe(source_attr, t=(kt, kt), q=True, valueChange=True)
                 if values:
                     val = values[0]
-                    # condition
-                    if attr in ["translateX", "rotateY", "rotateZ"]:
-                        val = val * -1
-                    # condition
-                    cmds.setKeyframe(target, attribute=attr, time=t, value=val)
+                    cmds.setKeyframe(target, attribute=attr, t=kt, value=val)
+
+        # result
+        created_key_node = cmds.listConnections(target_attr, destination=False, source=True, plugs=False)
+        if not created_key_node:
+            continue
+        elif isinstance(created_key_node, list):
+            result.append(created_key_node[0])
+        elif isinstance(created_key_node, str):
+            result.append(created_key_node)
+        else:
+            continue
+        
+    return result
 
 
-# copy_key("pSphere1", "pCube1", time=(0, 35), translateX=True)
+
+@alias(pos="translate", rot="rotate", scl="scale", vis="visibility", tx="translateX", ty="translateY", tz="translateZ", rx="rotateX", ry="rotateY", rz="rotateZ", sx="scaleX", sy="scaleY", sz="scaleZ", d="set_default")
+def delete_key(
+        object: str, 
+        all: bool=False, 
+        translate: bool=False, 
+        rotate: bool=False, 
+        scale: bool=False, 
+        translateX: bool=False, 
+        translateY: bool=False, 
+        translateZ: bool=False, 
+        rotateX: bool=False, 
+        rotateY: bool=False, 
+        rotateZ: bool=False, 
+        scaleX: bool=False, 
+        scaleY: bool=False, 
+        scaleZ: bool=False, 
+        visibility: bool=False, 
+        # Set 0 or 1 to the channel
+        set_default: bool=False
+) -> None:
+    """ This function clear the key values of object.
+
+    Notes
+    -----
+        **Decoration**
+            - @alias(pos="translate", rot="rotate", scl="scale", vis="visibility", tx="translateX", ty="translateY", tz="translateZ", rx="rotateX", ry="rotateY", rz="rotateZ", sx="scaleX", sy="scaleY", sz="scaleZ", d="set_default")
+
+    Args
+    ----
+     - object: str, 
+     - all: bool=False, 
+     - translate: bool=False, 
+     - rotate: bool=False, 
+     - scale: bool=False, 
+     - translateX: bool=False, 
+     - translateY: bool=False, 
+     - translateZ: bool=False, 
+     - rotateX: bool=False, 
+     - rotateY: bool=False, 
+     - rotateZ: bool=False, 
+     - scaleX: bool=False, 
+     - scaleY: bool=False, 
+     - scaleZ: bool=False, 
+     - visibility: bool=False
+     - set_default: bool=False
+
+    Examples
+    --------
+    >>> delete_key("pCube1", all=True)
+    >>> delete_key("pCube1", pos=True, rot=True)
+    >>> delete_key("pCube1", vis=True)
+    >>> delete_key("pCube1", tx=True, ty=True)
+    >>> delete_key("pCube1", ty=True, rot=True, scl=True, d=True)
+    >>> delete_key("pCube1", tx=True, ry=True, sz=True, d=True)
+    """
+    attributes = [
+        'translateX', 'translateY', 'translateZ', 
+        'rotateX', 'rotateY', 'rotateZ', 
+        'scaleX', 'scaleY', 'scaleZ', 
+        'visibility'
+        ]
+    attrs = []
+    if all:
+        attrs += attributes
+    else:
+        if translate:
+            attrs += attributes[:3]
+        else:
+            if translateX:
+                attrs += attributes[:1]
+            if translateY:
+                attrs += attributes[1:2]
+            if translateZ:
+                attrs += attributes[2:3]
+        if rotate:
+            attrs += attributes[3:6]
+        else:
+            if rotateX:
+                attrs += attributes[3:4]
+            if rotateY:
+                attrs += attributes[4:5]
+            if rotateZ:
+                attrs += attributes[5:6]
+        if scale:
+            attrs += attributes[6:9]
+        else:
+            if scaleX:
+                attrs += attributes[6:7]
+            if scaleY:
+                attrs += attributes[7:8]
+            if scaleZ:
+                attrs += attributes[8:9]
+        if visibility:
+            attrs += attributes[9:]
+
+
+    for attr in attrs:
+        cmds.cutKey(object, at=attr, clear=True)
+        if set_default:
+            defaults = 1 if "scale" in attr  or "visibility" in attr else 0
+            cmds.setAttr(f"{object}.{attr}", defaults)
+
+
