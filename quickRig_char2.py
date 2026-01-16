@@ -1,11 +1,564 @@
-from collections import Iterable
-from PySide2.QtWidgets import *
-from PySide2.QtCore import Qt, QCoreApplication
-from PySide2.QtGui import QFont
-from shiboken2 import wrapInstance
-from hjk import *
-import pymel.core as pm
+from collections.abc import Iterable
+from Qt import QtWidgets, QtCore, QtGui
+import Qt as QtModule
+import maya.cmds as cmds
 import maya.OpenMayaUI as omui
+
+# Qt.py compatibility - create aliases for commonly used classes
+# This allows using QWidget, QPushButton, etc. directly (backward compatibility)
+# while also supporting QtWidgets.QPushButton() style (Qt.py recommended way)
+QWidget = QtWidgets.QWidget
+QPushButton = QtWidgets.QPushButton
+QVBoxLayout = QtWidgets.QVBoxLayout
+QLineEdit = QtWidgets.QLineEdit
+QFrame = QtWidgets.QFrame
+QSpacerItem = QtWidgets.QSpacerItem
+QSizePolicy = QtWidgets.QSizePolicy
+
+# Qt constants and classes
+Qt = QtCore.Qt
+QCoreApplication = QtCore.QCoreApplication
+QFont = QtGui.QFont
+
+# wrapInstance from QtCompat (works with both PySide2 and PySide6)
+wrapInstance = QtModule.QtCompat.wrapInstance
+
+
+# ============================================================================
+# Utility Functions (converted from hjk.py to use cmds instead of pymel)
+# ============================================================================
+
+def getPosition(selection: str) -> tuple:
+    """ Get the coordinates of an object or point. """
+    try:
+        position = cmds.pointPosition(selection)
+    except:
+        position = cmds.xform(selection, q=1, ws=1, rp=1)
+    x, y, z = position
+    result = (round(x, 5), round(y, 5), round(z, 5))
+    return result
+
+
+def getBoundingBoxSize(vertexOrObject) -> list:
+    """ Get the length, width, and height of the bounding box. """
+    boundingBox = cmds.xform(vertexOrObject, q=True, bb=True, ws=True)
+    xMin, yMin, zMin, xMax, yMax, zMax = boundingBox
+    x = (xMax - xMin) / 2
+    y = (yMax - yMin) / 2
+    z = (zMax - zMin) / 2
+    boundingBoxSize = [x, y, z]
+    result = [round(i, 5) for i in boundingBoxSize]
+    return result
+
+
+def changeLeftToRight(inputs: str) -> str:
+    """ If you input the "left", it returns the "right". """
+    if not inputs:
+        return
+    elif "Left" in inputs:
+        sideA = "Left"
+        sideB = "Right"
+    elif "left" in inputs:
+        sideA = "left"
+        sideB = "right"
+    elif "_L" in inputs:
+        sideA = "_L"
+        sideB = "_R"
+    elif "Right" in inputs:
+        sideA = "Right"
+        sideB = "Left"
+    elif "right" in inputs:
+        sideA = "right"
+        sideB = "left"
+    elif "_R" in inputs:
+        sideA = "_R"
+        sideB = "_L"
+    else:
+        return
+    result = inputs.replace(sideA, sideB)
+    return result
+
+
+def addPrefix(name: list=[], prefix: list=[], suffix: list=[]):
+    """ Naming Convention Modification. """
+    result = []
+    if name and prefix and suffix:
+        result = [f"{p}{n}{s}" for n in name for p in prefix for s in suffix]
+    elif name and prefix and not suffix:
+        result = [f"{p}{n}" for n in name for p in prefix]
+    elif name and not prefix and suffix:
+        result = [f"{n}{s}" for n in name for s in suffix]
+    elif not name and prefix and suffix:
+        result = [f"{p}{s}" for p in prefix for s in suffix]
+    elif name and not prefix and not suffix:
+        result = name
+    return result
+
+
+def createRigGroups(assetName: str="") -> list:
+    """ Create a Group Tree used by Madman Company. """
+    grpNames = {
+        "assetName": ["rig", "MODEL"], 
+        "rig": ["controllers", "skeletons", "geoForBind", "extraNodes"], 
+        "skeletons": ["bindBones", "rigBones"]
+        }
+    if assetName:
+        grpNames[assetName] = grpNames.pop("assetName")
+        grpNames = {k: grpNames[k] for k in [assetName, "rig", "skeletons"]}
+    for parents, children in grpNames.items():
+        if not cmds.objExists(parents):
+            cmds.group(em=True, n=parents)
+        for child in children:
+            if not cmds.objExists(child):
+                cmds.group(em=True, n=child)
+            cmds.parent(child, parents)
+    result = []
+    for k, v in grpNames.items():
+        result.append(k)
+        result.extend(v)
+    return result
+
+
+def createAnnotation(base: str, target: str) -> str:
+    """ Create a Annotation. """
+    basePos = getPosition(base)
+    anoShp = cmds.annotate(target, tx="", p=basePos)
+    ano = cmds.listRelatives(anoShp, p=True)[0]
+    cmds.setAttr(f"{ano}.overrideEnabled", 1)
+    cmds.setAttr(f"{ano}.overrideDisplayType", 1)
+    return ano
+
+
+def createPolevectorJoint(*args) -> list:
+    """ Select three joints. Put the pole vector at 90 degrees to the direction of the first and last joints. """
+    sel = list(args) if args else cmds.ls(sl=True, type="joint")
+    if len(sel) != 3:
+        cmds.warning("Three joints needed.")
+        return []
+    jntPosition = [getPosition(i) for i in sel]
+    middleJnt, endJnt = sel[1:3]
+    result = []
+    cmds.select(cl=True)
+    result = [cmds.joint(p=pos) for pos in jntPosition[::2]]
+    newJnt = result[0]
+    orientJoints(*result, d=True)
+    cmds.aimConstraint(endJnt, newJnt, o=(0,0,90), wut='object', wuo=middleJnt)
+    cmds.delete(newJnt, cn=True)
+    cmds.matchTransform(newJnt, middleJnt, pos=True)
+    return result
+
+
+def orientJoints(*args, **kwargs) -> None:
+    """ Select joints and don't put anything in the argument, it will be oriented with the Maya default settings. """
+    sel = list(args) if args else cmds.ls(sl=True, type="joint")
+    flags = {
+        "primary": ["xyz", "yzx", "zxy", "zyx", "yxz", "xzy", "none"], 
+        "p": ["xyz", "yzx", "zxy", "zyx", "yxz", "xzy", "none"], 
+        "secondary": ["xup", "xdown", "yup", "ydown", "zup", "zdown", "none"], 
+        "s": ["xup", "xdown", "yup", "ydown", "zup", "zdown", "none"], 
+        }
+    primary = "xyz"
+    secondary = "yup"
+    for k, v in kwargs.items():
+        if ("primary"==k or "p"==k) and v in flags.get(k, []):
+            primary = v
+        elif ("secondary"==k or "s"==k) and v in flags.get(k, []):
+            secondary = v
+        else:
+            continue
+    cmds.makeIdentity(sel, a=True, jo=True, n=0)
+    for jnt in sel:
+        cmds.joint(jnt, 
+                 edit=True, 
+                 children=True, 
+                 zeroScaleOrient=True, 
+                 orientJoint=primary, 
+                 secondaryAxisOrient=secondary, 
+                 )
+        allDescendents = cmds.listRelatives(jnt, ad=True, type="joint") or []
+        endJoints = [i for i in allDescendents if not cmds.listRelatives(i, c=True)]
+        for i in endJoints:
+            cmds.joint(i, e=True, oj='none', ch=True, zso=True)
+
+
+def parentHierarchically(*args) -> list:
+    """ Hierarchically parent. """
+    sel = list(args) if args else cmds.ls(sl=True)
+    if not sel:
+        return []
+    for idx, parents in enumerate(sel):
+        try:
+            child = sel[idx + 1]
+            cmds.parent(child, parents)
+        except:
+            continue
+    return sel
+
+
+def groupOwnPivot(*args, **kwargs) -> list:
+    """ Create a group with the same pivot. """
+    sel = list(args) if args else cmds.ls(sl=True)
+    flags = {"null": False, "n": ""}
+    for key, value in kwargs.items():
+        if key in flags:
+            flags[key] = value
+        else:
+            continue
+    result = []
+    for i in sel:
+        objName = flags["n"]
+        objName = objName if objName else i
+        topGroup = cmds.listRelatives(i, p=True)
+        temp = []
+        if True == flags["null"]:
+            grpName = [f"{objName}_grp", f"{objName}_null"]
+            for name in grpName:
+                grp = cmds.group(em=True, n=name)[0]
+                cmds.matchTransform(grp, i, pos=True, rot=True)
+                temp.append(grp)
+        else:
+            grpName = f"{objName}_grp"
+            grp = cmds.group(em=True, n=grpName)[0]
+            cmds.matchTransform(grp, i, pos=True, rot=True)
+            temp.append(grp)
+        temp.append(i)
+        parentHierarchically(*temp)
+        try:    
+            if topGroup:
+                cmds.parent(temp[0], topGroup[0])
+        except: 
+            pass
+        result += temp
+    return result
+
+
+def duplicateRange(start: str, end: str="", prefix: str="", suffix: str="") -> list:
+    """ Range-duplicate objects with hierarchy. """
+    # Check if start object exists
+    if not cmds.objExists(start):
+        cmds.warning(f"Object '{start}' does not exist. Cannot duplicate.")
+        return []
+    
+    renamed = f"{prefix}{start}{suffix}"
+    lastJoint = f"{prefix}{end}{suffix}"
+    
+    # Check if renamed object already exists
+    if cmds.objExists(renamed):
+        cmds.warning(f"Object '{renamed}' already exists. Skipping duplication.")
+        return []
+    
+    duplicated_list = cmds.duplicate(start, rr=True, n=renamed)
+    if not duplicated_list:
+        cmds.warning(f"Failed to duplicate '{start}'. No objects created.")
+        return []
+    
+    duplicated = duplicated_list[0]
+    for i in cmds.listRelatives(duplicated, ad=True, f=True) or []:
+        endOfName = i.rsplit("|", 1)[-1]
+        new = i.replace(endOfName, f"{prefix}{endOfName}{suffix}")
+        if cmds.objExists(new):
+            continue
+        else:
+            try:
+                cmds.rename(i, new)
+            except:
+                continue
+    try:
+        lower = cmds.listRelatives(lastJoint, c=True)
+        if lower:
+            cmds.delete(lower)
+    except:
+        pass
+    result = []
+    if not end:
+        result = cmds.listRelatives(renamed, ad=True, f=True) or []
+        result.append(renamed)
+        result.reverse()
+    else:
+        upper = cmds.listRelatives(lastJoint, p=True, f=True)
+        if upper:
+            upper = upper[0]
+            while upper != duplicated:
+                result.append(upper)
+                upper_list = cmds.listRelatives(upper, p=True, f=True)
+                if not upper_list:
+                    break
+                upper = upper_list[0]
+        result.reverse()
+        result.insert(0, duplicated)
+        result.append(lastJoint)
+        for idx, jnt in enumerate(result):
+            if idx+1 >= len(result):
+                continue
+            children = cmds.listRelatives(jnt, c=True, f=True) or []
+            next_jnt = result[idx+1]
+            for i in children:
+                if i != next_jnt:
+                    cmds.delete(i)
+    return result
+
+
+def createIKHandle(startJnt: str="", endJnt: str="", rp=False, sc=False, spl=False, spr=False) -> list:
+    """ Create a ikHandle and return names. """
+    if rp:
+        solver = "ikRPsolver"
+    elif sc:
+        solver = "ikSCsolver"
+    elif spl:
+        solver = "ikSplineSolver"
+    elif spr:
+        solver = "ikSpringSolver"
+    else:
+        return []
+    temp = startJnt.split("_")
+    temp[0] = "ikh"
+    ikHandleName = "_".join(temp)
+    result = cmds.ikHandle(sj=startJnt, ee=endJnt, sol=solver, n=ikHandleName)
+    return result
+
+
+def createBlendColor(controller: str="", jnt: list=[], jntFK: list=[], jntIK: list=[], t=False, r=False, s=False, v=False) -> None:
+    """ Create a blendColor node. """
+    attributes = []
+    if t:   attributes.append("translate")
+    if r:   attributes.append("rotate")
+    if s:   attributes.append("scale")
+    if v:   attributes.append("visibility")
+    for attr in attributes:
+        for j, fk, ik in zip(jnt, jntFK, jntIK):
+            blColor = cmds.shadingNode("blendColors", au=True)
+            cmds.connectAttr(f"{fk}.{attr}", f"{blColor}.color1", f=True)
+            cmds.connectAttr(f"{ik}.{attr}", f"{blColor}.color2", f=True)
+            cmds.connectAttr(f"{blColor}.output", f"{j}.{attr}", f=True)
+            cmds.connectAttr(controller, f"{blColor}.blender", f=True)
+
+
+def connectSpace(ctrl: str, menu: dict, enum=False, float_type=False):
+    """ Connects the controller and space. """
+    if enum:
+        isAttr = cmds.attributeQuery("Space", node=ctrl, exists=True)
+        if isAttr:
+            cmds.deleteAttr(ctrl, at="Space")
+        ctrlGrp = cmds.listRelatives(ctrl, p=True, f=True)
+        if not ctrlGrp:
+            return
+        ctrlGrp = ctrlGrp[0]
+        selector = list(menu.keys())
+        space = list(menu.values())
+        cmds.addAttr(ctrl, ln="Space", at="enum", en=":".join(selector))
+        cmds.setAttr(f'{ctrl}.Space', e=True, k=True)
+        for idx, name in enumerate(selector):
+            nodeName = f"{ctrl}_space{name}"
+            animCurve = cmds.shadingNode("animCurveTL", au=True, n=nodeName)
+            for i in range(len(selector)):
+                num = 1 if idx==i else 0
+                cmds.setKeyframe(animCurve, time=i, value=num)
+            cmds.keyTangent(animCurve, ott="step")
+            pConstraint = cmds.parentConstraint(space[idx], ctrlGrp, mo=1, w=1)[0]
+            sConstraint = cmds.scaleConstraint(space[idx], ctrlGrp, mo=1, w=1)[0]
+            cmds.connectAttr(f"{ctrl}.Space", f"{animCurve}.input", f=True)
+            obj_name = space[idx].split("|")[-1].split(":")[-1]
+            target_weight_attr = f"{obj_name}W{idx}"
+            cmds.connectAttr(f"{animCurve}.output", 
+                           f"{pConstraint}.{target_weight_attr}", f=True)
+            cmds.connectAttr(f"{animCurve}.output", 
+                           f"{sConstraint}.{target_weight_attr}", f=True)
+    elif float_type:
+        selector = list(menu.keys())
+        space = list(menu.values())
+        if len(selector) != 2:
+            return
+        attr = "_".join(selector)
+        isAttr = cmds.attributeQuery(attr, node=ctrl, exists=True)
+        if isAttr:
+            cmds.deleteAttr(ctrl, at=attr)
+        cmds.addAttr(ctrl, ln=attr, at="double", min=0, max=1, dv=0)
+        cmds.setAttr(f'{ctrl}.{attr}', e=True, k=True)
+        ctrlGrp = cmds.listRelatives(ctrl, p=True, f=True)
+        if not ctrlGrp:
+            return
+        ctrlGrp = ctrlGrp[0]
+        for idx, name in enumerate(space):
+            pConstraint = cmds.parentConstraint(name, ctrlGrp, mo=1, w=1)[0]
+            sConstraint = cmds.scaleConstraint(name, ctrlGrp, mo=1, w=1)[0]
+            obj_name = name.split("|")[-1].split(":")[-1]
+            target_weight_attr = f"{obj_name}W{idx}"
+            if idx == 0:
+                reverseNode = cmds.shadingNode("reverse", au=True)
+                cmds.connectAttr(f"{ctrl}.{attr}", f"{reverseNode}.inputX", f=1)
+                cmds.connectAttr(f"{reverseNode}.outputX", 
+                               f"{pConstraint}.{target_weight_attr}", f=True)
+                cmds.connectAttr(f"{reverseNode}.outputX", 
+                               f"{sConstraint}.{target_weight_attr}", f=True)
+            else:
+                cmds.connectAttr(f"{ctrl}.{attr}", 
+                               f"{pConstraint}.{target_weight_attr}", f=True)
+                cmds.connectAttr(f"{ctrl}.{attr}", 
+                               f"{sConstraint}.{target_weight_attr}", f=True)
+    else:
+        return
+
+
+def colorize(*args, **kwargs) -> None:
+    """ Color an Object. """
+    sel = list(args) if args else cmds.ls(sl=True)
+    if not sel or not kwargs:
+        return
+    colorDict = {
+        "blue": 6, 
+        "blue2": 18, 
+        "brown": 10, 
+        "pink": 9, 
+        "red": 13, 
+        "red2": 21, 
+        "green": 14, 
+        "green2": 23, 
+        "yellow": 17,
+        "yellow2": 25, 
+        }
+    for obj in sel:
+        for key, value in kwargs.items():
+            if key in colorDict and value:
+                try:
+                    cmds.setAttr(f"{obj}.overrideColor", colorDict[key])
+                    cmds.setAttr(f"{obj}.overrideEnabled", 1)
+                except:
+                    continue
+
+
+class Controllers:
+    def __init__(self):
+        """ Create Curve Controllers for rig """
+        self.controllerShapes = {
+            "arrow": [
+                (0, 0, 8), (8, 0, 4), (4, 0, 4), (4, 0, -8), 
+                (-4, 0, -8), (-4, 0, 4), (-8, 0, 4), (0, 0, 8)
+                ], 
+            "arrow1": [
+                (0, 3, 12), (12, 3, 6), (6, 3, 6), (6, 3, -12), 
+                (-6, 3, -12), (-6, 3, 6), (-12, 3, 6), (0, 3, 12), 
+                (0, -3, 12), (12, -3, 6), (6, -3, 6), (6, -3, -12), 
+                (-6, -3, -12), (-6, -3, 6), (-12, -3, 6), (0, -3, 12), 
+                (12, -3, 6), (12, 3, 6), (6, 3, 6), (6, 3, -12), 
+                (6, -3, -12), (-6, -3, -12), (-6, 3, -12), (-6, 3, 6), 
+                (-12, 3, 6), (-12, -3, 6)
+                ], 
+            "arrow2": [
+                (14, 0, 0), (10, 0, -10), (0, 0, -14), (-10, 0, -10), 
+                (-14, 0, 0), (-10, 0, 10), (0, 0, 14), (10, 0, 10), 
+                (14, 0, 0), (10, 0, 4), (14, 0, 6), (14, 0, 0)
+                ], 
+            "arrow3": [
+                (0, 0, -23.1), (-6.3, 0, -16.8), (-4.2, 0, -16.8), 
+                (-4.2, 0, -12.6), (-10.5, 0, -10.5), (-12.6, 0, -4.2), 
+                (-16.8, 0, -4.2), (-16.8, 0, -6.3), (-23.1, 0, 0), 
+                (-16.8, 0, 6.3), (-16.8, 0, 4.2), (-12.6, 0, 4.2), 
+                (-10.5, 0, 10.5), (-4.2, 0, 12.6), (-4.2, 0, 16.8), 
+                (-6.3, 0, 16.8), (0, 0, 23.1), (6.3, 0, 16.8), 
+                (4.2, 0, 16.8), (4.2, 0, 12.6), (10.5, 0, 10.5), 
+                (12.6, 0, 4.2), (16.8, 0, 4.2), (16.8, 0, 6.3), 
+                (23.1, 0, 0), (16.8, 0, -6.3), (16.8, 0, -4.2), 
+                (12.6, 0, -4.2), (10.5, 0, -10.5), (4.2, 0, -12.6), 
+                (4.2, 0, -16.8), (6.3, 0, -16.8), (0, 0, -23.1)
+                ], 
+            "arrow4": [
+                (-8, 0, -4), (8, 0, -4), (8, 0, -8), (16, 0, 0), 
+                (8, 0, 8), (8, 0, 4), (-8, 0, 4), (-8, 0, 8), 
+                (-16, 0, 0), (-8, 0, -8), (-8, 0, -4)
+                ], 
+            "arrow5": [
+                (-0, 0, -12.6), (-0, 4, -13), (-0, 2, -10), 
+                (-0, 0, -12.6), (-0, 2, -12), (-0, 6, -10), 
+                (-0, 10, -6), (0, 12, 0), (0, 10, 6), (0, 6, 10), 
+                (0, 2, 12), (0, 0, 12.6), (0, 2, 10), (0, 4, 13), 
+                (0, 0, 12.6)
+                ], 
+            "arrow6": [
+                (0, 0, 0), (0, 6, 0), (0, 6, 3), 
+                (1, 6, 2), (-1, 6, 2), (0, 6, 3), 
+                ], 
+            "cap": [
+                (0, 0, 12), (-9, 0, 9), (-6.667, 6.667, 6.667), 
+                (0, 9, 9), (6.667, 6.667, 6.667), (9, 0, 9), 
+                (0, 0, 12), (0, 9, 9), (0, 12, 0), 
+                (0, 9, -9), (0, 0, -12), (9, 0, -9), 
+                (6.667, 6.667, -6.667), (0, 9, -9), (-6.667, 6.667, -6.667), 
+                (-9, 0, -9), (0, 0, -12), (9, 0, -9), 
+                (12, 0, 0), (9, 0, 9), (6.667, 6.667, 6.667), 
+                (9, 9, 0), (6.667, 6.667, -6.667), (9, 0, -9), 
+                (12, 0, 0), (9, 9, 0), (0, 12, 0), 
+                (-9, 9, 0), (-6.667, 6.667, -6.667), (-9, 0, -9), 
+                (-12, 0, 0), (-9, 9, 0), (-6.667, 6.667, 6.667), 
+                (-9, 0, 9), (-12, 0, 0)
+                ], 
+            "circle": [
+                (0, 0, -15), (-10, 0, -10), (-15, 0, 0), 
+                (-10, 0, 10), (0, 0, 15), (10, 0, 10), 
+                (15, 0, 0), (10, 0, -10), (0, 0, -15)
+                ], 
+            "cross": [
+                (-1, 5, 0), (1, 5, 0), (1, 1, 0), (5, 1, 0), 
+                (5, -1, 0), (1, -1, 0), (1, -5, 0), (-1, -5, 0), 
+                (-1, -1, 0), (-5, -1, 0), (-5, 1, 0), (-1, 1, 0), 
+                (-1, 5, 0)
+                ], 
+            "cube": [
+                (-5, 5, -5), (-5, 5, 5), (5, 5, 5), (5, 5, -5), 
+                (-5, 5, -5), (-5, -5, -5), (-5, -5, 5), (5, -5, 5), 
+                (5, -5, -5), (-5, -5, -5), (-5, -5, 5), (-5, 5, 5), 
+                (5, 5, 5), (5, -5, 5), (5, -5, -5), (5, 5, -5)
+                ], 
+            "IKFK": [
+                (-6.611, 0, 2), (-6.611, 0, -2), (-5.792, 0, -2), 
+                (-5.792, 0, 2), (-6.611, 0, 2), (-4.692, 0, 2), 
+                (-4.692, 0, -2), (-3.879, 0, -2), (-3.879, 0, -0.368), 
+                (-2.391, 0, -2), (-1.342, 0, -2), (-2.928, 0, -0.358), 
+                (-1.245, 0, 2), (-2.304, 0, 2), (-3.495, 0, 0.245), 
+                (-3.879, 0, 0.65), (-3.879, 0, 2), (-4.692, 0, 2), 
+                (-0.376, 0, 2), (-0.376, 0, -2), (2.401, 0, -2), 
+                (2.401, 0, -1.294), (0.442, 0, -1.294), (0.442, 0, -0.384), 
+                (2.156, 0, -0.384), (2.156, 0, 0.322), (0.442, 0, 0.322), 
+                (0.442, 0, 2), (-0.376, 0, 2), (3.164, 0, 2), 
+                (3.164, 0, -2), (3.977, 0, -2), (3.977, 0, -0.368), 
+                (5.465, 0, -2), (6.513, 0, -2), (4.928, 0, -0.358), 
+                (6.611, 0, 2), (5.552, 0, 2), (4.36, 0, 0.245), 
+                (3.977, 0, 0.65), (3.977, 0, 2), (3.164, 0, 2), 
+                (6.611, 0, 2)
+                ], 
+            "sphere": [
+                (0, 5, 0), (0, 3.5, 3.5), (0, 0, 5), (0, -3.5, 3.5), 
+                (0, -5, 0), (0, -3.5, -3.5), (0, 0, -5), (0, 3.5, -3.5), 
+                (0, 5, 0), (-3.5, 3.5, 0), (-5, 0, 0), (-3.5, 0, 3.5), 
+                (0, 0, 5), (3.5, 0, 3.5), (5, 0, 0), (3.5, 0, -3.5), 
+                (0, 0, -5), (-3.5, 0, -3.5), (-5, 0, 0), (-3.5, -3.5, 0), 
+                (0, -5, 0), (3.5, -3.5, 0), (5, 0, 0), (3.5, 3.5, 0), 
+                (0, 5, 0)
+                ], 
+            "spine": [
+                (-4, 0, 18), (4, 0, 18), (4, 12, 12.7), (4, 17, 0), 
+                (4, 12, -12.7), (4, 0, -18), (-4, 0, -18), (-4, 12, -12.7), 
+                (-4, 18, 0), (-4, 12, 12.7), (-4, 0, 18)
+                ], 
+            "square": [
+                (25, 0, 25), (25, 0, -25), (-25, 0, -25), 
+                (-25, 0, 25), (25, 0, 25)
+                ], 
+            }
+
+    def createControllers(self, **kwargs):
+        """ Create curve controllers. """
+        result = []
+        if not kwargs:
+            for shapeName, points in self.controllerShapes.items():
+                ctrl = cmds.curve(d=1, p=points, n=shapeName)
+                result.append(ctrl)
+        else:
+            for shapeName, ctrlName in kwargs.items():
+                if shapeName in self.controllerShapes:
+                    points = self.controllerShapes[shapeName]
+                    ctrl = cmds.curve(d=1, p=points, n=ctrlName)
+                    result.append(ctrl)
+        return result
 
 
 def mayaMainWindow():
@@ -260,15 +813,15 @@ class Character(QWidget):
         self.cleanUp(*joints, self.mainCurve)
         # Create Joints
         for jnt, pos in self.jntPosition.items():
-            pm.select(cl=True)
-            pm.joint(p=pos, n=jnt)
+            cmds.select(cl=True)
+            cmds.joint(p=pos, n=jnt)
         self.setHierarchy(self.jntHierarchy)
         # Create Main Curve
         bbSize = self.getDefaultSize(self.jntHips)
         bbSize = bbSize[0]
-        pm.circle(nr=(0, 1, 0), n=self.mainCurve, ch=0, r=bbSize)
+        cmds.circle(nr=(0, 1, 0), n=self.mainCurve, ch=0, r=bbSize)[0]
         try:
-            pm.parent(self.jntHips, self.mainCurve)
+            cmds.parent(self.jntHips, self.mainCurve)
         except:
             pass
 
@@ -307,15 +860,15 @@ class Character(QWidget):
         self.update()
         self.createTempJoints()
         createdGroup = createRigGroups(self.fldCreateRigGrp.text())
-        if pm.objExists(self.jntHips):
-            pm.parent(self.jntHips, createdGroup[-2])
-        if pm.objExists(self.rgHips):
-            pm.parent(self.rgHips, createdGroup[-1])
+        if cmds.objExists(self.jntHips):
+            cmds.parent(self.jntHips, createdGroup[-2])
+        if cmds.objExists(self.rgHips):
+            cmds.parent(self.rgHips, createdGroup[-1])
 
 
     def createCharCtrl(self):
         self.update()
-        if not pm.objExists(self.rgHips):
+        if not cmds.objExists(self.rgHips):
             self.createRigJnt()
         # Run
         g1 = self.createMainCtrl()
@@ -331,7 +884,7 @@ class Character(QWidget):
         g11 = self.createFingerCtrl(self.finger_R)
         results = [g1, g2, g3, g4, g5, g6, g7, g8, g9, g10, g11]
         try:
-            pm.parent(results, self.groupNames[1])
+            cmds.parent(results, self.groupNames[1])
         except:
             pass
 
@@ -347,8 +900,8 @@ class Character(QWidget):
             ]
         locators_R = [changeLeftToRight(i) for i in locators_L]
         for l, r in zip(locators_L, locators_R):
-            x, y, z = pm.xform(l, q=1, ws=1, rp=1)
-            pm.move(r, (-1*x, y, z))
+            x, y, z = cmds.xform(l, q=1, ws=1, rp=1)
+            cmds.move(r, (-1*x, y, z))
 
 
     def rig(self):
@@ -372,7 +925,7 @@ class Character(QWidget):
         rgJoints = addPrefix(joints, ["rig_"], [])
         for rgJnt, jnt in zip(rgJoints, joints):
             for attr in ["translate", "rotate"]:
-                pm.connectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}", f=1)
+                cmds.connectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}", f=1)
 
 
     def disConnectBones(self):
@@ -381,7 +934,7 @@ class Character(QWidget):
         rgJoints = addPrefix(joints, ["rig_"], [])
         for rgJnt, jnt in zip(rgJoints, joints):
             for attr in ["translate", "rotate"]:
-                pm.disconnectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}")
+                cmds.disconnectAttr(f"{rgJnt}.{attr}", f"{jnt}.{attr}")
 
 
 # ==============================================================================
@@ -389,12 +942,15 @@ class Character(QWidget):
 
     def createRigJnt(self) -> None:
         """ To create the rig joint by copying the original joint. """
-        if not pm.objExists(self.jntHips):
+        if not cmds.objExists(self.jntHips):
             return
         rigJoints = duplicateRange(self.jntHips, "", "rig_", "")
+        if not rigJoints:
+            cmds.warning(f"Failed to duplicate joints from '{self.jntHips}'. No rig joints created.")
+            return
         rgHips = rigJoints[0]
         try:
-            pm.parent(rgHips, self.groupNames[-1])
+            cmds.parent(rgHips, self.groupNames[-1])
         except:
             pass
         startEndJoint = {
@@ -406,6 +962,10 @@ class Character(QWidget):
             }
         types = ["_FK", "_IK"]
         for start, end in startEndJoint.items():
+            # Check if start joint exists before duplicating
+            if not cmds.objExists(start):
+                cmds.warning(f"Joint '{start}' does not exist. Skipping duplication.")
+                continue
             for typ in types:
                 duplicateRange(start, end, "", typ)
 
@@ -418,16 +978,15 @@ class Character(QWidget):
         ctrlSize = [70, 58, 50]
         ctrlColor = ["yellow", "pink", "red2"]
         scaleRatio = self.getDefaultSize(self.jntHips)[-1]
-        if any([pm.objExists(i) for i in self.mainCtrls]):
+        if any([cmds.objExists(i) for i in self.mainCtrls]):
             return
         for cc, scl, color in zip(self.mainCtrls, ctrlSize, ctrlColor):
-            cuv = pm.circle(nr=(0, 1, 0), r=scl*scaleRatio, n=cc, ch=False)
-            cuv = cuv[0]
+            cuv = cmds.circle(nr=(0, 1, 0), r=scl*scaleRatio, n=cc, ch=False)[0]
             colorize(cuv, **{color: True})
         ctrls_grp = groupOwnPivot(*self.mainCtrls)
         ctrls_grp = parentHierarchically(*ctrls_grp)
-        nullSpace = pm.group(em=True, n=self.worldSpace)
-        pm.parent(nullSpace, ctrls_grp[-1])
+        nullSpace = cmds.group(em=True, n=self.worldSpace)[0]
+        cmds.parent(nullSpace, ctrls_grp[-1])
         return ctrls_grp[0]
 
 
@@ -455,31 +1014,31 @@ class Character(QWidget):
             "Right_Leg_IK0_FK1", 
             ]
         # Run
-        if pm.objExists(ccMain):
+        if cmds.objExists(ccMain):
             return
         ctrl = Controllers()
         ctrls = ctrl.createControllers(cube=ccMain, arrow4=ccSub, IKFK=ccIKFK)
         ccMain, ccSub, ccIKFK = ctrls
-        pm.scale(ccMain, (i*scaleRatio for i in ccMain_size))
-        pm.makeIdentity(ccMain, a=1, s=1, jo=0, n=0, pn=1)
-        pm.rotate(ccIKFK, (90, 0, 0))
-        pm.move(ccIKFK, (40*scaleRatio, 0, 0))
+        cmds.scale(ccMain, (i*scaleRatio for i in ccMain_size))
+        cmds.makeIdentity(ccMain, a=1, s=1, jo=0, n=0, pn=1)
+        cmds.rotate(ccIKFK, (90, 0, 0))
+        cmds.move(ccIKFK, (40*scaleRatio, 0, 0))
         for i in [ccSub, ccIKFK]:
-            pm.scale(i, (scaleRatio, scaleRatio, scaleRatio))
-            pm.makeIdentity(i, a=1, t=1, r=1, s=1, jo=0, n=0, pn=1)
+            cmds.scale(i, (scaleRatio, scaleRatio, scaleRatio))
+            cmds.makeIdentity(i, a=1, t=1, r=1, s=1, jo=0, n=0, pn=1)
         ctrls_grp = groupOwnPivot(*ctrls)
         ctrls_grp = parentHierarchically(*ctrls_grp)
-        nullSpace = pm.group(em=True, n=self.rootSpace)
-        pm.parent(nullSpace, ccSub)
-        pm.matchTransform(ctrls_grp[0], self.jntHips, pos=True)
-        pm.makeIdentity(ccIKFK, a=1, t=1, jo=0, n=0, pn=1)
+        nullSpace = cmds.group(em=True, n=self.rootSpace)[0]
+        cmds.parent(nullSpace, ccSub)
+        cmds.matchTransform(ctrls_grp[0], self.jntHips, pos=True)
+        cmds.makeIdentity(ccIKFK, a=1, t=1, jo=0, n=0, pn=1)
         # Color
         colorize(ccMain, ccIKFK, yellow=True)
         colorize(ccSub, pink=True)
         # Add Attributes
         for i in attrName:
-            pm.addAttr(ccIKFK, ln=i, at="double", min=0, max=1, dv=0)
-            pm.setAttr(f'{ccIKFK}.{i}', e=True, k=True)
+            cmds.addAttr(ccIKFK, ln=i, at="double", min=0, max=1, dv=0)
+            cmds.setAttr(f'{ccIKFK}.{i}', e=True, k=True)
         return ctrls_grp[0]
 
 
@@ -513,47 +1072,47 @@ class Character(QWidget):
         ccNeckSize = 10 * scaleRatio
         ccHeadSize = (scaleRatio, ) * 3
         # Run
-        isExist = [pm.objExists(i) for i in ccSpines_FK + ccSpines_IK]
+        isExist = [cmds.objExists(i) for i in ccSpines_FK + ccSpines_IK]
         if any(isExist):
             return
         # IK
-        spineCurve = pm.curve(d=3, ep=list(joints.values()), n=spineCurve)
-        pm.setAttr(f"{spineCurve}.visibility", 0)
-        try:    pm.parent(spineCurve, self.groupNames[4])
+        spineCurve = cmds.curve(d=3, ep=list(joints.values()), n=spineCurve)[0]
+        cmds.setAttr(f"{spineCurve}.visibility", 0)
+        try:    cmds.parent(spineCurve, self.groupNames[4])
         except: pass
-        clt1 = pm.cluster(f"{spineCurve}.cv[:1]", n=f"clt_{spine0}")[1]
+        clt1 = cmds.cluster(f"{spineCurve}.cv[:1]", n=f"clt_{spine0}")[1]
         clt1_grp = groupOwnPivot(clt1)[0]
-        pm.setAttr(f"{clt1_grp}.visibility", 0)
-        clt2 = pm.cluster(f"{spineCurve}.cv[2:]", n=f"clt_{spine2}")[1]
+        cmds.setAttr(f"{clt1_grp}.visibility", 0)
+        clt2 = cmds.cluster(f"{spineCurve}.cv[2:]", n=f"clt_{spine2}")[1]
         clt2_grp = groupOwnPivot(clt2)[0]
-        pm.setAttr(f"{clt2_grp}.visibility", 0)
+        cmds.setAttr(f"{clt2_grp}.visibility", 0)
         ctrl = Controllers()
         ccSpine0_IK = ctrl.createControllers(circle=ccSpine0_IK)[0]
-        pm.scale(ccSpine0_IK, ccSpine0_IKSize)
-        pm.makeIdentity(ccSpine0_IK, a=1, s=1, jo=0, n=0, pn=1)
-        pm.matchTransform(ccSpine0_IK, spine0, pos=True)
+        cmds.scale(ccSpine0_IK, ccSpine0_IKSize)
+        cmds.makeIdentity(ccSpine0_IK, a=1, s=1, jo=0, n=0, pn=1)
+        cmds.matchTransform(ccSpine0_IK, spine0, pos=True)
         ccSpine0_IK_grp = groupOwnPivot(ccSpine0_IK)
-        pm.parent(clt1_grp, ccSpine0_IK)
+        cmds.parent(clt1_grp, ccSpine0_IK)
         ccSpine2_IK = ctrl.createControllers(circle=ccSpine2_IK)[0]
-        pm.scale(ccSpine2_IK, ccSpine2_IKSize)
-        pm.makeIdentity(ccSpine2_IK, a=1, s=1, jo=0, n=0, pn=1)
-        pm.matchTransform(ccSpine2_IK, clt2, pos=True)
+        cmds.scale(ccSpine2_IK, ccSpine2_IKSize)
+        cmds.makeIdentity(ccSpine2_IK, a=1, s=1, jo=0, n=0, pn=1)
+        cmds.matchTransform(ccSpine2_IK, clt2, pos=True)
         ccSpine2_IK_grp = groupOwnPivot(ccSpine2_IK)
-        pm.parent(clt2_grp, ccSpine2_IK)
+        cmds.parent(clt2_grp, ccSpine2_IK)
         parentHierarchically(*ccSpine0_IK_grp + ccSpine2_IK_grp)
         # FK
         for cc, jnt, scl in zip(ccSpines_FK, joints.keys(), FKSize):
-            cc = pm.circle(nr=(0, 1, 0), r=scl, n=cc, ch=0)[0]
-            pm.matchTransform(cc, jnt, pos=True)
+            cc = cmds.circle(nr=(0, 1, 0), r=scl, n=cc, ch=0)[0]
+            cmds.matchTransform(cc, jnt, pos=True)
         ccSpines_FK_grp = groupOwnPivot(*ccSpines_FK)
         ccSpines_FK_grp = parentHierarchically(*ccSpines_FK_grp)
         # Neck, Head
-        ccNeck = pm.circle(nr=(0, 1, 0), r=ccNeckSize, n=ccNeck, ch=0)[0]
+        ccNeck = cmds.circle(nr=(0, 1, 0), r=ccNeckSize, n=ccNeck, ch=0)[0]
         ccHead = ctrl.createControllers(head=ccHead)[0]
-        pm.scale(ccHead, ccHeadSize)
-        pm.makeIdentity(ccHead, a=1, s=1, jo=0, n=0, pn=1)
-        pm.matchTransform(ccNeck, neck, pos=True)
-        pm.matchTransform(ccHead, head, pos=True)
+        cmds.scale(ccHead, ccHeadSize)
+        cmds.makeIdentity(ccHead, a=1, s=1, jo=0, n=0, pn=1)
+        cmds.matchTransform(ccNeck, neck, pos=True)
+        cmds.matchTransform(ccHead, head, pos=True)
         ccNeck_grp = groupOwnPivot(ccNeck)
         ccHead_grp = groupOwnPivot(ccHead)
         ccNeckHead_grp = parentHierarchically(*ccNeck_grp + ccHead_grp)
@@ -562,10 +1121,10 @@ class Character(QWidget):
         colorize(*ccSpines_FK, blue2=True)
         colorize(ccNeck, ccHead, yellow=True)
         # Grouping
-        if not pm.objExists(finalGroup):
-            finalGroup = pm.group(em=True, n=finalGroup)
+        if not cmds.objExists(finalGroup):
+            finalGroup = cmds.group(em=True, n=finalGroup)[0]
         temp = [ccSpine0_IK_grp[0], ccSpines_FK_grp[0], ccNeckHead_grp[0]]
-        pm.parent(temp, finalGroup)
+        cmds.parent(temp, finalGroup)
         return finalGroup
 
 
@@ -584,18 +1143,18 @@ class Character(QWidget):
         rotateZ = 135 if "Right" in shoulderJnt else -45
         nullSpace = "null_%sSpace" % shoulderJnt
         # Run
-        if pm.objExists(ccShoulder):
+        if cmds.objExists(ccShoulder):
             return
         ctrl = Controllers()
         ccShoulder = ctrl.createControllers(scapula=ccShoulder)[0]
-        pm.scale(ccShoulder, ccShoulderSize)
-        pm.rotate(ccShoulder, (0, 0, rotateZ))
-        pm.makeIdentity(ccShoulder, a=1, r=1, s=1, pn=1)
+        cmds.scale(ccShoulder, ccShoulderSize)
+        cmds.rotate(ccShoulder, (0, 0, rotateZ))
+        cmds.makeIdentity(ccShoulder, a=1, r=1, s=1, pn=1)
         if "Right" in shoulderJnt:
-            pm.rotate(ccShoulder, (180, 0, 0))
-        nullSpace = pm.group(em=True, n=nullSpace)
-        pm.parent(nullSpace, ccShoulder)
-        pm.matchTransform(ccShoulder, shoulderJnt, pos=True)
+            cmds.rotate(ccShoulder, (180, 0, 0))
+        nullSpace = cmds.group(em=True, n=nullSpace)[0]
+        cmds.parent(nullSpace, ccShoulder)
+        cmds.matchTransform(ccShoulder, shoulderJnt, pos=True)
         ccShoulder_grp = groupOwnPivot(ccShoulder)
         # color
         colorBar = {"blue": True} if "Right" in shoulderJnt else {"red": True}
@@ -632,30 +1191,30 @@ class Character(QWidget):
         scaleRatio = self.getDefaultSize(self.jntHips)[1]
         FKSize = (i*scaleRatio for i in [9.3, 8, 6.8])
         # Run
-        isFKExist = any([pm.objExists(i) for i in ccArm_FK])
-        isIKExist = any([pm.objExists(i) for i in ccArm_IK])
+        isFKExist = any([cmds.objExists(i) for i in ccArm_FK])
+        isIKExist = any([cmds.objExists(i) for i in ccArm_IK])
         if isFKExist or isIKExist:
             return
         # FK
         for cc, jnt, scl in zip(ccArm_FK, joints, FKSize):
-            cc = pm.circle(nr=(1,0,0), r=scl, n=cc, ch=False)[0]
+            cc = cmds.circle(nr=(1,0,0), r=scl, n=cc, ch=False)[0]
             if "Right" in jnt:
-                pm.rotate(cc, (-180, 0, 0))
-            pm.matchTransform(cc, jnt, pos=True)
+                cmds.rotate(cc, (-180, 0, 0))
+            cmds.matchTransform(cc, jnt, pos=True)
         for idx, cc in enumerate(ccArm_FK):
             flipFactor = -1 if "Right" in jnt else 1
             if (idx+1) < len(ccArm_FK):
-                pm.aimConstraint(ccArm_FK[idx+1], cc, 
+                cmds.aimConstraint(ccArm_FK[idx+1], cc, 
                                 aimVector=(flipFactor,0,0), 
                                 upVector=(0,flipFactor,0), 
                                 worldUpType="vector", 
                                 worldUpVector=(0,1,0), 
                                 mo=False, w=1.0
                                 )
-                pm.delete(cc, cn=True)
+                cmds.delete(cc, cn=True)
             elif (idx+1) == len(ccArm_FK):
-                pm.orientConstraint(ccArm_FK[idx-1], cc, mo=False, w=1.0)
-                pm.delete(cc, cn=True)
+                cmds.orientConstraint(ccArm_FK[idx-1], cc, mo=False, w=1.0)
+                cmds.delete(cc, cn=True)
             else:
                 continue
         ccArm_FK_grp = groupOwnPivot(*ccArm_FK)
@@ -667,22 +1226,22 @@ class Character(QWidget):
                                            cube=ccHand_IK)
         ccShoulder_IK, ccElbow_IK, ccHand_IK = ccArm_IK
         for i in ccArm_IK:
-            pm.scale(i, (scaleRatio, )*3)
-            pm.makeIdentity(i, a=1, s=1, jo=0, n=0, pn=1)
-        pm.scale(ccShoulder_IK, (0.75,)*3)
-        pm.rotate(ccShoulder_IK, (0, 0, -90))
-        pm.makeIdentity(ccShoulder_IK, a=1, r=1, s=1, pn=1)
-        nullSpace = pm.group(em=True, n=nullSpace)
-        pm.parent(nullSpace, ccShoulder_IK)
-        pm.matchTransform(ccShoulder_IK, shoulder, pos=True)
+            cmds.scale(i, (scaleRatio, )*3)
+            cmds.makeIdentity(i, a=1, s=1, jo=0, n=0, pn=1)
+        cmds.scale(ccShoulder_IK, (0.75,)*3)
+        cmds.rotate(ccShoulder_IK, (0, 0, -90))
+        cmds.makeIdentity(ccShoulder_IK, a=1, r=1, s=1, pn=1)
+        nullSpace = cmds.group(em=True, n=nullSpace)[0]
+        cmds.parent(nullSpace, ccShoulder_IK)
+        cmds.matchTransform(ccShoulder_IK, shoulder, pos=True)
         ccShoulder_IK_grp = groupOwnPivot(ccShoulder_IK)
         jnt1, jnt2 = createPolevectorJoint(*joints)
-        pm.matchTransform(ccElbow_IK, jnt2, pos=True)
+        cmds.matchTransform(ccElbow_IK, jnt2, pos=True)
         ccElbow_IK_grp = groupOwnPivot(ccElbow_IK)
-        pm.delete(jnt1)
-        handSpace = pm.group(em=True, n=handSpace)
-        pm.parent(handSpace, ccHand_IK)
-        pm.matchTransform(ccHand_IK, hand, pos=True)
+        cmds.delete(jnt1)
+        handSpace = cmds.group(em=True, n=handSpace)[0]
+        cmds.parent(handSpace, ccHand_IK)
+        cmds.matchTransform(ccHand_IK, hand, pos=True)
         ccHand_IK_grp = groupOwnPivot(ccHand_IK)
         # Color
         ctrls = ccArm_FK + ccArm_IK
@@ -690,11 +1249,11 @@ class Character(QWidget):
         colorize(*ctrls, **colorBar)
         # Add Attributes
         attrForeArm_IK = "World:Root:Chest:Arm:Hand"
-        pm.addAttr(ccElbow_IK, ln="Space", at="enum", en=attrForeArm_IK)
-        pm.setAttr(f"{ccElbow_IK}.Space", e=True, k=True)
+        cmds.addAttr(ccElbow_IK, ln="Space", at="enum", en=attrForeArm_IK)
+        cmds.setAttr(f"{ccElbow_IK}.Space", e=True, k=True)
         attrHand_IK = "World0_Shoulder1"
-        pm.addAttr(ccHand_IK, ln=attrHand_IK, at="double", min=0, max=1, dv=0)
-        pm.setAttr(f'{ccHand_IK}.{attrHand_IK}', e=True, k=True)
+        cmds.addAttr(ccHand_IK, ln=attrHand_IK, at="double", min=0, max=1, dv=0)
+        cmds.setAttr(f'{ccHand_IK}.{attrHand_IK}', e=True, k=True)
         # Grouping
         ctrls_grp = [
             ccShoulder_IK_grp[0], 
@@ -702,7 +1261,7 @@ class Character(QWidget):
             ccHand_IK_grp[0], 
             ccArm_FK_grp[0], 
             ]
-        pm.group(ctrls_grp, n=finalGroup)
+        cmds.group(ctrls_grp, n=finalGroup)[0]
         return finalGroup
 
 
@@ -761,9 +1320,9 @@ class Character(QWidget):
         footSpace = f"null_{foot}Space"
         finalGroup = f"cc_{side}Leg_grp"
         # Run
-        isIKExist = any([pm.objExists(i) for i in ccLegs_IK])
-        isFKExist = any([pm.objExists(i) for i in ccLegs_FK])
-        isLocExist = any([pm.objExists(i) for i in locators])
+        isIKExist = any([cmds.objExists(i) for i in ccLegs_IK])
+        isFKExist = any([cmds.objExists(i) for i in ccLegs_FK])
+        isLocExist = any([cmds.objExists(i) for i in locators])
         if isFKExist or isIKExist or isLocExist:
             return
         # FK
@@ -772,10 +1331,10 @@ class Character(QWidget):
                 continue
             normalAxis = (0, 0, 1) if "ToeBase" in cc else (0, 1, 0)
             scl *= scaleRatio
-            cc = pm.circle(nr=normalAxis, r=scl, n=cc, ch=False)[0]
+            cc = cmds.circle(nr=normalAxis, r=scl, n=cc, ch=False)[0]
             if "Right" in jnt:
-                pm.rotate(cc, (180, 0, 0))
-            pm.matchTransform(cc, jnt, pos=True)
+                cmds.rotate(cc, (180, 0, 0))
+            cmds.matchTransform(cc, jnt, pos=True)
         ccLegs_FK_grp = groupOwnPivot(*ccLegs_FK[:-1])
         ccLegs_FK_grp = parentHierarchically(*ccLegs_FK_grp)
         # IK
@@ -784,88 +1343,88 @@ class Character(QWidget):
                                            sphere=ccKnee_IK, foot1=ccFoot_IK)
         ccPelvis_IK, ccKnee_IK, ccFoot_IK = ccLegs_IK
         for i in ccLegs_IK:
-            pm.scale(i, (scaleRatio, )*3)
-            pm.makeIdentity(i, a=1, s=1, jo=0, n=0, pn=1)
+            cmds.scale(i, (scaleRatio, )*3)
+            cmds.makeIdentity(i, a=1, s=1, jo=0, n=0, pn=1)
         # IK - UpLeg
         ccPelvisRotation = (0, 0, 90) if "Right" == side else (0, 0, -90)
-        pm.rotate(ccPelvis_IK, ccPelvisRotation)
-        pm.scale(ccPelvis_IK, (0.9, )*3)
-        pm.makeIdentity(ccPelvis_IK, a=1, r=1, s=1, pn=1)
-        pm.matchTransform(ccPelvis_IK, pelvis, pos=True)
+        cmds.rotate(ccPelvis_IK, ccPelvisRotation)
+        cmds.scale(ccPelvis_IK, (0.9, )*3)
+        cmds.makeIdentity(ccPelvis_IK, a=1, r=1, s=1, pn=1)
+        cmds.matchTransform(ccPelvis_IK, pelvis, pos=True)
         # IK - Space group
-        pelvisSpace = pm.group(em=True, n=pelvisSpace)
-        pm.matchTransform(pelvisSpace, ccPelvis_IK, pos=True)
-        pm.parent(pelvisSpace, ccPelvis_IK)
+        pelvisSpace = cmds.group(em=True, n=pelvisSpace)[0]
+        cmds.matchTransform(pelvisSpace, ccPelvis_IK, pos=True)
+        cmds.parent(pelvisSpace, ccPelvis_IK)
         ccPelvis_IK_grp = groupOwnPivot(ccPelvis_IK)
         # IK - Knee
         jnt1, jnt2 = createPolevectorJoint(*joints[:3])
-        pm.matchTransform(ccKnee_IK, jnt2, pos=True)
+        cmds.matchTransform(ccKnee_IK, jnt2, pos=True)
         ccKnee_IK_grp = groupOwnPivot(ccKnee_IK)
-        pm.delete(jnt1)
+        cmds.delete(jnt1)
         # IK - Foot
         groupingOrder = []
-        pm.matchTransform(ccFoot_IK, foot, pos=True)
-        pm.setAttr(f"{ccFoot_IK}.translateY", 0)
-        footPivot = pm.xform(foot, q=True, ws=True, rp=True)
-        pm.xform(ccFoot_IK, ws=True, piv=footPivot)
+        cmds.matchTransform(ccFoot_IK, foot, pos=True)
+        cmds.setAttr(f"{ccFoot_IK}.translateY", 0)
+        footPivot = cmds.xform(foot, q=True, ws=True, rp=True)
+        cmds.xform(ccFoot_IK, ws=True, piv=footPivot)
         ccFoot_IK_grp = groupOwnPivot(ccFoot_IK)
-        pm.makeIdentity(ccFoot_IK, a=1, t=1, pn=1)
+        cmds.makeIdentity(ccFoot_IK, a=1, t=1, pn=1)
         groupingOrder.append(ccFoot_IK)
         # IK - Locators
         for i in locators:
-            pm.spaceLocator(p=(0, 0, 0), n=i)
+            cmds.spaceLocator(p=(0, 0, 0), n=i)[0]
         # locators[0] : heel
-        pm.matchTransform(locators[0], foot, pos=True)
-        pm.setAttr(f"{locators[0]}.translateY", 0)
-        tmp = pm.getAttr(f"{locators[0]}.translateZ") - (8*scaleRatio)
-        pm.setAttr(f"{locators[0]}.translateZ", tmp)
+        cmds.matchTransform(locators[0], foot, pos=True)
+        cmds.setAttr(f"{locators[0]}.translateY", 0)
+        tmp = cmds.getAttr(f"{locators[0]}.translateZ") - (8*scaleRatio)
+        cmds.setAttr(f"{locators[0]}.translateZ", tmp)
         groupingOrder.append(locators[0])
         # locators[1] : toe
-        pm.matchTransform(locators[1], toe, pos=True)
-        pm.setAttr(f"{locators[1]}.translateY", 0)
+        cmds.matchTransform(locators[1], toe, pos=True)
+        cmds.setAttr(f"{locators[1]}.translateY", 0)
         groupingOrder.append(locators[1])
         # locators[2] : bankIn
-        pm.matchTransform(locators[2], ball, pos=True)
-        pm.setAttr(f"{locators[2]}.translateY", 0)
-        tmp = pm.getAttr(f"{locators[2]}.translateX") - (5*scaleRatio)
-        pm.setAttr(f"{locators[2]}.translateX", tmp)
+        cmds.matchTransform(locators[2], ball, pos=True)
+        cmds.setAttr(f"{locators[2]}.translateY", 0)
+        tmp = cmds.getAttr(f"{locators[2]}.translateX") - (5*scaleRatio)
+        cmds.setAttr(f"{locators[2]}.translateX", tmp)
         groupingOrder.append(locators[2])
         # locators[3] : bankOut
-        pm.matchTransform(locators[3], ball, pos=True)
-        pm.setAttr(f"{locators[3]}.translateY", 0)
-        tmp = pm.getAttr(f"{locators[3]}.translateX") + (5*scaleRatio)
-        pm.setAttr(f"{locators[3]}.translateX", tmp)
+        cmds.matchTransform(locators[3], ball, pos=True)
+        cmds.setAttr(f"{locators[3]}.translateY", 0)
+        tmp = cmds.getAttr(f"{locators[3]}.translateX") + (5*scaleRatio)
+        cmds.setAttr(f"{locators[3]}.translateX", tmp)
         groupingOrder.append(locators[3])
         # locators[4] : ball
-        pm.matchTransform(locators[4], ball, pos=True)
-        pm.aimConstraint(foot, locators[4], 
+        cmds.matchTransform(locators[4], ball, pos=True)
+        cmds.aimConstraint(foot, locators[4], 
                             aimVector=(0,0,-1), 
                             upVector=(0,1,0), 
                             worldUpType="vector", 
                             worldUpVector=(0,1,0), 
                             mo=False, w=1.0
                             )
-        pm.delete(locators[4], cn=True)
+        cmds.delete(locators[4], cn=True)
         groupingOrder += groupOwnPivot(locators[4])
         # locators[5] : ankle
-        pm.matchTransform(locators[5], foot, pos=True)
+        cmds.matchTransform(locators[5], foot, pos=True)
         groupingOrder.append(locators[5])
         # Foot's Space
-        footSpace = pm.group(em=True, n=footSpace)
-        pm.matchTransform(footSpace, ccFoot_IK, pos=True)
-        pm.parent(footSpace, ccFoot_IK)
+        footSpace = cmds.group(em=True, n=footSpace)[0]
+        cmds.matchTransform(footSpace, ccFoot_IK, pos=True)
+        cmds.parent(footSpace, ccFoot_IK)
         # Color
         ctrls = ccLegs_FK + ccLegs_IK
         colorBar = {"red": True} if "Left" == side else {"blue": True}
         colorize(*ctrls, **colorBar)
         # Add Attributes
-        pm.addAttr(ccLegs_IK[1], ln="Space", at="enum", en=attrLeg_IK)
-        pm.setAttr(f"{ccLegs_IK[1]}.Space", e=True, k=True)
+        cmds.addAttr(ccLegs_IK[1], ln="Space", at="enum", en=attrLeg_IK)
+        cmds.setAttr(f"{ccLegs_IK[1]}.Space", e=True, k=True)
         for i in attrFoot_IK_enum:
-            pm.addAttr(ccLegs_IK[2], ln=i, at="double", dv=0)
-            pm.setAttr(f"{ccLegs_IK[2]}.{i}", e=True, k=True)
-        pm.addAttr(ccFoot_IK, ln=attrFoot_IK_float, at="double", min=0, max=1, dv=0)
-        pm.setAttr(f'{ccFoot_IK}.{attrFoot_IK_float}', e=True, k=True)
+            cmds.addAttr(ccLegs_IK[2], ln=i, at="double", dv=0)
+            cmds.setAttr(f"{ccLegs_IK[2]}.{i}", e=True, k=True)
+        cmds.addAttr(ccFoot_IK, ln=attrFoot_IK_float, at="double", min=0, max=1, dv=0)
+        cmds.setAttr(f'{ccFoot_IK}.{attrFoot_IK_float}', e=True, k=True)
         # Final Touch
         parentHierarchically(*groupingOrder)
         groups = [
@@ -874,7 +1433,7 @@ class Character(QWidget):
             ccFoot_IK_grp[0], 
             ccLegs_FK_grp[0], 
             ]
-        pm.group(groups, n=finalGroup)
+        cmds.group(groups, n=finalGroup)[0]
         return finalGroup
 
 
@@ -900,7 +1459,7 @@ class Character(QWidget):
         side = "Right" if "Right" in ccFinger[0] else "Left"
         finalGroup = f"cc_{side}HandFingers_grp"
         # Run
-        if any([pm.objExists(i) for i in ccFinger]):
+        if any([cmds.objExists(i) for i in ccFinger]):
             return
         # Create Ctrls
         ccFinger_FK = []
@@ -908,14 +1467,14 @@ class Character(QWidget):
             if idx%4 == 3:
                 continue
             scl = scaleRatio * ccFingerSize[idx%4]
-            cc = pm.circle(nr=(1, 0, 0), r=scl, n=cc, ch=0)[0]
-            pm.matchTransform(cc, jnt, pos=True, rot=True)
-            rot = -1 if "Right" in cc.name() else 1
-            pm.rotate(cc, (0, 0, rot*90), r=True, os=True, fo=True)
-            pm.rotate(cc, (rot*-90, 0, 0), r=True, os=True, fo=True)
+            cc = cmds.circle(nr=(1, 0, 0), r=scl, n=cc, ch=0)[0]
+            cmds.matchTransform(cc, jnt, pos=True, rot=True)
+            rot = -1 if "Right" in cc else 1
+            cmds.rotate(cc, (0, 0, rot*90), r=True, os=True, fo=True)
+            cmds.rotate(cc, (rot*-90, 0, 0), r=True, os=True, fo=True)
             ccFinger_FK.append(cc)
             # Color
-            color = {"blue2": True} if "Right" in cc.name() else {"red2": True}
+            color = {"blue2": True} if "Right" in cc else {"red2": True}
             colorize(cc, **color)
         # Grouping
         ccFinger_FK_grp = groupOwnPivot(*ccFinger_FK)
@@ -923,7 +1482,7 @@ class Character(QWidget):
         for idx, num in enumerate(range(0, len(ccFinger_FK_grp), 6)):
             tmp = parentHierarchically(*ccFinger_FK_grp[num:6*(idx+1)])[0]
             temp.append(tmp)
-        finalGroup = pm.group(temp, n=finalGroup)
+        finalGroup = cmds.group(temp, n=finalGroup)[0]
         return finalGroup
 
 
@@ -938,17 +1497,17 @@ class Character(QWidget):
         # Variables
         ccHipsMain_grp = "cc_%sMain_grp" % self.jntHips
         ccHipsSub = "cc_%sSub" % self.jntHips
-        if not pm.objExists(ccHipsMain_grp):
+        if not cmds.objExists(ccHipsMain_grp):
             return
-        if not pm.objExists(ccHipsSub):
+        if not cmds.objExists(ccHipsSub):
             return
-        if pm.listConnections(ccHipsMain_grp, type="constraint"):
+        if cmds.listConnections(ccHipsMain_grp, type="constraint"):
             return
         # cc_sub2 -> rig_Hips
-        pm.parentConstraint(self.mainCtrls[2], ccHipsMain_grp, mo=1, w=1)
-        pm.scaleConstraint(self.mainCtrls[2], ccHipsMain_grp, mo=1, w=1)
+        cmds.parentConstraint(self.mainCtrls[2], ccHipsMain_grp, mo=1, w=1)
+        cmds.scaleConstraint(self.mainCtrls[2], ccHipsMain_grp, mo=1, w=1)
         # cc_HipsSub -> rig_Hips
-        pm.parentConstraint(ccHipsSub, self.rgHips, mo=1, w=1)
+        cmds.parentConstraint(ccHipsSub, self.rgHips, mo=1, w=1)
 
 
     def rigSpineCtrl(self) -> None:
@@ -970,14 +1529,14 @@ class Character(QWidget):
         ccNeck = addPrefix(neckJnt, ["cc_"], [])
         ccNeck_grp = f"{ccNeck[0]}_grp"
         # Run
-        if not pm.objExists(ccHipsSub) or not pm.objExists(cuvName):
+        if not cmds.objExists(ccHipsSub) or not cmds.objExists(cuvName):
             return
-        isIKHandle = pm.objExists(ikhName)
+        isIKHandle = cmds.objExists(ikhName)
         if isIKHandle:
-            if "ikHandle" == pm.objectType(ikhName):
+            if "ikHandle" == cmds.objectType(ikhName):
                 return
         # IK
-        ikHandle = pm.ikHandle(sj=rgSpineJnt_IK[0], ee=rgSpineJnt_IK[2], 
+        ikHandle = cmds.ikHandle(sj=rgSpineJnt_IK[0], ee=rgSpineJnt_IK[2], 
                           sol="ikSplineSolver", 
                           name=ikhName, 
                           curve=cuvName, 
@@ -985,35 +1544,35 @@ class Character(QWidget):
                           parentCurve=0, 
                           numSpans=3)
         ikHandle = ikHandle[0]
-        pm.setAttr(f"{ikHandle}.visibility", 0)
+        cmds.setAttr(f"{ikHandle}.visibility", 0)
         try:
-            pm.parent(ikHandle, "extraNodes")
+            cmds.parent(ikHandle, "extraNodes")
         except:
             pass
-        pm.connectAttr(f"{ccSpine_IK[0]}.rotateY", f"{ikHandle}.roll", f=1)
-        pm.connectAttr(f"{ccSpine_IK[2]}.rotateY", f"{ikHandle}.twist", f=1)
+        cmds.connectAttr(f"{ccSpine_IK[0]}.rotateY", f"{ikHandle}.roll", f=1)
+        cmds.connectAttr(f"{ccSpine_IK[2]}.rotateY", f"{ikHandle}.twist", f=1)
         # FK
         for cc, jnt in zip(ccSpine_FK, rgSpineJnt_FK):
-            pm.parentConstraint(cc, jnt, mo=True, w=1)
+            cmds.parentConstraint(cc, jnt, mo=True, w=1)
         # Connect : FK + IK -> BlendColor -> Original
         createBlendColor(ccIKFK, 
                          rgSpineJnt, rgSpineJnt_FK, rgSpineJnt_IK, 
                          t=True, r=True)
         # Create Neck Ctrls
         for cc, jnt in zip(ccNeck, rgNeckJnt):
-            pm.parentConstraint(cc, jnt, mo=True, w=1)
+            cmds.parentConstraint(cc, jnt, mo=True, w=1)
         # Setting Visibility
-        pm.connectAttr(ccIKFK, f"{ccSpine_FK_grp}.visibility", f=1)
-        rev = pm.shadingNode("reverse", au=True)
-        pm.connectAttr(ccIKFK, f"{rev}.inputX", f=1)
-        pm.connectAttr(f"{rev}.outputX", f"{ccSpine_IK_grp}.visibility", f=1)
+        cmds.connectAttr(ccIKFK, f"{ccSpine_FK_grp}.visibility", f=1)
+        rev = cmds.shadingNode("reverse", au=True)
+        cmds.connectAttr(ccIKFK, f"{rev}.inputX", f=1)
+        cmds.connectAttr(f"{rev}.outputX", f"{ccSpine_IK_grp}.visibility", f=1)
         # Constraint
-        pm.parentConstraint(ccHipsSub, ccSpine_IK_grp, mo=True, w=1)
-        pm.scaleConstraint(ccHipsSub, ccSpine_IK_grp, mo=True, w=1)
-        pm.parentConstraint(ccHipsSub, ccSpine_FK_grp, mo=True, w=1)
-        pm.scaleConstraint(ccHipsSub, ccSpine_FK_grp, mo=True, w=1)
-        pm.parentConstraint(rgSpineJnt[-1], ccNeck_grp, mo=True, w=1)
-        pm.scaleConstraint(rgSpineJnt[-1], ccNeck_grp, mo=True, w=1)
+        cmds.parentConstraint(ccHipsSub, ccSpine_IK_grp, mo=True, w=1)
+        cmds.scaleConstraint(ccHipsSub, ccSpine_IK_grp, mo=True, w=1)
+        cmds.parentConstraint(ccHipsSub, ccSpine_FK_grp, mo=True, w=1)
+        cmds.scaleConstraint(ccHipsSub, ccSpine_FK_grp, mo=True, w=1)
+        cmds.parentConstraint(rgSpineJnt[-1], ccNeck_grp, mo=True, w=1)
+        cmds.scaleConstraint(rgSpineJnt[-1], ccNeck_grp, mo=True, w=1)
 
 
     def rigShoulderCtrl(self, joint: str):
@@ -1024,14 +1583,14 @@ class Character(QWidget):
         ccShoulder_grp = "cc_" + joint + "_grp"
         rgSpine2 = "rig_" + self.spine[2]
         # Run
-        if not pm.objExists(ccShoulder_grp):
+        if not cmds.objExists(ccShoulder_grp):
             return
-        if pm.listConnections(ccShoulder_grp, type="constraint"):
+        if cmds.listConnections(ccShoulder_grp, type="constraint"):
             return
         # Constraint
-        pm.parentConstraint(shoulderSpace, rgShoulder, mo=True, w=1)
-        pm.parentConstraint(rgSpine2, ccShoulder_grp, mo=True, w=1)
-        pm.scaleConstraint(rgSpine2, ccShoulder_grp, mo=True, w=1)
+        cmds.parentConstraint(shoulderSpace, rgShoulder, mo=True, w=1)
+        cmds.parentConstraint(rgSpine2, ccShoulder_grp, mo=True, w=1)
+        cmds.scaleConstraint(rgSpine2, ccShoulder_grp, mo=True, w=1)
 
 
     def rigArmsCtrl(self, joints: list):
@@ -1049,47 +1608,47 @@ class Character(QWidget):
         handMenu = self.getSpaceMenu(side, hand=True)
         elbowMenu = self.getSpaceMenu(side, elbow=True)
         # Run
-        if not pm.objExists(ccShoulder_IK):
+        if not cmds.objExists(ccShoulder_IK):
             return
-        if pm.listConnections(rgShoulder_IK, type="constraint"):
+        if cmds.listConnections(rgShoulder_IK, type="constraint"):
             return
         createBlendColor(ccIKFK, rgArms, rgArms_FK, rgArms_IK, t=1, r=1)
         # IK - Shoulder
-        pm.pointConstraint(ccShoulder_IK, rgShoulder_IK, mo=True, w=1)
+        cmds.pointConstraint(ccShoulder_IK, rgShoulder_IK, mo=True, w=1)
         # IK - Hand
         ikHandle = createIKHandle(rgShoulder_IK, rgHand_IK, rp=True)[0]
-        pm.orientConstraint(ccHand_IK, rgHand_IK, mo=True, w=1)
-        pm.parent(ikHandle, ccHand_IK)
-        connectSpace(ccHand_IK, handMenu, float=True)
+        cmds.orientConstraint(ccHand_IK, rgHand_IK, mo=True, w=1)
+        cmds.parent(ikHandle, ccHand_IK)
+        connectSpace(ccHand_IK, handMenu, float_type=True)
         # IK - Polevector
-        pm.poleVectorConstraint(ccElbow_IK, ikHandle, w=1.0)
+        cmds.poleVectorConstraint(ccElbow_IK, ikHandle, w=1.0)
         connectSpace(ccElbow_IK, elbowMenu, enum=True)
         anno = createAnnotation(rgElbow_IK, ccElbow_IK)
         anno_grp = groupOwnPivot(anno)
-        pm.parentConstraint(rgElbow_IK, anno_grp[0], mo=True, w=1)
-        pm.scaleConstraint(rgElbow_IK, anno_grp[0], mo=True, w=1)
+        cmds.parentConstraint(rgElbow_IK, anno_grp[0], mo=True, w=1)
+        cmds.scaleConstraint(rgElbow_IK, anno_grp[0], mo=True, w=1)
         try:
-            pm.parent(anno_grp[0], "extraNodes")
+            cmds.parent(anno_grp[0], "extraNodes")
         except:
             pass
         # FK
         for cc, jnt in zip(ccArms_FK, rgArms_FK):
-            pm.parentConstraint(cc, jnt, mo=True, w=1)
+            cmds.parentConstraint(cc, jnt, mo=True, w=1)
         # Setting Visibility
-        pm.setAttr(f"{ikHandle}.visibility", 0)
-        ccShoulder_FK_grp = pm.listRelatives(ccArms_FK[0], p=True)[0]
-        pm.connectAttr(ccIKFK, f"{ccShoulder_FK_grp}.visibility", f=1)
-        revNode = pm.shadingNode("reverse", au=True)
-        pm.connectAttr(ccIKFK, f"{revNode}.inputX", f=1)
+        cmds.setAttr(f"{ikHandle}.visibility", 0)
+        ccShoulder_FK_grp = cmds.listRelatives(ccArms_FK[0], p=True)[0]
+        cmds.connectAttr(ccIKFK, f"{ccShoulder_FK_grp}.visibility", f=1)
+        revNode = cmds.shadingNode("reverse", au=True)
+        cmds.connectAttr(ccIKFK, f"{revNode}.inputX", f=1)
         for cc in ccArms_IK:
-            cc_grp = pm.listRelatives(cc, p=True)[0]
-            pm.connectAttr(f"{revNode}.outputX", f"{cc_grp}.visibility", f=1)
+            cc_grp = cmds.listRelatives(cc, p=True)[0]
+            cmds.connectAttr(f"{revNode}.outputX", f"{cc_grp}.visibility", f=1)
         # Constraint
-        pm.parentConstraint(shoulderSpace, ccShoulder_FK_grp, mo=True, w=1)
-        pm.scaleConstraint(shoulderSpace, ccShoulder_FK_grp, mo=True, w=1)
-        ccShoulder_IK_grp = pm.listRelatives(ccShoulder_IK, p=True)[0]
-        pm.parentConstraint(shoulderSpace, ccShoulder_IK_grp, mo=True, w=1)
-        pm.scaleConstraint(shoulderSpace, ccShoulder_IK_grp, mo=True, w=1)
+        cmds.parentConstraint(shoulderSpace, ccShoulder_FK_grp, mo=True, w=1)
+        cmds.scaleConstraint(shoulderSpace, ccShoulder_FK_grp, mo=True, w=1)
+        ccShoulder_IK_grp = cmds.listRelatives(ccShoulder_IK, p=True)[0]
+        cmds.parentConstraint(shoulderSpace, ccShoulder_IK_grp, mo=True, w=1)
+        cmds.scaleConstraint(shoulderSpace, ccShoulder_IK_grp, mo=True, w=1)
 
 
     def rigLegsCtrl(self, joints: list) -> None:
@@ -1126,91 +1685,91 @@ class Character(QWidget):
         ccLegs_FK = addPrefix(joints, ["cc_"], ["_FK"])
         ccPelvis_FK_grp = f"{ccLegs_FK[0]}_grp"
         # Run
-        if not pm.objExists(ccPelvis_IK):
+        if not cmds.objExists(ccPelvis_IK):
             return
-        if pm.listConnections(rgPelvisJnt, type="constraint"):
+        if cmds.listConnections(rgPelvisJnt, type="constraint"):
             return
-        if pm.listConnections(rgFootJnt, type="ikHandle"):
+        if cmds.listConnections(rgFootJnt, type="ikHandle"):
             return
         # IK - UpLeg
-        pm.pointConstraint(ccPelvis_IK, rgPelvisJnt, mo=True, w=1)
+        cmds.pointConstraint(ccPelvis_IK, rgPelvisJnt, mo=True, w=1)
         # IK - ikHandle
         ikhPelvis = createIKHandle(rgPelvisJnt, rgFootJnt, rp=True)[0]
         ikhFoot = createIKHandle(rgFootJnt, rgBallJnt, sc=True)[0]
         ikhBall = createIKHandle(rgBallJnt, rgToeJnt, sc=True)[0]
         ikhPelvis_grp = groupOwnPivot(ikhPelvis)[0]
-        pm.parent(ikhPelvis_grp, locFoot)
-        pm.parent(ikhFoot, ikhPelvis_grp)
+        cmds.parent(ikhPelvis_grp, locFoot)
+        cmds.parent(ikhFoot, ikhPelvis_grp)
         ikhBall_grp = groupOwnPivot(ikhBall, null=True)
-        rgBallJnt_pos = pm.xform(rgBallJnt, q=True, ws=True, rp=True)
+        rgBallJnt_pos = cmds.xform(rgBallJnt, q=True, ws=True, rp=True)
         for idx, i in enumerate(ikhBall_grp):
             if idx == 0:
-                pm.parent(i, locBankOut)
+                cmds.parent(i, locBankOut)
             if i != ikhBall:
-                pm.xform(i, ws=True, piv=rgBallJnt_pos)
+                cmds.xform(i, ws=True, piv=rgBallJnt_pos)
         # IK - Connect blendColorNode
         createBlendColor(ccIKFK, 
                          rgLegsJnt, rgLegsJnt_FK, rgLegsJnt_IK, 
                          t=True, r=True)
         # IK - Connect Foot's Attr
-        pm.connectAttr(f"{ccFoot_IK}.Heel_Up", f"{locHeel}.{rx}", f=1)
-        pm.connectAttr(f"{ccFoot_IK}.Heel_Twist", f"{locHeel}.{ry}", f=1)
-        pm.connectAttr(f"{ccFoot_IK}.Toe_Up", f"{locToe}.{rx}", f=1)
-        pm.connectAttr(f"{ccFoot_IK}.Toe_Twist", f"{locToe}.{ry}", f=1)
-        pm.connectAttr(f"{ccFoot_IK}.Ball_Up", f"{locBall}.{rx}", f=1)
-        pm.connectAttr(f"{ccFoot_IK}.Ball_Down", f"{ikhBall_grp[1]}.{rx}", f=1)
-        clampNode = pm.shadingNode("clamp", au=True)
-        pm.setAttr(f"{clampNode}.minR", -180)
-        pm.setAttr(f"{clampNode}.maxG", 180)
-        pm.connectAttr(f"{clampNode}.outputR", f"{locBankOut}.{rz}", f=1)
-        pm.connectAttr(f"{clampNode}.outputG", f"{locBankIn}.{rz}", f=1)
-        pm.connectAttr(f"{ccFoot_IK}.Bank", f"{clampNode}.inputR", f=1)
-        pm.connectAttr(f"{ccFoot_IK}.Bank", f"{clampNode}.inputG", f=1)
-        connectSpace(ccFoot_IK, footMenu, float=True)
+        cmds.connectAttr(f"{ccFoot_IK}.Heel_Up", f"{locHeel}.{rx}", f=1)
+        cmds.connectAttr(f"{ccFoot_IK}.Heel_Twist", f"{locHeel}.{ry}", f=1)
+        cmds.connectAttr(f"{ccFoot_IK}.Toe_Up", f"{locToe}.{rx}", f=1)
+        cmds.connectAttr(f"{ccFoot_IK}.Toe_Twist", f"{locToe}.{ry}", f=1)
+        cmds.connectAttr(f"{ccFoot_IK}.Ball_Up", f"{locBall}.{rx}", f=1)
+        cmds.connectAttr(f"{ccFoot_IK}.Ball_Down", f"{ikhBall_grp[1]}.{rx}", f=1)
+        clampNode = cmds.shadingNode("clamp", au=True)
+        cmds.setAttr(f"{clampNode}.minR", -180)
+        cmds.setAttr(f"{clampNode}.maxG", 180)
+        cmds.connectAttr(f"{clampNode}.outputR", f"{locBankOut}.{rz}", f=1)
+        cmds.connectAttr(f"{clampNode}.outputG", f"{locBankIn}.{rz}", f=1)
+        cmds.connectAttr(f"{ccFoot_IK}.Bank", f"{clampNode}.inputR", f=1)
+        cmds.connectAttr(f"{ccFoot_IK}.Bank", f"{clampNode}.inputG", f=1)
+        connectSpace(ccFoot_IK, footMenu, float_type=True)
         # IK - polevector
-        pm.poleVectorConstraint(ccKnee_IK, ikhPelvis, w=1)
+        cmds.poleVectorConstraint(ccKnee_IK, ikhPelvis, w=1)
         ano = createAnnotation(rgKneeJnt, ccKnee_IK)
         anoGrp = groupOwnPivot(ano)
-        pm.parentConstraint(rgKneeJnt, anoGrp[0], mo=True, w=1)
-        pm.scaleConstraint(rgKneeJnt, anoGrp[0], mo=True, w=1)
+        cmds.parentConstraint(rgKneeJnt, anoGrp[0], mo=True, w=1)
+        cmds.scaleConstraint(rgKneeJnt, anoGrp[0], mo=True, w=1)
         try:
-            pm.parent(anoGrp[0], "extraNodes")
+            cmds.parent(anoGrp[0], "extraNodes")
         except:
             pass
         connectSpace(ccKnee_IK, legMenu, enum=True)
         # FK
         for cc, jnt in zip(ccLegs_FK, rgLegsJnt_FK):
             try:
-                pm.parentConstraint(cc, jnt, mo=True, w=1)
+                cmds.parentConstraint(cc, jnt, mo=True, w=1)
             except:
                 continue
         # Setting Visibility
-        pm.connectAttr(ccIKFK, f"{ccPelvis_FK_grp}.visibility", f=1)
-        revNode = pm.shadingNode("reverse", au=True)
-        pm.connectAttr(ccIKFK, f"{revNode}.inputX", f=1)
+        cmds.connectAttr(ccIKFK, f"{ccPelvis_FK_grp}.visibility", f=1)
+        revNode = cmds.shadingNode("reverse", au=True)
+        cmds.connectAttr(ccIKFK, f"{revNode}.inputX", f=1)
         for i in [ccPelvis_IK_grp, ccKnee_IK_grp, ccFoot_IK_grp]:
-            pm.connectAttr(f"{revNode}.outputX", f"{i}.visibility", f=1)
-        pm.setAttr(f"{locHeel}.visibility", 0)
+            cmds.connectAttr(f"{revNode}.outputX", f"{i}.visibility", f=1)
+        cmds.setAttr(f"{locHeel}.visibility", 0)
         # Grouping
         for i in [ccPelvis_IK_grp, ccPelvis_FK_grp]:
-            pm.parentConstraint(ccSub, i, mo=True, w=1)
-            pm.scaleConstraint(ccSub, i, mo=True, w=1)
+            cmds.parentConstraint(ccSub, i, mo=True, w=1)
+            cmds.scaleConstraint(ccSub, i, mo=True, w=1)
 
 
     def rigFingerCtrl(self, joints: list):
         ctrls = addPrefix(joints, ["cc_"], [])
         rgJoints = addPrefix(joints, ["rig_"], [])
         for cc, jnt in zip(ctrls, rgJoints):
-            if pm.objExists(cc) and pm.objExists(jnt):
-                pm.parentConstraint(cc, jnt, mo=True, w=1.0)
+            if cmds.objExists(cc) and cmds.objExists(jnt):
+                cmds.parentConstraint(cc, jnt, mo=True, w=1.0)
             else:
                 continue
         for i in ["Left", "Right"]:
             finger_grp = f"cc_{i}HandFingers_grp"
             rgJnt = f"rig_{i}Hand"
             try:
-                pm.parentConstraint(rgJnt, finger_grp, mo=True, w=1.0)
-                pm.scaleConstraint(rgJnt, finger_grp, mo=True, w=1.0)
+                cmds.parentConstraint(rgJnt, finger_grp, mo=True, w=1.0)
+                cmds.scaleConstraint(rgJnt, finger_grp, mo=True, w=1.0)
             except:
                 continue
 
@@ -1269,15 +1828,15 @@ class Character(QWidget):
         skeltonGroup = self.groupNames[2]
         rigBoneGroup = self.groupNames[-1]
         try:
-            pm.delete(self.mainCurve)
+            cmds.delete(self.mainCurve)
         except:
             pass
         try:
-            pm.scaleConstraint(ccSub2, skeltonGroup)
+            cmds.scaleConstraint(ccSub2, skeltonGroup)
         except:
             pass
-        pm.setAttr(f"{skeltonGroup}.visibility", 0)
-        pm.setAttr(f"{rigBoneGroup}.visibility", 0)
+        cmds.setAttr(f"{skeltonGroup}.visibility", 0)
+        cmds.setAttr(f"{rigBoneGroup}.visibility", 0)
 
 
     def buttonUnlock(self):
@@ -1303,7 +1862,7 @@ class Character(QWidget):
                     self.cleanUp(i)
             else:
                 try:
-                    pm.delete(arg)
+                    cmds.delete(arg)
                 except:
                     pass
 
