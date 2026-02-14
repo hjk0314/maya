@@ -2,7 +2,7 @@
 
 
 from typing import Callable, Union, Dict, List, Tuple, Any
-from collections import Counter, defaultdict
+from collections import Counter
 import time
 import functools
 import math
@@ -56,7 +56,6 @@ __all__ = [
 
     'add_affixes', 
     'duplicate_with_rename', 
-    'extract_number', 
     're_name', 
     'check_duplicated_names', 
     'delete_unused_plugins', 
@@ -601,7 +600,7 @@ def get_position(obj_or_vtx: str) -> tuple:
      """
     try:
         position = pm.pointPosition(obj_or_vtx)
-    except:
+    except Exception:
         position = pm.xform(obj_or_vtx, q=1, ws=1, rp=1)
     result = [round(i, 5) for i in position]
 
@@ -757,7 +756,7 @@ def get_downstream_path(start: str, end: str) -> list:
         elif end is None:
             raise ValueError(f"{end} has no parent.")
         elif "|" in end:
-            raise ValueError(f"There are '|' in the name.")
+            raise ValueError("There are '|' in the name.")
         else:
             result.append(end.name())
         if end == start:
@@ -879,7 +878,7 @@ def parent_in_sequence(*objs) -> list:
         try:
             child = sel[idx + 1]
             pm.parent(child, obj)
-        except:
+        except Exception:
             continue
 
     return result
@@ -935,7 +934,7 @@ def group_with_pivot(*args, **kwargs) -> list:
         parent_in_sequence(*temp)
         try:
             pm.parent(temp[0], top_group)
-        except:
+        except Exception:
             pass
         result += temp
 
@@ -1378,7 +1377,7 @@ def create_animation_curves(
             curve = pm.curve(p=positions, d=3)
             result_curves.append(curve.name())
         else:
-            pm.warning(f"Not enough points to create a curve for an item.")
+            pm.warning("Not enough points to create a curve for an item.")
 
     return result_curves
 
@@ -2835,123 +2834,5 @@ def straighten_curve_cvs(*curves) -> list:
 # Limit all lines to a maximum of 79 characters. ==============================
 # Docstrings or Comments, limit the line length to 72 characters. ======
 
-
-# cc_main = "cc_main"
-# cc_sub = "cc_sub"
-# cc_body = "cc_body"
-
-# move_pivot(pos=(0, 0, 0))
-
-# create_rig_groups("arrowBagA")
-
-# dt = Data()
-# points = dt.ctrl_shapes["sphere"]
-# create_curve(*points, cn="cc_leg_LF_IK_1")
-
-# group_with_pivot()
-
-# attr_1 = "Geo"
-# bt_dict = {"at": "bool"}
-# create_attributes(cc_main, attr_1, bt=bt_dict)
-# pm.connectAttr(f"{cc_main}.Geo", "MODEL.visibility", f=True)
-
-# cpu = ColorPickerUI()
-# cpu.show()
-
-# sel = pm.selected()
-# for i in sel:
-#     d = f"rig_{i}"
-#     pm.connectAttr(f"{d}.translate", f"{i}.translate", f=True)
-#     pm.connectAttr(f"{d}.rotate", f"{i}.rotate", f=True)
-#     pm.connectAttr(f"{d}.scale", f"{i}.scale", f=True)
-
-# for i in range(13, 26):
-#     obj = "rig_string_%d" % i
-#     poly = "dummy_string_straight_down"
-#     uv = get_uv_coordinates_closet_object(obj, poly)
-#     create_follicle(poly, uv)
-
-
-# create_attributes("cc_head_3", "Head", proxy="cc_head_2", bt=bt_dict)
-
-# orient_joints(p="yzx", s="zup")
-# flatten_to_plane()
-# create_pole_vector_joints()
-
-
-# sel = cmds.ls(sl=True)
-# for cuv in sel:
-#     jnt = create_motion_path_joints(10, cuv)
-#     result= []
-#     for i in jnt:
-#         cmds.select(cl=True)
-#         j = cmds.joint(p=(0, 0, 0))
-#         cmds.matchTransform(j, i, pos=True)
-#         result.append(j)
-#     cmds.delete(jnt)
-#     result.sort(reverse=True)
-#     parent_in_sequence(*result)
-#     orient_joints(*result)
-
-# b = cmds.ls(sl=True)
-# print(b)
-# a = get_bounding_box_position(b[0])
-# # print(a)
-# cmds.select(cl=True)
-# cmds.joint(p=a)
-
-
-# sel = cmds.ls(sl=True)
-# for idx, i in enumerate(sel):
-#     pos = get_position(i)
-#     cmds.select(cl=True)
-#     jnt = cmds.joint(p=pos)
-#     cmds.parent(jnt, i)
-#     for j in ["X", "Y", "Z"]:
-#         cmds.setAttr(f"{jnt}.translate{j}", 0)
-#         cmds.setAttr(f"{jnt}.rotate{j}", 0)
-#     cmds.rename(jnt, "rig_fol_string_straight_down_%d" % (idx + 1))
-
-
-# select_only(constraint=True)
-
-# sel = cmds.ls(sl=True)
-# for i in range(3, 26):
-#     st = f"rig_string_{i}_parentConstraint1.rig_fol_string_straight_up_{i}W1"
-#     cu = f"rig_string_{i}_parentConstraint1.rig_fol_string_curved_{i}W0"
-#     cmds.connectAttr("setRange1.outValueX", st, f=True)
-#     cmds.connectAttr("reverse1.outputX", cu, f=True)
-
-# def make_joints(cuv) -> list:
-#     joints = create_motion_path_joints(10, cuv)
-
-#     result= []
-#     for jnt in joints:
-#         cmds.select(cl=True)
-#         joint = cmds.joint(p=(0, 0, 0))
-#         cmds.matchTransform(joint, jnt, pos=True)
-#         result.append(joint)
-#     cmds.delete(joints)
-#     result.sort(reverse=True)
-#     parent_in_sequence(*result)
-#     orient_joints(*result)
-
-#     return result
-
-# mesh = "dummy_wing_LF"
-# sel = cmds.ls(sl=True, fl=True)
-# for i in sel:
-#     # uv = get_uv_coordinates(i)
-#     uv = get_uv_coordinates_closet_object(i, mesh)
-#     fol = create_follicle(mesh, uv)
-#     cmds.select(cl=True)
-#     jnt = cmds.joint(p=(0, 0, 0))
-#     cmds.parent(jnt, "%s" % fol)
-#     cmds.setAttr(f"{jnt}.translateX", 0)
-#     cmds.setAttr(f"{jnt}.translateY", 0)
-#     cmds.setAttr(f"{jnt}.translateZ", 0)
-#     cmds.setAttr(f"{jnt}.rotateX", 0)
-#     cmds.setAttr(f"{jnt}.rotateY", 0)
-#     cmds.setAttr(f"{jnt}.rotateZ", 0)
 
 
