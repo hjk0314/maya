@@ -1,4 +1,4 @@
-from collections import Iterable
+# from collections.abc import Iterable
 from PySide2.QtWidgets import *
 from PySide2.QtCore import Qt, QCoreApplication
 from PySide2.QtGui import QFont
@@ -171,7 +171,7 @@ class Character(QWidget):
 
     def setupUI(self):
         self.setWindowTitle(u"Quick Rig for Character")
-        self.move(0, 0)
+        self.move(1030, 465)
         self.resize(260, 180)
         font = QFont()
         font.setFamily(u"Courier New")
@@ -1342,12 +1342,12 @@ class Character(QWidget):
                 parentHierarchically(parents, joints[0])
 
 
-if __name__ == "__main__":
-    try:
-        char.close()
-        char.deleteLater()
-    except:
-        pass
-    char = Character()
-    char.show()
+# if __name__ == "__main__":
+#     try:
+#         char.close()
+#         char.deleteLater()
+#     except:
+#         pass
+#     char = Character()
+#     char.show()
 
